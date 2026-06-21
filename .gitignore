@@ -1,0 +1,16 @@
+# Build output
+bin/
+obj/
+publish/
+installer/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Local-only data import (contains third-party usernames — keep private)
+import_games.py
+
+# Generated preview (not used by the app)
+iguana-eye-preview.png

@@ -1,0 +1,390 @@
+<Window x:Class="GameTracker.Views.AddEditGameWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        xmlns:converters="clr-namespace:GameTracker.Converters"
+        Title="Game Details"
+        Width="480" Height="620"
+        MinWidth="420" MinHeight="540"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None" ResizeMode="CanResize"
+        Icon="/iguana-eye.ico"
+        Background="{StaticResource ScaleBrush}">
+
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="32" ResizeBorderThickness="6"
+                            GlassFrameThickness="0" CornerRadius="0"
+                            UseAeroCaptionButtons="False"/>
+    </shell:WindowChrome.WindowChrome>
+
+    <Window.Resources>
+        <converters:EmptyToVisibilityConverter x:Key="EmptyVisConverter"/>
+        <Style x:Key="LabelStyle" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#7cc44a"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="Margin" Value="0,0,0,4"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+        </Style>
+        <Style x:Key="InputStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="#142016"/>
+            <Setter Property="Foreground" Value="#e8e0c4"/>
+            <Setter Property="BorderBrush" Value="#2e4a30"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="CaretBrush" Value="#7cc44a"/>
+            <Style.Triggers>
+                <Trigger Property="IsFocused" Value="True">
+                    <Setter Property="BorderBrush" Value="#7cc44a"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        <Style x:Key="ComboStyle" TargetType="ComboBox">
+            <Setter Property="Background" Value="#142016"/>
+            <Setter Property="Foreground" Value="Black"/>
+            <Setter Property="BorderBrush" Value="#2e4a30"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="8,6"/>
+            <Setter Property="FontSize" Value="13"/>
+        </Style>
+        <Style x:Key="ActionButton" TargetType="Button">
+            <Setter Property="Background" Value="#4a7c3a"/>
+            <Setter Property="Foreground" Value="#0a1410"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="20,10"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="4"
+                                Padding="{TemplateBinding Padding}"
+                                BorderBrush="#7cc44a" BorderThickness="1">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#7cc44a"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="SessionButton" TargetType="Button">
+            <Setter Property="Background" Value="#3a2a10"/>
+            <Setter Property="Foreground" Value="#d4a437"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="12,7"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="4"
+                                Padding="{TemplateBinding Padding}"
+                                BorderBrush="#d4a437" BorderThickness="1">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#5a3a1a"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Border BorderBrush="#4a7c3a" BorderThickness="1">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="32"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Custom Title Bar -->
+        <Border Grid.Row="0" Background="#0a1410"
+                BorderBrush="#2e4a30" BorderThickness="0,0,0,1">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
+                    <Image Source="/iguana-eye.ico" Width="16" Height="16"
+                           Margin="0,0,8,0" VerticalAlignment="Center"
+                           RenderOptions.BitmapScalingMode="HighQuality"/>
+                    <TextBlock x:Name="TitleBarText" Text="GAME DETAILS"
+                               Foreground="#7cc44a" FontSize="11" FontWeight="Bold"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+                <Button Grid.Column="1" Content="&#x2715;" Click="Close_Click"
+                        Style="{StaticResource WindowCloseButton}"
+                        Height="32"
+                        shell:WindowChrome.IsHitTestVisibleInChrome="True"/>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="1" Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <TextBlock x:Name="WindowTitle" Grid.Row="0" Text="Add Game"
+                   Foreground="#e8e0c4" FontSize="20" FontWeight="Bold" Margin="0,0,0,20"/>
+
+        <!-- Form -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+            <StackPanel>
+                <!-- Title -->
+                <TextBlock Text="TITLE" Style="{StaticResource LabelStyle}"/>
+                <TextBox x:Name="TitleBox" Style="{StaticResource InputStyle}" Margin="0,0,0,14"/>
+
+                <!-- Platform + Genre row -->
+                <Grid Margin="0,0,0,14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="12"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Grid.Column="0">
+                        <TextBlock Text="PLATFORM" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox x:Name="PlatformCombo" Style="{StaticResource ComboStyle}"
+                                  IsEditable="True"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2">
+                        <TextBlock Text="GENRE" Style="{StaticResource LabelStyle}"/>
+                        <ComboBox x:Name="GenreCombo" Style="{StaticResource ComboStyle}"
+                                  IsEditable="True"/>
+                    </StackPanel>
+                </Grid>
+
+                <!-- Status -->
+                <TextBlock Text="STATUS" Style="{StaticResource LabelStyle}"/>
+                <ComboBox x:Name="StatusCombo" Style="{StaticResource ComboStyle}" Margin="0,0,0,14"/>
+
+                <!-- Requester -->
+                <TextBlock Text="REQUESTER" Style="{StaticResource LabelStyle}"/>
+                <TextBox x:Name="RequesterBox" Style="{StaticResource InputStyle}" Margin="0,0,0,14"/>
+
+                <!-- Rating -->
+                <TextBlock Text="RATING" Style="{StaticResource LabelStyle}"/>
+                <Grid Margin="0,0,0,14">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="50"/>
+                    </Grid.ColumnDefinitions>
+                    <Slider x:Name="RatingSlider" Grid.Column="0"
+                            Minimum="0" Maximum="10" TickFrequency="1" IsSnapToTickEnabled="True"
+                            Foreground="#7cc44a" VerticalAlignment="Center"
+                            ValueChanged="RatingSlider_ValueChanged"/>
+                    <TextBlock x:Name="RatingLabel" Grid.Column="1"
+                               Foreground="#d4a437" FontSize="16" FontWeight="Bold"
+                               HorizontalAlignment="Center" VerticalAlignment="Center" Text="0"/>
+                </Grid>
+
+                <!-- Notes -->
+                <TextBlock Text="NOTES" Style="{StaticResource LabelStyle}"/>
+                <TextBox x:Name="NotesBox" Style="{StaticResource InputStyle}"
+                         Height="70" TextWrapping="Wrap" AcceptsReturn="True"
+                         VerticalScrollBarVisibility="Auto" Margin="0,0,0,16"/>
+
+                <!-- Play Sessions -->
+                <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="PLAY SESSIONS" Style="{StaticResource LabelStyle}"
+                               VerticalAlignment="Center" Margin="0"/>
+                    <Border Grid.Column="1" CornerRadius="10" Padding="9,2"
+                            Background="#1e3a1e" BorderBrush="#4a7c3a" BorderThickness="1">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="&#9201; " Foreground="#7cc44a" FontSize="11"
+                                       VerticalAlignment="Center"/>
+                            <TextBlock x:Name="TotalTimeText" Text="0m"
+                                       Foreground="#c4e090" FontSize="11" FontWeight="Bold"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                </Grid>
+
+                <!-- Start/Stop -->
+                <Button x:Name="StartStopButton" Content="▶ Start Session"
+                        Click="ToggleSession_Click" Margin="0,0,0,8"
+                        HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
+                        BorderThickness="0" Padding="12,9" FontSize="13" FontWeight="Bold"
+                        Cursor="Hand" Foreground="#0a1410" Background="#4a7c3a">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="{TemplateBinding Background}" CornerRadius="4"
+                                    Padding="{TemplateBinding Padding}"
+                                    BorderBrush="#7cc44a" BorderThickness="1">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Opacity" Value="0.88"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+
+                <!-- Manual add -->
+                <Grid Margin="0,0,0,8">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="40"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="40"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Add past:" Foreground="#7a9070" FontSize="11"
+                               VerticalAlignment="Center" Margin="0,0,6,0"/>
+                    <TextBox x:Name="ManualHoursBox" Grid.Column="1" Style="{StaticResource InputStyle}"
+                             Padding="4,5" FontSize="12" Tag="h"/>
+                    <TextBlock Grid.Column="2" Text="h" Foreground="#7a9070" FontSize="11"
+                               VerticalAlignment="Center" Margin="3,0"/>
+                    <TextBox x:Name="ManualMinutesBox" Grid.Column="3" Style="{StaticResource InputStyle}"
+                             Padding="4,5" FontSize="12" Tag="m"/>
+                    <TextBlock Grid.Column="4" Text="m" Foreground="#7a9070" FontSize="11"
+                               VerticalAlignment="Center" Margin="3,0,0,0"/>
+                    <Button Grid.Column="5" Content="+ Add" Click="AddManual_Click"
+                            Style="{StaticResource SessionButton}" Padding="10,5"/>
+                </Grid>
+
+                <Border Background="#142016" BorderBrush="#2e4a30" BorderThickness="1"
+                        CornerRadius="4" MinHeight="40" MaxHeight="200">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <TextBlock x:Name="NoSessionsText" Text="No sessions logged yet"
+                                       Foreground="#506050" FontSize="12" Margin="10,12"/>
+                            <ItemsControl x:Name="SessionsItems">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border BorderBrush="#1e2a20" BorderThickness="0,0,0,1" Padding="8,7">
+                                            <Grid>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+                                                <Grid Grid.Row="0">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding StartDisplay}"
+                                                               Foreground="#c4d4a8" FontSize="12"
+                                                               VerticalAlignment="Center"/>
+                                                    <Border Grid.Column="1" CornerRadius="8" Padding="7,1"
+                                                            Background="#243a26" Margin="6,0">
+                                                        <TextBlock Text="{Binding DurationDisplay}"
+                                                                   Foreground="#7cc44a" FontSize="11"
+                                                                   FontWeight="Bold"/>
+                                                    </Border>
+                                                    <Button Grid.Column="2" Content="&#x2715;"
+                                                            Tag="{Binding}" Click="RemoveSession_Click"
+                                                            Foreground="#9a3a2a" Background="Transparent"
+                                                            BorderThickness="0" FontSize="12" Cursor="Hand"
+                                                            Padding="4,0" ToolTip="Remove this session">
+                                                        <Button.Template>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <Border Background="{TemplateBinding Background}">
+                                                                    <ContentPresenter HorizontalAlignment="Center"
+                                                                                      VerticalAlignment="Center"/>
+                                                                </Border>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter Property="Foreground" Value="#e89080"/>
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Button.Template>
+                                                    </Button>
+                                                </Grid>
+                                                <Grid Grid.Row="1" Margin="0,5,0,0">
+                                                    <TextBox Text="{Binding Note, UpdateSourceTrigger=PropertyChanged}"
+                                                             Background="#0f1812" Foreground="#c4d4a8"
+                                                             BorderBrush="#1e2a20" BorderThickness="1"
+                                                             CaretBrush="#7cc44a" Padding="6,3" FontSize="11"/>
+                                                    <TextBlock Text="What did you do? (optional note)"
+                                                               Foreground="#3e5040" FontSize="11"
+                                                               Margin="8,0,0,0" VerticalAlignment="Center"
+                                                               IsHitTestVisible="False"
+                                                               Visibility="{Binding Note, Converter={StaticResource EmptyVisConverter}}"/>
+                                                </Grid>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Footer Buttons -->
+        <Grid Grid.Row="2" Margin="0,16,0,0">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="8"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Button x:Name="DeleteButton" Grid.Column="0" Content="Shed"
+                    Visibility="Collapsed" Click="Delete_Click"
+                    Background="#5a1a14" Foreground="#e89080"
+                    BorderThickness="0" Padding="14,10" FontSize="12"
+                    FontWeight="SemiBold" Cursor="Hand">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="4"
+                                Padding="{TemplateBinding Padding}"
+                                BorderBrush="#9a3a2a" BorderThickness="1">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#9a3a2a"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+            <Button Grid.Column="2" Content="Cancel" Click="Cancel_Click"
+                    Background="#1c2a1e" Foreground="#7a9070"
+                    BorderThickness="0" Padding="18,10" FontSize="13" Cursor="Hand">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="4"
+                                Padding="{TemplateBinding Padding}"
+                                BorderBrush="#2e4a30" BorderThickness="1">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#243a26"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+            <Button Grid.Column="4" Content="Save" Click="Save_Click"
+                    Style="{StaticResource ActionButton}"/>
+        </Grid>
+        </Grid>
+    </Grid>
+    </Border>
+</Window>

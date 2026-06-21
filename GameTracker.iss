@@ -1,11 +1,11 @@
 ; Inno Setup script for GameTracker
 ; Build with: ISCC.exe GameTracker.iss  (or just run build-installer.bat)
 
-#define MyAppName "Game Tracker"
+#define MyAppName "LazerGuanas Game Hunter"
 #ifndef MyAppVersion
   #define MyAppVersion "1.0.0"
 #endif
-#define MyAppPublisher "GameTracker"
+#define MyAppPublisher "LazerGuanas"
 #define MyAppExeName "GameTracker.exe"
 #define MyPublishDir "bin\Release\net8.0-windows\win-x64\publish"
 
@@ -17,7 +17,7 @@ AppPublisher={#MyAppPublisher}
 DefaultDirName={autopf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 OutputDir=installer
-OutputBaseFilename=GameTracker-Setup-{#MyAppVersion}
+OutputBaseFilename=LazerGuanas-Game-Hunter-Setup-{#MyAppVersion}
 SetupIconFile=iguana-eye.ico
 UninstallDisplayIcon={app}\{#MyAppExeName}
 Compression=lzma2

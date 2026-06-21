@@ -5,7 +5,7 @@ rem Run this from anywhere - it cd's to its own folder
 cd /d "%~dp0"
 
 echo.
-echo === Publishing GameTracker (Release, win-x64, self-contained, single-file) ===
+echo === Publishing LazerGuanas Game Hunter (Release, win-x64, self-contained, single-file) ===
 echo.
 
 dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
@@ -42,6 +42,6 @@ if errorlevel 1 (
 
 echo.
 echo === Done ===
-echo Installer:    %~dp0installer\GameTracker-Setup-1.0.0.exe
+echo Installer:    %~dp0installer\LazerGuanas-Game-Hunter-Setup-1.0.0.exe
 echo.
 endlocal

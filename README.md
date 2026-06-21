@@ -1,4 +1,4 @@
-# 🦎 Iguana Game Hunter
+# 🦎 LazerGuanas Game Hunter
 
 A reptilian-themed WPF desktop app for tracking your game backlog as a kanban board —
 **Dormant → Hunting → Devoured** — with per-game play-session time tracking.
@@ -15,7 +15,7 @@ A reptilian-themed WPF desktop app for tracking your game backlog as a kanban bo
 
 ## Installing
 
-Download the latest `GameTracker-Setup-x.y.z.exe` from the
+Download the latest `LazerGuanas-Game-Hunter-Setup-x.y.z.exe` from the
 [Releases page](https://github.com/TequilaJosh/iguana-game-hunter/releases/latest)
 and run it. The app checks for updates automatically on each launch (and via the ⟳
 button in the title bar).
@@ -38,7 +38,7 @@ build-installer.bat
 ```
 
 This publishes a self-contained single-file build and compiles
-`installer/GameTracker-Setup-<version>.exe`.
+`installer/LazerGuanas-Game-Hunter-Setup-<version>.exe`.
 
 ### Cutting a release
 

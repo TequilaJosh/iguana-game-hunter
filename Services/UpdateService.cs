@@ -47,13 +47,13 @@ namespace GameTracker.Services
                 {
                     if (!silent)
                         MessageBox.Show($"You're on the latest version (v{current.ToString(3)}).",
-                            "Game Tracker", MessageBoxButton.OK, MessageBoxImage.Information);
+                            "LazerGuanas Game Hunter", MessageBoxButton.OK, MessageBoxImage.Information);
                     return;
                 }
 
                 var notes = ((string?)release["body"] ?? string.Empty).Trim();
                 var prompt =
-                    $"A new version of Game Tracker is available.\n\n" +
+                    $"A new version of LazerGuanas Game Hunter is available.\n\n" +
                     $"Installed:  v{current.ToString(3)}\n" +
                     $"Available:  {tag}\n\n" +
                     (notes.Length > 0 ? $"{Truncate(notes, 400)}\n\n" : string.Empty) +

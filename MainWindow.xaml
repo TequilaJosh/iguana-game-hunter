@@ -3,7 +3,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         xmlns:converters="clr-namespace:GameTracker.Converters"
-        Title="Game Tracker" Height="700" Width="1100"
+        Title="LazerGuanas Game Hunter" Height="700" Width="1100"
         MinWidth="800" MinHeight="500"
         WindowStartupLocation="CenterScreen"
         WindowStyle="None" ResizeMode="CanResize"
@@ -241,7 +241,7 @@
                     <Image Source="/iguana-eye.ico" Width="18" Height="18"
                            Margin="0,0,8,0" VerticalAlignment="Center"
                            RenderOptions.BitmapScalingMode="HighQuality"/>
-                    <TextBlock Text="GAME TRACKER"
+                    <TextBlock Text="LAZERGUANAS GAME HUNTER"
                                Foreground="#7cc44a" FontSize="11" FontWeight="Bold"
                                VerticalAlignment="Center"/>
                 </StackPanel>
@@ -275,7 +275,7 @@
                     <Image Source="/iguana-eye.ico" Width="28" Height="28"
                            Margin="0,0,12,0" VerticalAlignment="Center"
                            RenderOptions.BitmapScalingMode="HighQuality"/>
-                    <TextBlock Text="Game Tracker"
+                    <TextBlock Text="LazerGuanas Game Hunter"
                                Foreground="#e8e0c4" FontSize="20" FontWeight="Bold"
                                VerticalAlignment="Center"/>
                 </StackPanel>

@@ -42,13 +42,18 @@ This publishes a self-contained single-file build and compiles
 
 ### Cutting a release
 
-Releases are built automatically by GitHub Actions. Bump `<Version>` in
-`GameTracker.csproj`, then push a matching tag:
+Bump `<Version>` in `GameTracker.csproj`, then run:
 
 ```sh
-git tag v1.0.1
-git push origin v1.0.1
+release.bat
 ```
 
-The workflow publishes the app, builds the installer, and creates the GitHub Release —
-which the auto-updater in the wild will then pick up.
+It validates the build, commits any pending changes, and pushes a `v<version>` tag.
+GitHub Actions then publishes the app, builds the installer, and creates the GitHub
+Release — which the auto-updater in the wild picks up automatically.
+
+> The version is read from `GameTracker.csproj` in one place, so the app, the installer
+> filename, and the release tag always match. (`release.bat` refuses to run if that tag
+> already exists — bump the version first.)
+
+To do it by hand instead: `git tag v1.0.1 && git push origin v1.0.1`.

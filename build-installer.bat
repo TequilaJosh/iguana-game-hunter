@@ -4,11 +4,19 @@ setlocal enabledelayedexpansion
 rem Run this from anywhere - it cd's to its own folder
 cd /d "%~dp0"
 
+rem --- Read <Version> from the .csproj so the installer matches the app ---
+set "APPVER="
+for /f "usebackq delims=" %%V in (`powershell -NoProfile -Command "[regex]::Match((Get-Content 'GameTracker.csproj' -Raw),'<Version>(.*?)</Version>').Groups[1].Value"`) do set "APPVER=%%V"
+if not defined APPVER (
+    echo [X] Could not read ^<Version^> from GameTracker.csproj
+    exit /b 1
+)
+
 echo.
-echo === Publishing LazerGuanas Game Hunter (Release, win-x64, self-contained, single-file) ===
+echo === Publishing LazerGuanas Game Hunter v%APPVER% (Release, win-x64, self-contained, single-file) ===
 echo.
 
-dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:Version=%APPVER%
 if errorlevel 1 (
     echo.
     echo [X] dotnet publish failed.
@@ -33,7 +41,7 @@ echo === Compiling installer with Inno Setup ===
 echo Using: !ISCC!
 echo.
 
-"!ISCC!" GameTracker.iss
+"!ISCC!" /DMyAppVersion=%APPVER% GameTracker.iss
 if errorlevel 1 (
     echo.
     echo [X] Inno Setup compile failed.
@@ -42,6 +50,6 @@ if errorlevel 1 (
 
 echo.
 echo === Done ===
-echo Installer:    %~dp0installer\LazerGuanas-Game-Hunter-Setup-1.0.0.exe
+echo Installer:    %~dp0installer\LazerGuanas-Game-Hunter-Setup-%APPVER%.exe
 echo.
 endlocal

@@ -42,18 +42,19 @@ This publishes a self-contained single-file build and compiles
 
 ### Cutting a release
 
-Bump `<Version>` in `GameTracker.csproj`, then run:
+Just run:
 
 ```sh
-release.bat
+release.bat            # bump patch: 1.0.2 -> 1.0.3
+release.bat minor      # 1.0.3 -> 1.1.0
+release.bat major      # 1.1.0 -> 2.0.0
+release.bat 1.4.2      # set an explicit version
 ```
 
-It validates the build, commits any pending changes, and pushes a `v<version>` tag.
-GitHub Actions then publishes the app, builds the installer, and creates the GitHub
-Release — which the auto-updater in the wild picks up automatically.
+`release.bat` bumps the version in `GameTracker.csproj`, validates the build, commits,
+and pushes a `v<version>` tag. GitHub Actions then builds the installer `.exe` and
+publishes the GitHub Release — which the auto-updater in the wild picks up automatically.
 
-> The version is read from `GameTracker.csproj` in one place, so the app, the installer
-> filename, and the release tag always match. (`release.bat` refuses to run if that tag
-> already exists — bump the version first.)
-
-To do it by hand instead: `git tag v1.0.1 && git push origin v1.0.1`.
+> The version lives in `GameTracker.csproj` only, so the app, the installer filename, and
+> the release tag always match. If the target tag already exists, `release.bat` aborts
+> before changing anything.

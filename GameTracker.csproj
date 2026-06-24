@@ -7,9 +7,9 @@
     <RootNamespace>GameTracker</RootNamespace>
     <Nullable>enable</Nullable>
     <ApplicationIcon>iguana-eye.ico</ApplicationIcon>
-    <Version>1.0.2</Version>
-    <AssemblyVersion>1.0.2.0</AssemblyVersion>
-    <FileVersion>1.0.2.0</FileVersion>
+    <Version>1.0.3</Version>
+    <AssemblyVersion>1.0.3.0</AssemblyVersion>
+    <FileVersion>1.0.3.0</FileVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />

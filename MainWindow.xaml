@@ -154,11 +154,12 @@
                         </Border>
                     </StackPanel>
 
-                    <!-- Last Played + Start/Stop -->
+                    <!-- Last Played + Pop-out + Start/Stop -->
                     <Grid Grid.Row="2">
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <Ellipse Grid.Column="0" Width="7" Height="7"
@@ -167,7 +168,30 @@
                         <TextBlock Grid.Column="1"
                                    Text="{Binding LastPlayedDisplay}"
                                    Foreground="#506050" FontSize="11" VerticalAlignment="Center"/>
-                        <Button Grid.Column="2" Content="{Binding PlayButtonLabel}"
+                        <Button Grid.Column="2" Content="&#10696;"
+                                Tag="{Binding Id}"
+                                Click="PopOutSession_Click"
+                                ToolTip="Pop out session"
+                                Visibility="{Binding IsSessionActive, Converter={StaticResource BoolVisConverter}}"
+                                Background="#243a26" Foreground="#7cc44a"
+                                BorderThickness="0" Padding="8,3" FontSize="12" Cursor="Hand"
+                                Margin="0,0,5,0">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}" CornerRadius="3"
+                                            Padding="{TemplateBinding Padding}"
+                                            BorderBrush="#4a7c3a" BorderThickness="1">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#4a7c3a"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                        <Button Grid.Column="3" Content="{Binding PlayButtonLabel}"
                                 Tag="{Binding Id}"
                                 Click="ToggleSession_Click"
                                 BorderThickness="0" Padding="9,3" FontSize="11" Cursor="Hand">

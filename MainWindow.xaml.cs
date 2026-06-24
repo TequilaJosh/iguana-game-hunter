@@ -18,6 +18,7 @@ namespace GameTracker
         private Point _dragStartPoint;
         private bool _isDragging;
         private readonly DispatcherTimer _liveTimer;
+        private readonly Dictionary<Guid, Views.SessionWindow> _sessionWindows = new();
 
         public MainWindow()
         {
@@ -41,6 +42,26 @@ namespace GameTracker
         {
             StatusText.Text = "Checking for updates…";
             await Services.UpdateService.CheckForUpdatesAsync(silent: false);
+        }
+
+        private void PopOutSession_Click(object sender, RoutedEventArgs e)
+        {
+            e.Handled = true;
+            if (sender is not Button btn || btn.Tag is not Guid id) return;
+
+            var game = _games.FirstOrDefault(g => g.Id == id);
+            if (game == null || !game.IsSessionActive) return;
+
+            if (_sessionWindows.TryGetValue(id, out var existing))
+            {
+                existing.Activate();
+                return;
+            }
+
+            var win = new Views.SessionWindow(game, () => { Save(); RefreshView(); }) { Owner = this };
+            _sessionWindows[id] = win;
+            win.Closed += (_, _) => _sessionWindows.Remove(id);
+            win.Show();
         }
 
         private void LoadGames()

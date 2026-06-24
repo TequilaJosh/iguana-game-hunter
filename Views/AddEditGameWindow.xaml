@@ -39,14 +39,6 @@
                 </Trigger>
             </Style.Triggers>
         </Style>
-        <Style x:Key="ComboStyle" TargetType="ComboBox">
-            <Setter Property="Background" Value="#142016"/>
-            <Setter Property="Foreground" Value="Black"/>
-            <Setter Property="BorderBrush" Value="#2e4a30"/>
-            <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="Padding" Value="8,6"/>
-            <Setter Property="FontSize" Value="13"/>
-        </Style>
         <Style x:Key="ActionButton" TargetType="Button">
             <Setter Property="Background" Value="#4a7c3a"/>
             <Setter Property="Foreground" Value="#0a1410"/>
@@ -156,19 +148,17 @@
                     </Grid.ColumnDefinitions>
                     <StackPanel Grid.Column="0">
                         <TextBlock Text="PLATFORM" Style="{StaticResource LabelStyle}"/>
-                        <ComboBox x:Name="PlatformCombo" Style="{StaticResource ComboStyle}"
-                                  IsEditable="True"/>
+                        <ComboBox x:Name="PlatformCombo" IsEditable="True"/>
                     </StackPanel>
                     <StackPanel Grid.Column="2">
                         <TextBlock Text="GENRE" Style="{StaticResource LabelStyle}"/>
-                        <ComboBox x:Name="GenreCombo" Style="{StaticResource ComboStyle}"
-                                  IsEditable="True"/>
+                        <ComboBox x:Name="GenreCombo" IsEditable="True"/>
                     </StackPanel>
                 </Grid>
 
                 <!-- Status -->
                 <TextBlock Text="STATUS" Style="{StaticResource LabelStyle}"/>
-                <ComboBox x:Name="StatusCombo" Style="{StaticResource ComboStyle}" Margin="0,0,0,14"/>
+                <ComboBox x:Name="StatusCombo" Margin="0,0,0,14"/>
 
                 <!-- Requester -->
                 <TextBlock Text="REQUESTER" Style="{StaticResource LabelStyle}"/>

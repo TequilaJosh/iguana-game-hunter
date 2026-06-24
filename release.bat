@@ -32,16 +32,17 @@ if errorlevel 1 (
 )
 
 rem --- Refuse to release if the tag already exists (bump the version) ---
-git tag -l %TAG% | findstr /x %TAG% >nul
-if not errorlevel 1 (
-    echo [X] Tag %TAG% already exists.
-    echo     Bump ^<Version^> in GameTracker.csproj before releasing.
+rem  Pipe-free checks so the errorlevel is reliable.
+git rev-parse -q --verify "refs/tags/%TAG%" >nul 2>&1 && (
+    echo [X] Tag %TAG% already exists locally.
+    echo     Bump ^<Version^> in GameTracker.csproj, then re-run.
     exit /b 1
 )
-git ls-remote --tags origin %TAG% 2>nul | findstr /e "%TAG%" >nul
-if not errorlevel 1 (
+set "REMOTE_HIT="
+for /f "delims=" %%r in ('git ls-remote --tags origin "refs/tags/%TAG%" 2^>nul') do set "REMOTE_HIT=1"
+if defined REMOTE_HIT (
     echo [X] Tag %TAG% already exists on the remote.
-    echo     Bump ^<Version^> in GameTracker.csproj before releasing.
+    echo     Bump ^<Version^> in GameTracker.csproj, then re-run.
     exit /b 1
 )
 

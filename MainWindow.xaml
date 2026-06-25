@@ -50,6 +50,33 @@
             </Setter>
         </Style>
 
+        <Style x:Key="SecondaryButton" TargetType="Button">
+            <Setter Property="Background" Value="#1c2a1e"/>
+            <Setter Property="Foreground" Value="#c4d4a8"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="14,9"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="5"
+                                Padding="{TemplateBinding Padding}"
+                                BorderBrush="#2e4a30" BorderThickness="1">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#243a26"/>
+                                <Setter Property="BorderBrush" Value="#4a7c3a"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
         <Style x:Key="ColumnHeader" TargetType="Border">
             <Setter Property="CornerRadius" Value="6,6,0,0"/>
             <Setter Property="Padding" Value="14,10"/>
@@ -119,11 +146,33 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                             <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="{Binding Title}"
                                    Foreground="#e8e0c4" FontSize="14" FontWeight="SemiBold"
                                    TextWrapping="Wrap" VerticalAlignment="Center"/>
-                        <Button Grid.Column="1" Content="&#128214;"
+                        <Button Grid.Column="1" Content="&#9201;"
+                                Tag="{Binding Id}" Click="OpenHltb_Click"
+                                ToolTip="How long to beat (estimate)"
+                                Background="#1c2a1e" Foreground="#7cc44a"
+                                BorderThickness="0" Padding="6,1" FontSize="12" Cursor="Hand"
+                                Margin="6,0,0,0" VerticalAlignment="Center">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}" CornerRadius="3"
+                                            Padding="{TemplateBinding Padding}"
+                                            BorderBrush="#2e4a30" BorderThickness="1">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                    <ControlTemplate.Triggers>
+                                        <Trigger Property="IsMouseOver" Value="True">
+                                            <Setter Property="Background" Value="#243a26"/>
+                                        </Trigger>
+                                    </ControlTemplate.Triggers>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                        <Button Grid.Column="2" Content="&#128214;"
                                 Tag="{Binding Id}" Click="OpenGuide_Click"
                                 BorderThickness="0" Padding="6,1" FontSize="12" Cursor="Hand"
                                 Margin="6,0,0,0" VerticalAlignment="Center">
@@ -157,7 +206,7 @@
                                 </Style>
                             </Button.Style>
                         </Button>
-                        <Border Grid.Column="2" CornerRadius="10" Padding="7,2"
+                        <Border Grid.Column="3" CornerRadius="10" Padding="7,2"
                                 Background="#3a2a10" Margin="6,0,0,0"
                                 BorderBrush="#d4a437" BorderThickness="1"
                                 Visibility="{Binding Rating, Converter={StaticResource RatingVisConverter}}">
@@ -306,6 +355,10 @@
                 </StackPanel>
                 <StackPanel Grid.Column="2" Orientation="Horizontal"
                             shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Button Content="OBS" Click="Overlay_Click"
+                            Style="{StaticResource WindowControlButton}"
+                            FontFamily="Segoe UI" FontSize="10" FontWeight="Bold"
+                            ToolTip="Stream overlay files (OBS)"/>
                     <Button Content="&#x21BB;" Click="CheckUpdates_Click"
                             Style="{StaticResource WindowControlButton}"
                             ToolTip="Check for updates"/>
@@ -327,6 +380,10 @@
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="12"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
@@ -340,7 +397,7 @@
                 </StackPanel>
                 <TextBox x:Name="SearchBox" Grid.Column="1"
                          Style="{StaticResource SearchBox}"
-                         Width="220" Height="36"
+                         Width="200" Height="36"
                          TextChanged="SearchBox_TextChanged">
                     <TextBox.Resources>
                         <Style TargetType="Border">
@@ -348,7 +405,13 @@
                         </Style>
                     </TextBox.Resources>
                 </TextBox>
-                <Button Grid.Column="3" Content="+ Add Game"
+                <Button Grid.Column="3" Content="&#127922; Spin"
+                        Style="{StaticResource SecondaryButton}" Height="36"
+                        Click="Spin_Click" ToolTip="Pick a random game from Dormant"/>
+                <Button Grid.Column="5" Content="&#128203; Recap"
+                        Style="{StaticResource SecondaryButton}" Height="36"
+                        Click="Recap_Click" ToolTip="Stream recap — time played and clips"/>
+                <Button Grid.Column="7" Content="+ Add Game"
                         Style="{StaticResource AddButton}"
                         Height="36"
                         Click="AddGame_Click"/>

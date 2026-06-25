@@ -3,8 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         Title="Now Playing"
-        Width="360" Height="400"
-        MinWidth="300" MinHeight="320"
+        Width="380" Height="560"
+        MinWidth="320" MinHeight="460"
         WindowStartupLocation="CenterOwner"
         WindowStyle="None" ResizeMode="CanResize"
         Icon="/iguana-eye.ico"
@@ -53,6 +53,9 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                     <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
@@ -63,20 +66,135 @@
 
                 <TextBlock x:Name="ElapsedText" Grid.Row="1" Text="0:00:00"
                            Foreground="#7cc44a" FontFamily="Consolas" FontSize="40"
-                           FontWeight="Bold" Margin="0,0,0,12"/>
+                           FontWeight="Bold" Margin="0,0,0,6"/>
 
-                <TextBlock Grid.Row="2" Text="SESSION NOTES" Foreground="#7cc44a"
-                           FontSize="11" FontWeight="Bold" Margin="0,0,0,4"/>
+                <!-- Goal / countdown -->
+                <StackPanel Grid.Row="2" Margin="0,0,0,8">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="34"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="34"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="&#127919; Goal" Foreground="#7a9070" FontSize="11"
+                                   VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBox x:Name="GoalHoursBox" Grid.Column="1" Background="#142016"
+                                 Foreground="#e8e0c4" BorderBrush="#2e4a30" BorderThickness="1"
+                                 CaretBrush="#7cc44a" Padding="3,3" FontSize="11"
+                                 HorizontalContentAlignment="Center"/>
+                        <TextBlock Grid.Column="2" Text="h" Foreground="#7a9070" FontSize="11"
+                                   VerticalAlignment="Center" Margin="3,0"/>
+                        <TextBox x:Name="GoalMinutesBox" Grid.Column="3" Background="#142016"
+                                 Foreground="#e8e0c4" BorderBrush="#2e4a30" BorderThickness="1"
+                                 CaretBrush="#7cc44a" Padding="3,3" FontSize="11"
+                                 HorizontalContentAlignment="Center"/>
+                        <TextBlock Grid.Column="4" Text="m" Foreground="#7a9070" FontSize="11"
+                                   VerticalAlignment="Center" Margin="3,0,0,0"/>
+                        <Button Grid.Column="6" x:Name="GoalSetButton" Content="Set" Click="SetGoal_Click"
+                                Foreground="#7cc44a" Background="#243a26" BorderThickness="0"
+                                Padding="10,3" FontSize="11" Cursor="Hand">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}" CornerRadius="3"
+                                            Padding="{TemplateBinding Padding}"
+                                            BorderBrush="#4a7c3a" BorderThickness="1">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
+                    </Grid>
+                    <Grid x:Name="GoalProgressRow" Margin="0,6,0,0" Visibility="Collapsed">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <ProgressBar x:Name="GoalBar" Grid.Column="0" Height="8" Minimum="0" Maximum="100"
+                                     Background="#142016" Foreground="#7cc44a" BorderBrush="#2e4a30"
+                                     BorderThickness="1" VerticalAlignment="Center"/>
+                        <TextBlock x:Name="GoalRemainingText" Grid.Column="1" Margin="8,0,0,0"
+                                   Foreground="#d4a437" FontSize="11" FontWeight="Bold"
+                                   VerticalAlignment="Center"/>
+                    </Grid>
+                </StackPanel>
 
-                <TextBox x:Name="NotesBox" Grid.Row="3"
+                <!-- Clip marker entry -->
+                <Grid Grid.Row="3" Margin="0,0,0,6">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="ClipBox" Grid.Column="0" KeyDown="ClipBox_KeyDown"
+                             Background="#142016" Foreground="#e8e0c4" BorderBrush="#2e4a30"
+                             BorderThickness="1" CaretBrush="#d4a437" Padding="8,6" FontSize="12"
+                             VerticalContentAlignment="Center"/>
+                    <Button Grid.Column="1" Content="&#128204; Clip" Click="Clip_Click"
+                            Margin="6,0,0,0" Foreground="#d4a437" Background="#3a2a10"
+                            BorderThickness="0" Padding="10,6" FontSize="12" FontWeight="Bold"
+                            Cursor="Hand" ToolTip="Mark this moment (Enter in the box also clips)">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}" CornerRadius="3"
+                                        Padding="{TemplateBinding Padding}"
+                                        BorderBrush="#d4a437" BorderThickness="1">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                                <ControlTemplate.Triggers>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="#5a3a1a"/>
+                                    </Trigger>
+                                </ControlTemplate.Triggers>
+                            </ControlTemplate>
+                        </Button.Template>
+                    </Button>
+                </Grid>
+
+                <!-- Markers list -->
+                <Border Grid.Row="4" Background="#142016" BorderBrush="#2e4a30" BorderThickness="1"
+                        CornerRadius="4" MaxHeight="120" Margin="0,0,0,10">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <StackPanel>
+                            <TextBlock x:Name="NoMarkersText" Text="No clips marked yet"
+                                       Foreground="#506050" FontSize="11" Margin="8,8"/>
+                            <ItemsControl x:Name="MarkersItems">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="8,4">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Grid.Column="0" Text="{Binding Offset}"
+                                                       Foreground="#d4a437" FontFamily="Consolas"
+                                                       FontSize="12" FontWeight="Bold" Margin="0,0,8,0"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding Text}"
+                                                       Foreground="#c4d4a8" FontSize="12"
+                                                       TextWrapping="Wrap"/>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Border>
+
+                <TextBlock Grid.Row="5" Text="SESSION NOTES" Foreground="#7cc44a"
+                           FontSize="11" FontWeight="Bold" Margin="0,0,0,4"
+                           VerticalAlignment="Top"/>
+
+                <TextBox x:Name="NotesBox" Grid.Row="6"
                          TextChanged="NotesBox_TextChanged"
                          Background="#142016" Foreground="#e8e0c4"
                          BorderBrush="#2e4a30" BorderThickness="1"
                          CaretBrush="#7cc44a" Padding="8,6" FontSize="13"
-                         TextWrapping="Wrap" AcceptsReturn="True"
+                         MinHeight="60" TextWrapping="Wrap" AcceptsReturn="True"
                          VerticalScrollBarVisibility="Auto" Margin="0,0,0,12"/>
 
-                <Button x:Name="StopButton" Grid.Row="4" Content="&#9632; Stop Session"
+                <Button x:Name="StopButton" Grid.Row="7" Content="&#9632; Stop Session"
                         Click="Stop_Click"
                         HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                         BorderThickness="0" Padding="12,10" FontSize="13" FontWeight="Bold"

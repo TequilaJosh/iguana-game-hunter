@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
 using System.Windows.Threading;
 using GameTracker.Models;
 using GameTracker.Services;
@@ -15,16 +17,20 @@ namespace GameTracker
     {
         private List<Game> _games = new();
         private string _searchQuery = string.Empty;
+        private Guid? _currentGameId;
         private Point _dragStartPoint;
         private bool _isDragging;
         private readonly DispatcherTimer _liveTimer;
+        private readonly DispatcherTimer _overlayTimer;
         private readonly Dictionary<Guid, Views.SessionWindow> _sessionWindows = new();
         private readonly Dictionary<Guid, Views.GuideWindow> _guideWindows = new();
+        private readonly Dictionary<Guid, Views.HltbWindow> _hltbWindows = new();
 
         public MainWindow()
         {
             InitializeComponent();
             LoadGames();
+            Services.OverlayService.Initialize();
 
             // While any game has a running session, keep the cards' live totals fresh.
             _liveTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(60) };
@@ -35,8 +41,154 @@ namespace GameTracker
             };
             _liveTimer.Start();
 
+            // Push the live "Now Playing" state to the OBS overlay files every second.
+            _overlayTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
+            _overlayTimer.Tick += (_, _) => Services.OverlayService.Update(CurrentlyStreaming());
+            _overlayTimer.Start();
+
             // Quietly check GitHub releases for a newer version on launch.
             Loaded += async (_, _) => await Services.UpdateService.CheckForUpdatesAsync(silent: true);
+        }
+
+        // The active session most recently started — what the overlay shows.
+        private Game? CurrentlyStreaming() =>
+            _games.Where(g => g.IsSessionActive)
+                  .OrderByDescending(g => g.ActiveSession!.Start)
+                  .FirstOrDefault();
+
+        #region Global hotkeys
+
+        private const int WM_HOTKEY = 0x0312;
+        private const uint MOD_ALT = 0x0001, MOD_CONTROL = 0x0002;
+        private const int HK_TOGGLE = 1, HK_CLIP = 2, HK_NOTE = 3;
+        private IntPtr _hwnd;
+
+        [DllImport("user32.dll")]
+        private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
+        [DllImport("user32.dll")]
+        private static extern bool UnregisterHotKey(IntPtr hWnd, int id);
+
+        protected override void OnSourceInitialized(EventArgs e)
+        {
+            base.OnSourceInitialized(e);
+            _hwnd = new WindowInteropHelper(this).Handle;
+            HwndSource.FromHwnd(_hwnd)?.AddHook(WndHook);
+
+            // Ctrl+Alt+S start/stop, Ctrl+Alt+C clip, Ctrl+Alt+N quick note.
+            RegisterHotKey(_hwnd, HK_TOGGLE, MOD_CONTROL | MOD_ALT, 0x53);
+            RegisterHotKey(_hwnd, HK_CLIP, MOD_CONTROL | MOD_ALT, 0x43);
+            RegisterHotKey(_hwnd, HK_NOTE, MOD_CONTROL | MOD_ALT, 0x4E);
+        }
+
+        private IntPtr WndHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
+        {
+            if (msg == WM_HOTKEY)
+            {
+                switch (wParam.ToInt32())
+                {
+                    case HK_TOGGLE: HotkeyToggle(); handled = true; break;
+                    case HK_CLIP: HotkeyClip(); handled = true; break;
+                    case HK_NOTE: HotkeyNote(); handled = true; break;
+                }
+            }
+            return IntPtr.Zero;
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            if (_hwnd != IntPtr.Zero)
+            {
+                UnregisterHotKey(_hwnd, HK_TOGGLE);
+                UnregisterHotKey(_hwnd, HK_CLIP);
+                UnregisterHotKey(_hwnd, HK_NOTE);
+            }
+            base.OnClosed(e);
+        }
+
+        private Game? ResolveCurrentGame()
+        {
+            var active = CurrentlyStreaming();
+            if (active != null) return active;
+            if (_currentGameId is Guid id)
+            {
+                var g = _games.FirstOrDefault(x => x.Id == id);
+                if (g != null) return g;
+            }
+            return _games.Where(g => g.LastPlayed != null)
+                         .OrderByDescending(g => g.LastPlayed)
+                         .FirstOrDefault()
+                   ?? _games.FirstOrDefault(g => g.Status == GameStatus.InProgress);
+        }
+
+        private void HotkeyToggle()
+        {
+            var game = ResolveCurrentGame();
+            if (game == null)
+            {
+                StatusText.Text = "Hotkey: no game to start — pick one first.";
+                return;
+            }
+            if (game.IsSessionActive) StopSession(game);
+            else StartSession(game);
+        }
+
+        private void HotkeyClip()
+        {
+            var game = CurrentlyStreaming();
+            if (game?.ActiveSession == null)
+            {
+                StatusText.Text = "Hotkey: no active session to clip.";
+                return;
+            }
+            game.ActiveSession.Markers.Add(new SessionMarker { At = DateTime.Now, Text = string.Empty });
+            Save();
+            RefreshView();
+            StatusText.Text = $"Clip marked for \"{game.Title}\" at {DateTime.Now:h:mm tt}";
+        }
+
+        private void HotkeyNote()
+        {
+            var game = CurrentlyStreaming();
+            if (game?.ActiveSession == null)
+            {
+                StatusText.Text = "Hotkey: no active session for a note.";
+                return;
+            }
+            var win = new Views.QuickNoteWindow { Owner = this };
+            if (win.ShowDialog() == true && !string.IsNullOrWhiteSpace(win.NoteText))
+            {
+                game.ActiveSession.Markers.Add(new SessionMarker
+                {
+                    At = DateTime.Now,
+                    Text = win.NoteText.Trim()
+                });
+                Save();
+                RefreshView();
+                StatusText.Text = $"Note clipped for \"{game.Title}\".";
+            }
+        }
+
+        #endregion
+
+        private void Overlay_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                System.IO.Directory.CreateDirectory(Services.OverlayService.FolderPath);
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(
+                    Services.OverlayService.FolderPath) { UseShellExecute = true });
+            }
+            catch { /* ignore */ }
+
+            MessageBox.Show(
+                "Stream overlay files are in the folder that just opened.\n\n" +
+                "OBS Text source: add a Text (GDI+) source, check \"Read from file\", and pick " +
+                "game.txt, elapsed.txt, requester.txt, or now_playing.txt.\n\n" +
+                "OBS Browser source: add a Browser source, check \"Local file\", and select " +
+                "overlay.html (transparent styled card; ~600x120).\n\n" +
+                "They update live while a session is running and clear when you stop. " +
+                "See README.txt in the folder.",
+                "Stream Overlay (OBS)", MessageBoxButton.OK, MessageBoxImage.Information);
         }
 
         private async void CheckUpdates_Click(object sender, RoutedEventArgs e)
@@ -52,6 +204,7 @@ namespace GameTracker
 
             var game = _games.FirstOrDefault(g => g.Id == id);
             if (game == null || !game.IsSessionActive) return;
+            _currentGameId = id;
 
             if (_sessionWindows.TryGetValue(id, out var existing))
             {
@@ -90,6 +243,26 @@ namespace GameTracker
             { Owner = this };
             _guideWindows[id] = win;
             win.Closed += (_, _) => _guideWindows.Remove(id);
+            win.Show();
+        }
+
+        private void OpenHltb_Click(object sender, RoutedEventArgs e)
+        {
+            e.Handled = true;
+            if (sender is not Button btn || btn.Tag is not Guid id) return;
+
+            var game = _games.FirstOrDefault(g => g.Id == id);
+            if (game == null) return;
+
+            if (_hltbWindows.TryGetValue(id, out var existing))
+            {
+                existing.Activate();
+                return;
+            }
+
+            var win = new Views.HltbWindow(game.Title) { Owner = this };
+            _hltbWindows[id] = win;
+            win.Closed += (_, _) => _hltbWindows.Remove(id);
             win.Show();
         }
 
@@ -269,32 +442,52 @@ namespace GameTracker
         private void ToggleSession_Click(object sender, RoutedEventArgs e)
         {
             e.Handled = true;
-
             if (sender is not Button btn || btn.Tag is not Guid id) return;
             var game = _games.FirstOrDefault(g => g.Id == id);
             if (game == null) return;
 
-            if (game.IsSessionActive)
-            {
-                var session = game.ActiveSession!;
-                session.End = DateTime.Now;
-                Save();
-                RefreshView();
-                StatusText.Text =
-                    $"Ended session for \"{game.Title}\"  -  played {PlaySession.FormatSpan(session.Duration)} " +
-                    $"(total {game.TotalPlayTimeDisplay})";
-            }
-            else
-            {
-                game.Sessions.Add(new PlaySession { Start = DateTime.Now });
-                var moved = game.Status != GameStatus.InProgress;
-                game.Status = GameStatus.InProgress;
-                Save();
-                RefreshView();
-                StatusText.Text = moved
-                    ? $"Started session for \"{game.Title}\"  -  now HUNTING"
-                    : $"Started session for \"{game.Title}\"  -  {DateTime.Now:h:mm tt}";
-            }
+            if (game.IsSessionActive) StopSession(game);
+            else StartSession(game);
+        }
+
+        private void StartSession(Game game)
+        {
+            _currentGameId = game.Id;
+            game.Sessions.Add(new PlaySession { Start = DateTime.Now });
+            var moved = game.Status != GameStatus.InProgress;
+            game.Status = GameStatus.InProgress;
+            Save();
+            RefreshView();
+            Services.OverlayService.Update(CurrentlyStreaming());
+            StatusText.Text = moved
+                ? $"Started session for \"{game.Title}\"  -  now HUNTING"
+                : $"Started session for \"{game.Title}\"  -  {DateTime.Now:h:mm tt}";
+        }
+
+        private void StopSession(Game game)
+        {
+            var session = game.ActiveSession;
+            if (session == null) return;
+            session.End = DateTime.Now;
+            Save();
+            RefreshView();
+            Services.OverlayService.Update(CurrentlyStreaming());
+            StatusText.Text =
+                $"Ended session for \"{game.Title}\"  -  played {PlaySession.FormatSpan(session.Duration)} " +
+                $"(total {game.TotalPlayTimeDisplay})";
+        }
+
+        private void Spin_Click(object sender, RoutedEventArgs e)
+        {
+            var dormant = _games.Where(g => g.Status == GameStatus.NotStarted).ToList();
+            var win = new Views.SpinnerWindow(dormant, game => StartSession(game)) { Owner = this };
+            win.ShowDialog();
+        }
+
+        private void Recap_Click(object sender, RoutedEventArgs e)
+        {
+            var win = new Views.RecapWindow(_games) { Owner = this };
+            win.Show();
         }
 
         private void OpenEditDialog(Guid id)

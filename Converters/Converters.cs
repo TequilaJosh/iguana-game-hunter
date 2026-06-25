@@ -6,6 +6,25 @@ using System.Windows.Media;
 
 namespace GameTracker.Converters
 {
+    // Formats a clip's offset into its session ("stream time") from the marker
+    // timestamp [0] and the session start [1].
+    public class MarkerOffsetConverter : IMultiValueConverter
+    {
+        public object Convert(object[] values, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (values.Length >= 2 && values[0] is DateTime at && values[1] is DateTime start)
+            {
+                var t = at - start;
+                if (t < TimeSpan.Zero) t = TimeSpan.Zero;
+                return $"{(int)t.TotalHours}:{t.Minutes:00}:{t.Seconds:00}";
+            }
+            return string.Empty;
+        }
+
+        public object[] ConvertBack(object value, Type[] targetTypes, object parameter, CultureInfo culture)
+            => throw new NotImplementedException();
+    }
+
     public class RatingToStarsConverter : IValueConverter
     {
         public object Convert(object value, Type targetType, object parameter, CultureInfo culture)

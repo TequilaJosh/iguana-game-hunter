@@ -75,7 +75,16 @@ namespace GameTracker.Views
             var source = existing?.Sessions ?? new List<PlaySession>();
             _sessions = new ObservableCollection<PlaySession>(
                 source.OrderByDescending(s => s.Start)
-                      .Select(s => new PlaySession { Start = s.Start, End = s.End, Note = s.Note }));
+                      .Select(s => new PlaySession
+                      {
+                          Start = s.Start,
+                          End = s.End,
+                          Note = s.Note,
+                          GoalMinutes = s.GoalMinutes,
+                          Markers = s.Markers
+                              .Select(m => new SessionMarker { At = m.At, Text = m.Text })
+                              .ToList()
+                      }));
 
             SetupControls();
         }

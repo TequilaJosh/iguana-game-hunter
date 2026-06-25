@@ -19,6 +19,7 @@
 
     <Window.Resources>
         <converters:EmptyToVisibilityConverter x:Key="EmptyVisConverter"/>
+        <converters:MarkerOffsetConverter x:Key="MarkerOffsetConverter"/>
         <Style x:Key="LabelStyle" TargetType="TextBlock">
             <Setter Property="Foreground" Value="#7cc44a"/>
             <Setter Property="FontSize" Value="11"/>
@@ -266,6 +267,7 @@
                                                 <Grid.RowDefinitions>
                                                     <RowDefinition Height="Auto"/>
                                                     <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
                                                 </Grid.RowDefinitions>
                                                 <Grid Grid.Row="0">
                                                     <Grid.ColumnDefinitions>
@@ -313,6 +315,43 @@
                                                                IsHitTestVisible="False"
                                                                Visibility="{Binding Note, Converter={StaticResource EmptyVisConverter}}"/>
                                                 </Grid>
+                                                <ItemsControl Grid.Row="2" ItemsSource="{Binding Markers}"
+                                                              Margin="2,5,0,0">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Grid Margin="0,1">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                </Grid.ColumnDefinitions>
+                                                                <TextBlock Grid.Column="0" Text="&#128204;"
+                                                                           Foreground="#d4a437" FontSize="11"
+                                                                           Margin="0,0,6,0"/>
+                                                                <TextBlock Grid.Column="1" Foreground="#7cc44a"
+                                                                           FontFamily="Consolas" FontWeight="Bold"
+                                                                           FontSize="11" Margin="0,0,8,0"
+                                                                           ToolTip="Time into the stream (session)">
+                                                                    <TextBlock.Text>
+                                                                        <MultiBinding Converter="{StaticResource MarkerOffsetConverter}">
+                                                                            <Binding Path="At"/>
+                                                                            <Binding Path="DataContext.Start"
+                                                                                     RelativeSource="{RelativeSource AncestorType=ItemsControl}"/>
+                                                                        </MultiBinding>
+                                                                    </TextBlock.Text>
+                                                                </TextBlock>
+                                                                <TextBlock Grid.Column="2" Foreground="#506050"
+                                                                           FontSize="10" Margin="0,0,8,0"
+                                                                           VerticalAlignment="Center"
+                                                                           Text="{Binding At, StringFormat='h:mm tt'}"/>
+                                                                <TextBlock Grid.Column="3" Text="{Binding TextOrClip}"
+                                                                           Foreground="#d4a437" FontSize="11"
+                                                                           TextWrapping="Wrap"/>
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
                                             </Grid>
                                         </Border>
                                     </DataTemplate>

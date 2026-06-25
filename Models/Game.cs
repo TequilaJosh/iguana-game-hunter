@@ -12,11 +12,28 @@ namespace GameTracker.Models
         Beaten
     }
 
+    /// <summary>A timestamped moment within a session — e.g. a "clip this" marker for VOD editing.</summary>
+    public class SessionMarker
+    {
+        public DateTime At { get; set; } = DateTime.Now;
+        public string Text { get; set; } = string.Empty;
+
+        [JsonIgnore] public string TextOrClip => string.IsNullOrWhiteSpace(Text) ? "(clip)" : Text;
+
+        [JsonIgnore]
+        public string Display =>
+            $"{At:h:mm tt}  {TextOrClip}";
+    }
+
     public class PlaySession
     {
         public DateTime Start { get; set; } = DateTime.Now;
         public DateTime? End { get; set; }
         public string Note { get; set; } = string.Empty;
+        public List<SessionMarker> Markers { get; set; } = new();
+
+        // Optional stream-time goal for this session, in minutes (0 = none).
+        public double GoalMinutes { get; set; } = 0;
 
         [JsonIgnore] public bool IsActive => End == null;
         [JsonIgnore] public TimeSpan Duration => (End ?? DateTime.Now) - Start;

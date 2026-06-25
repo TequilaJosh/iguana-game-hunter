@@ -54,6 +54,12 @@ namespace GameTracker.Models
         public string Notes { get; set; } = string.Empty;
         public DateTime DateAdded { get; set; } = DateTime.Now;
 
+        // Saved place in the GameFAQs guide window (last page + scroll position).
+        public string GuideUrl { get; set; } = string.Empty;
+        public double GuideScroll { get; set; } = 0;
+
+        [JsonIgnore] public bool HasGuide => !string.IsNullOrWhiteSpace(GuideUrl);
+
         // Legacy quick-log timestamps (pre-session-tracking). Retained for back-compat.
         public List<DateTime> PlaySessions { get; set; } = new();
 

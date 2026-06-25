@@ -118,11 +118,46 @@
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="{Binding Title}"
                                    Foreground="#e8e0c4" FontSize="14" FontWeight="SemiBold"
                                    TextWrapping="Wrap" VerticalAlignment="Center"/>
-                        <Border Grid.Column="1" CornerRadius="10" Padding="7,2"
+                        <Button Grid.Column="1" Content="&#128214;"
+                                Tag="{Binding Id}" Click="OpenGuide_Click"
+                                BorderThickness="0" Padding="6,1" FontSize="12" Cursor="Hand"
+                                Margin="6,0,0,0" VerticalAlignment="Center">
+                            <Button.Style>
+                                <Style TargetType="Button">
+                                    <Setter Property="Background" Value="#1c2a1e"/>
+                                    <Setter Property="Foreground" Value="#7cc44a"/>
+                                    <Setter Property="ToolTip" Value="Find guides on GameFAQs"/>
+                                    <Setter Property="Template">
+                                        <Setter.Value>
+                                            <ControlTemplate TargetType="Button">
+                                                <Border Background="{TemplateBinding Background}" CornerRadius="3"
+                                                        Padding="{TemplateBinding Padding}"
+                                                        BorderBrush="#2e4a30" BorderThickness="1">
+                                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                                </Border>
+                                                <ControlTemplate.Triggers>
+                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                        <Setter Property="Background" Value="#243a26"/>
+                                                    </Trigger>
+                                                </ControlTemplate.Triggers>
+                                            </ControlTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasGuide}" Value="True">
+                                            <Setter Property="Foreground" Value="#d4a437"/>
+                                            <Setter Property="ToolTip" Value="Resume your saved guide"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Button.Style>
+                        </Button>
+                        <Border Grid.Column="2" CornerRadius="10" Padding="7,2"
                                 Background="#3a2a10" Margin="6,0,0,0"
                                 BorderBrush="#d4a437" BorderThickness="1"
                                 Visibility="{Binding Rating, Converter={StaticResource RatingVisConverter}}">

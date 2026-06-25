@@ -1,0 +1,130 @@
+<Window x:Class="GameTracker.Views.GuideWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        Title="Game Guides"
+        Width="920" Height="720"
+        MinWidth="520" MinHeight="420"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None" ResizeMode="CanResize"
+        Icon="/iguana-eye.ico"
+        Background="{StaticResource ScaleBrush}">
+
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="32" ResizeBorderThickness="6"
+                            GlassFrameThickness="0" CornerRadius="0"
+                            UseAeroCaptionButtons="False"/>
+    </shell:WindowChrome.WindowChrome>
+
+    <Window.Resources>
+        <Style x:Key="ToolButton" TargetType="Button">
+            <Setter Property="Background" Value="#1c2a1e"/>
+            <Setter Property="Foreground" Value="#c4d4a8"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="3"
+                                Padding="{TemplateBinding Padding}"
+                                BorderBrush="#2e4a30" BorderThickness="1">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#243a26"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ToolButtonGreen" TargetType="Button" BasedOn="{StaticResource ToolButton}">
+            <Setter Property="Background" Value="#4a7c3a"/>
+            <Setter Property="Foreground" Value="#0a1410"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="3"
+                                Padding="{TemplateBinding Padding}"
+                                BorderBrush="#7cc44a" BorderThickness="1">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#7cc44a"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Border BorderBrush="#4a7c3a" BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="32"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Title bar -->
+            <Border Grid.Row="0" Background="#0a1410"
+                    BorderBrush="#2e4a30" BorderThickness="0,0,0,1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
+                        <Image Source="/iguana-eye.ico" Width="16" Height="16" Margin="0,0,8,0"
+                               VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
+                        <TextBlock x:Name="TitleBarText" Text="GAME GUIDES" Foreground="#7cc44a"
+                                   FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal"
+                                shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                        <Button x:Name="PinButton" Content="&#128204;" Click="Pin_Click"
+                                Style="{StaticResource WindowControlButton}" ToolTip="Pin on top"/>
+                        <Button Content="&#x2715;" Click="Close_Click"
+                                Style="{StaticResource WindowCloseButton}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Toolbar -->
+            <Border Grid.Row="1" Background="#0a1410" Padding="8,6"
+                    BorderBrush="#2e4a30" BorderThickness="0,0,0,1"
+                    shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Button Grid.Column="0" Content="&#9664;" Click="Back_Click"
+                            Style="{StaticResource ToolButton}" Margin="0,0,6,0"
+                            ToolTip="Back"/>
+                    <TextBox x:Name="SearchBox" Grid.Column="1" KeyDown="SearchBox_KeyDown"
+                             Background="#142016" Foreground="#e8e0c4" BorderBrush="#2e4a30"
+                             BorderThickness="1" CaretBrush="#7cc44a" Padding="8,5" FontSize="13"
+                             VerticalContentAlignment="Center"/>
+                    <Button Grid.Column="2" Content="Search" Click="Search_Click"
+                            Style="{StaticResource ToolButtonGreen}" Margin="6,0,0,0"/>
+                    <Button Grid.Column="3" Content="&#8599; Browser" Click="OpenBrowser_Click"
+                            Style="{StaticResource ToolButton}" Margin="6,0,0,0"
+                            ToolTip="Open the current page in your web browser"/>
+                </Grid>
+            </Border>
+
+            <!-- Embedded GameFAQs -->
+            <wv2:WebView2 x:Name="Web" Grid.Row="2"/>
+        </Grid>
+    </Border>
+</Window>

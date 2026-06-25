@@ -19,6 +19,7 @@ namespace GameTracker
         private bool _isDragging;
         private readonly DispatcherTimer _liveTimer;
         private readonly Dictionary<Guid, Views.SessionWindow> _sessionWindows = new();
+        private readonly Dictionary<Guid, Views.GuideWindow> _guideWindows = new();
 
         public MainWindow()
         {
@@ -61,6 +62,34 @@ namespace GameTracker
             var win = new Views.SessionWindow(game, () => { Save(); RefreshView(); }) { Owner = this };
             _sessionWindows[id] = win;
             win.Closed += (_, _) => _sessionWindows.Remove(id);
+            win.Show();
+        }
+
+        private void OpenGuide_Click(object sender, RoutedEventArgs e)
+        {
+            e.Handled = true;
+            if (sender is not Button btn || btn.Tag is not Guid id) return;
+
+            var game = _games.FirstOrDefault(g => g.Id == id);
+            if (game == null) return;
+
+            if (_guideWindows.TryGetValue(id, out var existing))
+            {
+                existing.Activate();
+                return;
+            }
+
+            var win = new Views.GuideWindow(game.Title, game.GuideUrl, game.GuideScroll,
+                (url, scroll) =>
+                {
+                    game.GuideUrl = url;
+                    game.GuideScroll = scroll;
+                    Save();
+                    RefreshView();
+                })
+            { Owner = this };
+            _guideWindows[id] = win;
+            win.Closed += (_, _) => _guideWindows.Remove(id);
             win.Show();
         }
 

@@ -65,6 +65,8 @@ namespace GameTracker.Views
                     Rating = existing.Rating,
                     Notes = existing.Notes,
                     DateAdded = existing.DateAdded,
+                    GuideUrl = existing.GuideUrl,
+                    GuideScroll = existing.GuideScroll,
                     PlaySessions = new List<DateTime>(existing.PlaySessions)
                 }
                 : new Game();

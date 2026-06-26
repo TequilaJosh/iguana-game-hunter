@@ -115,17 +115,15 @@
                     PreviewMouseMove="GameCard_PreviewMouseMove"
                     Tag="{Binding Id}">
                 <Border.ContextMenu>
-                    <ContextMenu Background="#142016" BorderBrush="#4a7c3a" BorderThickness="1"
-                                 Foreground="#c4d4a8">
-                        <MenuItem Header="Move to DORMANT" Click="MoveToDormant_Click"
-                                  Foreground="Black"/>
-                        <MenuItem Header="Move to HUNTING" Click="MoveToHunting_Click"
-                                  Foreground="Black"/>
-                        <MenuItem Header="Move to DEVOURED" Click="MoveToDevoured_Click"
-                                  Foreground="Black"/>
+                    <ContextMenu>
+                        <MenuItem Header="Move to DORMANT" Click="MoveToDormant_Click"/>
+                        <MenuItem Header="Move to HUNTING" Click="MoveToHunting_Click"/>
+                        <MenuItem Header="Move to DEVOURED" Click="MoveToDevoured_Click"/>
                         <Separator/>
-                        <MenuItem Header="Shed" Click="RemoveGame_Click"
-                                  Foreground="Black" FontWeight="Bold"/>
+                        <MenuItem Header="🎡 Wheel…" Click="OpenWheel_Click"/>
+                        <Separator/>
+                        <MenuItem Header="Shed" Click="RemoveGame_Click" FontWeight="Bold"
+                                  Foreground="#e89080"/>
                     </ContextMenu>
                 </Border.ContextMenu>
                 <Border.InputBindings>
@@ -355,6 +353,10 @@
                 </StackPanel>
                 <StackPanel Grid.Column="2" Orientation="Horizontal"
                             shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Button Content="?" Click="Help_Click"
+                            Style="{StaticResource WindowControlButton}"
+                            FontFamily="Segoe UI" FontSize="13" FontWeight="Bold"
+                            ToolTip="Help &amp; keyboard shortcuts"/>
                     <Button Content="OBS" Click="Overlay_Click"
                             Style="{StaticResource WindowControlButton}"
                             FontFamily="Segoe UI" FontSize="10" FontWeight="Bold"

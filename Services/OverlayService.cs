@@ -1,5 +1,7 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using GameTracker.Models;
 
 namespace GameTracker.Services
@@ -26,9 +28,8 @@ namespace GameTracker.Services
             try
             {
                 Directory.CreateDirectory(Folder);
-                var readme = Path.Combine(Folder, "README.txt");
-                if (!File.Exists(readme))
-                    File.WriteAllText(readme, ReadmeText);
+                // Always refresh the README so it reflects the current overlay files.
+                File.WriteAllText(Path.Combine(Folder, "README.txt"), ReadmeText);
                 Update(null); // write idle/empty files
             }
             catch { /* best-effort */ }
@@ -45,9 +46,10 @@ namespace GameTracker.Services
                 string requester = live ? active!.Requester : string.Empty;
                 string elapsed = live && session != null ? Format(session.Duration) : string.Empty;
                 string status = live ? "Now Playing" : "Offline";
+                var challenges = live ? active!.WheelResults : new List<string>();
 
                 // Only rewrite when something changed (keeps idle quiet; ticks while live).
-                var sig = $"{live}|{title}|{requester}|{elapsed}";
+                var sig = $"{live}|{title}|{requester}|{elapsed}|{string.Join("␟", challenges)}";
                 if (sig == _lastSignature) return;
                 _lastSignature = sig;
 
@@ -65,6 +67,11 @@ namespace GameTracker.Services
                 Write("status.txt", status);
                 Write("now_playing.txt", combined);
                 Write("overlay.html", BuildHtml(live, title, elapsed, requester));
+
+                // Challenges (rolled from the game's wheel).
+                Write("challenges.txt", string.Join(Environment.NewLine,
+                    challenges.Select((c, i) => $"{i + 1}. {c}")));
+                Write("challenges.html", BuildChallengesHtml(challenges));
             }
             catch { /* best-effort */ }
         }
@@ -112,6 +119,41 @@ namespace GameTracker.Services
 "</style></head><body>" + body + "</body></html>";
         }
 
+        private static string BuildChallengesHtml(IReadOnlyList<string> challenges)
+        {
+            string body;
+            if (challenges.Count == 0)
+            {
+                body = string.Empty; // transparent when there are no active challenges
+            }
+            else
+            {
+                var rows = string.Concat(challenges.Select((c, i) =>
+                    $"<div class=\"row\"><span class=\"num\">{i + 1}</span>" +
+                    $"<span class=\"txt\">{Enc(c)}</span></div>"));
+                body =
+                    "<div class=\"card\">" +
+                    "<div class=\"head\">\U0001F3A1 CHALLENGES</div>" +
+                    rows +
+                    "</div>";
+            }
+
+            return
+"<!DOCTYPE html><html><head><meta charset=\"utf-8\">" +
+"<meta http-equiv=\"refresh\" content=\"1\">" +
+"<style>" +
+"html,body{margin:0;padding:8px;background:transparent;overflow:hidden;" +
+"font-family:'Segoe UI',Segoe,sans-serif;}" +
+".card{display:inline-block;min-width:240px;padding:12px 16px;border-radius:12px;" +
+"background:rgba(10,20,16,0.85);border:2px solid #4a7c3a;box-shadow:0 4px 18px rgba(0,0,0,0.5);}" +
+".head{font-size:15px;font-weight:700;color:#d4a437;letter-spacing:1px;margin-bottom:8px;}" +
+".row{display:flex;align-items:flex-start;margin:5px 0;}" +
+".num{min-width:22px;height:22px;border-radius:50%;background:#243a26;color:#7cc44a;" +
+"font-weight:700;font-size:13px;text-align:center;line-height:22px;margin-right:10px;}" +
+".txt{color:#e8e0c4;font-size:18px;font-weight:600;line-height:22px;}" +
+"</style></head><body>" + body + "</body></html>";
+        }
+
         private static string Enc(string s) => (s ?? string.Empty)
             .Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;");
 
@@ -134,6 +176,12 @@ OBS - Browser source (styled card):
   Add a Browser source -> check ""Local file"" -> select overlay.html
   Set width ~600, height ~120. It has a transparent background and shows
   nothing while offline.
+
+Challenges (from a game's custom wheel):
+    challenges.txt  - the rolled challenges, numbered, one per line
+    challenges.html - a styled Browser-source card listing current challenges
+  Open a game's wheel (right-click a card -> Wheel) and spin to add challenges.
+  They appear here for whichever game's session is currently running.
 
 Start a session in the app (the Start button on a game card) and these update live.
 ";

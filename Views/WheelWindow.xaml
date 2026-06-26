@@ -1,0 +1,289 @@
+<Window x:Class="GameTracker.Views.WheelWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="Wheel"
+        Width="820" Height="640"
+        MinWidth="620" MinHeight="540"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None" ResizeMode="CanResize"
+        Icon="/iguana-eye.ico"
+        Background="{StaticResource ScaleBrush}">
+
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="32" ResizeBorderThickness="6"
+                            GlassFrameThickness="0" CornerRadius="0"
+                            UseAeroCaptionButtons="False"/>
+    </shell:WindowChrome.WindowChrome>
+
+    <Window.Resources>
+        <Style x:Key="WheelBtn" TargetType="Button">
+            <Setter Property="Background" Value="#1c2a1e"/>
+            <Setter Property="Foreground" Value="#c4d4a8"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="10,6"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="4"
+                                Padding="{TemplateBinding Padding}"
+                                BorderBrush="#2e4a30" BorderThickness="1">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#243a26"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Border BorderBrush="#4a7c3a" BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="32"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Title bar -->
+            <Border Grid.Row="0" Background="#0a1410"
+                    BorderBrush="#2e4a30" BorderThickness="0,0,0,1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
+                        <Image Source="/iguana-eye.ico" Width="16" Height="16" Margin="0,0,8,0"
+                               VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
+                        <TextBlock x:Name="TitleBarText" Text="WHEEL" Foreground="#7cc44a"
+                                   FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal"
+                                shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                        <Button x:Name="PinButton" Content="&#128204;" Click="Pin_Click"
+                                Style="{StaticResource WindowControlButton}" ToolTip="Pin on top"/>
+                        <Button Content="&#x2715;" Click="Close_Click"
+                                Style="{StaticResource WindowCloseButton}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Wheel + editor -->
+            <Grid Grid.Row="1" Margin="16,16,16,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Wheel area -->
+                <Grid x:Name="WheelArea" Grid.Column="0" ClipToBounds="False">
+                    <Canvas x:Name="WheelCanvas" Width="360" Height="360"
+                            HorizontalAlignment="Center" VerticalAlignment="Center"
+                            RenderTransformOrigin="0.5,0.5">
+                        <Canvas.RenderTransform>
+                            <RotateTransform x:Name="WheelRotate" Angle="0"/>
+                        </Canvas.RenderTransform>
+                    </Canvas>
+                    <!-- Fixed pointer at top -->
+                    <Path x:Name="Pointer" Data="M -14,0 L 14,0 L 0,22 Z"
+                          Fill="#d4a437" Stroke="#0a1410" StrokeThickness="1.5"
+                          HorizontalAlignment="Center" VerticalAlignment="Top"
+                          Margin="0,2,0,0"/>
+                    <TextBlock x:Name="EmptyHint" Text="Add some items →"
+                               Foreground="#7a9070" FontSize="14"
+                               HorizontalAlignment="Center" VerticalAlignment="Center"
+                               Visibility="Collapsed"/>
+                </Grid>
+
+                <!-- Items editor + rolled challenges (custom wheel only) -->
+                <Border x:Name="EditorPanel" Grid.Column="1" Width="250" Margin="14,0,0,0"
+                        Background="#0f1812" BorderBrush="#2e4a30" BorderThickness="1"
+                        CornerRadius="6" Visibility="Collapsed">
+                    <Grid Margin="10">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Text="WHEEL ITEMS" Foreground="#7cc44a"
+                                   FontSize="11" FontWeight="Bold" Margin="0,0,0,8"/>
+                        <Grid Grid.Row="1" Margin="0,0,0,8">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBox x:Name="AddItemBox" KeyDown="AddItemBox_KeyDown"
+                                     Background="#142016" Foreground="#e8e0c4" BorderBrush="#2e4a30"
+                                     BorderThickness="1" CaretBrush="#7cc44a" Padding="6,5" FontSize="12"
+                                     VerticalContentAlignment="Center"/>
+                            <Button Grid.Column="1" Content="+" Click="AddItem_Click"
+                                    Style="{StaticResource WheelBtn}" Margin="6,0,0,0"
+                                    Padding="10,5" FontWeight="Bold"/>
+                        </Grid>
+                        <ScrollViewer Grid.Row="2" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl x:Name="ItemsList">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Grid Margin="0,2">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="{Binding}" Foreground="#c4d4a8" FontSize="12"
+                                                       VerticalAlignment="Center" TextTrimming="CharacterEllipsis"/>
+                                            <Button Grid.Column="1" Content="&#x2715;" Tag="{Binding}"
+                                                    Click="RemoveItem_Click" Foreground="#9a3a2a"
+                                                    Background="Transparent" BorderThickness="0"
+                                                    FontSize="11" Cursor="Hand" Padding="4,0">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border Background="Transparent">
+                                                            <ContentPresenter/>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter Property="Foreground" Value="#e89080"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+                                        </Grid>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+
+                        <!-- Rolled challenges header -->
+                        <Grid Grid.Row="3" Margin="0,10,0,6">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Text="ROLLED" Foreground="#d4a437" FontSize="11"
+                                       FontWeight="Bold" VerticalAlignment="Center"/>
+                            <Button Grid.Column="1" Content="Clear" Click="ClearResults_Click"
+                                    Style="{StaticResource WheelBtn}" Padding="8,2" FontSize="11"/>
+                        </Grid>
+                        <Border Grid.Row="4" Background="#0a1410" BorderBrush="#2e4a30"
+                                BorderThickness="1" CornerRadius="4">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <StackPanel>
+                                    <TextBlock x:Name="NoResultsText" Text="Spin to add challenges"
+                                               Foreground="#506050" FontSize="11" Margin="8,8"/>
+                                    <ItemsControl x:Name="ResultsList">
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="8,3">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <TextBlock Grid.Column="0" Text="{Binding Num}"
+                                                               Foreground="#7cc44a" FontWeight="Bold"
+                                                               FontSize="12" Margin="0,0,6,0"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding Text}"
+                                                               Foreground="#e8e0c4" FontSize="12"
+                                                               TextWrapping="Wrap"/>
+                                                    <Button Grid.Column="2" Content="&#x2715;" Tag="{Binding Index}"
+                                                            Click="RemoveResult_Click" Foreground="#9a3a2a"
+                                                            Background="Transparent" BorderThickness="0"
+                                                            FontSize="11" Cursor="Hand" Padding="4,0"
+                                                            ToolTip="Remove (e.g. challenge done)">
+                                                        <Button.Template>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <Border Background="Transparent">
+                                                                    <ContentPresenter/>
+                                                                </Border>
+                                                                <ControlTemplate.Triggers>
+                                                                    <Trigger Property="IsMouseOver" Value="True">
+                                                                        <Setter Property="Foreground" Value="#e89080"/>
+                                                                    </Trigger>
+                                                                </ControlTemplate.Triggers>
+                                                            </ControlTemplate>
+                                                        </Button.Template>
+                                                    </Button>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+                                </StackPanel>
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- Result -->
+            <TextBlock x:Name="ResultText" Grid.Row="2" Text="Press Spin"
+                       Foreground="#e8e0c4" FontSize="20" FontWeight="Bold"
+                       TextAlignment="Center" TextWrapping="Wrap" Margin="16,0,16,10"/>
+
+            <!-- Buttons -->
+            <Grid Grid.Row="3" Margin="16,0,16,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Button x:Name="SpinButton" Grid.Column="0" Content="&#127922; Spin" Click="Spin_Click"
+                        Foreground="#0a1410" Background="#4a7c3a" BorderThickness="0"
+                        Padding="12,11" FontSize="15" FontWeight="Bold" Cursor="Hand">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="{TemplateBinding Background}" CornerRadius="4"
+                                    Padding="{TemplateBinding Padding}"
+                                    BorderBrush="#7cc44a" BorderThickness="1">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#7cc44a"/>
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.5"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+                <Button x:Name="ChooseButton" Grid.Column="2" Content="Choose" Click="Choose_Click"
+                        IsEnabled="False" Visibility="Collapsed"
+                        Foreground="#d4a437" Background="#3a2a10" BorderThickness="0"
+                        Padding="14,11" FontSize="15" FontWeight="Bold" Cursor="Hand">
+                    <Button.Template>
+                        <ControlTemplate TargetType="Button">
+                            <Border Background="{TemplateBinding Background}" CornerRadius="4"
+                                    Padding="{TemplateBinding Padding}"
+                                    BorderBrush="#d4a437" BorderThickness="1">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter Property="Background" Value="#5a3a1a"/>
+                                </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter Property="Opacity" Value="0.4"/>
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

@@ -59,9 +59,9 @@ namespace GameTracker
         #region Global hotkeys
 
         private const int WM_HOTKEY = 0x0312;
-        private const uint MOD_ALT = 0x0001, MOD_CONTROL = 0x0002;
         private const int HK_TOGGLE = 1, HK_CLIP = 2, HK_NOTE = 3;
         private IntPtr _hwnd;
+        private HotkeyConfig _hotkeys = new();
 
         [DllImport("user32.dll")]
         private static extern bool RegisterHotKey(IntPtr hWnd, int id, uint fsModifiers, uint vk);
@@ -74,10 +74,25 @@ namespace GameTracker
             _hwnd = new WindowInteropHelper(this).Handle;
             HwndSource.FromHwnd(_hwnd)?.AddHook(WndHook);
 
-            // Ctrl+Alt+S start/stop, Ctrl+Alt+C clip, Ctrl+Alt+N quick note.
-            RegisterHotKey(_hwnd, HK_TOGGLE, MOD_CONTROL | MOD_ALT, 0x53);
-            RegisterHotKey(_hwnd, HK_CLIP, MOD_CONTROL | MOD_ALT, 0x43);
-            RegisterHotKey(_hwnd, HK_NOTE, MOD_CONTROL | MOD_ALT, 0x4E);
+            _hotkeys = Services.SettingsService.LoadHotkeys();
+            RegisterHotkeys();
+        }
+
+        private void RegisterHotkeys()
+        {
+            if (_hwnd == IntPtr.Zero) return;
+            UnregisterHotkeys();
+            RegisterHotKey(_hwnd, HK_TOGGLE, _hotkeys.Toggle.Win32Modifiers, _hotkeys.Toggle.VirtualKey);
+            RegisterHotKey(_hwnd, HK_CLIP, _hotkeys.Clip.Win32Modifiers, _hotkeys.Clip.VirtualKey);
+            RegisterHotKey(_hwnd, HK_NOTE, _hotkeys.Note.Win32Modifiers, _hotkeys.Note.VirtualKey);
+        }
+
+        private void UnregisterHotkeys()
+        {
+            if (_hwnd == IntPtr.Zero) return;
+            UnregisterHotKey(_hwnd, HK_TOGGLE);
+            UnregisterHotKey(_hwnd, HK_CLIP);
+            UnregisterHotKey(_hwnd, HK_NOTE);
         }
 
         private IntPtr WndHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
@@ -96,12 +111,7 @@ namespace GameTracker
 
         protected override void OnClosed(EventArgs e)
         {
-            if (_hwnd != IntPtr.Zero)
-            {
-                UnregisterHotKey(_hwnd, HK_TOGGLE);
-                UnregisterHotKey(_hwnd, HK_CLIP);
-                UnregisterHotKey(_hwnd, HK_NOTE);
-            }
+            UnregisterHotkeys();
             base.OnClosed(e);
         }
 
@@ -169,6 +179,24 @@ namespace GameTracker
         }
 
         #endregion
+
+        private Views.HelpWindow? _helpWindow;
+
+        private void Help_Click(object sender, RoutedEventArgs e)
+        {
+            if (_helpWindow != null) { _helpWindow.Activate(); return; }
+
+            _helpWindow = new Views.HelpWindow(_hotkeys,
+                onBeginCapture: UnregisterHotkeys,           // free the keys so the new combo can be read
+                onApply: () =>
+                {
+                    Services.SettingsService.SaveHotkeys(_hotkeys);
+                    RegisterHotkeys();
+                })
+            { Owner = this };
+            _helpWindow.Closed += (_, _) => _helpWindow = null;
+            _helpWindow.Show();
+        }
 
         private void Overlay_Click(object sender, RoutedEventArgs e)
         {
@@ -327,8 +355,21 @@ namespace GameTracker
             }
             if (sender is Border border && border.Tag is Guid id)
             {
-                OpenEditDialog(id);
+                OpenInfoDialog(id);
             }
+        }
+
+        private void OpenInfoDialog(Guid id)
+        {
+            var game = _games.FirstOrDefault(g => g.Id == id);
+            if (game == null) return;
+
+            var info = new Views.GameInfoWindow(game) { Owner = this };
+            info.ShowDialog();
+
+            // "Edit" in the info window hands off to the full edit dialog.
+            if (info.EditRequested)
+                OpenEditDialog(id);
         }
 
         private void GameCard_PreviewMouseDown(object sender, MouseButtonEventArgs e)
@@ -480,8 +521,56 @@ namespace GameTracker
         private void Spin_Click(object sender, RoutedEventArgs e)
         {
             var dormant = _games.Where(g => g.Status == GameStatus.NotStarted).ToList();
-            var win = new Views.SpinnerWindow(dormant, game => StartSession(game)) { Owner = this };
+            var titles = dormant.Select(g => g.Title).ToList();
+            var win = new Views.WheelWindow("Spin the Backlog", titles, editable: false,
+                onItemsChanged: null,
+                onChosen: i => { if (i >= 0 && i < dormant.Count) StartSession(dormant[i]); },
+                chooseButtonText: "▶ Start playing")
+            { Owner = this };
             win.ShowDialog();
+        }
+
+        private void OpenWheel_Click(object sender, RoutedEventArgs e)
+        {
+            if (GetMenuItemGameId(sender) is not Guid id) return;
+            var game = _games.FirstOrDefault(g => g.Id == id);
+            if (game == null) return;
+
+            var win = new Views.WheelWindow($"{game.Title} Wheel", game.WheelItems, editable: true,
+                onItemsChanged: items => { game.WheelItems = new List<string>(items); Save(); },
+                onChosen: null, chooseButtonText: null,
+                initialResults: game.WheelResults,
+                onResultsChanged: results =>
+                {
+                    game.WheelResults = new List<string>(results);
+                    Save();
+                    Services.OverlayService.Update(CurrentlyStreaming());
+                },
+                onRolled: challenge => LogChallengeToSession(game, challenge))
+            { Owner = this };
+            win.Show();
+        }
+
+        // Record a rolled wheel challenge into the game's session notes.
+        private void LogChallengeToSession(Game game, string challenge)
+        {
+            var line = $"🎡 {challenge}";
+
+            // If the live pop-out is open, append through it so its notes box stays in sync.
+            if (_sessionWindows.TryGetValue(game.Id, out var sw))
+            {
+                sw.AppendNote(line);
+                return;
+            }
+
+            var session = game.ActiveSession
+                          ?? game.Sessions.OrderByDescending(s => s.Start).FirstOrDefault();
+            if (session == null) return;
+
+            session.Note = string.IsNullOrWhiteSpace(session.Note)
+                ? line
+                : session.Note.TrimEnd() + Environment.NewLine + line;
+            Save();
         }
 
         private void Recap_Click(object sender, RoutedEventArgs e)

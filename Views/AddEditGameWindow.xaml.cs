@@ -67,6 +67,8 @@ namespace GameTracker.Views
                     DateAdded = existing.DateAdded,
                     GuideUrl = existing.GuideUrl,
                     GuideScroll = existing.GuideScroll,
+                    WheelItems = new List<string>(existing.WheelItems),
+                    WheelResults = new List<string>(existing.WheelResults),
                     PlaySessions = new List<DateTime>(existing.PlaySessions)
                 }
                 : new Game();

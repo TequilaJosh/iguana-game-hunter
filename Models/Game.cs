@@ -75,6 +75,12 @@ namespace GameTracker.Models
         public string GuideUrl { get; set; } = string.Empty;
         public double GuideScroll { get; set; } = 0;
 
+        // User-defined options for this game's custom randomization wheel.
+        public List<string> WheelItems { get; set; } = new();
+
+        // Results rolled from the wheel — the active "challenges" list (also shown on the OBS overlay).
+        public List<string> WheelResults { get; set; } = new();
+
         [JsonIgnore] public bool HasGuide => !string.IsNullOrWhiteSpace(GuideUrl);
 
         // Legacy quick-log timestamps (pre-session-tracking). Retained for back-compat.

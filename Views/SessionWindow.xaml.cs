@@ -148,6 +148,16 @@ namespace GameTracker.Views
             _dirty = true;
         }
 
+        /// <summary>Append a line to the session notes (e.g. a rolled wheel challenge).</summary>
+        public void AppendNote(string line)
+        {
+            NotesBox.Text = string.IsNullOrWhiteSpace(NotesBox.Text)
+                ? line
+                : NotesBox.Text.TrimEnd() + Environment.NewLine + line;
+            NotesBox.CaretIndex = NotesBox.Text.Length;
+            Persist();
+        }
+
         private void Clip_Click(object sender, RoutedEventArgs e) => AddMarker();
 
         private void ClipBox_KeyDown(object sender, KeyEventArgs e)

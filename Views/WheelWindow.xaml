@@ -53,6 +53,7 @@
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <!-- Title bar -->
@@ -87,7 +88,8 @@
                 </Grid.ColumnDefinitions>
 
                 <!-- Wheel area -->
-                <Grid x:Name="WheelArea" Grid.Column="0" ClipToBounds="False">
+                <Grid x:Name="WheelArea" Grid.Column="0" ClipToBounds="False"
+                      AllowDrop="True" DragOver="WheelArea_DragOver" Drop="WheelArea_Drop">
                     <Canvas x:Name="WheelCanvas" Width="360" Height="360"
                             HorizontalAlignment="Center" VerticalAlignment="Center"
                             RenderTransformOrigin="0.5,0.5">
@@ -105,6 +107,72 @@
                                HorizontalAlignment="Center" VerticalAlignment="Center"
                                Visibility="Collapsed"/>
                 </Grid>
+
+                <!-- Game picker (backlog wheel customize) -->
+                <Border x:Name="CustomizePanel" Grid.Column="1" Width="260" Margin="14,0,0,0"
+                        Background="#0f1812" BorderBrush="#2e4a30" BorderThickness="1"
+                        CornerRadius="6" Visibility="Collapsed">
+                    <Grid Margin="10">
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+                        <TextBlock Grid.Row="0" Text="ADD GAMES" Foreground="#7cc44a"
+                                   FontSize="11" FontWeight="Bold" Margin="0,0,0,2"/>
+                        <TextBlock Grid.Row="1" Text="Click to add/remove, or drag onto the wheel."
+                                   Foreground="#7a9070" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8"/>
+                        <ComboBox x:Name="FilterCombo" Grid.Row="2" Margin="0,0,0,8"
+                                  SelectionChanged="FilterCombo_SelectionChanged"/>
+                        <Border Grid.Row="3" Background="#0a1410" BorderBrush="#2e4a30"
+                                BorderThickness="1" CornerRadius="4">
+                            <ScrollViewer VerticalScrollBarVisibility="Auto">
+                                <ItemsControl x:Name="GameList">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Button Tag="{Binding Game}" Click="ToggleGame_Click"
+                                                    PreviewMouseLeftButtonDown="GameRow_PreviewMouseDown"
+                                                    PreviewMouseMove="GameRow_PreviewMouseMove"
+                                                    HorizontalContentAlignment="Stretch"
+                                                    Background="Transparent" BorderThickness="0"
+                                                    Cursor="Hand" Padding="8,5">
+                                                <Button.Template>
+                                                    <ControlTemplate TargetType="Button">
+                                                        <Border x:Name="rb" Background="{TemplateBinding Background}"
+                                                                CornerRadius="3" Padding="{TemplateBinding Padding}">
+                                                            <Grid>
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="16"/>
+                                                                    <ColumnDefinition Width="*"/>
+                                                                    <ColumnDefinition Width="Auto"/>
+                                                                </Grid.ColumnDefinitions>
+                                                                <TextBlock Grid.Column="0" Text="{Binding Mark}"
+                                                                           Foreground="#7cc44a" FontWeight="Bold"
+                                                                           FontSize="12"/>
+                                                                <TextBlock Grid.Column="1" Text="{Binding Title}"
+                                                                           Foreground="#c4d4a8" FontSize="12"
+                                                                           TextTrimming="CharacterEllipsis"/>
+                                                                <TextBlock Grid.Column="2" Text="{Binding Tag}"
+                                                                           Foreground="#506050" FontSize="10"
+                                                                           Margin="6,0,0,0" VerticalAlignment="Center"/>
+                                                            </Grid>
+                                                        </Border>
+                                                        <ControlTemplate.Triggers>
+                                                            <Trigger Property="IsMouseOver" Value="True">
+                                                                <Setter TargetName="rb" Property="Background" Value="#1c2a1e"/>
+                                                            </Trigger>
+                                                        </ControlTemplate.Triggers>
+                                                    </ControlTemplate>
+                                                </Button.Template>
+                                            </Button>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+                            </ScrollViewer>
+                        </Border>
+                    </Grid>
+                </Border>
 
                 <!-- Items editor + rolled challenges (custom wheel only) -->
                 <Border x:Name="EditorPanel" Grid.Column="1" Width="250" Margin="14,0,0,0"
@@ -233,8 +301,30 @@
                        Foreground="#e8e0c4" FontSize="20" FontWeight="Bold"
                        TextAlignment="Center" TextWrapping="Wrap" Margin="16,0,16,10"/>
 
+            <!-- Customize wheel (backlog picker only) -->
+            <Button x:Name="CustomizeButton" Grid.Row="3" Content="&#9881; Customize Wheel"
+                    Click="Customize_Click" Visibility="Collapsed"
+                    Margin="16,0,16,8" HorizontalContentAlignment="Center"
+                    Foreground="#c4d4a8" Background="#1c2a1e" BorderThickness="0"
+                    Padding="10,8" FontSize="13" Cursor="Hand">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="4"
+                                Padding="{TemplateBinding Padding}"
+                                BorderBrush="#2e4a30" BorderThickness="1">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#243a26"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+
             <!-- Buttons -->
-            <Grid Grid.Row="3" Margin="16,0,16,16">
+            <Grid Grid.Row="4" Margin="16,0,16,16">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="8"/>

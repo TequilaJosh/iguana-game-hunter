@@ -28,6 +28,14 @@ namespace GameTracker.Views
         private readonly Action<int>? _onChosen;
         private readonly Random _rng = new();
 
+        // Backlog game-picker mode.
+        private readonly bool _gameMode;
+        private readonly List<WheelGame> _allGames = new();
+        private readonly List<WheelGame> _selected = new();
+        private readonly Action<Guid>? _onStartGame;
+        private WheelGame? _winnerGame;
+        private Point _dragStart;
+
         private bool _pinned;
         private bool _spinning;
         private double _currentAngle;
@@ -45,7 +53,9 @@ namespace GameTracker.Views
                            string? chooseButtonText,
                            IEnumerable<string>? initialResults = null,
                            Action<List<string>>? onResultsChanged = null,
-                           Action<string>? onRolled = null)
+                           Action<string>? onRolled = null,
+                           List<WheelGame>? games = null,
+                           Action<Guid>? onStartGame = null)
         {
             InitializeComponent();
 
@@ -59,6 +69,22 @@ namespace GameTracker.Views
             _onChosen = onChosen;
 
             TitleBarText.Text = header.ToUpperInvariant();
+
+            if (games != null)
+            {
+                _gameMode = true;
+                _onStartGame = onStartGame;
+                _allGames = games;
+                _selected.AddRange(games.Where(g => g.IsDefault));
+                SyncItemsFromSelected();
+
+                CustomizeButton.Visibility = Visibility.Visible;
+                FilterCombo.ItemsSource = new[] { "All" }
+                    .Concat(Models.SuggestionTypes.All)
+                    .Concat(new[] { "Dormant", "Hunting", "Devoured" })
+                    .ToList();
+                FilterCombo.SelectedIndex = 0;
+            }
 
             if (editable)
             {
@@ -218,6 +244,9 @@ namespace GameTracker.Views
             if (ChooseButton.Visibility == Visibility.Visible)
                 ChooseButton.IsEnabled = true;
 
+            if (_gameMode)
+                _winnerGame = _winnerIndex < _selected.Count ? _selected[_winnerIndex] : null;
+
             // Record each spin into the running challenges group.
             if (_recordResults)
             {
@@ -230,9 +259,124 @@ namespace GameTracker.Views
 
         private void Choose_Click(object sender, RoutedEventArgs e)
         {
+            if (_gameMode)
+            {
+                if (_winnerGame != null) { _onStartGame?.Invoke(_winnerGame.Id); Close(); }
+                return;
+            }
             if (_winnerIndex < 0) return;
             _onChosen?.Invoke(_winnerIndex);
             Close();
+        }
+
+        // ----- backlog game picker -----
+
+        private void SyncItemsFromSelected()
+        {
+            _items.Clear();
+            _items.AddRange(_selected.Select(g => g.Title));
+        }
+
+        private void Customize_Click(object sender, RoutedEventArgs e)
+        {
+            bool show = CustomizePanel.Visibility != Visibility.Visible;
+            CustomizePanel.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+            CustomizeButton.Content = show ? "⚙ Hide" : "⚙ Customize Wheel";
+            if (show) RefreshGameList();
+        }
+
+        private void FilterCombo_SelectionChanged(object sender, SelectionChangedEventArgs e) =>
+            RefreshGameList();
+
+        private void RefreshGameList()
+        {
+            if (!_gameMode) return;
+            var filter = FilterCombo.SelectedItem as string ?? "All";
+            bool isStatus = filter is "Dormant" or "Hunting" or "Devoured";
+            var rows = _allGames
+                .Where(g => filter == "All"
+                            || (isStatus ? g.StatusLabel == filter : g.SuggestionType == filter))
+                .OrderBy(g => g.Title, StringComparer.OrdinalIgnoreCase)
+                .Select(g => new GameRow
+                {
+                    Game = g,
+                    Title = g.Title,
+                    Tag = g.SuggestionType,
+                    OnWheel = _selected.Any(s => s.Id == g.Id),
+                })
+                .ToList();
+            GameList.ItemsSource = rows;
+        }
+
+        private void ToggleGame_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is Button b && b.Tag is WheelGame g)
+            {
+                if (_selected.Any(s => s.Id == g.Id))
+                    _selected.RemoveAll(s => s.Id == g.Id);
+                else
+                    _selected.Add(g);
+                RebuildFromSelected();
+            }
+        }
+
+        private void GameRow_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            _dragStart = e.GetPosition(null);
+        }
+
+        private void GameRow_PreviewMouseMove(object sender, MouseEventArgs e)
+        {
+            if (e.LeftButton != MouseButtonState.Pressed) return;
+            var pos = e.GetPosition(null);
+            if (Math.Abs(pos.X - _dragStart.X) < SystemParameters.MinimumHorizontalDragDistance &&
+                Math.Abs(pos.Y - _dragStart.Y) < SystemParameters.MinimumVerticalDragDistance)
+                return;
+            if (sender is Button b && b.Tag is WheelGame g)
+                DragDrop.DoDragDrop(b, g.Id.ToString(), DragDropEffects.Copy);
+        }
+
+        private void WheelArea_DragOver(object sender, DragEventArgs e)
+        {
+            e.Effects = e.Data.GetDataPresent(DataFormats.StringFormat)
+                ? DragDropEffects.Copy : DragDropEffects.None;
+            e.Handled = true;
+        }
+
+        private void WheelArea_Drop(object sender, DragEventArgs e)
+        {
+            if (!_gameMode) return;
+            if (e.Data.GetData(DataFormats.StringFormat) is string idStr &&
+                Guid.TryParse(idStr, out var id))
+            {
+                var g = _allGames.FirstOrDefault(x => x.Id == id);
+                if (g != null && _selected.All(s => s.Id != id))
+                {
+                    _selected.Add(g);
+                    RebuildFromSelected();
+                }
+            }
+        }
+
+        private void RebuildFromSelected()
+        {
+            SyncItemsFromSelected();
+            BuildWheel();
+            RefreshGameList();
+            _winnerGame = null;
+            _winnerIndex = -1;
+            ResultText.Text = "Press Spin";
+            SpinButton.Content = "🎲 Spin";
+            ChooseButton.IsEnabled = false;
+        }
+
+        public class GameRow
+        {
+            public WheelGame Game { get; set; } = null!;
+            public string Title { get; set; } = string.Empty;
+            public string Tag { get; set; } = string.Empty;
+            public bool OnWheel { get; set; }
+            public string Mark => OnWheel ? "✓" : "+";
         }
 
         // ----- editable items -----
@@ -321,5 +465,15 @@ namespace GameTracker.Views
         }
 
         private void Close_Click(object sender, RoutedEventArgs e) => Close();
+    }
+
+    /// <summary>A game offered to the backlog picker wheel.</summary>
+    public class WheelGame
+    {
+        public Guid Id { get; set; }
+        public string Title { get; set; } = string.Empty;
+        public string SuggestionType { get; set; } = "Suggested";
+        public string StatusLabel { get; set; } = string.Empty; // Dormant / Hunting / Devoured
+        public bool IsDefault { get; set; } // on the wheel by default (Dormant games)
     }
 }

@@ -62,6 +62,7 @@ namespace GameTracker.Views
                     Platform = existing.Platform,
                     Genre = existing.Genre,
                     Requester = existing.Requester,
+                    SuggestionType = existing.SuggestionType,
                     Rating = existing.Rating,
                     Notes = existing.Notes,
                     DateAdded = existing.DateAdded,
@@ -102,6 +103,12 @@ namespace GameTracker.Views
 
             StatusCombo.ItemsSource = new List<string> { "Not Started", "In Progress", "Beaten" };
             StatusCombo.SelectedIndex = (int)_game.Status;
+
+            SuggestionCombo.ItemsSource = SuggestionTypes.All;
+            SuggestionCombo.SelectedItem =
+                Array.IndexOf(SuggestionTypes.All, _game.SuggestionType) >= 0
+                    ? _game.SuggestionType
+                    : SuggestionTypes.Default;
 
             TitleBox.Text = _game.Title;
             PlatformCombo.Text = _game.Platform;
@@ -206,6 +213,7 @@ namespace GameTracker.Views
             _game.Platform = PlatformCombo.Text.Trim();
             _game.Genre = GenreCombo.Text.Trim();
             _game.Requester = RequesterBox.Text.Trim();
+            _game.SuggestionType = SuggestionCombo.SelectedItem as string ?? SuggestionTypes.Default;
             _game.Status = (GameStatus)StatusCombo.SelectedIndex;
             _game.Rating = (int)RatingSlider.Value;
             _game.Notes = NotesBox.Text.Trim();

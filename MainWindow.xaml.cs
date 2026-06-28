@@ -520,12 +520,32 @@ namespace GameTracker
 
         private void Spin_Click(object sender, RoutedEventArgs e)
         {
-            var dormant = _games.Where(g => g.Status == GameStatus.NotStarted).ToList();
-            var titles = dormant.Select(g => g.Title).ToList();
-            var win = new Views.WheelWindow("Spin the Backlog", titles, editable: false,
-                onItemsChanged: null,
-                onChosen: i => { if (i >= 0 && i < dormant.Count) StartSession(dormant[i]); },
-                chooseButtonText: "▶ Start playing")
+            // All games are available to the wheel; Dormant ones are on it by default.
+            var wheelGames = _games.Select(g => new Views.WheelGame
+            {
+                Id = g.Id,
+                Title = g.Title,
+                SuggestionType = string.IsNullOrWhiteSpace(g.SuggestionType)
+                    ? SuggestionTypes.Default : g.SuggestionType,
+                StatusLabel = g.Status switch
+                {
+                    GameStatus.NotStarted => "Dormant",
+                    GameStatus.InProgress => "Hunting",
+                    GameStatus.Beaten => "Devoured",
+                    _ => "",
+                },
+                IsDefault = g.Status == GameStatus.NotStarted,
+            }).ToList();
+
+            var win = new Views.WheelWindow("Spin the Backlog",
+                Array.Empty<string>(), editable: false,
+                onItemsChanged: null, onChosen: null, chooseButtonText: "▶ Start playing",
+                games: wheelGames,
+                onStartGame: id =>
+                {
+                    var game = _games.FirstOrDefault(g => g.Id == id);
+                    if (game != null) StartSession(game);
+                })
             { Owner = this };
             win.ShowDialog();
         }

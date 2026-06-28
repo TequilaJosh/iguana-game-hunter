@@ -59,6 +59,13 @@ namespace GameTracker.Models
         }
     }
 
+    /// <summary>How a game was suggested — used to filter the picker wheel.</summary>
+    public static class SuggestionTypes
+    {
+        public const string Default = "Suggested";
+        public static readonly string[] All = { "Suggested", "Point buy", "Cash buy" };
+    }
+
     public class Game
     {
         public Guid Id { get; set; } = Guid.NewGuid();
@@ -67,6 +74,7 @@ namespace GameTracker.Models
         public string Platform { get; set; } = string.Empty;
         public string Genre { get; set; } = string.Empty;
         public string Requester { get; set; } = string.Empty;
+        public string SuggestionType { get; set; } = SuggestionTypes.Default;
         public int Rating { get; set; } = 0;
         public string Notes { get; set; } = string.Empty;
         public DateTime DateAdded { get; set; } = DateTime.Now;

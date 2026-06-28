@@ -43,14 +43,14 @@ namespace GameTracker.Services.Chat
                 {
                     ws = new ClientWebSocket();
                     StatusChanged?.Invoke("Connecting…");
+                    // Documented "read chat" method: join the session listening on channel 4.
+                    // The URL alone subscribes us; no extra join frame is needed (and sending
+                    // one without an "in" channel can drop the channel-4 subscription).
                     await ws.ConnectAsync(
                         new Uri($"wss://io.socialstream.ninja/join/{_session}/4"), ct);
 
-                    var join = Encoding.UTF8.GetBytes($"{{\"join\":\"{_session}\"}}");
-                    await ws.SendAsync(join, WebSocketMessageType.Text, true, ct);
-
                     IsConnected = true;
-                    StatusChanged?.Invoke("Connected");
+                    StatusChanged?.Invoke("Connected — waiting for chat");
 
                     var buffer = new byte[16384];
                     var sb = new StringBuilder();

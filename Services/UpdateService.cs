@@ -57,7 +57,7 @@ namespace GameTracker.Services
                     $"Installed:  v{current.ToString(3)}\n" +
                     $"Available:  {tag}\n\n" +
                     (notes.Length > 0 ? $"{Truncate(notes, 400)}\n\n" : string.Empty) +
-                    "Download and install it now?";
+                    "Download and install it now? The app will update and reopen automatically.";
 
                 if (MessageBox.Show(prompt, "Update Available",
                         MessageBoxButton.YesNo, MessageBoxImage.Information) != MessageBoxResult.Yes)
@@ -85,8 +85,13 @@ namespace GameTracker.Services
                     await response.Content.CopyToAsync(fs);
                 }
 
-                // Launch the installer, then exit so it can replace the running files.
-                Process.Start(new ProcessStartInfo(destination) { UseShellExecute = true });
+                // Run the installer silently (no wizard), then exit so it can replace the
+                // running files. The installer relaunches the app when it finishes.
+                Process.Start(new ProcessStartInfo(destination)
+                {
+                    UseShellExecute = true,
+                    Arguments = "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART",
+                });
                 Application.Current.Shutdown();
             }
             catch (Exception ex)

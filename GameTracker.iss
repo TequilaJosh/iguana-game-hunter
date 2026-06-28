@@ -29,6 +29,9 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 DisableDirPage=no
 DisableProgramGroupPage=yes
+; Close the running app during a silent auto-update; we relaunch it ourselves.
+CloseApplications=yes
+RestartApplications=no
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -45,4 +48,13 @@ Name: "{group}\Uninstall {#MyAppName}";    Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#MyAppName}";        Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]
+; Interactive install: offer to launch from the finish page.
 Filename: "{app}\{#MyAppExeName}"; Description: "Launch {#MyAppName}"; Flags: nowait postinstall skipifsilent
+; Silent install (auto-update): relaunch the app automatically.
+Filename: "{app}\{#MyAppExeName}"; Flags: nowait; Check: IsSilentRun
+
+[Code]
+function IsSilentRun(): Boolean;
+begin
+  Result := WizardSilent();
+end;

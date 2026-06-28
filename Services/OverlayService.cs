@@ -2,6 +2,8 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
+using System.Text.RegularExpressions;
 using GameTracker.Models;
 
 namespace GameTracker.Services
@@ -157,6 +159,87 @@ namespace GameTracker.Services
         private static string Enc(string s) => (s ?? string.Empty)
             .Replace("&", "&amp;").Replace("<", "&lt;").Replace(">", "&gt;");
 
+        // ---------- Live chat overlay ----------
+
+        // Plain glyphs (not emoji) so we can color them ourselves — WPF renders emoji monochrome.
+        /// <summary>Per-platform symbol glyph (coloured via ChatColorHex).</summary>
+        public static string ChatSymbol(string platform) => (platform ?? string.Empty).ToLowerInvariant() switch
+        {
+            "twitch" => "♥",   // ♥
+            "youtube" => "▶",  // ▶
+            "tiktok" => "♪",   // ♪
+            "restream" => "⟳", // ⟳
+            _ => "●",          // ●
+        };
+
+        /// <summary>Per-platform brand colour for the symbol.</summary>
+        public static string ChatColorHex(string platform) => (platform ?? string.Empty).ToLowerInvariant() switch
+        {
+            "twitch" => "#9146FF",
+            "youtube" => "#FF0000",
+            "tiktok" => "#25F4EE",
+            "kick" => "#53FC18",
+            "facebook" => "#1877F2",
+            "restream" => "#1f6feb",
+            _ => "#b6e08a",
+        };
+
+        private static readonly Regex HexColor = new("^#[0-9a-fA-F]{6}$", RegexOptions.Compiled);
+
+        /// <summary>Write the recent chat messages to chat.html for an OBS Browser source.</summary>
+        public static void WriteChatHtml(IReadOnlyList<ChatMessage> messages)
+        {
+            try
+            {
+                Directory.CreateDirectory(Folder);
+
+                var rows = new StringBuilder();
+                foreach (var m in messages)
+                {
+                    var color = HexColor.IsMatch(m.UserColor ?? string.Empty) ? m.UserColor : "#b6e08a";
+                    rows.Append(
+                        "<div class=\"row\">" +
+                        $"<span class=\"sym\" style=\"color:{ChatColorHex(m.Platform)}\">{ChatSymbol(m.Platform)}</span>" +
+                        $"<span class=\"user\" style=\"color:{color}\">{Enc(m.User)}</span>" +
+                        $"<span class=\"msg\">{Enc(m.Text)}</span></div>");
+                }
+
+                File.WriteAllText(Path.Combine(Folder, "chat.html"), ChatHtml(rows.ToString()));
+            }
+            catch { /* best-effort */ }
+        }
+
+        public static void ClearChatHtml()
+        {
+            try
+            {
+                Directory.CreateDirectory(Folder);
+                File.WriteAllText(Path.Combine(Folder, "chat.html"), ChatHtml(string.Empty));
+            }
+            catch { /* best-effort */ }
+        }
+
+        private static string ChatHtml(string rows) =>
+"<!DOCTYPE html><html><head><meta charset=\"utf-8\">" +
+"<meta http-equiv=\"refresh\" content=\"1\">" +
+"<style>" +
+"html,body{margin:0;padding:0;background:transparent;overflow:hidden;" +
+"font-family:'Segoe UI',Segoe,sans-serif;}" +
+".box{position:fixed;inset:8px;background:rgba(10,20,16,0.92);border:2px solid #4a7c3a;" +
+"border-radius:12px;box-shadow:0 6px 22px rgba(0,0,0,0.55);box-sizing:border-box;" +
+"display:flex;flex-direction:column;overflow:hidden;}" +
+".head{padding:8px 14px;color:#7cc44a;font-size:13px;font-weight:700;letter-spacing:1px;" +
+"border-bottom:1px solid #2e4a30;flex:0 0 auto;}" +
+".wrap{flex:1 1 auto;display:flex;flex-direction:column;justify-content:flex-end;" +
+"padding:8px 14px;overflow:hidden;}" +
+".row{margin:3px 0;font-size:20px;line-height:1.3;}" +
+".sym{margin-right:6px;font-weight:bold;}" +
+".user{font-weight:700;margin-right:5px;}" +
+".msg{color:#ffffff;}" +
+"</style></head><body>" +
+"<div class=\"box\"><div class=\"head\">● LIVE CHAT</div>" +
+"<div class=\"wrap\">" + rows + "</div></div></body></html>";
+
         private const string ReadmeText =
 @"LazerGuanas Game Hunter - Stream Overlay files
 ================================================
@@ -182,6 +265,12 @@ Challenges (from a game's custom wheel):
     challenges.html - a styled Browser-source card listing current challenges
   Open a game's wheel (right-click a card -> Wheel) and spin to add challenges.
   They appear here for whichever game's session is currently running.
+
+Live chat:
+    chat.html - a styled Browser-source overlay of recent chat, with a per-platform
+                symbol and the viewer's colored name. Transparent background.
+  Open the Chat window in the app and connect a source (Twitch / Social Stream Ninja /
+  Restream). Keep that window open while streaming; this clears when you close it.
 
 Start a session in the app (the Start button on a game card) and these update live.
 ";

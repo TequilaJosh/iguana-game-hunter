@@ -386,6 +386,8 @@
                     <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="8"/>
                     <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="8"/>
+                    <ColumnDefinition Width="Auto"/>
                     <ColumnDefinition Width="12"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
@@ -407,13 +409,16 @@
                         </Style>
                     </TextBox.Resources>
                 </TextBox>
-                <Button Grid.Column="3" Content="&#127922; Spin"
+                <Button Grid.Column="3" Content="&#128172; Chat"
+                        Style="{StaticResource SecondaryButton}" Height="36"
+                        Click="Chat_Click" ToolTip="Live chat (Twitch / Social Stream Ninja / Restream)"/>
+                <Button Grid.Column="5" Content="&#127922; Spin"
                         Style="{StaticResource SecondaryButton}" Height="36"
                         Click="Spin_Click" ToolTip="Pick a random game from Dormant"/>
-                <Button Grid.Column="5" Content="&#128203; Recap"
+                <Button Grid.Column="7" Content="&#128203; Recap"
                         Style="{StaticResource SecondaryButton}" Height="36"
                         Click="Recap_Click" ToolTip="Stream recap — time played and clips"/>
-                <Button Grid.Column="7" Content="+ Add Game"
+                <Button Grid.Column="9" Content="+ Add Game"
                         Style="{StaticResource AddButton}"
                         Height="36"
                         Click="AddGame_Click"/>

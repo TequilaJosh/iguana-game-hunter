@@ -599,6 +599,16 @@ namespace GameTracker
             win.Show();
         }
 
+        private Views.ChatWindow? _chatWindow;
+
+        private void Chat_Click(object sender, RoutedEventArgs e)
+        {
+            if (_chatWindow != null) { _chatWindow.Activate(); return; }
+            _chatWindow = new Views.ChatWindow { Owner = this };
+            _chatWindow.Closed += (_, _) => _chatWindow = null;
+            _chatWindow.Show();
+        }
+
         private void OpenEditDialog(Guid id)
         {
             var game = _games.FirstOrDefault(g => g.Id == id);

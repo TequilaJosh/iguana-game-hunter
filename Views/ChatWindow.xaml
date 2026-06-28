@@ -1,0 +1,200 @@
+<Window x:Class="GameTracker.Views.ChatWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="Chat"
+        Width="460" Height="680"
+        MinWidth="380" MinHeight="420"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None" ResizeMode="CanResize"
+        Icon="/iguana-eye.ico"
+        Background="{StaticResource ScaleBrush}">
+
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="32" ResizeBorderThickness="6"
+                            GlassFrameThickness="0" CornerRadius="0"
+                            UseAeroCaptionButtons="False"/>
+    </shell:WindowChrome.WindowChrome>
+
+    <Window.Resources>
+        <Style x:Key="ConnectBtn" TargetType="Button">
+            <Setter Property="Background" Value="#243a26"/>
+            <Setter Property="Foreground" Value="#7cc44a"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="12,5"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="3"
+                                Padding="{TemplateBinding Padding}"
+                                BorderBrush="#4a7c3a" BorderThickness="1">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#4a7c3a"/>
+                                <Setter Property="Foreground" Value="#0a1410"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ChanBox" TargetType="TextBox">
+            <Setter Property="Background" Value="#142016"/>
+            <Setter Property="Foreground" Value="#e8e0c4"/>
+            <Setter Property="BorderBrush" Value="#2e4a30"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CaretBrush" Value="#7cc44a"/>
+            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+    </Window.Resources>
+
+    <Border BorderBrush="#4a7c3a" BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="32"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- Title bar -->
+            <Border Grid.Row="0" Background="#0a1410"
+                    BorderBrush="#2e4a30" BorderThickness="0,0,0,1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
+                        <Image Source="/iguana-eye.ico" Width="16" Height="16" Margin="0,0,8,0"
+                               VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
+                        <TextBlock Text="LIVE CHAT" Foreground="#7cc44a" FontSize="11"
+                                   FontWeight="Bold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="1" Orientation="Horizontal"
+                                shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                        <Button x:Name="CollapseButton" Content="&#9650;" Click="Collapse_Click"
+                                Style="{StaticResource WindowControlButton}" FontSize="9"
+                                ToolTip="Hide the connect bar (clean chat box)"/>
+                        <Button x:Name="PinButton" Content="&#128204;" Click="Pin_Click"
+                                Style="{StaticResource WindowControlButton}" ToolTip="Pin on top"/>
+                        <Button Content="&#x2715;" Click="Close_Click"
+                                Style="{StaticResource WindowCloseButton}"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+
+            <!-- Connect panel -->
+            <Border x:Name="ConnectPanel" Grid.Row="1" Background="#0f1812" Padding="10"
+                    BorderBrush="#2e4a30" BorderThickness="0,0,0,1">
+                <StackPanel>
+                    <!-- Twitch (direct, no login) -->
+                    <Grid Margin="0,0,0,9">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="42"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Border Grid.Row="0" Grid.Column="0" Background="#9146FF" CornerRadius="3"
+                                Padding="6,3" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,8,0">
+                            <TextBlock Text="TW" Foreground="White" FontSize="11" FontWeight="Bold"/>
+                        </Border>
+                        <TextBox x:Name="TwitchBox" Grid.Row="0" Grid.Column="1" Style="{StaticResource ChanBox}"
+                                 Margin="0,0,6,0" ToolTip="Twitch channel name (no login needed)"/>
+                        <Button x:Name="TwitchBtn" Grid.Row="0" Grid.Column="2" Content="Connect"
+                                Style="{StaticResource ConnectBtn}" Click="Twitch_Click"/>
+                        <TextBlock x:Name="TwitchStatus" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
+                                   Text="Twitch — channel name, no login" Foreground="#7a9070" FontSize="11"
+                                   Margin="0,3,0,0" TextTrimming="CharacterEllipsis"/>
+                    </Grid>
+
+                    <!-- Social Stream Ninja (aggregator: all platforms) -->
+                    <Grid Margin="0,0,0,9">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="42"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Border Grid.Row="0" Grid.Column="0" Background="#4a7c3a" CornerRadius="3"
+                                Padding="5,3" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,8,0">
+                            <TextBlock Text="SSN" Foreground="#0a1410" FontSize="11" FontWeight="Bold"/>
+                        </Border>
+                        <TextBox x:Name="SsnBox" Grid.Row="0" Grid.Column="1" Style="{StaticResource ChanBox}"
+                                 Margin="0,0,6,0" ToolTip="Social Stream Ninja session ID (from your dock URL)"/>
+                        <Button x:Name="SsnBtn" Grid.Row="0" Grid.Column="2" Content="Connect"
+                                Style="{StaticResource ConnectBtn}" Click="Ssn_Click"/>
+                        <TextBlock x:Name="SsnStatus" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
+                                   Text="Social Stream Ninja — session ID brings in all platforms"
+                                   Foreground="#7a9070" FontSize="11" Margin="0,3,0,0"
+                                   TextTrimming="CharacterEllipsis"/>
+                    </Grid>
+
+                    <!-- Restream -->
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="42"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Border Grid.Row="0" Grid.Column="0" Background="#1f6feb" CornerRadius="3"
+                                Padding="6,3" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,8,0">
+                            <TextBlock Text="RS" Foreground="White" FontSize="11" FontWeight="Bold"/>
+                        </Border>
+                        <TextBox x:Name="RestreamBox" Grid.Row="0" Grid.Column="1" Style="{StaticResource ChanBox}"
+                                 Margin="0,0,6,0" ToolTip="Restream OAuth access token"/>
+                        <Button x:Name="RestreamBtn" Grid.Row="0" Grid.Column="2" Content="Connect"
+                                Style="{StaticResource ConnectBtn}" Click="Restream_Click"/>
+                        <TextBlock x:Name="RestreamStatus" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
+                                   Text="Restream — paste an access token (needs a Restream app)"
+                                   Foreground="#7a9070" FontSize="11" Margin="0,3,0,0"
+                                   TextTrimming="CharacterEllipsis"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- Messages -->
+            <ScrollViewer x:Name="MsgScroll" Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="10,8">
+                <ItemsControl x:Name="MessageList">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,3">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="{Binding Symbol}" Foreground="{Binding SymbolBrush}"
+                                           FontSize="14" FontWeight="Bold" VerticalAlignment="Top" Margin="0,0,7,0"/>
+                                <TextBlock Grid.Column="1" TextWrapping="Wrap" FontSize="13">
+                                    <Run Text="{Binding User, Mode=OneWay}" Foreground="{Binding UserBrush}"
+                                         FontWeight="Bold"/><Run Text=": " Foreground="#7a9070"/><Run
+                                         Text="{Binding Text, Mode=OneWay}" Foreground="#e8e0c4"/>
+                                </TextBlock>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+        </Grid>
+    </Border>
+</Window>

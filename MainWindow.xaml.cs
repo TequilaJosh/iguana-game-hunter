@@ -29,6 +29,7 @@ namespace GameTracker
         public MainWindow()
         {
             InitializeComponent();
+            SuggestionTypes.Set(Services.SettingsService.LoadSuggestionTypes());
             LoadGames();
             Services.OverlayService.Initialize();
 
@@ -297,6 +298,13 @@ namespace GameTracker
         private void LoadGames()
         {
             _games = GameDataService.Load();
+
+            // Add any bundled shared games (e.g. the Final Fantasy Renaissance challenge
+            // wheel) — but only if the library loaded cleanly, so a failed read is never
+            // overwritten. SeedService only appends; it never edits or removes games.
+            if (GameDataService.LastLoadSucceeded && SeedService.ApplySeeds(_games))
+                GameDataService.Save(_games);
+
             RefreshView();
         }
 

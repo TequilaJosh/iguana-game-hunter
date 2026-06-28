@@ -1,0 +1,150 @@
+<Window x:Class="GameTracker.Views.SuggestionTypesWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="Suggestion Types"
+        Width="340" Height="460"
+        MinWidth="300" MinHeight="380"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None" ResizeMode="CanResize"
+        Icon="/iguana-eye.ico"
+        Background="{StaticResource ScaleBrush}">
+
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="32" ResizeBorderThickness="6"
+                            GlassFrameThickness="0" CornerRadius="0"
+                            UseAeroCaptionButtons="False"/>
+    </shell:WindowChrome.WindowChrome>
+
+    <Window.Resources>
+        <Style x:Key="SmallBtn" TargetType="Button">
+            <Setter Property="Background" Value="#243a26"/>
+            <Setter Property="Foreground" Value="#7cc44a"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="3"
+                                Padding="{TemplateBinding Padding}"
+                                BorderBrush="#4a7c3a" BorderThickness="1">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#4a7c3a"/>
+                                <Setter Property="Foreground" Value="#0a1410"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.45"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ActionBtn" TargetType="Button" BasedOn="{StaticResource SmallBtn}">
+            <Setter Property="Background" Value="#4a7c3a"/>
+            <Setter Property="Foreground" Value="#0a1410"/>
+            <Setter Property="Padding" Value="18,5"/>
+            <Setter Property="Margin" Value="0"/>
+        </Style>
+        <Style x:Key="InputBox" TargetType="TextBox">
+            <Setter Property="Background" Value="#142016"/>
+            <Setter Property="Foreground" Value="#e8e0c4"/>
+            <Setter Property="BorderBrush" Value="#2e4a30"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CaretBrush" Value="#7cc44a"/>
+            <Setter Property="Padding" Value="6,5"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+    </Window.Resources>
+
+    <Border BorderBrush="#4a7c3a" BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="32"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Title bar -->
+            <Border Grid.Row="0" Background="#0a1410" BorderBrush="#2e4a30" BorderThickness="0,0,0,1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
+                        <Image Source="/iguana-eye.ico" Width="16" Height="16" Margin="0,0,8,0"
+                               VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
+                        <TextBlock Text="SUGGESTION TYPES" Foreground="#7cc44a" FontSize="11"
+                                   FontWeight="Bold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <Button Grid.Column="1" Content="&#x2715;" Click="Cancel_Click"
+                            Style="{StaticResource WindowCloseButton}" Height="32"
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True"/>
+                </Grid>
+            </Border>
+
+            <!-- Hint -->
+            <TextBlock Grid.Row="1" Margin="14,12,14,0" Foreground="#7a9070" FontSize="11" TextWrapping="Wrap"
+                       Text="Edit the suggestion types below. The top entry is the default for new games."/>
+
+            <!-- Editable list -->
+            <ListBox x:Name="TypesList" Grid.Row="2" Margin="12,8,12,0"
+                     Background="#142016" BorderBrush="#2e4a30" BorderThickness="1"
+                     ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                <ListBox.ItemContainerStyle>
+                    <Style TargetType="ListBoxItem">
+                        <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                        <Setter Property="Padding" Value="2"/>
+                        <Setter Property="Background" Value="Transparent"/>
+                    </Style>
+                </ListBox.ItemContainerStyle>
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                                 Background="#0f1812" Foreground="#e8e0c4" BorderBrush="#2e4a30"
+                                 BorderThickness="1" CaretBrush="#7cc44a" Padding="6,4" FontSize="13"/>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <!-- Reorder / remove / reset -->
+            <StackPanel Grid.Row="3" Orientation="Horizontal" Margin="12,8,12,0">
+                <Button Content="&#9650;" Click="MoveUp_Click" Style="{StaticResource SmallBtn}" ToolTip="Move up"/>
+                <Button Content="&#9660;" Click="MoveDown_Click" Style="{StaticResource SmallBtn}" ToolTip="Move down"/>
+                <Button Content="Remove" Click="Remove_Click" Style="{StaticResource SmallBtn}"/>
+                <Button Content="Reset" Click="Reset_Click" Style="{StaticResource SmallBtn}"
+                        ToolTip="Restore the built-in list"/>
+            </StackPanel>
+
+            <!-- Add -->
+            <Grid Grid.Row="4" Margin="12,8,12,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBox x:Name="NewBox" Grid.Column="0" Style="{StaticResource InputBox}"
+                         KeyDown="NewBox_KeyDown"/>
+                <Button Grid.Column="1" Content="Add" Click="Add_Click" Style="{StaticResource SmallBtn}"
+                        Margin="8,0,0,0"/>
+            </Grid>
+
+            <!-- Footer -->
+            <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right" Margin="12,14,12,14">
+                <Button Content="Cancel" Click="Cancel_Click" Style="{StaticResource SmallBtn}"/>
+                <Button Content="Save" Click="Save_Click" Style="{StaticResource ActionBtn}"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

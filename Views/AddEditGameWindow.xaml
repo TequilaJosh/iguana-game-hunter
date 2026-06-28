@@ -173,7 +173,13 @@
                         <TextBox x:Name="RequesterBox" Style="{StaticResource InputStyle}"/>
                     </StackPanel>
                     <StackPanel Grid.Column="2">
-                        <TextBlock Text="SUGGESTION TYPE" Style="{StaticResource LabelStyle}"/>
+                        <Grid>
+                            <TextBlock Text="SUGGESTION TYPE" Style="{StaticResource LabelStyle}"/>
+                            <Button Content="&#9998; Edit" Click="EditSuggestionTypes_Click"
+                                    Style="{StaticResource SessionButton}" Padding="7,1" FontSize="10"
+                                    HorizontalAlignment="Right" Margin="0,-2,0,3"
+                                    ToolTip="Add, rename, remove or reorder suggestion types"/>
+                        </Grid>
                         <ComboBox x:Name="SuggestionCombo"/>
                     </StackPanel>
                 </Grid>

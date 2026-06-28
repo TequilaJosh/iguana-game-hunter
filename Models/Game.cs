@@ -59,11 +59,34 @@ namespace GameTracker.Models
         }
     }
 
-    /// <summary>How a game was suggested — used to filter the picker wheel.</summary>
+    /// <summary>
+    /// How a game was suggested — used to filter the picker wheel.
+    /// User-editable and persisted (see SettingsService); the first entry is the default.
+    /// </summary>
     public static class SuggestionTypes
     {
-        public const string Default = "Suggested";
-        public static readonly string[] All = { "Suggested", "Point buy", "Cash buy" };
+        public const string Fallback = "Suggested";
+        private static readonly string[] Builtin = { "Suggested", "Point buy", "Cash buy" };
+
+        /// <summary>The current list of suggestion types (first entry is the default).</summary>
+        public static List<string> All { get; private set; } = new(Builtin);
+
+        /// <summary>The default suggestion type (the first in the list).</summary>
+        public static string Default => All.Count > 0 ? All[0] : Fallback;
+
+        /// <summary>The built-in starter list, for "reset to defaults".</summary>
+        public static List<string> Defaults() => new(Builtin);
+
+        /// <summary>Replace the list (trimmed, de-duplicated, non-empty; falls back to built-in if empty).</summary>
+        public static void Set(IEnumerable<string>? types)
+        {
+            var cleaned = (types ?? Enumerable.Empty<string>())
+                .Select(t => (t ?? string.Empty).Trim())
+                .Where(t => t.Length > 0)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            All = cleaned.Count > 0 ? cleaned : new List<string>(Builtin);
+        }
     }
 
     public class Game

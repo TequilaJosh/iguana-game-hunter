@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Newtonsoft.Json;
 using GameTracker.Models;
@@ -25,6 +26,8 @@ namespace GameTracker.Services
         {
             public HotkeyConfig Hotkeys { get; set; } = new();
             public ChatSettings Chat { get; set; } = new();
+            public List<string>? SuggestionTypes { get; set; } // null = use built-in defaults
+            public List<string> SeedsApplied { get; set; } = new(); // bundled games already offered
         }
 
         private static AppSettings LoadAll()
@@ -64,6 +67,25 @@ namespace GameTracker.Services
         {
             var s = LoadAll();
             s.Chat = chat;
+            SaveAll(s);
+        }
+
+        /// <summary>Saved suggestion types, or null if the user has never customized them.</summary>
+        public static List<string>? LoadSuggestionTypes() => LoadAll().SuggestionTypes;
+
+        public static void SaveSuggestionTypes(List<string> types)
+        {
+            var s = LoadAll();
+            s.SuggestionTypes = types;
+            SaveAll(s);
+        }
+
+        public static List<string> LoadAppliedSeeds() => LoadAll().SeedsApplied ?? new List<string>();
+
+        public static void SaveAppliedSeeds(List<string> keys)
+        {
+            var s = LoadAll();
+            s.SeedsApplied = keys;
             SaveAll(s);
         }
     }

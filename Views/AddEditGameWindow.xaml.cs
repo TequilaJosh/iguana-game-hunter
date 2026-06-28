@@ -104,11 +104,7 @@ namespace GameTracker.Views
             StatusCombo.ItemsSource = new List<string> { "Not Started", "In Progress", "Beaten" };
             StatusCombo.SelectedIndex = (int)_game.Status;
 
-            SuggestionCombo.ItemsSource = SuggestionTypes.All;
-            SuggestionCombo.SelectedItem =
-                Array.IndexOf(SuggestionTypes.All, _game.SuggestionType) >= 0
-                    ? _game.SuggestionType
-                    : SuggestionTypes.Default;
+            PopulateSuggestionCombo(_game.SuggestionType);
 
             TitleBox.Text = _game.Title;
             PlatformCombo.Text = _game.Platform;
@@ -122,6 +118,29 @@ namespace GameTracker.Views
 
             SessionsItems.ItemsSource = _sessions;
             RefreshSessionsUi();
+        }
+
+        // Fill the combo from the current list, keeping the game's value selectable even if it
+        // was removed from the master list (so saving doesn't silently change it).
+        private void PopulateSuggestionCombo(string? selected)
+        {
+            var items = new List<string>(SuggestionTypes.All);
+            if (!string.IsNullOrWhiteSpace(selected) &&
+                !items.Any(i => string.Equals(i, selected, StringComparison.OrdinalIgnoreCase)))
+                items.Insert(0, selected);
+
+            SuggestionCombo.ItemsSource = items;
+            SuggestionCombo.SelectedItem =
+                items.FirstOrDefault(i => string.Equals(i, selected, StringComparison.OrdinalIgnoreCase))
+                ?? SuggestionTypes.Default;
+        }
+
+        private void EditSuggestionTypes_Click(object sender, RoutedEventArgs e)
+        {
+            var current = SuggestionCombo.SelectedItem as string ?? _game.SuggestionType;
+            var win = new SuggestionTypesWindow { Owner = this };
+            if (win.ShowDialog() == true)
+                PopulateSuggestionCombo(current);
         }
 
         private void RefreshSessionsUi()

@@ -21,10 +21,19 @@ namespace GameTracker.Services
         // Previous save location (app was formerly named "Game Tracker").
         private static readonly string LegacyDataFile = Path.Combine(AppData, "GameTracker", "games.json");
 
+        /// <summary>
+        /// True when the last Load() completed without error (including a legitimately
+        /// absent file for a new user). False if reading/parsing threw — in which case
+        /// callers must NOT write back, or they'd overwrite a real-but-unreadable save.
+        /// </summary>
+        public static bool LastLoadSucceeded { get; private set; } = true;
+
         public static List<Game> Load()
         {
             try
             {
+                LastLoadSucceeded = true;
+
                 if (!Directory.Exists(DataFolder))
                     Directory.CreateDirectory(DataFolder);
 
@@ -43,6 +52,7 @@ namespace GameTracker.Services
             }
             catch
             {
+                LastLoadSucceeded = false;
                 return new List<Game>();
             }
         }

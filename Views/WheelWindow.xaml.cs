@@ -18,7 +18,11 @@ namespace GameTracker.Views
     {
         private const double Cx = 180, Cy = 180, R = 170;
 
-        private readonly List<string> _items;
+        private readonly List<string> _items;          // faces currently on the wheel (≤ MaxWheel)
+        private readonly List<string> _pool = new();   // full master list (custom-wheel rotation)
+        private readonly List<string> _queue = new();  // unused items waiting to rotate in
+        private const int MaxWheel = 20;
+        private bool _rotation;                          // custom challenge wheel: cap + cycle on land
         private readonly List<string> _results;
         private readonly bool _editable;
         private readonly bool _recordResults;
@@ -88,6 +92,13 @@ namespace GameTracker.Views
 
             if (editable)
             {
+                // The editor edits the full master list (_pool); the wheel shows a rotating
+                // window of up to MaxWheel items drawn from it.
+                _rotation = true;
+                _pool.AddRange(_items);
+                _items.Clear();
+                RebuildRotation();
+
                 EditorPanel.Visibility = Visibility.Visible;
                 RefreshItemsList();
                 RefreshResultsList();
@@ -255,6 +266,20 @@ namespace GameTracker.Views
                 _onResultsChanged?.Invoke(_results);
                 _onRolled?.Invoke(winner);
             }
+
+            // Take the landed challenge out of rotation and cycle in an unused one.
+            if (_rotation)
+            {
+                _items.RemoveAt(_winnerIndex);
+                if (_queue.Count > 0)
+                {
+                    _items.Insert(Math.Min(_winnerIndex, _items.Count), _queue[0]);
+                    _queue.RemoveAt(0);
+                }
+                RefreshItemsList();
+                BuildWheel();
+                _winnerIndex = -1;
+            }
         }
 
         private void Choose_Click(object sender, RoutedEventArgs e)
@@ -392,32 +417,104 @@ namespace GameTracker.Views
         {
             var text = AddItemBox.Text.Trim();
             if (string.IsNullOrEmpty(text)) return;
-            _items.Add(text);
+            _pool.Add(text);
             AddItemBox.Clear();
-            ItemsChanged();
+            PoolChanged();
         }
 
         private void RemoveItem_Click(object sender, RoutedEventArgs e)
         {
             if (sender is Button b && b.Tag is string item)
             {
-                _items.Remove(item);
-                ItemsChanged();
+                _pool.Remove(item);
+                PoolChanged();
             }
         }
 
-        private void ItemsChanged()
+        private void Shuffle_Click(object sender, RoutedEventArgs e)
         {
+            if (_pool.Count < 2) return;
+            var spread = SpreadShuffle(_pool);
+            _pool.Clear();
+            _pool.AddRange(spread);
+            PoolChanged();
+        }
+
+        // Build the wheel's active rotation from the master pool, skipping items already
+        // rolled (kept out of rotation): the first MaxWheel land on the wheel, the rest queue.
+        private void RebuildRotation()
+        {
+            var available = new List<string>(_pool);
+            foreach (var r in _results) available.Remove(r); // one instance each (handles duplicates)
+
+            _items.Clear();
+            _queue.Clear();
+            foreach (var it in available)
+                (_items.Count < MaxWheel ? _items : _queue).Add(it);
+        }
+
+        // Randomize order while keeping related items apart: group by leading word so
+        // "No …" restrictions, "Any …" classes, and exact duplicates (e.g. 3× VETO) get
+        // spaced evenly around the wheel instead of landing in one big arc.
+        private List<string> SpreadShuffle(IEnumerable<string> source)
+        {
+            var groups = source
+                .GroupBy(KeyOf)
+                .Select(g => { var list = g.ToList(); ShuffleInPlace(list); return list; })
+                .ToList();
+
+            int total = groups.Sum(g => g.Count);
+            var result = new List<string>(total);
+            string? lastKey = null;
+
+            while (result.Count < total)
+            {
+                // Take from the largest remaining group whose key differs from the last
+                // placed item (the classic max-spacing greedy), random tie-breaks.
+                var ordered = groups.Where(g => g.Count > 0)
+                                    .OrderByDescending(g => g.Count)
+                                    .ThenBy(_ => _rng.Next())
+                                    .ToList();
+                var pick = ordered.FirstOrDefault(g => KeyOf(g[0]) != lastKey) ?? ordered[0];
+                result.Add(pick[0]);
+                lastKey = KeyOf(pick[0]);
+                pick.RemoveAt(0);
+            }
+            return result;
+        }
+
+        private static string KeyOf(string item)
+        {
+            var s = (item ?? string.Empty).Trim().ToLowerInvariant();
+            int sp = s.IndexOf(' ');
+            return sp > 0 ? s.Substring(0, sp) : s;
+        }
+
+        private void ShuffleInPlace(IList<string> list)
+        {
+            for (int i = list.Count - 1; i > 0; i--)
+            {
+                int j = _rng.Next(i + 1);
+                (list[i], list[j]) = (list[j], list[i]);
+            }
+        }
+
+        private void PoolChanged()
+        {
+            RebuildRotation();
             RefreshItemsList();
             BuildWheel();
             _winnerIndex = -1;
-            _onItemsChanged?.Invoke(_items);
+            _onItemsChanged?.Invoke(_pool);
         }
 
         private void RefreshItemsList()
         {
+            var list = _rotation ? _pool : _items;
             ItemsList.ItemsSource = null;
-            ItemsList.ItemsSource = _items.ToList();
+            ItemsList.ItemsSource = list.ToList();
+            if (_rotation)
+                ItemsHeader.Text = $"WHEEL ITEMS  ({_items.Count}/{_pool.Count})";
         }
 
         private void RefreshResultsList()
@@ -435,6 +532,7 @@ namespace GameTracker.Views
             _results.Clear();
             RefreshResultsList();
             _onResultsChanged?.Invoke(_results);
+            if (_rotation) { RebuildRotation(); RefreshItemsList(); BuildWheel(); _winnerIndex = -1; }
         }
 
         private void RemoveResult_Click(object sender, RoutedEventArgs e)
@@ -444,6 +542,7 @@ namespace GameTracker.Views
                 _results.RemoveAt(idx);
                 RefreshResultsList();
                 _onResultsChanged?.Invoke(_results);
+                if (_rotation) { RebuildRotation(); RefreshItemsList(); BuildWheel(); }
             }
         }
 

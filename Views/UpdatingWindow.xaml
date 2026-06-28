@@ -1,0 +1,30 @@
+<Window x:Class="GameTracker.Views.UpdatingWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Updating"
+        Width="380" SizeToContent="Height"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None" ResizeMode="NoResize"
+        Topmost="True" ShowInTaskbar="False"
+        Background="{StaticResource ScaleBrush}">
+    <Border BorderBrush="#4a7c3a" BorderThickness="2">
+        <StackPanel Margin="22,20">
+            <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
+                <Image Source="/iguana-eye.ico" Width="24" Height="24" Margin="0,0,10,0"
+                       VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
+                <TextBlock Text="Updating LazerGuanas Game Hunter"
+                           Foreground="#e8e0c4" FontSize="14" FontWeight="Bold"
+                           VerticalAlignment="Center"/>
+            </StackPanel>
+
+            <ProgressBar x:Name="Bar" Height="10" Minimum="0" Maximum="100"
+                         Background="#142016" Foreground="#7cc44a"
+                         BorderBrush="#2e4a30" BorderThickness="1"/>
+
+            <TextBlock x:Name="StatusText" Text="Starting…"
+                       Foreground="#c4d4a8" FontSize="12" Margin="0,8,0,0"/>
+            <TextBlock Text="The app will reopen automatically when it's done."
+                       Foreground="#7a9070" FontSize="11" Margin="0,4,0,0"/>
+        </StackPanel>
+    </Border>
+</Window>

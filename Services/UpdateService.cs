@@ -78,21 +78,54 @@ namespace GameTracker.Services
                 }
 
                 var destination = Path.Combine(Path.GetTempPath(), assetName);
-                using (var response = await http.GetAsync(downloadUrl))
-                {
-                    response.EnsureSuccessStatusCode();
-                    await using var fs = File.Create(destination);
-                    await response.Content.CopyToAsync(fs);
-                }
 
-                // Run the installer silently (no wizard), then exit so it can replace the
-                // running files. The installer relaunches the app when it finishes.
-                Process.Start(new ProcessStartInfo(destination)
+                var splash = new Views.UpdatingWindow();
+                splash.Show();
+                try
                 {
-                    UseShellExecute = true,
-                    Arguments = "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART",
-                });
-                Application.Current.Shutdown();
+                    using (var response = await http.GetAsync(downloadUrl,
+                               HttpCompletionOption.ResponseHeadersRead))
+                    {
+                        response.EnsureSuccessStatusCode();
+                        var total = response.Content.Headers.ContentLength ?? -1;
+
+                        await using var input = await response.Content.ReadAsStreamAsync();
+                        await using var fs = File.Create(destination);
+
+                        var buffer = new byte[81920];
+                        long readSoFar = 0;
+                        int read;
+                        if (total <= 0) splash.SetIndeterminate("Downloading the update…");
+                        while ((read = await input.ReadAsync(buffer)) > 0)
+                        {
+                            await fs.WriteAsync(buffer.AsMemory(0, read));
+                            readSoFar += read;
+                            if (total > 0)
+                            {
+                                splash.SetProgress((double)readSoFar / total * 100);
+                                splash.SetStatus(
+                                    $"Downloading the update…  {readSoFar / 1048576} / {total / 1048576} MB");
+                            }
+                        }
+                    }
+
+                    splash.SetIndeterminate("Installing… the app will reopen automatically.");
+                    await Task.Delay(500); // let the message render
+
+                    // Run the installer silently (no wizard), then exit so it can replace the
+                    // running files. The installer relaunches the app when it finishes.
+                    Process.Start(new ProcessStartInfo(destination)
+                    {
+                        UseShellExecute = true,
+                        Arguments = "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART",
+                    });
+                    Application.Current.Shutdown();
+                }
+                catch
+                {
+                    splash.Close();
+                    throw;
+                }
             }
             catch (Exception ex)
             {

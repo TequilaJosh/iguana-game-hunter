@@ -8,6 +8,7 @@
         MinWidth="380" MinHeight="420"
         WindowStartupLocation="CenterOwner"
         WindowStyle="None" ResizeMode="CanResize"
+        AllowsTransparency="True"
         Icon="/iguana-eye.ico"
         Background="{StaticResource ScaleBrush}">
 
@@ -177,6 +178,18 @@
                     <CheckBox x:Name="AutoConnectCheck" Content="Auto-connect when a game session starts"
                               Foreground="#a8c488" FontSize="11" Margin="0,0,0,9" Click="AutoConnect_Changed"
                               ToolTip="When you Start a game, automatically connect the saved sources above"/>
+                    <Grid Margin="0,0,0,9">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Transparency" Foreground="#a8c488" FontSize="11"
+                                   VerticalAlignment="Center" Margin="0,0,10,0"/>
+                        <Slider x:Name="OpacitySlider" Grid.Column="1" Minimum="0.25" Maximum="1.0"
+                                Value="1.0" VerticalAlignment="Center" Foreground="#7cc44a"
+                                ValueChanged="Opacity_Changed"
+                                ToolTip="Make the chat window see-through (for overlaying on your screen)"/>
+                    </Grid>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>

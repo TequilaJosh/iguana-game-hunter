@@ -37,7 +37,9 @@ namespace GameTracker.Views
             var dlg = new OpenFileDialog
             {
                 Title = "Choose a sound file",
-                Filter = "Audio files (*.mp3;*.wav)|*.mp3;*.wav|All files (*.*)|*.*",
+                Filter =
+                    "Audio files|*.mp3;*.wav;*.wma;*.m4a;*.aac;*.flac;*.alac;*.aif;*.aiff;*.mp2;*.mpa;*.adts;*.ac3;*.amr;*.3gp;*.opus;*.ogg" +
+                    "|All files (*.*)|*.*",
             };
             if (dlg.ShowDialog(this) == true)
                 item.FilePath = dlg.FileName;

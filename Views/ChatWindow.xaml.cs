@@ -26,6 +26,7 @@ namespace GameTracker.Views
         private bool _pinned;
         private bool _collapsed;
         private bool _chatDirty;
+        private bool _ready;
 
         private readonly SoundService _sound = new();
 
@@ -50,7 +51,12 @@ namespace GameTracker.Views
             RestreamBox.Text = saved.RestreamToken;
             AutoConnectCheck.IsChecked = saved.AutoConnect;
 
+            var op = saved.Opacity is >= 0.25 and <= 1.0 ? saved.Opacity : 1.0;
+            OpacitySlider.Value = op;
+            Opacity = op;
+
             _sound.SetAlerts(SettingsService.LoadSoundAlerts());
+            _ready = true;
 
             // Refresh the OBS chat.html a few times a second when there's new chat.
             _overlayTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(700) };
@@ -146,9 +152,16 @@ namespace GameTracker.Views
             SsnSession = SsnBox.Text.Trim(),
             RestreamToken = RestreamBox.Text.Trim(),
             AutoConnect = AutoConnectCheck.IsChecked == true,
+            Opacity = OpacitySlider.Value,
         });
 
         private void AutoConnect_Changed(object sender, RoutedEventArgs e) => SaveChat();
+
+        private void Opacity_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
+        {
+            Opacity = e.NewValue;
+            if (_ready) SaveChat();
+        }
 
         /// <summary>Connect every source that has a saved value and isn't already connected.</summary>
         public void ConnectSaved()

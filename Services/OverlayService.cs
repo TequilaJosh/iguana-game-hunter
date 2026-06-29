@@ -248,13 +248,22 @@ namespace GameTracker.Services
             return rows.ToString();
         }
 
+        // Render the overlay at a fixed design width and uniformly scale it to the OBS
+        // source size, so resizing in OBS zooms cleanly instead of reflowing/smooshing.
+        private const string ScaleScript =
+"<script>(function(){var W=360;function f(){var v=document.getElementById('vp');if(!v)return;" +
+"var s=window.innerWidth/W;v.style.transformOrigin='top left';v.style.transform='scale('+s+')';" +
+"v.style.width=W+'px';v.style.height=(window.innerHeight/s)+'px';}f();" +
+"window.addEventListener('resize',f);})();</script>";
+
         private static string ChatHtml(string rows) =>
 "<!DOCTYPE html><html><head><meta charset=\"utf-8\">" +
 "<meta http-equiv=\"refresh\" content=\"1\">" +
 "<style>" +
 "html,body{margin:0;padding:0;background:transparent;overflow:hidden;" +
 "font-family:'Segoe UI',Segoe,sans-serif;}" +
-".box{position:fixed;inset:8px;background:rgba(10,20,16,0.92);border:2px solid #4a7c3a;" +
+"#vp{position:absolute;top:0;left:0;}" +
+".box{position:absolute;inset:8px;background:rgba(10,20,16,0.92);border:2px solid #4a7c3a;" +
 "border-radius:12px;box-shadow:0 6px 22px rgba(0,0,0,0.55);box-sizing:border-box;" +
 "display:flex;flex-direction:column;overflow:hidden;}" +
 ".head{padding:8px 14px;color:#7cc44a;font-size:13px;font-weight:700;letter-spacing:1px;" +
@@ -266,9 +275,9 @@ namespace GameTracker.Services
 ".user{font-weight:700;margin-right:5px;}" +
 ".msg{color:#ffffff;}" +
 ".emote{height:1.2em;vertical-align:middle;margin:0 1px;}" +
-"</style></head><body>" +
+"</style></head><body><div id=\"vp\">" +
 "<div class=\"box\"><div class=\"head\">● LIVE CHAT</div>" +
-"<div class=\"wrap\">" + rows + "</div></div></body></html>";
+"<div class=\"wrap\">" + rows + "</div></div></div>" + ScaleScript + "</body></html>";
 
         // ---------- Combined dashboard (all.html) ----------
 
@@ -311,7 +320,8 @@ namespace GameTracker.Services
 "<meta http-equiv=\"refresh\" content=\"1\">" +
 "<style>" +
 "html,body{margin:0;padding:0;background:transparent;overflow:hidden;font-family:'Segoe UI',Segoe,sans-serif;}" +
-".panel{position:fixed;inset:8px;display:flex;flex-direction:column;" +
+"#vp{position:absolute;top:0;left:0;}" +
+".panel{position:absolute;inset:8px;display:flex;flex-direction:column;" +
 "background:rgba(10,20,16,0.92);border:2px solid #4a7c3a;border-radius:12px;" +
 "box-shadow:0 6px 22px rgba(0,0,0,0.55);box-sizing:border-box;overflow:hidden;}" +
 ".sec{padding:9px 14px;border-bottom:1px solid #2e4a30;flex:0 0 auto;}" +
@@ -333,7 +343,7 @@ namespace GameTracker.Services
 ".user{font-weight:700;margin-right:5px;}" +
 ".msg{color:#ffffff;}" +
 ".emote{height:1.2em;vertical-align:middle;margin:0 1px;}" +
-"</style></head><body><div class=\"panel\">" + sb + "</div></body></html>";
+"</style></head><body><div id=\"vp\"><div class=\"panel\">" + sb + "</div></div>" + ScaleScript + "</body></html>";
         }
 
         private const string ReadmeText =

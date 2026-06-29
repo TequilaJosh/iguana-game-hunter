@@ -13,6 +13,7 @@ namespace GameTracker.Services
         public string SsnSession { get; set; } = string.Empty;
         public string RestreamToken { get; set; } = string.Empty;
         public bool AutoConnect { get; set; } = true; // connect saved sources when a session starts
+        public double Opacity { get; set; } = 1.0;    // chat window transparency (0.25–1.0)
     }
 
     /// <summary>Persists app settings (hotkeys, chat connections) to settings.json.</summary>

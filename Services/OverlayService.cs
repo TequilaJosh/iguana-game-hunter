@@ -197,11 +197,21 @@ namespace GameTracker.Services
                 foreach (var m in messages)
                 {
                     var color = HexColor.IsMatch(m.UserColor ?? string.Empty) ? m.UserColor : "#b6e08a";
+
+                    var body = new StringBuilder();
+                    foreach (var seg in m.Segments)
+                    {
+                        if (seg.Kind == ChatSegmentKind.Emote && !string.IsNullOrEmpty(seg.Url))
+                            body.Append($"<img class=\"emote\" src=\"{Enc(seg.Url)}\" alt=\"{Enc(seg.Text)}\">");
+                        else
+                            body.Append(Enc(seg.Text));
+                    }
+
                     rows.Append(
                         "<div class=\"row\">" +
                         $"<span class=\"sym\" style=\"color:{ChatColorHex(m.Platform)}\">{ChatSymbol(m.Platform)}</span>" +
                         $"<span class=\"user\" style=\"color:{color}\">{Enc(m.User)}</span>" +
-                        $"<span class=\"msg\">{Enc(m.Text)}</span></div>");
+                        $"<span class=\"msg\">{body}</span></div>");
                 }
 
                 File.WriteAllText(Path.Combine(Folder, "chat.html"), ChatHtml(rows.ToString()));
@@ -236,6 +246,7 @@ namespace GameTracker.Services
 ".sym{margin-right:6px;font-weight:bold;}" +
 ".user{font-weight:700;margin-right:5px;}" +
 ".msg{color:#ffffff;}" +
+".emote{height:1.2em;vertical-align:middle;margin:0 1px;}" +
 "</style></head><body>" +
 "<div class=\"box\"><div class=\"head\">● LIVE CHAT</div>" +
 "<div class=\"wrap\">" + rows + "</div></div></body></html>";

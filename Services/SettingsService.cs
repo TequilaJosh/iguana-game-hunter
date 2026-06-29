@@ -28,6 +28,7 @@ namespace GameTracker.Services
             public ChatSettings Chat { get; set; } = new();
             public List<string>? SuggestionTypes { get; set; } // null = use built-in defaults
             public List<string> SeedsApplied { get; set; } = new(); // bundled games already offered
+            public List<SoundAlert> SoundAlerts { get; set; } = new(); // chat command -> sound file
         }
 
         private static AppSettings LoadAll()
@@ -86,6 +87,15 @@ namespace GameTracker.Services
         {
             var s = LoadAll();
             s.SeedsApplied = keys;
+            SaveAll(s);
+        }
+
+        public static List<SoundAlert> LoadSoundAlerts() => LoadAll().SoundAlerts ?? new List<SoundAlert>();
+
+        public static void SaveSoundAlerts(List<SoundAlert> alerts)
+        {
+            var s = LoadAll();
+            s.SoundAlerts = alerts;
             SaveAll(s);
         }
     }

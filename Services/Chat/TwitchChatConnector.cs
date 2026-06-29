@@ -128,7 +128,7 @@ namespace GameTracker.Services.Chat
                 if (bang > 1) nick = rest.Substring(1, bang - 1);
             }
 
-            string display = nick, color = string.Empty;
+            string display = nick, color = string.Empty, emotes = string.Empty;
             foreach (var kv in tags.Split(';'))
             {
                 int eq = kv.IndexOf('=');
@@ -137,6 +137,7 @@ namespace GameTracker.Services.Chat
                 var v = kv[(eq + 1)..];
                 if (k == "display-name" && v.Length > 0) display = v;
                 else if (k == "color" && v.Length > 0) color = v;
+                else if (k == "emotes") emotes = v;
             }
 
             if (message.Length == 0) return;
@@ -144,7 +145,7 @@ namespace GameTracker.Services.Chat
             {
                 Platform = "twitch",
                 User = display,
-                Text = message,
+                Segments = ChatText.ParseTwitch(message, emotes),
                 UserColor = color,
             });
         }

@@ -27,6 +27,11 @@ namespace GameTracker.Views
         private bool _collapsed;
         private bool _chatDirty;
 
+        private readonly SoundService _sound = new();
+
+        /// <summary>Raised when a viewer runs "!request &lt;game&gt;" — (game title, requester).</summary>
+        public Action<string, string>? OnGameRequested;
+
         private static readonly Brush DefaultUser = Frozen("#a8c488");
 
         public ChatWindow()
@@ -43,6 +48,8 @@ namespace GameTracker.Views
             TwitchBox.Text = saved.TwitchChannel;
             SsnBox.Text = saved.SsnSession;
             RestreamBox.Text = saved.RestreamToken;
+
+            _sound.SetAlerts(SettingsService.LoadSoundAlerts());
 
             // Refresh the OBS chat.html a few times a second when there's new chat.
             _overlayTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(700) };
@@ -81,8 +88,34 @@ namespace GameTracker.Views
                 while (_recent.Count > OverlayMessages) _recent.RemoveAt(0);
                 _chatDirty = true;
 
+                HandleCommands(m);
+
                 if (atBottom) MsgScroll.ScrollToEnd();
             });
+        }
+
+        private void HandleCommands(ChatMessage m)
+        {
+            var text = m.Text ?? string.Empty;
+
+            // Sound alerts: play if the first word matches a configured command.
+            _sound.CheckAndPlay(text);
+
+            // "!request <game>" -> hand off to the board (deduped there).
+            var parts = text.TrimStart().Split(new[] { ' ' }, 2);
+            if (parts.Length == 2 &&
+                string.Equals(parts[0], "!request", StringComparison.OrdinalIgnoreCase))
+            {
+                var game = parts[1].Trim();
+                if (game.Length > 0) OnGameRequested?.Invoke(game, m.User);
+            }
+        }
+
+        private void SoundAlerts_Click(object sender, RoutedEventArgs e)
+        {
+            var win = new SoundAlertsWindow { Owner = this };
+            if (win.ShowDialog() == true)
+                _sound.SetAlerts(SettingsService.LoadSoundAlerts());
         }
 
         private ChatRow ToRow(ChatMessage m)
@@ -101,7 +134,7 @@ namespace GameTracker.Views
                 Symbol = OverlayService.ChatSymbol(m.Platform),
                 SymbolBrush = symbolBrush,
                 User = m.User,
-                Text = m.Text,
+                Segments = m.Segments,
                 UserBrush = userBrush,
             };
         }
@@ -167,7 +200,7 @@ namespace GameTracker.Views
             public string Symbol { get; set; } = string.Empty;
             public Brush SymbolBrush { get; set; } = Brushes.Gray;
             public string User { get; set; } = string.Empty;
-            public string Text { get; set; } = string.Empty;
+            public List<ChatSegment> Segments { get; set; } = new();
             public Brush UserBrush { get; set; } = Brushes.White;
         }
     }

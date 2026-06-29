@@ -89,18 +89,17 @@ namespace GameTracker.Services.Chat
 
                 var ep = o["payload"]?["eventPayload"];
                 var author = ep?["author"];
-                string user = (string?)author?["displayName"]
-                              ?? (string?)author?["name"]
-                              ?? string.Empty;
-                string msg = (string?)ep?["text"] ?? string.Empty;
-                if (string.IsNullOrWhiteSpace(msg)) return;
+                string user = ChatText.Plain((string?)author?["displayName"]
+                              ?? (string?)author?["name"]);
+                var segments = ChatText.Parse((string?)ep?["text"]);
+                if (segments.Count == 0) return;
 
                 int sourceId = (int?)o["payload"]?["eventSourceId"] ?? 0;
                 MessageReceived?.Invoke(new ChatMessage
                 {
                     Platform = MapSource(sourceId),
                     User = user,
-                    Text = msg,
+                    Segments = segments,
                 });
             }
             catch { }

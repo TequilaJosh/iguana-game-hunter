@@ -103,15 +103,15 @@ namespace GameTracker.Services.Chat
             var msg = o["chatmessage"] != null ? o
                     : (o["contents"] as JObject) ?? (o["message"] as JObject) ?? o;
 
-            var name = (string?)msg?["chatname"];
-            var body = (string?)msg?["chatmessage"];
-            if (string.IsNullOrWhiteSpace(name) && string.IsNullOrWhiteSpace(body)) return;
+            var name = ChatText.Plain((string?)msg?["chatname"]);
+            var segments = ChatText.Parse((string?)msg?["chatmessage"]);
+            if (string.IsNullOrWhiteSpace(name) && segments.Count == 0) return;
 
             MessageReceived?.Invoke(new ChatMessage
             {
                 Platform = ((string?)msg?["type"] ?? "social").ToLowerInvariant(),
-                User = name ?? string.Empty,
-                Text = body ?? string.Empty,
+                User = name,
+                Segments = segments,
                 UserColor = (string?)msg?["nameColor"] ?? string.Empty,
             });
         }

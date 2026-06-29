@@ -613,8 +613,33 @@ namespace GameTracker
         {
             if (_chatWindow != null) { _chatWindow.Activate(); return; }
             _chatWindow = new Views.ChatWindow { Owner = this };
+            _chatWindow.OnGameRequested = HandleGameRequest;
             _chatWindow.Closed += (_, _) => _chatWindow = null;
             _chatWindow.Show();
+        }
+
+        // A viewer typed "!request <game>". Add it to Dormant if we don't already have it.
+        private void HandleGameRequest(string title, string requester)
+        {
+            title = (title ?? string.Empty).Trim();
+            if (title.Length == 0) return;
+
+            if (_games.Any(g => string.Equals(g.Title?.Trim(), title, StringComparison.OrdinalIgnoreCase)))
+            {
+                StatusText.Text = $"“{title}” is already in the list (requested by {requester}).";
+                return;
+            }
+
+            _games.Add(new Game
+            {
+                Title = title,
+                Status = GameStatus.NotStarted,
+                Requester = requester ?? string.Empty,
+                SuggestionType = SuggestionTypes.Default,
+            });
+            Save();
+            RefreshView();
+            StatusText.Text = $"Added “{title}” to Dormant (requested by {requester}).";
         }
 
         private void OpenEditDialog(Guid id)

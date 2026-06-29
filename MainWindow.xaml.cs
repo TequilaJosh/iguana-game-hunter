@@ -25,6 +25,7 @@ namespace GameTracker
         private readonly Dictionary<Guid, Views.SessionWindow> _sessionWindows = new();
         private readonly Dictionary<Guid, Views.GuideWindow> _guideWindows = new();
         private readonly Dictionary<Guid, Views.HltbWindow> _hltbWindows = new();
+        private readonly Dictionary<Guid, Views.WheelWindow> _wheelWindows = new();
 
         public MainWindow()
         {
@@ -32,6 +33,10 @@ namespace GameTracker
             SuggestionTypes.Set(Services.SettingsService.LoadSuggestionTypes());
             LoadGames();
             Services.OverlayService.Initialize();
+
+            // After an auto-update restart, bring back whatever windows were open.
+            Services.UpdateService.CaptureStateBeforeRestart = SaveOpenWindows;
+            Loaded += (_, _) => RestoreOpenWindows();
 
             // While any game has a running session, keep the cards' live totals fresh.
             _liveTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(60) };
@@ -229,8 +234,11 @@ namespace GameTracker
         private void PopOutSession_Click(object sender, RoutedEventArgs e)
         {
             e.Handled = true;
-            if (sender is not Button btn || btn.Tag is not Guid id) return;
+            if (sender is Button btn && btn.Tag is Guid id) OpenSessionFor(id);
+        }
 
+        private void OpenSessionFor(Guid id)
+        {
             var game = _games.FirstOrDefault(g => g.Id == id);
             if (game == null || !game.IsSessionActive) return;
             _currentGameId = id;
@@ -250,8 +258,11 @@ namespace GameTracker
         private void OpenGuide_Click(object sender, RoutedEventArgs e)
         {
             e.Handled = true;
-            if (sender is not Button btn || btn.Tag is not Guid id) return;
+            if (sender is Button btn && btn.Tag is Guid id) OpenGuideFor(id);
+        }
 
+        private void OpenGuideFor(Guid id)
+        {
             var game = _games.FirstOrDefault(g => g.Id == id);
             if (game == null) return;
 
@@ -278,8 +289,11 @@ namespace GameTracker
         private void OpenHltb_Click(object sender, RoutedEventArgs e)
         {
             e.Handled = true;
-            if (sender is not Button btn || btn.Tag is not Guid id) return;
+            if (sender is Button btn && btn.Tag is Guid id) OpenHltbFor(id);
+        }
 
+        private void OpenHltbFor(Guid id)
+        {
             var game = _games.FirstOrDefault(g => g.Id == id);
             if (game == null) return;
 
@@ -508,6 +522,7 @@ namespace GameTracker
             Save();
             RefreshView();
             Services.OverlayService.Update(CurrentlyStreaming());
+            EnsureChatAutoConnect();
             StatusText.Text = moved
                 ? $"Started session for \"{game.Title}\"  -  now HUNTING"
                 : $"Started session for \"{game.Title}\"  -  {DateTime.Now:h:mm tt}";
@@ -560,9 +575,19 @@ namespace GameTracker
 
         private void OpenWheel_Click(object sender, RoutedEventArgs e)
         {
-            if (GetMenuItemGameId(sender) is not Guid id) return;
+            if (GetMenuItemGameId(sender) is Guid id) OpenWheelFor(id);
+        }
+
+        private void OpenWheelFor(Guid id)
+        {
             var game = _games.FirstOrDefault(g => g.Id == id);
             if (game == null) return;
+
+            if (_wheelWindows.TryGetValue(id, out var existing))
+            {
+                existing.Activate();
+                return;
+            }
 
             var win = new Views.WheelWindow($"{game.Title} Wheel", game.WheelItems, editable: true,
                 onItemsChanged: items => { game.WheelItems = new List<string>(items); Save(); },
@@ -576,6 +601,8 @@ namespace GameTracker
                 },
                 onRolled: challenge => LogChallengeToSession(game, challenge))
             { Owner = this };
+            _wheelWindows[id] = win;
+            win.Closed += (_, _) => _wheelWindows.Remove(id);
             win.Show();
         }
 
@@ -609,13 +636,61 @@ namespace GameTracker
 
         private Views.ChatWindow? _chatWindow;
 
-        private void Chat_Click(object sender, RoutedEventArgs e)
+        private void Chat_Click(object sender, RoutedEventArgs e) => OpenChatWindow().Activate();
+
+        private Views.ChatWindow OpenChatWindow()
         {
-            if (_chatWindow != null) { _chatWindow.Activate(); return; }
-            _chatWindow = new Views.ChatWindow { Owner = this };
-            _chatWindow.OnGameRequested = HandleGameRequest;
-            _chatWindow.Closed += (_, _) => _chatWindow = null;
-            _chatWindow.Show();
+            if (_chatWindow == null)
+            {
+                _chatWindow = new Views.ChatWindow { Owner = this };
+                _chatWindow.OnGameRequested = HandleGameRequest;
+                _chatWindow.Closed += (_, _) => _chatWindow = null;
+                _chatWindow.Show();
+            }
+            return _chatWindow;
+        }
+
+        // On session start: if enabled and chat sources are saved, open chat and connect them.
+        private void EnsureChatAutoConnect()
+        {
+            var chat = Services.SettingsService.LoadChat();
+            if (!chat.AutoConnect) return;
+
+            bool hasSaved = !string.IsNullOrWhiteSpace(chat.TwitchChannel)
+                         || !string.IsNullOrWhiteSpace(chat.SsnSession)
+                         || !string.IsNullOrWhiteSpace(chat.RestreamToken);
+            if (!hasSaved) return;
+
+            OpenChatWindow().ConnectSaved();
+        }
+
+        // ----- reopen windows after an update restart -----
+
+        private void SaveOpenWindows()
+        {
+            var open = new List<Services.OpenWindow>();
+            if (_chatWindow != null) open.Add(new Services.OpenWindow { Type = "chat" });
+            foreach (var id in _wheelWindows.Keys) open.Add(new() { Type = "wheel", GameId = id.ToString() });
+            foreach (var id in _guideWindows.Keys) open.Add(new() { Type = "guide", GameId = id.ToString() });
+            foreach (var id in _hltbWindows.Keys) open.Add(new() { Type = "hltb", GameId = id.ToString() });
+            foreach (var id in _sessionWindows.Keys) open.Add(new() { Type = "session", GameId = id.ToString() });
+            Services.WindowStateService.Save(open);
+        }
+
+        private void RestoreOpenWindows()
+        {
+            foreach (var w in Services.WindowStateService.LoadAndClear())
+            {
+                Guid.TryParse(w.GameId, out var id);
+                switch (w.Type)
+                {
+                    case "chat": OpenChatWindow(); break;
+                    case "wheel": OpenWheelFor(id); break;
+                    case "guide": OpenGuideFor(id); break;
+                    case "hltb": OpenHltbFor(id); break;
+                    case "session": OpenSessionFor(id); break;
+                }
+            }
         }
 
         // A viewer typed "!request <game>". Add it to Dormant if we don't already have it.

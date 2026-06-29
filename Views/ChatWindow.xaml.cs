@@ -48,6 +48,7 @@ namespace GameTracker.Views
             TwitchBox.Text = saved.TwitchChannel;
             SsnBox.Text = saved.SsnSession;
             RestreamBox.Text = saved.RestreamToken;
+            AutoConnectCheck.IsChecked = saved.AutoConnect;
 
             _sound.SetAlerts(SettingsService.LoadSoundAlerts());
 
@@ -144,7 +145,21 @@ namespace GameTracker.Views
             TwitchChannel = TwitchBox.Text.Trim(),
             SsnSession = SsnBox.Text.Trim(),
             RestreamToken = RestreamBox.Text.Trim(),
+            AutoConnect = AutoConnectCheck.IsChecked == true,
         });
+
+        private void AutoConnect_Changed(object sender, RoutedEventArgs e) => SaveChat();
+
+        /// <summary>Connect every source that has a saved value and isn't already connected.</summary>
+        public void ConnectSaved()
+        {
+            if (!string.IsNullOrWhiteSpace(TwitchBox.Text) && !_twitch.IsConnected)
+                Twitch_Click(this, new RoutedEventArgs());
+            if (!string.IsNullOrWhiteSpace(SsnBox.Text) && !_ssn.IsConnected)
+                Ssn_Click(this, new RoutedEventArgs());
+            if (!string.IsNullOrWhiteSpace(RestreamBox.Text) && !_restream.IsConnected)
+                Restream_Click(this, new RoutedEventArgs());
+        }
 
         private async void Twitch_Click(object sender, RoutedEventArgs e)
         {

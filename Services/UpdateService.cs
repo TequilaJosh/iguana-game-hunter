@@ -24,6 +24,10 @@ namespace GameTracker.Services
         private static readonly string ReleasesPage =
             $"https://github.com/{Owner}/{Repo}/releases/latest";
 
+        /// <summary>Invoked just before the app restarts to apply an update — lets the app
+        /// record which windows are open so they can reopen afterward.</summary>
+        public static Action? CaptureStateBeforeRestart;
+
         /// <param name="silent">
         /// When true (startup check), stays quiet if already up to date or on error.
         /// When false (manual check), reports those outcomes to the user.
@@ -111,6 +115,9 @@ namespace GameTracker.Services
 
                     splash.SetIndeterminate("Installing… the app will reopen automatically.");
                     await Task.Delay(500); // let the message render
+
+                    // Remember which windows are open so they reopen after the restart.
+                    try { CaptureStateBeforeRestart?.Invoke(); } catch { /* best-effort */ }
 
                     // Run the installer silently (no wizard), then exit so it can replace the
                     // running files. The installer relaunches the app when it finishes.

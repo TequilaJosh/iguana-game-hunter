@@ -12,6 +12,7 @@ namespace GameTracker.Services
         public string TwitchChannel { get; set; } = string.Empty;
         public string SsnSession { get; set; } = string.Empty;
         public string RestreamToken { get; set; } = string.Empty;
+        public bool AutoConnect { get; set; } = true; // connect saved sources when a session starts
     }
 
     /// <summary>Persists app settings (hotkeys, chat connections) to settings.json.</summary>

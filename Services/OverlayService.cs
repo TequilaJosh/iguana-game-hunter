@@ -25,6 +25,13 @@ namespace GameTracker.Services
 
         private static string _lastSignature = string.Empty;
 
+        // Latest state, kept so the combined all.html can be re-rendered whenever
+        // the game/session OR the chat updates (the two arrive on different triggers).
+        private static bool _cLive;
+        private static string _cTitle = string.Empty, _cElapsed = string.Empty, _cRequester = string.Empty;
+        private static IReadOnlyList<string> _cChallenges = new List<string>();
+        private static IReadOnlyList<ChatMessage> _cChat = new List<ChatMessage>();
+
         public static void Initialize()
         {
             try
@@ -74,6 +81,11 @@ namespace GameTracker.Services
                 Write("challenges.txt", string.Join(Environment.NewLine,
                     challenges.Select((c, i) => $"{i + 1}. {c}")));
                 Write("challenges.html", BuildChallengesHtml(challenges));
+
+                // Cache for the combined dashboard, then refresh it.
+                _cLive = live; _cTitle = title; _cElapsed = elapsed; _cRequester = requester;
+                _cChallenges = challenges.ToList();
+                WriteCombined();
             }
             catch { /* best-effort */ }
         }
@@ -186,35 +198,15 @@ namespace GameTracker.Services
 
         private static readonly Regex HexColor = new("^#[0-9a-fA-F]{6}$", RegexOptions.Compiled);
 
-        /// <summary>Write the recent chat messages to chat.html for an OBS Browser source.</summary>
+        /// <summary>Write the recent chat messages to chat.html (and refresh the combined all.html).</summary>
         public static void WriteChatHtml(IReadOnlyList<ChatMessage> messages)
         {
             try
             {
                 Directory.CreateDirectory(Folder);
-
-                var rows = new StringBuilder();
-                foreach (var m in messages)
-                {
-                    var color = HexColor.IsMatch(m.UserColor ?? string.Empty) ? m.UserColor : "#b6e08a";
-
-                    var body = new StringBuilder();
-                    foreach (var seg in m.Segments)
-                    {
-                        if (seg.Kind == ChatSegmentKind.Emote && !string.IsNullOrEmpty(seg.Url))
-                            body.Append($"<img class=\"emote\" src=\"{Enc(seg.Url)}\" alt=\"{Enc(seg.Text)}\">");
-                        else
-                            body.Append(Enc(seg.Text));
-                    }
-
-                    rows.Append(
-                        "<div class=\"row\">" +
-                        $"<span class=\"sym\" style=\"color:{ChatColorHex(m.Platform)}\">{ChatSymbol(m.Platform)}</span>" +
-                        $"<span class=\"user\" style=\"color:{color}\">{Enc(m.User)}</span>" +
-                        $"<span class=\"msg\">{body}</span></div>");
-                }
-
-                File.WriteAllText(Path.Combine(Folder, "chat.html"), ChatHtml(rows.ToString()));
+                _cChat = messages;
+                File.WriteAllText(Path.Combine(Folder, "chat.html"), ChatHtml(ChatRowsHtml(messages)));
+                WriteCombined();
             }
             catch { /* best-effort */ }
         }
@@ -224,9 +216,36 @@ namespace GameTracker.Services
             try
             {
                 Directory.CreateDirectory(Folder);
+                _cChat = new List<ChatMessage>();
                 File.WriteAllText(Path.Combine(Folder, "chat.html"), ChatHtml(string.Empty));
+                WriteCombined();
             }
             catch { /* best-effort */ }
+        }
+
+        private static string ChatRowsHtml(IReadOnlyList<ChatMessage> messages)
+        {
+            var rows = new StringBuilder();
+            foreach (var m in messages)
+            {
+                var color = HexColor.IsMatch(m.UserColor ?? string.Empty) ? m.UserColor : "#b6e08a";
+
+                var body = new StringBuilder();
+                foreach (var seg in m.Segments)
+                {
+                    if (seg.Kind == ChatSegmentKind.Emote && !string.IsNullOrEmpty(seg.Url))
+                        body.Append($"<img class=\"emote\" src=\"{Enc(seg.Url)}\" alt=\"{Enc(seg.Text)}\">");
+                    else
+                        body.Append(Enc(seg.Text));
+                }
+
+                rows.Append(
+                    "<div class=\"row\">" +
+                    $"<span class=\"sym\" style=\"color:{ChatColorHex(m.Platform)}\">{ChatSymbol(m.Platform)}</span>" +
+                    $"<span class=\"user\" style=\"color:{color}\">{Enc(m.User)}</span>" +
+                    $"<span class=\"msg\">{body}</span></div>");
+            }
+            return rows.ToString();
         }
 
         private static string ChatHtml(string rows) =>
@@ -250,6 +269,72 @@ namespace GameTracker.Services
 "</style></head><body>" +
 "<div class=\"box\"><div class=\"head\">● LIVE CHAT</div>" +
 "<div class=\"wrap\">" + rows + "</div></div></body></html>";
+
+        // ---------- Combined dashboard (all.html) ----------
+
+        private static void WriteCombined()
+        {
+            try { File.WriteAllText(Path.Combine(Folder, "all.html"), CombinedHtml()); }
+            catch { /* best-effort */ }
+        }
+
+        /// <summary>One panel with Now Playing + timer, Challenges and Live Chat — a single OBS source.</summary>
+        private static string CombinedHtml()
+        {
+            var sb = new StringBuilder();
+
+            if (_cLive)
+            {
+                var req = string.IsNullOrWhiteSpace(_cRequester)
+                    ? string.Empty : $"<span class=\"req\">req: {Enc(_cRequester)}</span>";
+                sb.Append(
+                    "<div class=\"sec\"><div class=\"hd\">● NOW PLAYING</div>" +
+                    "<div class=\"np\"><span class=\"dot\"></span>" +
+                    $"<span class=\"title\">{Enc(_cTitle)}</span>" +
+                    $"<span class=\"time\">{Enc(_cElapsed)}</span>{req}</div></div>");
+            }
+
+            if (_cChallenges.Count > 0)
+            {
+                var rows = new StringBuilder();
+                for (int i = 0; i < _cChallenges.Count; i++)
+                    rows.Append($"<div class=\"ch-row\"><span class=\"num\">{i + 1}</span>" +
+                                $"<span class=\"ch-txt\">{Enc(_cChallenges[i])}</span></div>");
+                sb.Append("<div class=\"sec chlist\"><div class=\"hd\">\U0001F3A1 CHALLENGES</div>" + rows + "</div>");
+            }
+
+            sb.Append("<div class=\"sec chat\"><div class=\"hd\">● LIVE CHAT</div>" +
+                      "<div class=\"wrap\">" + ChatRowsHtml(_cChat) + "</div></div>");
+
+            return
+"<!DOCTYPE html><html><head><meta charset=\"utf-8\">" +
+"<meta http-equiv=\"refresh\" content=\"1\">" +
+"<style>" +
+"html,body{margin:0;padding:0;background:transparent;overflow:hidden;font-family:'Segoe UI',Segoe,sans-serif;}" +
+".panel{position:fixed;inset:8px;display:flex;flex-direction:column;" +
+"background:rgba(10,20,16,0.92);border:2px solid #4a7c3a;border-radius:12px;" +
+"box-shadow:0 6px 22px rgba(0,0,0,0.55);box-sizing:border-box;overflow:hidden;}" +
+".sec{padding:9px 14px;border-bottom:1px solid #2e4a30;flex:0 0 auto;}" +
+".sec.chlist{max-height:34%;overflow:hidden;}" +
+".sec.chat{flex:1 1 auto;display:flex;flex-direction:column;border-bottom:0;min-height:0;}" +
+".hd{color:#7cc44a;font-size:12px;font-weight:700;letter-spacing:1px;margin-bottom:6px;}" +
+".np{display:flex;align-items:center;flex-wrap:wrap;gap:10px;}" +
+".dot{width:11px;height:11px;border-radius:50%;background:#7cc44a;box-shadow:0 0 8px #7cc44a;flex:0 0 auto;}" +
+".np .title{font-size:20px;font-weight:700;color:#e8e0c4;}" +
+".np .time{font-family:Consolas,monospace;font-size:20px;font-weight:700;color:#7cc44a;margin-left:auto;}" +
+".np .req{font-size:13px;font-weight:600;color:#d4a437;flex-basis:100%;}" +
+".ch-row{display:flex;align-items:flex-start;margin:3px 0;}" +
+".num{min-width:20px;height:20px;border-radius:50%;background:#243a26;color:#7cc44a;font-weight:700;" +
+"font-size:12px;text-align:center;line-height:20px;margin-right:9px;flex:0 0 auto;}" +
+".ch-txt{color:#e8e0c4;font-size:15px;line-height:20px;}" +
+".chat .wrap{flex:1 1 auto;display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden;padding-top:2px;}" +
+".row{margin:3px 0;font-size:17px;line-height:1.3;}" +
+".sym{margin-right:6px;font-weight:bold;}" +
+".user{font-weight:700;margin-right:5px;}" +
+".msg{color:#ffffff;}" +
+".emote{height:1.2em;vertical-align:middle;margin:0 1px;}" +
+"</style></head><body><div class=\"panel\">" + sb + "</div></body></html>";
+        }
 
         private const string ReadmeText =
 @"LazerGuanas Game Hunter - Stream Overlay files
@@ -279,9 +364,15 @@ Challenges (from a game's custom wheel):
 
 Live chat:
     chat.html - a styled Browser-source overlay of recent chat, with a per-platform
-                symbol and the viewer's colored name. Transparent background.
+                symbol, the viewer's colored name, and real emote images.
   Open the Chat window in the app and connect a source (Twitch / Social Stream Ninja /
   Restream). Keep that window open while streaming; this clears when you close it.
+
+All-in-one panel (easiest):
+    all.html - a single Browser source that shows Now Playing + timer, the current
+               Challenges, and Live Chat together in one themed panel. Add ONE Browser
+               source -> ""Local file"" -> all.html (try ~360 wide, ~700 tall).
+               Sections appear only when they have content; chat fills the rest.
 
 Start a session in the app (the Start button on a game card) and these update live.
 ";

@@ -66,6 +66,7 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="32"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
@@ -94,8 +95,21 @@
             <TextBlock Grid.Row="1" Margin="14,12,14,0" Foreground="#7a9070" FontSize="11" TextWrapping="Wrap"
                        Text="When a viewer types a command in chat (across any connected source), its sound plays. Commands usually start with ! — e.g. !airhorn"/>
 
+            <!-- Column headers -->
+            <Grid Grid.Row="2" Margin="12,10,12,2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="130"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="COMMAND" Foreground="#7cc44a" FontSize="10"
+                           FontWeight="Bold" Margin="2,0,6,0"/>
+                <TextBlock Grid.Column="1" Text="SOUND FILE" Foreground="#7cc44a" FontSize="10"
+                           FontWeight="Bold" Margin="2,0,6,0"/>
+            </Grid>
+
             <!-- Rows -->
-            <ScrollViewer Grid.Row="2" Margin="12,8,12,0" VerticalScrollBarVisibility="Auto">
+            <ScrollViewer Grid.Row="3" Margin="12,0,12,0" VerticalScrollBarVisibility="Auto">
                 <ItemsControl x:Name="AlertList">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
@@ -126,11 +140,11 @@
             </ScrollViewer>
 
             <!-- Add -->
-            <Button Grid.Row="3" Content="+ Add alert" Click="Add_Click" Style="{StaticResource SmallBtn}"
+            <Button Grid.Row="4" Content="+ Add alert" Click="Add_Click" Style="{StaticResource SmallBtn}"
                     HorizontalAlignment="Left" Margin="12,10,0,0"/>
 
             <!-- Footer -->
-            <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Margin="12,12,12,14">
+            <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right" Margin="12,12,12,14">
                 <Button Content="Cancel" Click="Cancel_Click" Style="{StaticResource SmallBtn}"/>
                 <Button Content="Save" Click="Save_Click" Style="{StaticResource ActionBtn}"/>
             </StackPanel>

@@ -201,6 +201,30 @@
                                 Style="{StaticResource ConnectBtn}" VerticalAlignment="Center" Margin="8,0,0,0"
                                 ToolTip="Set up chat commands that play your own sound files"/>
                     </Grid>
+
+                    <!-- OBS overlay (live WebSocket panel) -->
+                    <Border Background="#2e4a30" Height="1" Margin="0,11,0,9"/>
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="62"/>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="OBS overlay port" Foreground="#a8c488" FontSize="11"
+                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBox x:Name="PortBox" Grid.Column="1" Style="{StaticResource ChanBox}"
+                                 MaxLength="5" ToolTip="Port for the live overlay server (default 3620)"/>
+                        <Button x:Name="PortApplyBtn" Grid.Column="2" Content="Apply" Click="ApplyPort_Click"
+                                Style="{StaticResource ConnectBtn}" Margin="6,0,0,0"
+                                ToolTip="Restart the overlay server on this port"/>
+                        <Button x:Name="CopyUrlBtn" Grid.Column="3" Content="Copy URL" Click="CopyUrl_Click"
+                                Style="{StaticResource ConnectBtn}" Margin="6,0,0,0"
+                                ToolTip="Copy the Browser-source URL to the clipboard"/>
+                    </Grid>
+                    <TextBlock x:Name="OverlayStatus" Foreground="#7a9070" FontSize="11"
+                               TextWrapping="Wrap"
+                               Text="Add an OBS Browser source with this URL (not Local file)."/>
                 </StackPanel>
             </Border>
 

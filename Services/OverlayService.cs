@@ -37,8 +37,11 @@ namespace GameTracker.Services
             try
             {
                 Directory.CreateDirectory(Folder);
+                // Start the loopback server first so the README can show its real port.
+                OverlayServer.Start();
                 // Always refresh the README so it reflects the current overlay files.
-                File.WriteAllText(Path.Combine(Folder, "README.txt"), ReadmeText);
+                File.WriteAllText(Path.Combine(Folder, "README.txt"),
+                    ReadmeText.Replace("{PORT}", OverlayServer.Port.ToString()));
                 Update(null); // write idle/empty files
             }
             catch { /* best-effort */ }
@@ -86,6 +89,8 @@ namespace GameTracker.Services
                 _cLive = live; _cTitle = title; _cElapsed = elapsed; _cRequester = requester;
                 _cChallenges = challenges.ToList();
                 WriteCombined();
+                // Push to the live WebSocket overlay (clients re-render immediately).
+                OverlayServer.SetState(live, title, elapsed, requester, _cChallenges);
             }
             catch { /* best-effort */ }
         }
@@ -175,7 +180,7 @@ namespace GameTracker.Services
 
         // Plain glyphs (not emoji) so we can color them ourselves — WPF renders emoji monochrome.
         /// <summary>Per-platform symbol glyph (coloured via ChatColorHex).</summary>
-        public static string ChatSymbol(string platform) => (platform ?? string.Empty).ToLowerInvariant() switch
+        public static string ChatSymbol(string? platform) => (platform ?? string.Empty).ToLowerInvariant() switch
         {
             "twitch" => "♥",   // ♥
             "youtube" => "▶",  // ▶
@@ -185,7 +190,7 @@ namespace GameTracker.Services
         };
 
         /// <summary>Per-platform brand colour for the symbol.</summary>
-        public static string ChatColorHex(string platform) => (platform ?? string.Empty).ToLowerInvariant() switch
+        public static string ChatColorHex(string? platform) => (platform ?? string.Empty).ToLowerInvariant() switch
         {
             "twitch" => "#9146FF",
             "youtube" => "#FF0000",
@@ -207,6 +212,7 @@ namespace GameTracker.Services
                 _cChat = messages;
                 File.WriteAllText(Path.Combine(Folder, "chat.html"), ChatHtml(ChatRowsHtml(messages)));
                 WriteCombined();
+                OverlayServer.SetChat(messages);
             }
             catch { /* best-effort */ }
         }
@@ -219,6 +225,7 @@ namespace GameTracker.Services
                 _cChat = new List<ChatMessage>();
                 File.WriteAllText(Path.Combine(Folder, "chat.html"), ChatHtml(string.Empty));
                 WriteCombined();
+                OverlayServer.ClearChat();
             }
             catch { /* best-effort */ }
         }
@@ -317,6 +324,7 @@ namespace GameTracker.Services
 
             return
 "<!DOCTYPE html><html><head><meta charset=\"utf-8\">" +
+$"<!-- For a more stable, long-session overlay use the live panel instead: http://localhost:{OverlayServer.Port}/ -->" +
 "<meta http-equiv=\"refresh\" content=\"1\">" +
 "<style>" +
 "html,body{margin:0;padding:0;background:transparent;overflow:hidden;font-family:'Segoe UI',Segoe,sans-serif;}" +
@@ -378,11 +386,34 @@ Live chat:
   Open the Chat window in the app and connect a source (Twitch / Social Stream Ninja /
   Restream). Keep that window open while streaming; this clears when you close it.
 
-All-in-one panel (easiest):
-    all.html - a single Browser source that shows Now Playing + timer, the current
-               Challenges, and Live Chat together in one themed panel. Add ONE Browser
-               source -> ""Local file"" -> all.html (try ~360 wide, ~700 tall).
-               Sections appear only when they have content; chat fills the rest.
+==> RECOMMENDED: Live panel (rock-solid for long streams) <==
+    One Browser source shows Now Playing + timer, the current Challenges, and Live
+    Chat together in one themed panel - driven by a live connection instead of
+    reloading a file every second. It auto-reconnects, survives the app restarting,
+    and is built to run for days without a refresh.
+
+    Step-by-step OBS setup:
+      1. In OBS, under Sources, click + and choose ""Browser"".
+      2. Name it (e.g. ""Game Hunter Overlay"") and click OK.
+      3. Set URL to:   http://localhost:{PORT}/
+         (Leave ""Local file"" UNCHECKED - paste the URL into the URL box.)
+      4. Set Width 360 and Height 700 (the panel scales cleanly to any size).
+      5. Tick ""Shutdown source when not visible"" and ""Refresh browser when
+         scene becomes active"" - both are safe; the overlay reconnects on its own.
+      6. Click OK. Start a game session in the app and it fills in live.
+      7. Resize/position the source on your canvas as you like.
+
+    Troubleshooting: right-click the source -> Interact, then press Ctrl+D to show a
+    debug overlay (connection state + recent events) without opening DevTools.
+
+    Changing the port: Chat window -> OBS overlay port -> type a port -> Apply, then
+    update the Browser source URL to match. (Use ""Copy URL"" to grab the exact URL.)
+
+Older file-based panel (all.html) - still works, points to the live panel:
+    all.html is the previous all-in-one panel. It works as a ""Local file"" Browser
+    source, but it full-reloads once a second and is less stable over long sessions.
+    Prefer the Live panel URL above. (A copy of the live overlay is also written here
+    as LiveOverlay.html if you ever want to load it as a ""Local file"" instead.)
 
 Start a session in the app (the Start button on a game card) and these update live.
 ";

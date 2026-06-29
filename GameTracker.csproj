@@ -18,4 +18,8 @@
   <ItemGroup>
     <Resource Include="iguana-eye.ico" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- The live OBS overlay, served by OverlayServer from inside the exe. -->
+    <EmbeddedResource Include="overlay\LiveOverlay.html" />
+  </ItemGroup>
 </Project>

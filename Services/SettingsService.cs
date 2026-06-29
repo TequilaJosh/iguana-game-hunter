@@ -31,6 +31,7 @@ namespace GameTracker.Services
             public List<string>? SuggestionTypes { get; set; } // null = use built-in defaults
             public List<string> SeedsApplied { get; set; } = new(); // bundled games already offered
             public List<SoundAlert> SoundAlerts { get; set; } = new(); // chat command -> sound file
+            public int OverlayPort { get; set; } = 3620; // port for the live OBS overlay server
         }
 
         private static AppSettings LoadAll()
@@ -98,6 +99,20 @@ namespace GameTracker.Services
         {
             var s = LoadAll();
             s.SoundAlerts = alerts;
+            SaveAll(s);
+        }
+
+        /// <summary>TCP port for the live OBS overlay server (defaults to 3620).</summary>
+        public static int LoadOverlayPort()
+        {
+            int p = LoadAll().OverlayPort;
+            return (p is >= 1 and <= 65535) ? p : 3620;
+        }
+
+        public static void SaveOverlayPort(int port)
+        {
+            var s = LoadAll();
+            s.OverlayPort = (port is >= 1 and <= 65535) ? port : 3620;
             SaveAll(s);
         }
     }

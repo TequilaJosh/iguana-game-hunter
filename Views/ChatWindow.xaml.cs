@@ -56,6 +56,11 @@ namespace GameTracker.Views
             Opacity = op;
 
             _sound.SetAlerts(SettingsService.LoadSoundAlerts());
+
+            // OBS overlay server: show the current port + URL.
+            PortBox.Text = SettingsService.LoadOverlayPort().ToString();
+            UpdateOverlayStatus();
+
             _ready = true;
 
             // Refresh the OBS chat.html a few times a second when there's new chat.
@@ -123,6 +128,46 @@ namespace GameTracker.Views
             var win = new SoundAlertsWindow { Owner = this };
             if (win.ShowDialog() == true)
                 _sound.SetAlerts(SettingsService.LoadSoundAlerts());
+        }
+
+        // ---- OBS overlay server controls ----
+
+        private string OverlayUrl => $"http://localhost:{OverlayServer.Port}/";
+
+        private void ApplyPort_Click(object sender, RoutedEventArgs e)
+        {
+            if (!int.TryParse(PortBox.Text.Trim(), out int port) || port is < 1 or > 65535)
+            {
+                OverlayStatus.Text = "Enter a port between 1 and 65535 (default 3620).";
+                OverlayStatus.Foreground = new SolidColorBrush(Color.FromRgb(0xd4, 0xa4, 0x37));
+                return;
+            }
+
+            SettingsService.SaveOverlayPort(port);
+            OverlayServer.Restart();
+            PortBox.Text = OverlayServer.Port.ToString();
+            UpdateOverlayStatus();
+        }
+
+        private void CopyUrl_Click(object sender, RoutedEventArgs e)
+        {
+            try { Clipboard.SetText(OverlayUrl); OverlayStatus.Text = "Copied: " + OverlayUrl; }
+            catch { /* clipboard can be momentarily locked by another app */ }
+        }
+
+        private void UpdateOverlayStatus()
+        {
+            if (OverlayServer.IsRunning)
+            {
+                OverlayStatus.Text = $"Serving at {OverlayUrl} — use this as the OBS Browser source URL.";
+                OverlayStatus.Foreground = new SolidColorBrush(Color.FromRgb(0x7a, 0x90, 0x70));
+            }
+            else
+            {
+                OverlayStatus.Text = "Overlay server is not running" +
+                    (string.IsNullOrEmpty(OverlayServer.LastError) ? "." : $": {OverlayServer.LastError}. Try another port.");
+                OverlayStatus.Foreground = new SolidColorBrush(Color.FromRgb(0xd4, 0x5a, 0x37));
+            }
         }
 
         private ChatRow ToRow(ChatMessage m)

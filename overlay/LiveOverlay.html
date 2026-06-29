@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LazerGuanas Live Overlay</title>
+<!--
+================================================================================
+ LazerGuanas Game Hunter — Live OBS Overlay (combined panel)
+================================================================================
+
+ STABILITY ARCHITECTURE
+ ----------------------
+ This overlay is built to run unattended inside an OBS Browser source for hours
+ or days without a restart. Every known long-session failure mode for a Chromium
+ browser source is addressed here:
+
+ 1. TRANSPORT (WebSocket, never gives up)
+    - Connects to the in-app server at ws://<host>/ws and receives chat + "now
+      playing" + challenges as JSON pushes. No polling, no per-second full-page
+      reloads (the old <meta refresh> approach thrashed the compositor and reset
+      scroll/animation state every second).
+    - Auto-reconnect with EXPONENTIAL BACKOFF (base 1s, capped at 30s, +jitter),
+      and it NEVER stops trying. If the server is down at startup it just keeps
+      retrying quietly — no permanent error screen.
+    - Distinguishes an INTENTIONAL close (we set `manualClose` before closing,
+      e.g. on a deliberate soft-reload) from an UNEXPECTED drop. Only unexpected
+      drops trigger reconnect.
+    - APPLICATION-LEVEL HEARTBEAT every 15s ({type:"ping"} -> {type:"pong"}).
+      The browser WebSocket API cannot send native control-frame pings, and a
+      half-open TCP socket can sit "open" silently for minutes. If a pong does
+      not arrive within the timeout we force-close, which triggers reconnect.
+
+ 2. MEMORY / DOM HYGIENE
+    - Visible chat is capped (CONFIG.maxMessages). Oldest rows are explicitly
+      removed (node.remove()) and their dedupe keys deleted, so nothing detaches
+      and lingers. We never hold references to removed nodes in closures.
+    - All timers (heartbeat, pong, reconnect, maintenance, scale) have stored
+      handles and are cleared on teardown / pause.
+
+ 3. OBS BROWSER-SOURCE SPECIFICS
+    - visibilitychange: OBS hides the document when its scene is inactive.
+      While hidden we PAUSE the heartbeat and SUPPRESS reconnect attempts
+      (reconnect/timer behaviour is unreliable in a throttled background tab) and
+      resume cleanly when shown again.
+    - focus/blur: handled too, but ONLY to re-check the connection / re-pin
+      scroll on focus. We deliberately do NOT pause on blur, because an OBS
+      source is essentially never the focused window — pausing on blur would
+      pause forever. visibilitychange is the authoritative signal.
+    - We do NOT rely on onbeforeunload (OBS does not fire it reliably).
+    - Rendering uses requestAnimationFrame; data arrives via WebSocket events.
+      setTimeout/Interval are used only for time-based housekeeping (heartbeat,
+      maintenance), never for rendering.
+
+ 4. CSS / RENDERING (cheap in OBS Chromium)
+    - #panel is promoted to its own GPU layer (transform: translateZ(0)).
+    - The message list uses `contain: layout style` to isolate reflow, and the
+      scroll container uses `will-change: transform` to avoid compositor churn.
+    - Animations use ONLY transform + opacity (never top/left/width/height).
+    - box-shadow / filter are used only on STATIC chrome (the panel border), never
+      on frequently-updated elements (chat rows, the live timer).
+    - Fonts: a system font stack is used, so there is no web-font fetch and thus
+      no invisible-text flash (FOIT). If you swap in a @font-face web font, give
+      it `font-display: block` (see the commented stub below).
+
+ 5. ERROR BOUNDARIES
+    - The message handler and the render loop are wrapped in try/catch: one
+      malformed message can never kill the overlay.
+    - Non-JSON or unexpected-schema frames are discarded silently (logged to the
+      debug overlay only) and the overlay keeps running.
+    - A toggleable DEBUG OVERLAY (Ctrl+D) shows recent errors/events so you can
+      troubleshoot on the streaming machine without opening DevTools.
+
+ 6. SCROLL BEHAVIOUR
+    - Auto-scroll to the newest message ONLY when the viewer is already near the
+      bottom (within CONFIG.scrollThresholdPx). If someone scrolls up to read,
+      we leave them there; getting back within the threshold resumes auto-scroll.
+    - scrollTop is never set inside the message loop — it is debounced to once
+      per animation frame.
+
+ 7. LONG-SESSION HYGIENE
+    - If the page has been open longer than CONFIG.softReloadAfterMs (24h) AND
+      chat has been quiet for CONFIG.quietPeriodMs (60s), it does a soft
+      window.location.reload() to clear any accumulated memory drift — only ever
+      during a quiet moment so nothing visible is lost.
+    - Optional periodic clear of the message list every N hours
+      (CONFIG.enablePeriodicClear / CONFIG.clearListIntervalHours).
+
+ USAGE
+ -----
+ Add ONE OBS Browser source pointing at the app's overlay URL
+ (http://localhost:3620/ by default). When opened over http:// the WebSocket URL
+ is derived from the page's own host. If you instead open this file directly
+ (file://), it falls back to ws://<CONFIG.fallbackHost>:<CONFIG.fallbackPort>/ws.
+
+ All tunable values live in the CONFIG object at the very top of the <script>.
+================================================================================
+-->
+<style>
+  /* ---- Optional web font stub: if you add one, keep font-display:block ----
+  @font-face {
+    font-family: 'OverlayFont';
+    src: url('OverlayFont.woff2') format('woff2');
+    font-display: block;
+  }
+  ------------------------------------------------------------------------- */
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    overflow: hidden;
+    /* System stack: no network fetch, so no invisible-text flash (FOIT). */
+    font-family: 'Segoe UI', Segoe, system-ui, sans-serif;
+  }
+
+  #vp { position: absolute; top: 0; left: 0; }
+
+  #panel {
+    position: absolute;
+    inset: 8px;
+    display: flex;
+    flex-direction: column;
+    background: rgba(10, 20, 16, 0.92);
+    border: 2px solid #4a7c3a;
+    border-radius: 12px;
+    box-sizing: border-box;
+    overflow: hidden;
+    /* Static chrome only -> shadow is fine here (it never re-paints per frame). */
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.55);
+    /* Promote the whole overlay to its own GPU layer. */
+    transform: translateZ(0);
+  }
+
+  .sec {
+    padding: 9px 14px;
+    border-bottom: 1px solid #2e4a30;
+    flex: 0 0 auto;
+  }
+  .sec[hidden] { display: none; }
+  .sec.chlist { max-height: 34%; overflow: hidden; }
+  .sec.chat {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    border-bottom: 0;
+    min-height: 0;
+  }
+
+  .hd {
+    color: #7cc44a;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  /* Now Playing */
+  .np-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .np-row .dot {
+    width: 11px; height: 11px; border-radius: 50%;
+    background: #7cc44a; box-shadow: 0 0 8px #7cc44a; flex: 0 0 auto;
+  }
+  .np-row .title { font-size: 20px; font-weight: 700; color: #e8e0c4; }
+  .np-row .time {
+    font-family: Consolas, monospace; font-size: 20px; font-weight: 700;
+    color: #7cc44a; margin-left: auto;
+  }
+  .np-row .req { font-size: 13px; font-weight: 600; color: #d4a437; flex-basis: 100%; }
+  .np-row .req:empty { display: none; }
+
+  /* Challenges */
+  .ch-row { display: flex; align-items: flex-start; margin: 3px 0; }
+  .num {
+    min-width: 20px; height: 20px; border-radius: 50%;
+    background: #243a26; color: #7cc44a; font-weight: 700; font-size: 12px;
+    text-align: center; line-height: 20px; margin-right: 9px; flex: 0 0 auto;
+  }
+  .ch-txt { color: #e8e0c4; font-size: 15px; line-height: 20px; }
+
+  /* Live chat */
+  .live-dot {
+    width: 9px; height: 9px; border-radius: 50%; background: #7cc44a;
+    /* opacity-only pulse (no shadow/filter animation). */
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+
+  .chat .wrap {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-top: 2px;
+    /* Avoid compositor thrash while the list scrolls. */
+    will-change: transform;
+    scrollbar-width: none;            /* Firefox */
+  }
+  .chat .wrap::-webkit-scrollbar { width: 0; height: 0; }  /* Chromium/OBS */
+
+  .msgs {
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;        /* bottom-anchored when under-full */
+    min-height: 100%;
+    /* Isolate reflow of the (frequently mutated) message list. */
+    contain: layout style;
+  }
+
+  .row {
+    margin: 3px 0;
+    font-size: 17px;
+    line-height: 1.3;
+    /* transform + opacity only */
+    transition: opacity 0.18s ease, transform 0.18s ease;
+  }
+  .row.enter { opacity: 0; transform: translateY(6px); }
+  .sym { margin-right: 6px; font-weight: bold; }
+  .user { font-weight: 700; margin-right: 5px; }
+  .msg { color: #ffffff; word-break: break-word; }
+  .emote { height: 1.2em; vertical-align: middle; margin: 0 1px; }
+
+  /* Tiny connection indicator (unobtrusive; not a permanent error screen). */
+  .status {
+    position: absolute; top: 12px; right: 14px;
+    width: 8px; height: 8px; border-radius: 50%;
+    background: #7cc44a; opacity: 0.0;
+    transition: opacity 0.3s ease;
+    pointer-events: none;
+  }
+  .status.show { opacity: 0.9; }
+  .status.down { background: #d45a37; }
+
+  /* Debug overlay (Ctrl+D). */
+  #debug {
+    display: none;
+    position: absolute; inset: 8px;
+    background: rgba(0, 0, 0, 0.88);
+    color: #b6e08a;
+    font-family: Consolas, monospace;
+    font-size: 11px;
+    line-height: 1.4;
+    padding: 10px 12px;
+    border-radius: 10px;
+    overflow: auto;
+    white-space: pre-wrap;
+    z-index: 9999;
+  }
+  #debug.show { display: block; }
+  #debug .dh { color: #d4a437; font-weight: 700; margin-bottom: 6px; }
+  #debug .err { color: #ff8a6a; }
+</style>
+</head>
+<body>
+  <div id="vp">
+    <div id="panel">
+      <section id="np" class="sec" hidden>
+        <div class="hd">● NOW PLAYING</div>
+        <div class="np-row">
+          <span class="dot"></span>
+          <span class="title" id="npTitle"></span>
+          <span class="time" id="npTime"></span>
+          <span class="req" id="npReq"></span>
+        </div>
+      </section>
+
+      <section id="ch" class="sec chlist" hidden>
+        <div class="hd">🎡 CHALLENGES</div>
+        <div id="chRows"></div>
+      </section>
+
+      <section id="chat" class="sec chat">
+        <div class="hd"><span class="live-dot"></span> LIVE CHAT</div>
+        <div id="chatWrap" class="wrap"><div id="chatMsgs" class="msgs"></div></div>
+      </section>
+    </div>
+    <div id="status" class="status"></div>
+  </div>
+  <div id="debug"></div>
+
+<script>
+"use strict";
+(function () {
+  // =========================================================================
+  //  CONFIG — every tunable value lives here.
+  // =========================================================================
+  const CONFIG = {
+    // -- Transport / where to connect when opened as a file:// (over http://
+    //    the host is taken from the page URL, so these only matter for file://).
+    fallbackHost: "localhost",
+    fallbackPort: 3620,
+    wsPath: "/ws",
+
+    // -- Reconnect (exponential backoff; never gives up).
+    reconnectBaseMs: 1000,        // first retry delay
+    reconnectCapMs: 30000,        // maximum retry delay
+    reconnectJitterRatio: 0.30,   // +/- random jitter applied to each delay
+
+    // -- Heartbeat (detects silent half-open sockets).
+    heartbeatIntervalMs: 15000,   // send {type:"ping"} this often
+    heartbeatTimeoutMs: 10000,    // close if no {type:"pong"} within this
+
+    // -- Memory / DOM.
+    maxMessages: 100,             // hard cap on chat rows kept in the DOM
+
+    // -- Scroll.
+    scrollThresholdPx: 50,        // within this of bottom => auto-scroll stays on
+
+    // -- Long-session hygiene.
+    maintenanceIntervalMs: 30000, // how often housekeeping runs
+    softReloadAfterMs: 24 * 60 * 60 * 1000, // reload after 24h open...
+    quietPeriodMs: 60 * 1000,     // ...but only after this long with no chat
+    enablePeriodicClear: false,   // clear the list every N hours?
+    clearListIntervalHours: 6,    // N (only used when enablePeriodicClear)
+
+    // -- Layout: design width the overlay is authored at; OBS source size scales it.
+    designWidth: 360,
+
+    // -- Misc.
+    defaultUserColor: "#a8c488",
+    showStatusDot: true,          // show the tiny connection dot
+    debugMaxLines: 200,           // lines kept in the debug overlay
+  };
+
+  // =========================================================================
+  //  Debug overlay + logging (Ctrl+D). Safe even before DOM is ready.
+  // =========================================================================
+  const dbg = {
+    lines: [],
+    el: null,
+    visible: false,
+    log(msg, isErr) {
+      const ts = new Date().toISOString().slice(11, 19);
+      this.lines.push({ t: ts, m: String(msg), e: !!isErr });
+      if (this.lines.length > CONFIG.debugMaxLines) this.lines.shift();
+      if (this.visible) this.render();
+    },
+    render() {
+      if (!this.el) return;
+      const head = '<div class="dh">DEBUG (Ctrl+D to hide) — ' +
+        'state: ' + connState + '  open: ' + uptimeStr() + '</div>';
+      this.el.innerHTML = head + this.lines.map(function (l) {
+        return '[' + l.t + '] ' + (l.e ? '<span class="err">' + esc(l.m) + '</span>' : esc(l.m));
+      }).join("\n");
+      this.el.scrollTop = this.el.scrollHeight;
+    },
+    toggle() {
+      this.visible = !this.visible;
+      if (this.el) this.el.classList.toggle("show", this.visible);
+      if (this.visible) this.render();
+    },
+  };
+  function log(m) { dbg.log(m, false); }
+  function logErr(m) { dbg.log(m, true); }
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  // Catch anything that escapes a try/catch so it lands in the debug overlay
+  // instead of silently killing the script.
+  window.addEventListener("error", function (e) {
+    logErr("window.error: " + (e.message || e.error || "unknown"));
+  });
+  window.addEventListener("unhandledrejection", function (e) {
+    logErr("unhandledrejection: " + (e.reason && e.reason.message ? e.reason.message : e.reason));
+  });
+
+  // =========================================================================
+  //  State
+  // =========================================================================
+  let ws = null;
+  let connState = "init";          // init | connecting | open | closed
+  let manualClose = false;         // true => an intentional close, do NOT reconnect
+  let backoffStep = 0;             // exponential backoff counter
+  let hidden = false;              // OBS scene inactive (document hidden)
+  let pendingReconnect = false;    // a reconnect was deferred because we were hidden
+
+  let lastStateSig = "";           // dedupe re-render of the static sections
+  const renderedKeys = new Set();  // chat dedupe by stable message id
+  let lastMessageAt = Date.now();  // for the quiet-period soft reload
+  const pageStart = Date.now();
+  let lastClearAt = Date.now();
+
+  // Timer handles (all stored so they can be cleared).
+  let heartbeatTimer = null;
+  let pongTimer = null;
+  let reconnectTimer = null;
+  let maintenanceTimer = null;
+  let scaleRaf = 0;
+  let scrollRaf = 0;
+
+  let autoScroll = true;           // are we pinned to the bottom?
+
+  // DOM refs (filled on init).
+  let elPanel, elNp, elNpTitle, elNpTime, elNpReq, elCh, elChRows,
+      elChatWrap, elChatMsgs, elStatus;
+
+  function uptimeStr() {
+    const s = Math.floor((Date.now() - pageStart) / 1000);
+    const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60);
+    return h + "h" + String(m).padStart(2, "0") + "m";
+  }
+
+  // =========================================================================
+  //  WebSocket URL resolution
+  // =========================================================================
+  function wsUrl() {
+    const p = location.protocol;
+    if (p === "http:" || p === "https:") {
+      const scheme = p === "https:" ? "wss:" : "ws:";
+      return scheme + "//" + location.host + CONFIG.wsPath;
+    }
+    // Opened as a local file -> fall back to the configured loopback server.
+    return "ws://" + CONFIG.fallbackHost + ":" + CONFIG.fallbackPort + CONFIG.wsPath;
+  }
+
+  // =========================================================================
+  //  Connection lifecycle
+  // =========================================================================
+  function connect() {
+    clearReconnect();
+    if (hidden) { pendingReconnect = true; return; }   // don't connect while hidden
+    if (ws && (ws.readyState === 0 || ws.readyState === 1)) return; // already busy
+
+    connState = "connecting";
+    setStatus(false);
+    const url = wsUrl();
+    log("connecting -> " + url);
+
+    try {
+      ws = new WebSocket(url);
+    } catch (e) {
+      logErr("WebSocket ctor failed: " + e.message);
+      scheduleReconnect();
+      return;
+    }
+
+    ws.onopen = function () {
+      connState = "open";
+      backoffStep = 0;            // reset backoff on a clean connect
+      setStatus(true);
+      log("open");
+      startHeartbeat();
+    };
+
+    ws.onmessage = function (ev) {
+      // Error boundary: a single bad frame must never kill the overlay.
+      try {
+        onFrame(ev.data);
+      } catch (e) {
+        logErr("frame handler threw: " + (e && e.message));
+      }
+    };
+
+    ws.onerror = function () {
+      // onclose always follows; let it own the reconnect decision.
+      log("socket error");
+    };
+
+    ws.onclose = function (ev) {
+      connState = "closed";
+      stopHeartbeat();
+      setStatus(false);
+      if (manualClose) {
+        log("closed (intentional) — not reconnecting");
+        return;
+      }
+      log("closed (unexpected, code " + ev.code + ") — will reconnect");
+      scheduleReconnect();
+    };
+  }
+
+  function scheduleReconnect() {
+    clearReconnect();
+    if (manualClose) return;
+    if (hidden) { pendingReconnect = true; return; }   // resume when shown
+    const base = Math.min(CONFIG.reconnectCapMs, CONFIG.reconnectBaseMs * Math.pow(2, backoffStep));
+    backoffStep++;
+    const jitter = base * CONFIG.reconnectJitterRatio * (Math.random() * 2 - 1);
+    const delay = Math.max(0, Math.round(base + jitter));
+    log("reconnect in " + delay + "ms (step " + backoffStep + ")");
+    reconnectTimer = setTimeout(connect, delay);
+  }
+
+  function clearReconnect() {
+    if (reconnectTimer) { clearTimeout(reconnectTimer); reconnectTimer = null; }
+  }
+
+  function send(obj) {
+    if (ws && ws.readyState === 1) {
+      try { ws.send(JSON.stringify(obj)); } catch (e) { logErr("send failed: " + e.message); }
+    }
+  }
+
+  // ---- Heartbeat (app-level ping/pong) ----
+  function startHeartbeat() {
+    stopHeartbeat();
+    heartbeatTimer = setInterval(function () {
+      if (hidden) return;                          // paused while not visible
+      if (!ws || ws.readyState !== 1) return;
+      send({ type: "ping" });
+      if (!pongTimer) {
+        pongTimer = setTimeout(function () {
+          logErr("heartbeat timeout — forcing reconnect");
+          try { ws.close(); } catch (e) {}         // unexpected close => reconnect
+        }, CONFIG.heartbeatTimeoutMs);
+      }
+    }, CONFIG.heartbeatIntervalMs);
+  }
+  function stopHeartbeat() {
+    if (heartbeatTimer) { clearInterval(heartbeatTimer); heartbeatTimer = null; }
+    if (pongTimer) { clearTimeout(pongTimer); pongTimer = null; }
+  }
+  function onPong() {
+    if (pongTimer) { clearTimeout(pongTimer); pongTimer = null; }
+  }
+
+  // =========================================================================
+  //  Incoming frames
+  // =========================================================================
+  function onFrame(raw) {
+    let data;
+    try {
+      data = JSON.parse(raw);
+    } catch (e) {
+      logErr("non-JSON frame discarded");          // discard silently, keep running
+      return;
+    }
+    if (!data || typeof data.type !== "string") {
+      logErr("frame without type discarded");
+      return;
+    }
+
+    switch (data.type) {
+      case "pong":
+        onPong();
+        break;
+      case "snapshot":
+        // Full state given on (re)connect: rebuild from scratch.
+        clearChat();
+        if (data.state) renderState(data.state);
+        if (Array.isArray(data.chat)) {
+          for (let i = 0; i < data.chat.length; i++) appendMessage(data.chat[i]);
+        }
+        break;
+      case "state":
+        if (data.state) renderState(data.state);
+        break;
+      case "chat":
+        if (Array.isArray(data.messages)) {
+          for (let i = 0; i < data.messages.length; i++) appendMessage(data.messages[i]);
+        }
+        break;
+      case "chatClear":
+        clearChat();
+        break;
+      default:
+        log("ignored frame type: " + data.type);   // unknown schema -> ignore
+    }
+  }
+
+  // =========================================================================
+  //  Rendering — state sections (low frequency, rebuild only when changed)
+  // =========================================================================
+  function renderState(s) {
+    try {
+      const live = !!s.live;
+      const title = s.title || "";
+      const elapsed = s.elapsed || "";
+      const requester = s.requester || "";
+      const challenges = Array.isArray(s.challenges) ? s.challenges : [];
+
+      const sig = live + "|" + title + "|" + elapsed + "|" + requester + "|" + challenges.join("␟");
+      if (sig === lastStateSig) return;            // nothing changed
+      lastStateSig = sig;
+
+      // Now Playing
+      if (live) {
+        elNpTitle.textContent = title;
+        elNpTime.textContent = elapsed;
+        elNpReq.textContent = requester ? "req: " + requester : "";
+        elNp.hidden = false;
+      } else {
+        elNp.hidden = true;
+      }
+
+      // Challenges (small list; rebuild via DOM, not innerHTML, to stay XSS-safe)
+      while (elChRows.firstChild) elChRows.removeChild(elChRows.firstChild);
+      if (challenges.length) {
+        for (let i = 0; i < challenges.length; i++) {
+          const row = document.createElement("div");
+          row.className = "ch-row";
+          const num = document.createElement("span");
+          num.className = "num";
+          num.textContent = String(i + 1);
+          const txt = document.createElement("span");
+          txt.className = "ch-txt";
+          txt.textContent = challenges[i];
+          row.appendChild(num);
+          row.appendChild(txt);
+          elChRows.appendChild(row);
+        }
+        elCh.hidden = false;
+      } else {
+        elCh.hidden = true;
+      }
+    } catch (e) {
+      logErr("renderState failed: " + (e && e.message));
+    }
+  }
+
+  // =========================================================================
+  //  Rendering — chat (incremental append, hard DOM cap)
+  // =========================================================================
+  function appendMessage(m) {
+    try {
+      if (!m || typeof m !== "object") return;
+      const id = m.id != null ? String(m.id)
+        : (m.at || "") + "|" + (m.user || "") + "|" + (m.platform || "");
+      if (renderedKeys.has(id)) return;            // dedupe (snapshots overlap)
+      renderedKeys.add(id);
+
+      const row = document.createElement("div");
+      row.className = "row enter";
+      row.dataset.key = id;
+
+      const sym = document.createElement("span");
+      sym.className = "sym";
+      if (m.symbolColor) sym.style.color = m.symbolColor;
+      sym.textContent = m.symbol || "●";
+      row.appendChild(sym);
+
+      const user = document.createElement("span");
+      user.className = "user";
+      user.style.color = m.color || CONFIG.defaultUserColor;
+      user.textContent = (m.user || "") + " ";
+      row.appendChild(user);
+
+      const body = document.createElement("span");
+      body.className = "msg";
+      const segs = Array.isArray(m.segments) ? m.segments : [];
+      for (let i = 0; i < segs.length; i++) {
+        const seg = segs[i];
+        if (seg && seg.t === "emote" && seg.url) {
+          const img = document.createElement("img");
+          img.className = "emote";
+          img.src = seg.url;
+          img.alt = seg.text || "";
+          // A broken emote URL must not break the row.
+          img.addEventListener("error", function () {
+            if (img.parentNode) img.replaceWith(document.createTextNode(seg.text || ""));
+          });
+          body.appendChild(img);
+        } else if (seg) {
+          body.appendChild(document.createTextNode(seg.text || ""));
+        }
+      }
+      row.appendChild(body);
+
+      elChatMsgs.appendChild(row);
+
+      // Entry animation via transform/opacity only.
+      requestAnimationFrame(function () { row.classList.remove("enter"); });
+
+      enforceCap();
+      lastMessageAt = Date.now();
+      scheduleScroll();
+    } catch (e) {
+      logErr("appendMessage failed: " + (e && e.message));
+    }
+  }
+
+  function enforceCap() {
+    // Explicitly remove the oldest nodes AND drop their keys so nothing leaks.
+    while (elChatMsgs.childElementCount > CONFIG.maxMessages) {
+      const old = elChatMsgs.firstElementChild;
+      if (!old) break;
+      if (old.dataset && old.dataset.key) renderedKeys.delete(old.dataset.key);
+      old.remove();
+    }
+  }
+
+  function clearChat() {
+    while (elChatMsgs.firstChild) elChatMsgs.removeChild(elChatMsgs.firstChild);
+    renderedKeys.clear();
+    autoScroll = true;
+  }
+
+  // ---- Scroll: auto-stick to bottom unless the viewer scrolled up ----
+  function onScroll() {
+    const dist = elChatWrap.scrollHeight - elChatWrap.clientHeight - elChatWrap.scrollTop;
+    autoScroll = dist <= CONFIG.scrollThresholdPx;
+  }
+  function scheduleScroll() {
+    if (!autoScroll || scrollRaf) return;
+    scrollRaf = requestAnimationFrame(function () {
+      scrollRaf = 0;
+      if (autoScroll) elChatWrap.scrollTop = elChatWrap.scrollHeight;
+    });
+  }
+
+  // =========================================================================
+  //  Visibility / focus (OBS scene switching)
+  // =========================================================================
+  function onVisibilityChange() {
+    if (document.visibilityState === "hidden") {
+      hidden = true;
+      stopHeartbeat();                 // pause non-critical work
+      log("hidden (scene inactive) — paused");
+    } else {
+      hidden = false;
+      log("visible (scene active) — resuming");
+      // Resume: reconnect if needed, otherwise just re-prime heartbeat + scroll.
+      if (!ws || ws.readyState > 1) {   // closing/closed
+        backoffStep = 0;
+        pendingReconnect = false;
+        connect();
+      } else if (ws.readyState === 1) {
+        startHeartbeat();
+        scheduleScroll();
+      }
+      if (pendingReconnect) { pendingReconnect = false; backoffStep = 0; connect(); }
+    }
+  }
+  // focus/blur: only act on focus (an OBS source is ~never the focused window,
+  // so we must NOT pause on blur or we'd pause permanently).
+  function onFocus() {
+    if (!hidden && (!ws || ws.readyState > 1)) { backoffStep = 0; connect(); }
+  }
+
+  // =========================================================================
+  //  Long-session housekeeping
+  // =========================================================================
+  function maintenance() {
+    if (hidden) return;                 // paused while not visible
+    const now = Date.now();
+
+    // Optional periodic clear.
+    if (CONFIG.enablePeriodicClear) {
+      const everyMs = CONFIG.clearListIntervalHours * 3600 * 1000;
+      if (now - lastClearAt >= everyMs) {
+        lastClearAt = now;
+        clearChat();
+        log("periodic clear");
+      }
+    }
+
+    // Soft self-reload after a long uptime, but only during a quiet moment.
+    if (now - pageStart >= CONFIG.softReloadAfterMs &&
+        now - lastMessageAt >= CONFIG.quietPeriodMs) {
+      log("soft reload (long uptime, quiet) — reloading");
+      manualClose = true;               // mark our own close as intentional
+      try { if (ws) ws.close(1000, "soft-reload"); } catch (e) {}
+      location.reload();
+    }
+  }
+
+  // =========================================================================
+  //  Scaling — author at designWidth, scale uniformly to the OBS source size.
+  // =========================================================================
+  function applyScale() {
+    const vp = document.getElementById("vp");
+    if (!vp) return;
+    const s = window.innerWidth / CONFIG.designWidth;
+    vp.style.transformOrigin = "top left";
+    vp.style.transform = "scale(" + s + ")";
+    vp.style.width = CONFIG.designWidth + "px";
+    vp.style.height = (window.innerHeight / s) + "px";
+  }
+  function onResize() {
+    if (scaleRaf) return;
+    scaleRaf = requestAnimationFrame(function () { scaleRaf = 0; applyScale(); });
+  }
+
+  function setStatus(up) {
+    if (!CONFIG.showStatusDot || !elStatus) return;
+    elStatus.classList.toggle("down", !up);
+    // Only flash the dot while down/connecting; hide it once healthy so it does
+    // not clutter the stream. It is never a permanent error screen.
+    elStatus.classList.toggle("show", !up);
+  }
+
+  // =========================================================================
+  //  Init
+  // =========================================================================
+  function init() {
+    elPanel = document.getElementById("panel");
+    elNp = document.getElementById("np");
+    elNpTitle = document.getElementById("npTitle");
+    elNpTime = document.getElementById("npTime");
+    elNpReq = document.getElementById("npReq");
+    elCh = document.getElementById("ch");
+    elChRows = document.getElementById("chRows");
+    elChatWrap = document.getElementById("chatWrap");
+    elChatMsgs = document.getElementById("chatMsgs");
+    elStatus = document.getElementById("status");
+    dbg.el = document.getElementById("debug");
+
+    elChatWrap.addEventListener("scroll", onScroll, { passive: true });
+
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("blur", function () { log("blur (ignored for pause)"); });
+
+    // Ctrl+D toggles the debug overlay.
+    window.addEventListener("keydown", function (e) {
+      if (e.ctrlKey && (e.key === "d" || e.key === "D")) {
+        e.preventDefault();
+        dbg.toggle();
+      }
+    });
+
+    window.addEventListener("resize", onResize);
+    applyScale();
+
+    hidden = (document.visibilityState === "hidden");
+    maintenanceTimer = setInterval(maintenance, CONFIG.maintenanceIntervalMs);
+
+    log("init (uptime clock started)");
+    connect();
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>

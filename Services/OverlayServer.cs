@@ -219,7 +219,11 @@ namespace GameTracker.Services
 
         private static async Task ServeHtml(NetworkStream stream, CancellationToken ct)
         {
-            var body = Encoding.UTF8.GetBytes(_html);
+            // Inject the user's "chat lines" choice fresh on every load, so changing it
+            // just needs an OBS source refresh (no server restart).
+            var html = _html.Replace("maxMessages: 20,",
+                "maxMessages: " + SettingsService.LoadOverlayChatLines() + ",");
+            var body = Encoding.UTF8.GetBytes(html);
             var head =
                 "HTTP/1.1 200 OK\r\n" +
                 "Content-Type: text/html; charset=utf-8\r\n" +

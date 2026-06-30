@@ -120,7 +120,7 @@
     position: absolute;
     inset: 8px;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;              /* left column (now playing + challenges) | chat */
     background: rgba(10, 20, 16, 0.92);
     border: 2px solid #4a7c3a;
     border-radius: 12px;
@@ -132,18 +132,32 @@
     transform: translateZ(0);
   }
 
+  /* Left column: now playing + challenges, stacked. */
+  #left {
+    flex: 0 0 42%;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+    border-right: 1px solid #2e4a30;
+  }
+  #left[hidden] { display: none; }
+
   .sec {
-    padding: 9px 14px;
-    border-bottom: 1px solid #2e4a30;
+    padding: 7px 14px;
     flex: 0 0 auto;
   }
   .sec[hidden] { display: none; }
-  .sec.chlist { max-height: 34%; overflow: hidden; }
+  #left .sec { border-bottom: 1px solid #2e4a30; }
+  #left .sec:last-child { border-bottom: 0; }
+  /* Challenges fill the rest of the left column. */
+  .sec.chlist { flex: 1 1 auto; min-height: 0; overflow: hidden; }
+  /* Chat is the whole right column. */
   .sec.chat {
     flex: 1 1 auto;
     display: flex;
     flex-direction: column;
-    border-bottom: 0;
+    min-width: 0;
     min-height: 0;
   }
 
@@ -211,9 +225,9 @@
   }
 
   .row {
-    margin: 3px 0;
-    font-size: 17px;
-    line-height: 1.3;
+    margin: 2px 0;
+    font-size: 16px;
+    line-height: 1.25;
     /* transform + opacity only */
     transition: opacity 0.18s ease, transform 0.18s ease;
   }
@@ -257,20 +271,22 @@
 <body>
   <div id="vp">
     <div id="panel">
-      <section id="np" class="sec" hidden>
-        <div class="hd">● NOW PLAYING</div>
-        <div class="np-row">
-          <span class="dot"></span>
-          <span class="title" id="npTitle"></span>
-          <span class="time" id="npTime"></span>
-          <span class="req" id="npReq"></span>
-        </div>
-      </section>
+      <div id="left">
+        <section id="np" class="sec" hidden>
+          <div class="hd">● NOW PLAYING</div>
+          <div class="np-row">
+            <span class="dot"></span>
+            <span class="title" id="npTitle"></span>
+            <span class="time" id="npTime"></span>
+            <span class="req" id="npReq"></span>
+          </div>
+        </section>
 
-      <section id="ch" class="sec chlist" hidden>
-        <div class="hd">🎡 CHALLENGES</div>
-        <div id="chRows"></div>
-      </section>
+        <section id="ch" class="sec chlist" hidden>
+          <div class="hd">🎡 CHALLENGES</div>
+          <div id="chRows"></div>
+        </section>
+      </div>
 
       <section id="chat" class="sec chat">
         <div class="hd"><span class="live-dot"></span> LIVE CHAT</div>
@@ -303,8 +319,9 @@
     heartbeatIntervalMs: 15000,   // send {type:"ping"} this often
     heartbeatTimeoutMs: 10000,    // close if no {type:"pong"} within this
 
-    // -- Memory / DOM.
-    maxMessages: 100,             // hard cap on chat rows kept in the DOM
+    // -- Memory / DOM. (Doubles as "how many chat lines to show"; the app
+    //    injects the user's choice here at serve time. Default 20.)
+    maxMessages: 20,              // hard cap on chat rows kept in the DOM
 
     // -- Scroll.
     scrollThresholdPx: 50,        // within this of bottom => auto-scroll stays on
@@ -317,7 +334,8 @@
     clearListIntervalHours: 6,    // N (only used when enablePeriodicClear)
 
     // -- Layout: design width the overlay is authored at; OBS source size scales it.
-    designWidth: 360,
+    //    Wider for the two-column (info | chat) layout.
+    designWidth: 640,
 
     // -- Misc.
     defaultUserColor: "#a8c488",
@@ -395,7 +413,7 @@
   let autoScroll = true;           // are we pinned to the bottom?
 
   // DOM refs (filled on init).
-  let elPanel, elNp, elNpTitle, elNpTime, elNpReq, elCh, elChRows,
+  let elPanel, elLeft, elNp, elNpTitle, elNpTime, elNpReq, elCh, elChRows,
       elChatWrap, elChatMsgs, elStatus;
 
   function uptimeStr() {
@@ -607,6 +625,9 @@
       } else {
         elCh.hidden = true;
       }
+
+      // Collapse the left column when it has nothing, so chat spans full width.
+      if (elLeft) elLeft.hidden = (elNp.hidden && elCh.hidden);
     } catch (e) {
       logErr("renderState failed: " + (e && e.message));
     }
@@ -788,6 +809,7 @@
   // =========================================================================
   function init() {
     elPanel = document.getElementById("panel");
+    elLeft = document.getElementById("left");
     elNp = document.getElementById("np");
     elNpTitle = document.getElementById("npTitle");
     elNpTime = document.getElementById("npTime");

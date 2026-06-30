@@ -84,6 +84,9 @@
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal"
                                 shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                        <Button x:Name="MuteButton" Content="&#128266;" Click="Mute_Click"
+                                Style="{StaticResource WindowControlButton}" FontSize="11"
+                                ToolTip="Stop sound alerts (panic): kill the current alert and mute incoming"/>
                         <Button x:Name="CollapseButton" Content="&#9650;" Click="Collapse_Click"
                                 Style="{StaticResource WindowControlButton}" FontSize="9"
                                 ToolTip="Hide the connect bar (clean chat box)"/>
@@ -221,6 +224,20 @@
                         <Button x:Name="CopyUrlBtn" Grid.Column="3" Content="Copy URL" Click="CopyUrl_Click"
                                 Style="{StaticResource ConnectBtn}" Margin="6,0,0,0"
                                 ToolTip="Copy the Browser-source URL to the clipboard"/>
+                    </Grid>
+                    <Grid Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="62"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="Chat lines" Foreground="#a8c488" FontSize="11"
+                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBox x:Name="ChatLinesBox" Grid.Column="1" Style="{StaticResource ChanBox}"
+                                 MaxLength="3" LostFocus="ChatLines_Changed"
+                                 ToolTip="How many chat lines the overlay shows (5–100, default 20)"/>
+                        <TextBlock Grid.Column="2" Text="(refresh OBS source to apply)" Foreground="#506050"
+                                   FontSize="10" VerticalAlignment="Center" Margin="8,0,0,0"/>
                     </Grid>
                     <TextBlock x:Name="OverlayStatus" Foreground="#7a9070" FontSize="11"
                                TextWrapping="Wrap"

@@ -32,6 +32,7 @@ namespace GameTracker.Services
             public List<string> SeedsApplied { get; set; } = new(); // bundled games already offered
             public List<SoundAlert> SoundAlerts { get; set; } = new(); // chat command -> sound file
             public int OverlayPort { get; set; } = 3620; // port for the live OBS overlay server
+            public int OverlayChatLines { get; set; } = 20; // chat lines shown on the overlay
         }
 
         private static AppSettings LoadAll()
@@ -113,6 +114,20 @@ namespace GameTracker.Services
         {
             var s = LoadAll();
             s.OverlayPort = (port is >= 1 and <= 65535) ? port : 3620;
+            SaveAll(s);
+        }
+
+        /// <summary>How many chat lines the OBS overlay shows (clamped 5–100, default 20).</summary>
+        public static int LoadOverlayChatLines()
+        {
+            int n = LoadAll().OverlayChatLines;
+            return (n is >= 5 and <= 100) ? n : 20;
+        }
+
+        public static void SaveOverlayChatLines(int lines)
+        {
+            var s = LoadAll();
+            s.OverlayChatLines = (lines is >= 5 and <= 100) ? lines : 20;
             SaveAll(s);
         }
     }

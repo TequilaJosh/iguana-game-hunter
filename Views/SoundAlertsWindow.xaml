@@ -144,10 +144,18 @@
                     HorizontalAlignment="Left" Margin="12,10,0,0"/>
 
             <!-- Footer -->
-            <StackPanel Grid.Row="5" Orientation="Horizontal" HorizontalAlignment="Right" Margin="12,12,12,14">
-                <Button Content="Cancel" Click="Cancel_Click" Style="{StaticResource SmallBtn}"/>
-                <Button Content="Save" Click="Save_Click" Style="{StaticResource ActionBtn}"/>
-            </StackPanel>
+            <Grid Grid.Row="5" Margin="12,12,12,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="TestStatus" Grid.Column="0" Foreground="#7a9070" FontSize="11"
+                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="2,0,8,0"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Content="Cancel" Click="Cancel_Click" Style="{StaticResource SmallBtn}"/>
+                    <Button Content="Save" Click="Save_Click" Style="{StaticResource ActionBtn}"/>
+                </StackPanel>
+            </Grid>
         </Grid>
     </Border>
 </Window>

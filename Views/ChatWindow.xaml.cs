@@ -15,7 +15,7 @@ namespace GameTracker.Views
     public partial class ChatWindow : Window
     {
         private const int MaxMessages = 400;
-        private const int OverlayMessages = 20;
+        private int _overlayLines = 20;   // how many recent messages feed the overlay (user-set)
 
         private readonly TwitchChatConnector _twitch = new();
         private readonly SocialStreamConnector _ssn = new();
@@ -56,9 +56,12 @@ namespace GameTracker.Views
             Opacity = op;
 
             _sound.SetAlerts(SettingsService.LoadSoundAlerts());
+            UpdateMuteButton();
 
-            // OBS overlay server: show the current port + URL.
+            // OBS overlay server: show the current port + URL + chat-line count.
             PortBox.Text = SettingsService.LoadOverlayPort().ToString();
+            _overlayLines = SettingsService.LoadOverlayChatLines();
+            ChatLinesBox.Text = _overlayLines.ToString();
             UpdateOverlayStatus();
 
             _ready = true;
@@ -69,7 +72,7 @@ namespace GameTracker.Views
             {
                 if (!_chatDirty) return;
                 _chatDirty = false;
-                OverlayService.WriteChatHtml(_recent.TakeLast(OverlayMessages).ToList());
+                OverlayService.WriteChatHtml(_recent.TakeLast(_overlayLines).ToList());
             };
             _overlayTimer.Start();
         }
@@ -97,7 +100,7 @@ namespace GameTracker.Views
                 while (_rows.Count > MaxMessages) _rows.RemoveAt(0);
 
                 _recent.Add(m);
-                while (_recent.Count > OverlayMessages) _recent.RemoveAt(0);
+                while (_recent.Count > _overlayLines) _recent.RemoveAt(0);
                 _chatDirty = true;
 
                 HandleCommands(m);
@@ -130,6 +133,24 @@ namespace GameTracker.Views
                 _sound.SetAlerts(SettingsService.LoadSoundAlerts());
         }
 
+        private void Mute_Click(object sender, RoutedEventArgs e)
+        {
+            _sound.Muted = !_sound.Muted;
+            if (_sound.Muted) _sound.StopAll();   // panic: kill anything currently playing
+            UpdateMuteButton();
+        }
+
+        private void UpdateMuteButton()
+        {
+            MuteButton.Content = _sound.Muted ? "\U0001F507" : "\U0001F50A";   // 🔇 / 🔊
+            MuteButton.Foreground = _sound.Muted
+                ? new SolidColorBrush(Color.FromRgb(0xd4, 0x5a, 0x37))         // red when muted
+                : new SolidColorBrush(Color.FromRgb(0x7a, 0x90, 0x70));        // gray when active
+            MuteButton.ToolTip = _sound.Muted
+                ? "Sound alerts muted — click to unmute"
+                : "Stop sound alerts (panic): kill the current alert and mute incoming";
+        }
+
         // ---- OBS overlay server controls ----
 
         private string OverlayUrl => $"http://localhost:{OverlayServer.Port}/";
@@ -153,6 +174,17 @@ namespace GameTracker.Views
         {
             try { Clipboard.SetText(OverlayUrl); OverlayStatus.Text = "Copied: " + OverlayUrl; }
             catch { /* clipboard can be momentarily locked by another app */ }
+        }
+
+        private void ChatLines_Changed(object sender, RoutedEventArgs e)
+        {
+            if (!_ready) return;
+            if (!int.TryParse(ChatLinesBox.Text.Trim(), out int n)) return;
+            n = Math.Clamp(n, 5, 100);
+            _overlayLines = n;
+            SettingsService.SaveOverlayChatLines(n);
+            OverlayStatus.Text = $"Chat set to {n} lines — refresh the OBS source to apply.";
+            OverlayStatus.Foreground = new SolidColorBrush(Color.FromRgb(0x7a, 0x90, 0x70));
         }
 
         private void UpdateOverlayStatus()

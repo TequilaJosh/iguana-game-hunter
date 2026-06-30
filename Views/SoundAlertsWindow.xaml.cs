@@ -47,8 +47,14 @@ namespace GameTracker.Views
 
         private void Test_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is FrameworkElement fe && fe.Tag is AlertItem item)
-                _tester.Play(item.FilePath);
+            if (sender is not FrameworkElement fe || fe.Tag is not AlertItem item) return;
+            if (string.IsNullOrWhiteSpace(item.FilePath))
+            {
+                TestStatus.Text = "Pick a sound file first (Browse).";
+                return;
+            }
+            TestStatus.Text = "▶ Playing " + System.IO.Path.GetFileName(item.FilePath);
+            _tester.Play(item.FilePath, msg => Dispatcher.Invoke(() => TestStatus.Text = msg));
         }
 
         private void Save_Click(object sender, RoutedEventArgs e)

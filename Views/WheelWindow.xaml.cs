@@ -18,10 +18,11 @@ namespace GameTracker.Views
     {
         private const double Cx = 180, Cy = 180, R = 170;
 
-        private readonly List<string> _items;          // faces currently on the wheel (≤ MaxWheel)
+        private readonly List<string> _items;          // faces currently on the wheel (≤ _maxWheel)
         private readonly List<string> _pool = new();   // full master list (custom-wheel rotation)
         private readonly List<string> _queue = new();  // unused items waiting to rotate in
-        private const int MaxWheel = 20;
+        private int _maxWheel = 20;                      // how many items show at once (editable)
+        private Action<int>? _onWheelMaxChanged;
         private bool _rotation;                          // custom challenge wheel: cap + cycle on land
         private readonly List<string> _results;
         private readonly bool _editable;
@@ -59,7 +60,9 @@ namespace GameTracker.Views
                            Action<List<string>>? onResultsChanged = null,
                            Action<string>? onRolled = null,
                            List<WheelGame>? games = null,
-                           Action<Guid>? onStartGame = null)
+                           Action<Guid>? onStartGame = null,
+                           int wheelMax = 20,
+                           Action<int>? onWheelMaxChanged = null)
         {
             InitializeComponent();
 
@@ -71,6 +74,8 @@ namespace GameTracker.Views
             _onRolled = onRolled;
             _recordResults = onResultsChanged != null;
             _onChosen = onChosen;
+            _maxWheel = wheelMax is >= 2 and <= 100 ? wheelMax : 20;
+            _onWheelMaxChanged = onWheelMaxChanged;
 
             TitleBarText.Text = header.ToUpperInvariant();
 
@@ -100,6 +105,7 @@ namespace GameTracker.Views
                 RebuildRotation();
 
                 EditorPanel.Visibility = Visibility.Visible;
+                MaxBox.Text = _maxWheel.ToString();
                 RefreshItemsList();
                 RefreshResultsList();
             }
@@ -441,7 +447,7 @@ namespace GameTracker.Views
         }
 
         // Build the wheel's active rotation from the master pool, skipping items already
-        // rolled (kept out of rotation): the first MaxWheel land on the wheel, the rest queue.
+        // rolled (kept out of rotation): the first _maxWheel land on the wheel, the rest queue.
         private void RebuildRotation()
         {
             var available = new List<string>(_pool);
@@ -450,7 +456,28 @@ namespace GameTracker.Views
             _items.Clear();
             _queue.Clear();
             foreach (var it in available)
-                (_items.Count < MaxWheel ? _items : _queue).Add(it);
+                (_items.Count < _maxWheel ? _items : _queue).Add(it);
+        }
+
+        private void MaxItems_Changed(object sender, RoutedEventArgs e)
+        {
+            if (!_rotation) return;
+            if (!int.TryParse(MaxBox.Text.Trim(), out int n)) { MaxBox.Text = _maxWheel.ToString(); return; }
+            n = Math.Clamp(n, 2, 100);
+            MaxBox.Text = n.ToString();
+            if (n == _maxWheel) return;
+
+            _maxWheel = n;
+            RebuildRotation();
+            RefreshItemsList();
+            BuildWheel();
+            _winnerIndex = -1;
+            _onWheelMaxChanged?.Invoke(_maxWheel);
+        }
+
+        private void MaxBox_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter) { MaxItems_Changed(sender, e); }
         }
 
         // Randomize order while keeping related items apart: group by leading word so
@@ -514,7 +541,7 @@ namespace GameTracker.Views
             ItemsList.ItemsSource = null;
             ItemsList.ItemsSource = list.ToList();
             if (_rotation)
-                ItemsHeader.Text = $"WHEEL ITEMS  ({_items.Count}/{_pool.Count})";
+                ItemsHeader.Text = $"{_items.Count}/{_pool.Count} on wheel";
         }
 
         private void RefreshResultsList()

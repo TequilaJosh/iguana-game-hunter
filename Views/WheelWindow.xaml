@@ -190,11 +190,23 @@
                             <Grid.ColumnDefinitions>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <TextBlock x:Name="ItemsHeader" Text="WHEEL ITEMS" Foreground="#7cc44a"
-                                       FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
-                            <Button Grid.Column="1" Content="&#128256; Shuffle" Click="Shuffle_Click"
-                                    Style="{StaticResource WheelBtn}" Padding="8,2" FontSize="11"
+                                       FontSize="11" FontWeight="Bold" VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis"/>
+                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"
+                                        Margin="6,0,6,0">
+                                <TextBlock Text="Max" Foreground="#7a9070" FontSize="11"
+                                           VerticalAlignment="Center" Margin="0,0,3,0"/>
+                                <TextBox x:Name="MaxBox" Width="32" Background="#142016" Foreground="#e8e0c4"
+                                         BorderBrush="#2e4a30" BorderThickness="1" CaretBrush="#7cc44a"
+                                         Padding="2,2" FontSize="11" TextAlignment="Center" MaxLength="3"
+                                         LostFocus="MaxItems_Changed" KeyDown="MaxBox_KeyDown"
+                                         ToolTip="Max items shown on the wheel at once — the rest rotate in as you land on them"/>
+                            </StackPanel>
+                            <Button Grid.Column="2" Content="&#128256; Shuffle" Click="Shuffle_Click"
+                                    Style="{StaticResource WheelBtn}" Padding="6,2" FontSize="11"
                                     ToolTip="Randomize the order, spreading similar items (No…, Any…, duplicates) around the wheel instead of clustering them"/>
                         </Grid>
                         <Grid Grid.Row="1" Margin="0,0,0,8">

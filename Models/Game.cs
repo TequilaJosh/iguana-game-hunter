@@ -109,6 +109,9 @@ namespace GameTracker.Models
         // User-defined options for this game's custom randomization wheel.
         public List<string> WheelItems { get; set; } = new();
 
+        // How many wheel items appear at once (the rest rotate in as they're landed on).
+        public int WheelMax { get; set; } = 20;
+
         // Results rolled from the wheel — the active "challenges" list (also shown on the OBS overlay).
         public List<string> WheelResults { get; set; } = new();
 

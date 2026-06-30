@@ -599,7 +599,9 @@ namespace GameTracker
                     Save();
                     Services.OverlayService.Update(CurrentlyStreaming());
                 },
-                onRolled: challenge => LogChallengeToSession(game, challenge))
+                onRolled: challenge => LogChallengeToSession(game, challenge),
+                wheelMax: game.WheelMax,
+                onWheelMaxChanged: max => { game.WheelMax = max; Save(); })
             { Owner = this };
             _wheelWindows[id] = win;
             win.Closed += (_, _) => _wheelWindows.Remove(id);

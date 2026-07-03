@@ -21,6 +21,19 @@ namespace GameTracker.Views
         public static void SetRow(DependencyObject o, ChatWindow.ChatRow v) => o.SetValue(RowProperty, v);
         public static ChatWindow.ChatRow? GetRow(DependencyObject o) => (ChatWindow.ChatRow?)o.GetValue(RowProperty);
 
+        // Boxed mode: header (symbol + badges + name, dark-on-color) and body (message only).
+        public static readonly DependencyProperty HeaderRowProperty =
+            DependencyProperty.RegisterAttached("HeaderRow", typeof(ChatWindow.ChatRow), typeof(ChatInlines),
+                new PropertyMetadata(null, OnHeaderChanged));
+        public static void SetHeaderRow(DependencyObject o, ChatWindow.ChatRow v) => o.SetValue(HeaderRowProperty, v);
+        public static ChatWindow.ChatRow? GetHeaderRow(DependencyObject o) => (ChatWindow.ChatRow?)o.GetValue(HeaderRowProperty);
+
+        public static readonly DependencyProperty BodyRowProperty =
+            DependencyProperty.RegisterAttached("BodyRow", typeof(ChatWindow.ChatRow), typeof(ChatInlines),
+                new PropertyMetadata(null, OnBodyChanged));
+        public static void SetBodyRow(DependencyObject o, ChatWindow.ChatRow v) => o.SetValue(BodyRowProperty, v);
+        public static ChatWindow.ChatRow? GetBodyRow(DependencyObject o) => (ChatWindow.ChatRow?)o.GetValue(BodyRowProperty);
+
         private static readonly Brush Gray = Freeze(0x7a, 0x90, 0x70);
         private static readonly Brush Body = Freeze(0xe8, 0xe0, 0xc4);
 
@@ -80,6 +93,36 @@ namespace GameTracker.Views
             catch
             {
                 return new Run(seg.Text) { Foreground = Body }; // fall back to alt text
+            }
+        }
+
+        private static readonly Brush Dark = Freeze(0x0a, 0x14, 0x10);
+
+        private static void OnHeaderChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is not TextBlock tb) return;
+            tb.Inlines.Clear();
+            if (e.NewValue is not ChatWindow.ChatRow row) return;
+
+            if (!string.IsNullOrEmpty(row.Symbol))
+                tb.Inlines.Add(new Run(row.Symbol + " ") { Foreground = Dark, FontWeight = FontWeights.Bold });
+            foreach (var b in row.Badges)
+                tb.Inlines.Add(BuildBadge(b));
+            tb.Inlines.Add(new Run(row.User) { FontWeight = FontWeights.Bold, Foreground = Dark });
+        }
+
+        private static void OnBodyChanged(DependencyObject d, DependencyPropertyChangedEventArgs e)
+        {
+            if (d is not TextBlock tb) return;
+            tb.Inlines.Clear();
+            if (e.NewValue is not ChatWindow.ChatRow row) return;
+
+            foreach (var seg in row.Segments)
+            {
+                if (seg.Kind == ChatSegmentKind.Emote && !string.IsNullOrEmpty(seg.Url))
+                    tb.Inlines.Add(BuildEmote(seg));
+                else
+                    tb.Inlines.Add(new Run(seg.Text) { Foreground = Brushes.White });
             }
         }
 

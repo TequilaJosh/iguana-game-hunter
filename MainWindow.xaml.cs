@@ -704,6 +704,8 @@ namespace GameTracker
             if (_games.Any(g => string.Equals(g.Title?.Trim(), title, StringComparison.OrdinalIgnoreCase)))
             {
                 StatusText.Text = $"“{title}” is already in the list (requested by {requester}).";
+                Services.OverlayServer.Toast($"{title} is already on the list, {requester}!");
+                _chatWindow?.SendChatReply($"@{requester} {title} is already on the list!");
                 return;
             }
 
@@ -717,6 +719,8 @@ namespace GameTracker
             Save();
             RefreshView();
             StatusText.Text = $"Added “{title}” to Dormant (requested by {requester}).";
+            Services.OverlayServer.Toast($"✔ {title} added — requested by {requester}!", confetti: true);
+            _chatWindow?.SendChatReply($"@{requester} ✔ {title} was added to the request list!");
         }
 
         private void OpenEditDialog(Guid id)

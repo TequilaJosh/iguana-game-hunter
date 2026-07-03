@@ -65,7 +65,9 @@
             <Grid.RowDefinitions>
                 <RowDefinition Height="32"/>
                 <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <!-- Title bar -->
@@ -205,9 +207,17 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" VerticalAlignment="Center" Foreground="#7a9070" FontSize="11"
                                    TextWrapping="Wrap" Text="Viewers can type !request &lt;game&gt; to add it to Dormant."/>
-                        <Button Grid.Column="1" Content="&#128266; Sound Alerts" Click="SoundAlerts_Click"
-                                Style="{StaticResource ConnectBtn}" VerticalAlignment="Center" Margin="8,0,0,0"
-                                ToolTip="Set up chat commands that play your own sound files"/>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Content="&#128101; Chatters" Click="Chatters_Click"
+                                    Style="{StaticResource ConnectBtn}" Margin="8,0,0,0"
+                                    ToolTip="Who's in the room: green = active, yellow = lurking"/>
+                            <Button Content="&#9881; Features" Click="Features_Click"
+                                    Style="{StaticResource ConnectBtn}" Margin="6,0,0,0"
+                                    ToolTip="Chatter counts, points, chat style, and point redeems"/>
+                            <Button Content="&#128266; Sound Alerts" Click="SoundAlerts_Click"
+                                    Style="{StaticResource ConnectBtn}" Margin="6,0,0,0"
+                                    ToolTip="Set up chat commands that play your own sound files"/>
+                        </StackPanel>
                     </Grid>
 
                     <!-- OBS overlay (live WebSocket panel) -->
@@ -253,11 +263,18 @@
                 </StackPanel>
             </Border>
 
+            <!-- Chatter count bar -->
+            <Border x:Name="CountBar" Grid.Row="2" Background="#0f1812"
+                    BorderBrush="#2e4a30" BorderThickness="0,0,0,1" Padding="10,4"
+                    Visibility="Collapsed">
+                <TextBlock x:Name="CountText" FontSize="12" Foreground="#a8c488"/>
+            </Border>
+
             <!-- Messages -->
-            <ScrollViewer x:Name="MsgScroll" Grid.Row="2" VerticalScrollBarVisibility="Auto" Padding="10,8">
+            <ScrollViewer x:Name="MsgScroll" Grid.Row="3" VerticalScrollBarVisibility="Auto" Padding="10,8">
                 <ItemsControl x:Name="MessageList">
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
+                    <ItemsControl.Resources>
+                        <DataTemplate x:Key="LogRow">
                             <Border Margin="0,1" Padding="4,2" CornerRadius="4" Background="{Binding RowBrush}">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
@@ -275,9 +292,45 @@
                                 </Grid>
                             </Border>
                         </DataTemplate>
-                    </ItemsControl.ItemTemplate>
+                        <DataTemplate x:Key="BoxRow">
+                            <Border Margin="0,3" CornerRadius="8" Background="{Binding BoxBrush}">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="7,3,7,2">
+                                        <Border Width="18" Height="18" CornerRadius="9"
+                                                Background="{Binding AvatarBrush}" Margin="0,0,6,0">
+                                            <TextBlock Text="{Binding Initial}" Foreground="#0a1410" FontSize="9"
+                                                       FontWeight="Bold" HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"/>
+                                        </Border>
+                                        <TextBlock FontSize="12" VerticalAlignment="Center"
+                                                   local:ChatInlines.HeaderRow="{Binding}"/>
+                                    </StackPanel>
+                                    <Border Background="#DD000000" CornerRadius="0,0,8,8" Padding="9,4">
+                                        <TextBlock TextWrapping="Wrap" FontSize="13"
+                                                   local:ChatInlines.BodyRow="{Binding}"/>
+                                    </Border>
+                                </StackPanel>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.Resources>
                 </ItemsControl>
             </ScrollViewer>
+
+            <!-- Send bar (two-way chat via Social Stream Ninja) -->
+            <Border Grid.Row="4" Background="#0f1812" BorderBrush="#2e4a30"
+                    BorderThickness="0,1,0,0" Padding="8,6">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <TextBox x:Name="SendBox" Grid.Column="0" Style="{StaticResource ChanBox}"
+                             KeyDown="SendBox_KeyDown" Margin="0,0,6,0"
+                             ToolTip="Send a message to all your chats through Social Stream Ninja (needs SSN connected)"/>
+                    <Button x:Name="SendBtn" Grid.Column="1" Content="Send" Click="Send_Click"
+                            Style="{StaticResource ConnectBtn}"/>
+                </Grid>
+            </Border>
         </Grid>
     </Border>
 </Window>

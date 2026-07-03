@@ -32,6 +32,13 @@ namespace GameTracker.Views
 
         private readonly SoundService _sound = new();
 
+        private ChatFeatureSettings _features = new();
+        private readonly ChattersService _chattersSvc = new();
+        private DispatcherTimer? _chattersTimer;
+        private ChattersWindow? _chattersWindow;
+        private bool _chattersDirty;
+        private int _boxColorIdx;
+
         /// <summary>Raised when a viewer runs "!request &lt;game&gt;" — (game title, requester).</summary>
         public Action<string, string>? OnGameRequested;
 
@@ -59,6 +66,22 @@ namespace GameTracker.Views
 
             _sound.SetAlerts(SettingsService.LoadSoundAlerts());
             UpdateMuteButton();
+
+            // Chat features: counts, chatters list, points, style, redeems.
+            _features = SettingsService.LoadChatFeatures();
+            ApplyChatTemplate();
+            UpdateChattersUi();
+            _chattersTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(3) };
+            _chattersTimer.Tick += (_, _) =>
+            {
+                var (changed, awards) = _chattersSvc.Tick(3, _features);
+                if (changed || awards > 0 || _chattersDirty)
+                {
+                    _chattersDirty = false;
+                    UpdateChattersUi();
+                }
+            };
+            _chattersTimer.Start();
 
             // OBS overlay server: show the current port + URL + chat-line count.
             PortBox.Text = SettingsService.LoadOverlayPort().ToString();
@@ -105,6 +128,9 @@ namespace GameTracker.Views
                 while (_recent.Count > _overlayLines) _recent.RemoveAt(0);
                 _chatDirty = true;
 
+                _chattersSvc.OnMessage(m);
+                _chattersDirty = true;
+
                 HandleCommands(m);
 
                 if (atBottom) MsgScroll.ScrollToEnd();
@@ -118,14 +144,58 @@ namespace GameTracker.Views
             // Sound alerts: play if the first word matches a configured command.
             _sound.CheckAndPlay(text);
 
-            // "!request <game>" -> hand off to the board (deduped there).
             var parts = text.TrimStart().Split(new[] { ' ' }, 2);
-            if (parts.Length == 2 &&
-                string.Equals(parts[0], "!request", StringComparison.OrdinalIgnoreCase))
+            var cmd = parts.Length > 0 ? parts[0].Trim() : string.Empty;
+            if (cmd.Length == 0) return;
+
+            // "!request <game>" -> hand off to the board (deduped there).
+            if (parts.Length == 2 && string.Equals(cmd, "!request", StringComparison.OrdinalIgnoreCase))
             {
                 var game = parts[1].Trim();
                 if (game.Length > 0) OnGameRequested?.Invoke(game, m.User);
+                return;
             }
+
+            // "!points" (or "!<points name>") -> balance toast + optional chat reply.
+            if (_features.PointsEnabled && IsBalanceCommand(cmd))
+            {
+                var bal = PointsService.Get(m.Platform, m.User);
+                OverlayServer.Toast($"{m.User} has {bal} {_features.PointsName}");
+                SendChatReply($"@{m.User} you have {bal} {_features.PointsName}");
+                return;
+            }
+
+            // Point redeems -> spend points, fire the effect.
+            var idx = _features.Redeems.FindIndex(r =>
+                string.Equals(r.Command.Trim(), cmd, StringComparison.OrdinalIgnoreCase));
+            if (idx >= 0)
+            {
+                var r = _features.Redeems[idx];
+                if (!_features.PointsEnabled || r.Cost <= 0 ||
+                    PointsService.TrySpend(m.Platform, m.User, r.Cost))
+                {
+                    PointsService.Save();
+                    if (!_sound.Muted && !string.IsNullOrWhiteSpace(r.SoundPath))
+                        _sound.Play(r.SoundPath, r.Volume);
+                    OverlayServer.TriggerEffect(r.Effect,
+                        r.Effect == "custom" && !string.IsNullOrWhiteSpace(r.ImagePath) ? "/fx/" + idx : null);
+                    OverlayServer.Toast($"{m.User} redeemed {r.Command.TrimStart('!')}!", confetti: false);
+                    SendChatReply($"@{m.User} redeemed {r.Command.TrimStart('!')}!");
+                }
+                else
+                {
+                    var missing = r.Cost - PointsService.Get(m.Platform, m.User);
+                    OverlayServer.Toast($"{m.User} needs {missing} more {_features.PointsName} for {r.Command}");
+                    SendChatReply($"@{m.User} you need {missing} more {_features.PointsName} for {r.Command}");
+                }
+            }
+        }
+
+        private bool IsBalanceCommand(string cmd)
+        {
+            if (string.Equals(cmd, "!points", StringComparison.OrdinalIgnoreCase)) return true;
+            var custom = "!" + new string(_features.PointsName.Where(char.IsLetterOrDigit).ToArray());
+            return custom.Length > 1 && string.Equals(cmd, custom, StringComparison.OrdinalIgnoreCase);
         }
 
         private void SoundAlerts_Click(object sender, RoutedEventArgs e)
@@ -247,6 +317,13 @@ namespace GameTracker.Views
             }
             if (!hasPhoto) initial = FirstLetter(m.User);
 
+            Brush boxBrush = DefaultUser;
+            if (_features.BoxColors.Count > 0)
+            {
+                try { boxBrush = Frozen(_features.BoxColors[_boxColorIdx++ % _features.BoxColors.Count]); }
+                catch { }
+            }
+
             return new ChatRow
             {
                 Symbol = OverlayService.ChatSymbol(m.Platform),
@@ -258,7 +335,100 @@ namespace GameTracker.Views
                 AvatarBrush = avatarBrush,
                 Initial = initial,
                 RowBrush = (_zebra++ % 2 == 0) ? ZebraNone : ZebraDark,
+                BoxBrush = boxBrush,
             };
+        }
+
+        // ---- chat features (counts / chatters / points / style) ----
+
+        private void ApplyChatTemplate()
+        {
+            var key = _features.ChatStyle == "boxes" ? "BoxRow" : "LogRow";
+            if (MessageList.Resources[key] is DataTemplate t)
+                MessageList.ItemTemplate = t;
+        }
+
+        private void UpdateChattersUi()
+        {
+            // In-app count bar.
+            CountBar.Visibility = _features.ShowCount ? Visibility.Visible : Visibility.Collapsed;
+            if (_features.ShowCount)
+            {
+                CountText.Inlines.Clear();
+                CountText.Inlines.Add(new System.Windows.Documents.Run("\U0001F465 ")
+                { Foreground = Frozen("#7a9070") });
+                if (_features.CountPerSource)
+                {
+                    bool first = true;
+                    foreach (var (platform, n) in _chattersSvc.PerSource().OrderBy(kv => kv.Key))
+                    {
+                        if (!first) CountText.Inlines.Add(new System.Windows.Documents.Run("   "));
+                        first = false;
+                        Brush b = DefaultUser;
+                        try { b = Frozen(OverlayService.ChatColorHex(platform)); } catch { }
+                        CountText.Inlines.Add(new System.Windows.Documents.Run(
+                            OverlayService.ChatSymbol(platform) + " " + n)
+                        { Foreground = b, FontWeight = FontWeights.Bold });
+                    }
+                    if (first) CountText.Inlines.Add(new System.Windows.Documents.Run("0 chatting")
+                    { Foreground = Frozen("#7a9070") });
+                }
+                else
+                {
+                    CountText.Inlines.Add(new System.Windows.Documents.Run(
+                        _chattersSvc.Count + " chatting")
+                    { Foreground = Frozen("#a8c488"), FontWeight = FontWeights.Bold });
+                }
+            }
+
+            // In-app chatters window.
+            _chattersWindow?.Refresh(_chattersSvc.Snapshot(), _features);
+
+            // Overlay.
+            OverlayServer.SetChatters(BuildChattersPayload());
+        }
+
+        private object BuildChattersPayload() => new
+        {
+            showCount = _features.ShowCount,
+            onOverlay = _features.CountOnOverlay,
+            perSourceMode = _features.CountPerSource,
+            total = _chattersSvc.Count,
+            perSource = _chattersSvc.PerSource().OrderBy(kv => kv.Key).Select(kv => new
+            {
+                platform = kv.Key,
+                symbol = OverlayService.ChatSymbol(kv.Key),
+                symbolColor = OverlayService.ChatColorHex(kv.Key),
+                count = kv.Value,
+            }).ToArray(),
+            showList = _features.ShowChattersOnOverlay,
+            list = _chattersSvc.Snapshot().Select(c => new
+            {
+                u = c.User,
+                s = c.State == ChatterState.Lurking ? "l" : "a",
+                symbol = OverlayService.ChatSymbol(c.Platform),
+                symbolColor = OverlayService.ChatColorHex(c.Platform),
+            }).ToArray(),
+        };
+
+        private void Features_Click(object sender, RoutedEventArgs e)
+        {
+            var win = new ChatFeaturesWindow { Owner = this };
+            if (win.ShowDialog() != true) return;
+
+            _features = SettingsService.LoadChatFeatures();
+            ApplyChatTemplate();
+            OverlayServer.SetStyle(_features.ChatStyle, _features.BoxColors);
+            UpdateChattersUi();
+        }
+
+        private void Chatters_Click(object sender, RoutedEventArgs e)
+        {
+            if (_chattersWindow != null) { _chattersWindow.Activate(); return; }
+            _chattersWindow = new ChattersWindow { Owner = this };
+            _chattersWindow.Closed += (_, _) => _chattersWindow = null;
+            _chattersWindow.Refresh(_chattersSvc.Snapshot(), _features);
+            _chattersWindow.Show();
         }
 
         private static bool IsHttp(string? s) =>
@@ -293,6 +463,53 @@ namespace GameTracker.Views
 
         private void SsnGuide_Click(object sender, RoutedEventArgs e) =>
             new SsnGuideWindow { Owner = this }.ShowDialog();
+
+        // ---- two-way chat (outgoing via Social Stream Ninja) ----
+
+        /// <summary>
+        /// Send an @mention reply through SSN if "Reply in chat" is enabled and SSN is
+        /// connected. Fire-and-forget: replies are best-effort and must never block chat.
+        /// </summary>
+        public void SendChatReply(string text)
+        {
+            if (!_features.ReplyInChat || !_ssn.IsConnected || string.IsNullOrWhiteSpace(text)) return;
+            _ = _ssn.SendChatAsync(text);
+        }
+
+        private void SendBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.Enter) { _ = SendMessageAsync(); e.Handled = true; }
+        }
+
+        private void Send_Click(object sender, RoutedEventArgs e) => _ = SendMessageAsync();
+
+        private async System.Threading.Tasks.Task SendMessageAsync()
+        {
+            var text = SendBox.Text.Trim();
+            if (text.Length == 0) return;
+
+            if (!_ssn.IsConnected)
+            {
+                SsnStatus.Text = "Connect Social Stream Ninja to send messages.";
+                return;
+            }
+
+            SendBtn.IsEnabled = false;
+            try
+            {
+                bool ok = await _ssn.SendChatAsync(text);
+                if (ok)
+                {
+                    SendBox.Clear();   // the message echoes back through SSN's chat feed
+                    SsnStatus.Text = "Sent.";
+                }
+                else
+                {
+                    SsnStatus.Text = "Couldn't send — check SSN is running with remote API control on.";
+                }
+            }
+            finally { SendBtn.IsEnabled = true; }
+        }
 
         private void Opacity_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
@@ -352,6 +569,8 @@ namespace GameTracker.Views
         protected override void OnClosed(EventArgs e)
         {
             SaveChat();
+            _chattersTimer?.Stop();
+            PointsService.Save();
             _overlayTimer.Stop();
             OverlayService.ClearChatHtml();
             _twitch.Dispose();
@@ -371,6 +590,7 @@ namespace GameTracker.Views
             public Brush AvatarBrush { get; set; } = Brushes.Gray;
             public string Initial { get; set; } = string.Empty;
             public Brush RowBrush { get; set; } = Brushes.Transparent;
+            public Brush BoxBrush { get; set; } = Brushes.DarkOliveGreen;
         }
     }
 }

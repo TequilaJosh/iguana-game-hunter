@@ -25,6 +25,11 @@ namespace GameTracker.Services.Chat
         private string _session = string.Empty;
         private volatile bool _want;
 
+        // Outgoing messages go over their own socket on the session's default channel
+        // (the receive socket is pinned to channel 4, which is inbound chat only).
+        private ClientWebSocket? _sendWs;
+        private readonly SemaphoreSlim _sendLock = new(1, 1);
+
         public async Task ConnectAsync(string input)
         {
             await DisconnectAsync();
@@ -136,10 +141,54 @@ namespace GameTracker.Services.Chat
             return list;
         }
 
+        /// <summary>
+        /// Send a chat message out through Social Stream Ninja: the SSN extension posts it
+        /// into every connected platform's chat box using the streamer's own logins.
+        /// Returns false if it couldn't be sent.
+        /// </summary>
+        public async Task<bool> SendChatAsync(string message)
+        {
+            message = (message ?? string.Empty).Trim();
+            if (message.Length == 0 || string.IsNullOrEmpty(_session)) return false;
+
+            await _sendLock.WaitAsync();
+            try
+            {
+                // (Re)open the send socket if needed.
+                if (_sendWs is not { State: WebSocketState.Open })
+                {
+                    try { _sendWs?.Dispose(); } catch { }
+                    _sendWs = new ClientWebSocket();
+                    using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(6));
+                    await _sendWs.ConnectAsync(
+                        new Uri($"wss://io.socialstream.ninja/join/{_session}"), cts.Token);
+                }
+
+                var payload = Newtonsoft.Json.JsonConvert.SerializeObject(
+                    new { action = "sendChat", value = message });
+                using var sendCts = new CancellationTokenSource(TimeSpan.FromSeconds(6));
+                await _sendWs.SendAsync(Encoding.UTF8.GetBytes(payload),
+                    WebSocketMessageType.Text, true, sendCts.Token);
+                return true;
+            }
+            catch
+            {
+                try { _sendWs?.Dispose(); } catch { }
+                _sendWs = null;
+                return false;
+            }
+            finally
+            {
+                _sendLock.Release();
+            }
+        }
+
         public Task DisconnectAsync()
         {
             _want = false;
             try { _cts?.Cancel(); } catch { }
+            try { _sendWs?.Dispose(); } catch { }
+            _sendWs = null;
             IsConnected = false;
             return Task.CompletedTask;
         }

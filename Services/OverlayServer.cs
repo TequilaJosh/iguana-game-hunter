@@ -65,6 +65,8 @@ namespace GameTracker.Services
         private static object[] _chat = Array.Empty<object>();
         private static JToken? _layout;   // per-element layout (position/size/font), or null = default
         private static JToken? _presets;  // saved layout presets (editor-only)
+        private static object? _style;    // chat style: { mode, colors[] }
+        private static object? _chatters; // counts + chatters list state
 
         // The overlay HTML (loaded once, from the embedded resource or disk).
         private static string _html = string.Empty;
@@ -84,6 +86,8 @@ namespace GameTracker.Services
                 _html = LoadOverlayHtml();          // injects the live port for file:// use
                 _layout = ParseLayout(SettingsService.LoadOverlayLayout());
                 _presets = ParseLayout(SettingsService.LoadOverlayPresets());
+                var f = SettingsService.LoadChatFeatures();
+                _style = new { mode = f.ChatStyle, colors = f.BoxColors.ToArray() };
                 _cts = new CancellationTokenSource();
                 _listener = new TcpListener(IPAddress.Loopback, Port);
                 _listener.Start();
@@ -173,6 +177,10 @@ namespace GameTracker.Services
                 {
                     await ServeHtml(stream, ct);
                 }
+                else if (method == "GET" && route.StartsWith("/fx/", StringComparison.Ordinal))
+                {
+                    await ServeRedeemImage(stream, route, ct);
+                }
                 else
                 {
                     await WriteSimple(stream, "404 Not Found", "text/plain", "Not found", ct);
@@ -243,6 +251,48 @@ namespace GameTracker.Services
             await stream.FlushAsync(ct);
         }
 
+        // Serve a configured redeem image (/fx/<index>). Only files the streamer picked in
+        // the redeems editor are reachable — the index maps into that saved list.
+        private static async Task ServeRedeemImage(NetworkStream stream, string route, CancellationToken ct)
+        {
+            try
+            {
+                if (!int.TryParse(route.Substring(4), out int idx))
+                {
+                    await WriteSimple(stream, "404 Not Found", "text/plain", "Not found", ct);
+                    return;
+                }
+                var redeems = SettingsService.LoadChatFeatures().Redeems;
+                var path = (idx >= 0 && idx < redeems.Count) ? redeems[idx].ImagePath : null;
+                if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+                {
+                    await WriteSimple(stream, "404 Not Found", "text/plain", "Not found", ct);
+                    return;
+                }
+
+                var mime = Path.GetExtension(path).ToLowerInvariant() switch
+                {
+                    ".png" => "image/png",
+                    ".jpg" or ".jpeg" => "image/jpeg",
+                    ".gif" => "image/gif",
+                    ".webp" => "image/webp",
+                    ".bmp" => "image/bmp",
+                    _ => "application/octet-stream",
+                };
+                var body = await File.ReadAllBytesAsync(path, ct);
+                var head =
+                    "HTTP/1.1 200 OK\r\n" +
+                    "Content-Type: " + mime + "\r\n" +
+                    "Cache-Control: no-store\r\n" +
+                    "Content-Length: " + body.Length + "\r\n" +
+                    "Connection: close\r\n\r\n";
+                await stream.WriteAsync(Encoding.ASCII.GetBytes(head), ct);
+                await stream.WriteAsync(body, ct);
+                await stream.FlushAsync(ct);
+            }
+            catch { /* drop */ }
+        }
+
         private static async Task WriteSimple(NetworkStream stream, string status, string type,
             string body, CancellationToken ct)
         {
@@ -286,7 +336,11 @@ namespace GameTracker.Services
 
             // Send the current snapshot immediately so the overlay renders at once.
             object snapshot;
-            lock (Gate) snapshot = new { type = "snapshot", state = _state, chat = _chat, layout = _layout, presets = _presets };
+            lock (Gate) snapshot = new
+            {
+                type = "snapshot", state = _state, chat = _chat,
+                layout = _layout, presets = _presets, style = _style, chatters = _chatters,
+            };
             await SendText(client, JsonConvert.SerializeObject(snapshot), ct);
 
             await ReceiveLoop(client, ct);
@@ -410,6 +464,37 @@ namespace GameTracker.Services
             if (!_running) return;
             lock (Gate) _chat = Array.Empty<object>();
             Broadcast(new { type = "chatClear" });
+        }
+
+        /// <summary>Push the chat style (log/boxes + palette) to all clients.</summary>
+        public static void SetStyle(string mode, IEnumerable<string> colors)
+        {
+            if (!_running) return;
+            var style = new { mode, colors = (colors ?? Array.Empty<string>()).ToArray() };
+            lock (Gate) _style = style;
+            Broadcast(new { type = "style", style });
+        }
+
+        /// <summary>Push chatter counts + the active chatters list to all clients.</summary>
+        public static void SetChatters(object chatters)
+        {
+            if (!_running) return;
+            lock (Gate) _chatters = chatters;
+            Broadcast(new { type = "chatters", chatters });
+        }
+
+        /// <summary>Show a big on-stream toast (optionally with a confetti puff).</summary>
+        public static void Toast(string text, bool confetti = false)
+        {
+            if (!_running) return;
+            Broadcast(new { type = "toast", text = text ?? string.Empty, confetti });
+        }
+
+        /// <summary>Fire a visual effect on the overlay (confetti / fireworks / shake / custom image).</summary>
+        public static void TriggerEffect(string effect, string? imageUrl = null, int durationMs = 4000)
+        {
+            if (!_running) return;
+            Broadcast(new { type = "effect", effect, image = imageUrl ?? string.Empty, duration = durationMs });
         }
 
         private static object ToWire(ChatMessage m)

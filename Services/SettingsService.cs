@@ -35,14 +35,23 @@ namespace GameTracker.Services
             public int OverlayChatLines { get; set; } = 20; // chat lines shown on the overlay
             public string? OverlayLayout { get; set; } // JSON: per-element position/size/font (null = default)
             public string? OverlayPresets { get; set; } // JSON array of saved layout presets
+            public ChatFeatureSettings Features { get; set; } = new(); // counts/chatters/points/style/redeems
         }
+
+        // Replace initialized collections instead of appending to them — otherwise lists
+        // with non-empty defaults (e.g. Features.BoxColors) duplicate on every load/save.
+        private static readonly JsonSerializerSettings LoadSettings = new()
+        {
+            ObjectCreationHandling = ObjectCreationHandling.Replace,
+        };
 
         private static AppSettings LoadAll()
         {
             try
             {
                 if (File.Exists(SettingsFile))
-                    return JsonConvert.DeserializeObject<AppSettings>(File.ReadAllText(SettingsFile))
+                    return JsonConvert.DeserializeObject<AppSettings>(
+                               File.ReadAllText(SettingsFile), LoadSettings)
                            ?? new AppSettings();
             }
             catch { /* fall through to defaults */ }
@@ -150,6 +159,22 @@ namespace GameTracker.Services
         {
             var s = LoadAll();
             s.OverlayPresets = presetsJson;
+            SaveAll(s);
+        }
+
+        public static ChatFeatureSettings LoadChatFeatures()
+        {
+            var f = LoadAll().Features ?? new ChatFeatureSettings();
+            // Repair files written before the append-duplication fix (cap is 10 colors).
+            if (f.BoxColors.Count > 10)
+                f.BoxColors = f.BoxColors.GetRange(0, 10);
+            return f;
+        }
+
+        public static void SaveChatFeatures(ChatFeatureSettings features)
+        {
+            var s = LoadAll();
+            s.Features = features;
             SaveAll(s);
         }
     }

@@ -254,6 +254,59 @@
   .msg { color: #ffffff; word-break: break-word; }
   .emote { height: 1.2em; vertical-align: middle; margin: 0 1px; }
 
+  /* Boxed / bubble chat mode */
+  .row.bubble {
+    padding: 0; margin: 0.28em 0; background: transparent !important;
+    border-radius: 10px; overflow: hidden;
+  }
+  .bubble .bhead {
+    display: flex; align-items: center; gap: 0.25em;
+    padding: 0.18em 0.5em; font-weight: 700;
+  }
+  .bubble .bhead .user { color: #0a1410 !important; }
+  .bubble .bbody {
+    background: rgba(0, 0, 0, 0.82); color: #fff;
+    padding: 0.3em 0.55em; border-radius: 0 0 10px 10px;
+    word-break: break-word;
+  }
+
+  /* Chatters list box */
+  #clRows { flex: 1 1 auto; overflow: hidden; }
+  .cl-row { display: flex; align-items: center; gap: 0.35em; margin: 0.14em 0; font-size: 0.8em; }
+  .cl-dot { width: 0.55em; height: 0.55em; border-radius: 50%; flex: 0 0 auto; }
+  .cl-dot.a { background: #35d13a; box-shadow: 0 0 5px #35d13a; }
+  .cl-dot.l { background: #e0c341; box-shadow: 0 0 5px #e0c341; }
+  #chatCount { margin-left: auto; color: #a8c488; font-weight: 600; }
+
+  /* Big toast */
+  #toast {
+    position: fixed; left: 50%; top: 18%; transform: translateX(-50%) scale(0.8);
+    max-width: 84vw; text-align: center; z-index: 8000; pointer-events: none;
+    background: rgba(10, 20, 16, 0.94); border: 3px solid #7cc44a; border-radius: 16px;
+    color: #e8e0c4; font-weight: 800; font-size: 44px; line-height: 1.25;
+    padding: 18px 34px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+    opacity: 0; transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+  #toast.show { opacity: 1; transform: translateX(-50%) scale(1); }
+
+  /* Effects */
+  #fxcanvas { position: fixed; inset: 0; z-index: 7000; pointer-events: none; }
+  #fximg {
+    position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%) scale(0.85);
+    max-width: 46vw; max-height: 46vh; z-index: 7500; pointer-events: none;
+    opacity: 0; transition: opacity 0.3s ease, transform 0.3s ease;
+  }
+  #fximg.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  @keyframes shake {
+    0%, 100% { transform: translate(-50%, -50%) scale(var(--sscale)) translate(0, 0); }
+    10% { transform: translate(-50%, -50%) scale(var(--sscale)) translate(-9px, 5px); }
+    30% { transform: translate(-50%, -50%) scale(var(--sscale)) translate(8px, -6px); }
+    50% { transform: translate(-50%, -50%) scale(var(--sscale)) translate(-7px, -4px); }
+    70% { transform: translate(-50%, -50%) scale(var(--sscale)) translate(6px, 5px); }
+    90% { transform: translate(-50%, -50%) scale(var(--sscale)) translate(-4px, 2px); }
+  }
+  #stage.shake { animation: shake 0.55s ease-in-out 2; }
+
   /* Tiny connection indicator (unobtrusive; not a permanent error screen). */
   .status {
     position: absolute; top: 12px; right: 14px;
@@ -305,13 +358,22 @@
     </section>
 
     <section id="chat" class="box">
-      <div class="hd"><span class="live-dot"></span> LIVE CHAT</div>
+      <div class="hd"><span class="live-dot"></span> LIVE CHAT <span id="chatCount"></span></div>
       <div id="chatWrap" class="wrap"><div id="chatMsgs" class="msgs"></div></div>
       <div class="rz" data-el="chat"></div>
     </section>
 
+    <section id="cl" class="box" hidden>
+      <div class="hd">👥 CHATTERS <span id="clCount"></span></div>
+      <div id="clRows"></div>
+      <div class="rz" data-el="cl"></div>
+    </section>
+
     <div id="status" class="status"></div>
   </div>
+
+  <div id="toast"></div>
+  <img id="fximg" alt=""/>
 
   <div id="editbar">
     <h4>OVERLAY EDITOR</h4>
@@ -440,6 +502,11 @@
   const renderedKeys = new Set();  // chat dedupe by stable message id
   let chatZebra = 0;               // alternate row shading counter
   function initialOf(u) { u = (u || "").trim(); return u ? u[0].toUpperCase() : "?"; }
+
+  // Chat style: "log" (classic) or "boxes" (colored bubbles), plus the palette.
+  let chatStyle = { mode: "log", colors: ["#7cc44a", "#d4a437", "#4aa3c4", "#c44a7c", "#9146FF"] };
+  let bubbleIdx = 0;               // palette rotation (per message)
+  const msgStore = [];             // recent messages kept so a style switch can re-render
   let lastMessageAt = Date.now();  // for the quiet-period soft reload
   const pageStart = Date.now();
   let lastClearAt = Date.now();
@@ -603,6 +670,8 @@
         clearChat();
         if (data.layout) applyLayout(data.layout);
         if (Array.isArray(data.presets)) { presets = data.presets; if (EDIT) renderPresets(); }
+        if (data.style) applyStyle(data.style);
+        if (data.chatters) renderChatters(data.chatters);
         if (data.state) renderState(data.state);
         if (Array.isArray(data.chat)) {
           for (let i = 0; i < data.chat.length; i++) appendMessage(data.chat[i]);
@@ -614,6 +683,18 @@
       case "layout":
         // Live layout update pushed while editing — apply on OBS viewers, not the editor itself.
         if (!EDIT && data.layout) applyLayout(data.layout);
+        break;
+      case "style":
+        if (data.style) applyStyle(data.style);
+        break;
+      case "chatters":
+        if (data.chatters) renderChatters(data.chatters);
+        break;
+      case "toast":
+        showToast(data.text, !!data.confetti);
+        break;
+      case "effect":
+        runEffect(data);
         break;
       case "chat":
         if (Array.isArray(data.messages)) {
@@ -682,6 +763,112 @@
   // =========================================================================
   //  Rendering — chat (incremental append, hard DOM cap)
   // =========================================================================
+  function makeAvatar(m) {
+    const av = document.createElement("span");
+    av.className = "avatar";
+    if (m.avatar) {
+      const aimg = document.createElement("img");
+      aimg.src = m.avatar;
+      aimg.addEventListener("error", function () {
+        if (aimg.parentNode) aimg.remove();
+        av.textContent = initialOf(m.user);
+        av.style.background = m.symbolColor || "#4a7c3a";
+      });
+      av.appendChild(aimg);
+    } else {
+      av.textContent = initialOf(m.user);
+      av.style.background = m.symbolColor || "#4a7c3a";
+    }
+    return av;
+  }
+
+  function appendBadges(target, m) {
+    const badges = Array.isArray(m.badges) ? m.badges : [];
+    for (let bi = 0; bi < badges.length; bi++) {
+      const b = badges[bi];
+      if (b && b.url) {
+        const im = document.createElement("img");
+        im.className = "badge-img"; im.src = b.url; im.alt = b.label || "";
+        im.addEventListener("error", function () { if (im.parentNode) im.remove(); });
+        target.appendChild(im);
+      } else if (b && b.label) {
+        const sp = document.createElement("span");
+        sp.className = "badge"; sp.textContent = b.label;
+        sp.style.background = b.color || "#4a7c3a";
+        target.appendChild(sp);
+      }
+    }
+  }
+
+  function makeBody(m, asBlock) {
+    const body = document.createElement(asBlock ? "div" : "span");
+    body.className = asBlock ? "bbody" : "msg";
+    const segs = Array.isArray(m.segments) ? m.segments : [];
+    for (let i = 0; i < segs.length; i++) {
+      const seg = segs[i];
+      if (seg && seg.t === "emote" && seg.url) {
+        const img = document.createElement("img");
+        img.className = "emote";
+        img.src = seg.url;
+        img.alt = seg.text || "";
+        // A broken emote URL must not break the row.
+        img.addEventListener("error", function () {
+          if (img.parentNode) img.replaceWith(document.createTextNode(seg.text || ""));
+        });
+        body.appendChild(img);
+      } else if (seg) {
+        body.appendChild(document.createTextNode(seg.text || ""));
+      }
+    }
+    return body;
+  }
+
+  function buildRow(m, id) {
+    const row = document.createElement("div");
+    row.dataset.key = id;
+
+    if (chatStyle.mode === "boxes" && chatStyle.colors.length) {
+      // Bubble: colored box with a header line and a dark message body.
+      row.className = "row bubble enter";
+      row.style.background = "transparent";
+      const color = chatStyle.colors[bubbleIdx++ % chatStyle.colors.length];
+
+      const head = document.createElement("div");
+      head.className = "bhead";
+      head.style.background = color;
+      head.appendChild(makeAvatar(m));
+      const sym = document.createElement("span");
+      sym.className = "sym";
+      sym.style.color = "#0a1410";
+      sym.textContent = m.symbol || "●";
+      head.appendChild(sym);
+      appendBadges(head, m);
+      const user = document.createElement("span");
+      user.className = "user";
+      user.textContent = m.user || "";
+      head.appendChild(user);
+      row.appendChild(head);
+      row.appendChild(makeBody(m, true));
+    } else {
+      // Classic log line with zebra striping.
+      row.className = "row enter" + ((chatZebra++ % 2) ? " odd" : "");
+      row.appendChild(makeAvatar(m));
+      const sym = document.createElement("span");
+      sym.className = "sym";
+      if (m.symbolColor) sym.style.color = m.symbolColor;
+      sym.textContent = m.symbol || "●";
+      row.appendChild(sym);
+      appendBadges(row, m);
+      const user = document.createElement("span");
+      user.className = "user";
+      user.style.color = m.color || CONFIG.defaultUserColor;
+      user.textContent = (m.user || "") + " ";
+      row.appendChild(user);
+      row.appendChild(makeBody(m, false));
+    }
+    return row;
+  }
+
   function appendMessage(m) {
     try {
       if (!m || typeof m !== "object") return;
@@ -690,78 +877,10 @@
       if (renderedKeys.has(id)) return;            // dedupe (snapshots overlap)
       renderedKeys.add(id);
 
-      const row = document.createElement("div");
-      row.className = "row enter" + ((chatZebra++ % 2) ? " odd" : "");
-      row.dataset.key = id;
+      msgStore.push({ m: m, id: id });
+      while (msgStore.length > CONFIG.maxMessages) msgStore.shift();
 
-      // Avatar: photo, or a colored circle with the initial.
-      const av = document.createElement("span");
-      av.className = "avatar";
-      if (m.avatar) {
-        const aimg = document.createElement("img");
-        aimg.src = m.avatar;
-        aimg.addEventListener("error", function () {
-          if (aimg.parentNode) aimg.remove();
-          av.textContent = initialOf(m.user);
-          av.style.background = m.symbolColor || "#4a7c3a";
-        });
-        av.appendChild(aimg);
-      } else {
-        av.textContent = initialOf(m.user);
-        av.style.background = m.symbolColor || "#4a7c3a";
-      }
-      row.appendChild(av);
-
-      const sym = document.createElement("span");
-      sym.className = "sym";
-      if (m.symbolColor) sym.style.color = m.symbolColor;
-      sym.textContent = m.symbol || "●";
-      row.appendChild(sym);
-
-      // Badges: image (SSN) or a colored text label (Twitch roles).
-      const badges = Array.isArray(m.badges) ? m.badges : [];
-      for (let bi = 0; bi < badges.length; bi++) {
-        const b = badges[bi];
-        if (b && b.url) {
-          const im = document.createElement("img");
-          im.className = "badge-img"; im.src = b.url; im.alt = b.label || "";
-          im.addEventListener("error", function () { if (im.parentNode) im.remove(); });
-          row.appendChild(im);
-        } else if (b && b.label) {
-          const sp = document.createElement("span");
-          sp.className = "badge"; sp.textContent = b.label;
-          sp.style.background = b.color || "#4a7c3a";
-          row.appendChild(sp);
-        }
-      }
-
-      const user = document.createElement("span");
-      user.className = "user";
-      user.style.color = m.color || CONFIG.defaultUserColor;
-      user.textContent = (m.user || "") + " ";
-      row.appendChild(user);
-
-      const body = document.createElement("span");
-      body.className = "msg";
-      const segs = Array.isArray(m.segments) ? m.segments : [];
-      for (let i = 0; i < segs.length; i++) {
-        const seg = segs[i];
-        if (seg && seg.t === "emote" && seg.url) {
-          const img = document.createElement("img");
-          img.className = "emote";
-          img.src = seg.url;
-          img.alt = seg.text || "";
-          // A broken emote URL must not break the row.
-          img.addEventListener("error", function () {
-            if (img.parentNode) img.replaceWith(document.createTextNode(seg.text || ""));
-          });
-          body.appendChild(img);
-        } else if (seg) {
-          body.appendChild(document.createTextNode(seg.text || ""));
-        }
-      }
-      row.appendChild(body);
-
+      const row = buildRow(m, id);
       elChatMsgs.appendChild(row);
 
       // Entry animation via transform/opacity only.
@@ -772,6 +891,188 @@
       scheduleScroll();
     } catch (e) {
       logErr("appendMessage failed: " + (e && e.message));
+    }
+  }
+
+  function applyStyle(style) {
+    if (!style || typeof style !== "object") return;
+    if (style.mode) chatStyle.mode = style.mode;
+    if (Array.isArray(style.colors) && style.colors.length) chatStyle.colors = style.colors;
+    // Re-render the kept messages in the new style.
+    while (elChatMsgs.firstChild) elChatMsgs.removeChild(elChatMsgs.firstChild);
+    bubbleIdx = 0; chatZebra = 0;
+    for (let i = 0; i < msgStore.length; i++) {
+      const e = msgStore[i];
+      const row = buildRow(e.m, e.id);
+      row.classList.remove("enter");
+      elChatMsgs.appendChild(row);
+    }
+    scheduleScroll();
+  }
+
+  // ---- Chatter counts + list ----
+  function renderChatters(d) {
+    try {
+      if (!d || typeof d !== "object") return;
+      const cnt = document.getElementById("chatCount");
+      if (cnt) {
+        if (d.showCount && (d.onOverlay || EDIT)) {
+          if (d.perSourceMode && Array.isArray(d.perSource) && d.perSource.length) {
+            cnt.textContent = "";
+            for (let i = 0; i < d.perSource.length; i++) {
+              const s = d.perSource[i];
+              const sp = document.createElement("span");
+              sp.style.color = s.symbolColor || "#a8c488";
+              sp.style.marginLeft = i ? "0.45em" : "0";
+              sp.textContent = (s.symbol || "●") + " " + s.count;
+              cnt.appendChild(sp);
+            }
+          } else {
+            cnt.textContent = "· " + (d.total || 0);
+          }
+        } else {
+          cnt.textContent = "";
+        }
+      }
+
+      const cl = document.getElementById("cl");
+      if (cl) cl.hidden = EDIT ? false : !d.showList;
+      const clCount = document.getElementById("clCount");
+      if (clCount) clCount.textContent = d.total ? "(" + d.total + ")" : "";
+      const rowsEl = document.getElementById("clRows");
+      if (rowsEl) {
+        while (rowsEl.firstChild) rowsEl.removeChild(rowsEl.firstChild);
+        const list = Array.isArray(d.list) ? d.list : [];
+        for (let i = 0; i < list.length; i++) {
+          const c = list[i];
+          const row = document.createElement("div");
+          row.className = "cl-row";
+          const dot = document.createElement("span");
+          dot.className = "cl-dot " + (c.s === "l" ? "l" : "a");
+          row.appendChild(dot);
+          const sym = document.createElement("span");
+          sym.style.color = c.symbolColor || "#a8c488";
+          sym.textContent = c.symbol || "●";
+          row.appendChild(sym);
+          const nm = document.createElement("span");
+          nm.textContent = c.u || "";
+          row.appendChild(nm);
+          rowsEl.appendChild(row);
+        }
+      }
+    } catch (e) {
+      logErr("renderChatters failed: " + (e && e.message));
+    }
+  }
+
+  // ---- Big toast + effects ----
+  let toastTimer = null;
+  function showToast(text, confetti) {
+    const t = document.getElementById("toast");
+    if (!t) return;
+    t.textContent = text || "";
+    t.classList.add("show");
+    if (confetti) fxConfetti(2200);
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { t.classList.remove("show"); }, 4200);
+  }
+
+  let fxCanvas = null, fxCtx = null, fxParts = [], fxRaf = 0, fxUntil = 0;
+  function fxEnsureCanvas() {
+    if (fxCanvas) return;
+    fxCanvas = document.createElement("canvas");
+    fxCanvas.id = "fxcanvas";
+    document.body.appendChild(fxCanvas);
+    fxCtx = fxCanvas.getContext("2d");
+  }
+  function fxLoop() {
+    fxCanvas.width = window.innerWidth; fxCanvas.height = window.innerHeight;
+    const now = Date.now();
+    fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+    for (let i = fxParts.length - 1; i >= 0; i--) {
+      const p = fxParts[i];
+      p.vy += p.g; p.x += p.vx; p.y += p.vy; p.rot += p.vr; p.life -= 1;
+      if (p.life <= 0 || p.y > fxCanvas.height + 30) { fxParts.splice(i, 1); continue; }
+      fxCtx.save();
+      fxCtx.translate(p.x, p.y);
+      fxCtx.rotate(p.rot);
+      fxCtx.globalAlpha = Math.max(0, Math.min(1, p.life / 40));
+      fxCtx.fillStyle = p.c;
+      if (p.shape === "r") fxCtx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2);
+      else { fxCtx.beginPath(); fxCtx.arc(0, 0, p.s / 2, 0, 6.283); fxCtx.fill(); }
+      fxCtx.restore();
+    }
+    if (fxParts.length || now < fxUntil) fxRaf = requestAnimationFrame(fxLoop);
+    else { fxRaf = 0; fxCtx.clearRect(0, 0, fxCanvas.width, fxCanvas.height); }
+  }
+  function fxStart() { if (!fxRaf) fxRaf = requestAnimationFrame(fxLoop); }
+  const FX_COLORS = ["#7cc44a", "#d4a437", "#e8e0c4", "#4aa3c4", "#c44a7c", "#9146FF", "#ff6b4a"];
+
+  function fxConfetti(durMs) {
+    fxEnsureCanvas();
+    fxUntil = Date.now() + (durMs || 2500);
+    const w = window.innerWidth;
+    const burst = function () {
+      for (let i = 0; i < 90; i++) {
+        fxParts.push({
+          x: Math.random() * w, y: -20 - Math.random() * 60,
+          vx: (Math.random() - 0.5) * 3.2, vy: 1.5 + Math.random() * 3.2, g: 0.06,
+          rot: Math.random() * 6.28, vr: (Math.random() - 0.5) * 0.3,
+          s: 6 + Math.random() * 7, c: FX_COLORS[(Math.random() * FX_COLORS.length) | 0],
+          shape: "r", life: 260,
+        });
+      }
+    };
+    burst(); setTimeout(burst, 420); setTimeout(burst, 900);
+    fxStart();
+  }
+
+  function fxFireworks(durMs) {
+    fxEnsureCanvas();
+    fxUntil = Date.now() + (durMs || 3000);
+    const w = window.innerWidth, h = window.innerHeight;
+    const boom = function () {
+      const cx = w * (0.2 + Math.random() * 0.6), cy = h * (0.15 + Math.random() * 0.4);
+      const col = FX_COLORS[(Math.random() * FX_COLORS.length) | 0];
+      for (let i = 0; i < 70; i++) {
+        const a = Math.random() * 6.283, sp = 2 + Math.random() * 5;
+        fxParts.push({
+          x: cx, y: cy, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, g: 0.045,
+          rot: 0, vr: 0, s: 3 + Math.random() * 3.4, c: col, shape: "c", life: 70 + Math.random() * 40,
+        });
+      }
+    };
+    boom(); setTimeout(boom, 500); setTimeout(boom, 1000); setTimeout(boom, 1600);
+    fxStart();
+  }
+
+  function fxShake() {
+    const stage = document.getElementById("stage");
+    if (!stage) return;
+    stage.style.setProperty("--sscale", String(stageScale));
+    stage.classList.remove("shake");
+    void stage.offsetWidth;                     // restart the animation
+    stage.classList.add("shake");
+    setTimeout(function () { stage.classList.remove("shake"); }, 1300);
+  }
+
+  let fxImgTimer = null;
+  function fxImage(url, durMs) {
+    const img = document.getElementById("fximg");
+    if (!img || !url) return;
+    img.src = url;
+    img.classList.add("show");
+    if (fxImgTimer) clearTimeout(fxImgTimer);
+    fxImgTimer = setTimeout(function () { img.classList.remove("show"); }, durMs || 4000);
+  }
+
+  function runEffect(d) {
+    switch ((d.effect || "").toLowerCase()) {
+      case "confetti": fxConfetti(d.duration); break;
+      case "fireworks": fxFireworks(d.duration); break;
+      case "shake": fxShake(); break;
+      case "custom": if (d.image) fxImage(d.image, d.duration); break;
+      default: break;
     }
   }
 
@@ -788,6 +1089,7 @@
   function clearChat() {
     while (elChatMsgs.firstChild) elChatMsgs.removeChild(elChatMsgs.firstChild);
     renderedKeys.clear();
+    msgStore.length = 0;
     autoScroll = true;
   }
 
@@ -879,12 +1181,13 @@
   // =========================================================================
   //  Layout (per-element position / size / font) + in-browser editor (?edit)
   // =========================================================================
-  const ELEMENTS = ["np", "ch", "chat"];
-  const ELEMENT_NAMES = { np: "Now Playing", ch: "Challenges", chat: "Live Chat" };
+  const ELEMENTS = ["np", "ch", "chat", "cl"];
+  const ELEMENT_NAMES = { np: "Now Playing", ch: "Challenges", chat: "Live Chat", cl: "Chatters" };
   const DEFAULT_LAYOUT = {
     np:   { x: 246, y: 48,  w: 618, h: 72,  font: "", size: 22, color: "#e8e0c4" },
     ch:   { x: 246, y: 128, w: 294, h: 372, font: "", size: 18, color: "#e8e0c4" },
-    chat: { x: 548, y: 128, w: 316, h: 372, font: "", size: 24, color: "#ffffff" }
+    chat: { x: 548, y: 128, w: 316, h: 372, font: "", size: 24, color: "#ffffff" },
+    cl:   { x: 872, y: 128, w: 200, h: 372, font: "", size: 20, color: "#e8e0c4" }
   };
   const FONTS = ["", "Segoe UI", "Arial", "Verdana", "Tahoma", "Trebuchet MS",
                  "Georgia", "Times New Roman", "Courier New", "Consolas",
@@ -992,6 +1295,12 @@
     // Placeholder content so empty blocks are visible and positionable.
     document.getElementById("np").hidden = false;
     document.getElementById("ch").hidden = false;
+    document.getElementById("cl").hidden = false;
+    document.getElementById("clRows").innerHTML =
+      '<div class="cl-row"><span class="cl-dot a"></span><span style="color:#9146FF">♥</span><span>shroud</span></div>' +
+      '<div class="cl-row"><span class="cl-dot a"></span><span style="color:#FF0000">▶</span><span>viewer22</span></div>' +
+      '<div class="cl-row"><span class="cl-dot l"></span><span style="color:#25F4EE">♪</span><span>kayla</span></div>';
+    document.getElementById("clCount").textContent = "(3)";
     elNpTitle.textContent = "Game Title";
     elNpTime.textContent = "1:23:45";
     elNpReq.textContent = "req: viewer";

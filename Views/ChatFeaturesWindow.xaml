@@ -1,0 +1,270 @@
+<Window x:Class="GameTracker.Views.ChatFeaturesWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="Chat Features"
+        Width="640" Height="640"
+        MinWidth="560" MinHeight="480"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None" ResizeMode="CanResize"
+        Icon="/iguana-eye.ico"
+        Background="{StaticResource ScaleBrush}">
+
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="32" ResizeBorderThickness="6"
+                            GlassFrameThickness="0" CornerRadius="0"
+                            UseAeroCaptionButtons="False"/>
+    </shell:WindowChrome.WindowChrome>
+
+    <Window.Resources>
+        <Style x:Key="SecHdr" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#7cc44a"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Margin" Value="0,14,0,6"/>
+        </Style>
+        <Style x:Key="Lbl" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#a8c488"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="Margin" Value="0,0,8,0"/>
+        </Style>
+        <Style x:Key="Chk" TargetType="CheckBox">
+            <Setter Property="Foreground" Value="#e8e0c4"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Margin" Value="0,3,0,3"/>
+        </Style>
+        <Style x:Key="Num" TargetType="TextBox">
+            <Setter Property="Background" Value="#142016"/>
+            <Setter Property="Foreground" Value="#e8e0c4"/>
+            <Setter Property="BorderBrush" Value="#2e4a30"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CaretBrush" Value="#7cc44a"/>
+            <Setter Property="Padding" Value="5,3"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Width" Value="56"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="Txt" TargetType="TextBox" BasedOn="{StaticResource Num}">
+            <Setter Property="Width" Value="Auto"/>
+        </Style>
+        <Style x:Key="Btn" TargetType="Button">
+            <Setter Property="Background" Value="#243a26"/>
+            <Setter Property="Foreground" Value="#7cc44a"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="9,4"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="3"
+                                Padding="{TemplateBinding Padding}" BorderBrush="#4a7c3a" BorderThickness="1">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#4a7c3a"/>
+                                <Setter Property="Foreground" Value="#0a1410"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="SaveBtn" TargetType="Button" BasedOn="{StaticResource Btn}">
+            <Setter Property="Background" Value="#4a7c3a"/>
+            <Setter Property="Foreground" Value="#0a1410"/>
+            <Setter Property="Padding" Value="18,5"/>
+        </Style>
+    </Window.Resources>
+
+    <Border BorderBrush="#4a7c3a" BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="32"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Title bar -->
+            <Border Grid.Row="0" Background="#0a1410" BorderBrush="#2e4a30" BorderThickness="0,0,0,1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
+                        <Image Source="/iguana-eye.ico" Width="16" Height="16" Margin="0,0,8,0"
+                               VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
+                        <TextBlock Text="CHAT FEATURES" Foreground="#7cc44a" FontSize="11"
+                                   FontWeight="Bold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <Button Grid.Column="1" Content="&#x2715;" Click="Cancel_Click"
+                            Style="{StaticResource WindowCloseButton}" Height="32"
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True"/>
+                </Grid>
+            </Border>
+
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="16,4,16,8">
+                <StackPanel>
+
+                    <TextBlock Text="CHATTER COUNT" Style="{StaticResource SecHdr}"/>
+                    <CheckBox x:Name="ShowCountCb" Content="Show chatter count at the top of chat" Style="{StaticResource Chk}"/>
+                    <CheckBox x:Name="PerSourceCb" Content="Show a count per source (instead of one total)" Style="{StaticResource Chk}"/>
+                    <CheckBox x:Name="CountOverlayCb" Content="Also show the count on the OBS overlay" Style="{StaticResource Chk}"/>
+
+                    <TextBlock Text="ACTIVE CHATTERS LIST" Style="{StaticResource SecHdr}"/>
+                    <CheckBox x:Name="ChattersOverlayCb" Content="Show the chatters list on the OBS overlay" Style="{StaticResource Chk}"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                        <TextBlock Text="Lurking after" Style="{StaticResource Lbl}"/>
+                        <TextBox x:Name="LurkBox" Style="{StaticResource Num}"/>
+                        <TextBlock Text="min idle (green → yellow)," Style="{StaticResource Lbl}" Margin="6,0,10,0"/>
+                        <TextBlock Text="removed after" Style="{StaticResource Lbl}"/>
+                        <TextBox x:Name="RemoveBox" Style="{StaticResource Num}"/>
+                        <TextBlock Text="more min" Style="{StaticResource Lbl}" Margin="6,0,0,0"/>
+                    </StackPanel>
+
+                    <TextBlock Text="CHAT REPLIES" Style="{StaticResource SecHdr}"/>
+                    <CheckBox x:Name="ReplyCb" Style="{StaticResource Chk}"
+                              Content="Reply in chat with @mentions (via SSN) for requests, points and redeems"/>
+                    <TextBlock Foreground="#7a9070" FontSize="11" Margin="0,2,0,0" TextWrapping="Wrap"
+                               Text="Posts from your account through Social Stream Ninja, so SSN must be connected. Overlay toasts always show either way."/>
+
+                    <TextBlock Text="POINTS" Style="{StaticResource SecHdr}"/>
+                    <CheckBox x:Name="PointsCb" Content="Give points to everyone on the chatters list" Style="{StaticResource Chk}"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                        <TextBlock Text="Name" Style="{StaticResource Lbl}"/>
+                        <TextBox x:Name="PointsNameBox" Style="{StaticResource Txt}" Width="130" Margin="0,0,12,0"/>
+                        <TextBlock Text="every" Style="{StaticResource Lbl}"/>
+                        <TextBox x:Name="PointsIntervalBox" Style="{StaticResource Num}"/>
+                        <TextBlock Text="min give" Style="{StaticResource Lbl}" Margin="6,0,6,0"/>
+                        <TextBox x:Name="PointsAmountBox" Style="{StaticResource Num}"/>
+                    </StackPanel>
+                    <TextBlock Foreground="#7a9070" FontSize="11" Margin="0,4,0,0" TextWrapping="Wrap"
+                               Text="Viewers check their balance with !points (or !&lt;points name&gt;). Balance shows as a big toast on the overlay."/>
+
+                    <TextBlock Text="CHAT STYLE" Style="{StaticResource SecHdr}"/>
+                    <StackPanel Orientation="Horizontal">
+                        <RadioButton x:Name="StyleLogRb" Content="Chat log (classic)" Foreground="#e8e0c4"
+                                     FontSize="12" Margin="0,0,16,0"/>
+                        <RadioButton x:Name="StyleBoxRb" Content="Boxes (colored bubbles)" Foreground="#e8e0c4"
+                                     FontSize="12"/>
+                    </StackPanel>
+                    <TextBlock Text="Box colors (rotate per message, up to 10):" Foreground="#a8c488"
+                               FontSize="11" Margin="0,8,0,4"/>
+                    <ItemsControl x:Name="ColorList">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#0f1812" BorderBrush="#2e4a30" BorderThickness="1"
+                                        CornerRadius="4" Padding="4" Margin="0,0,6,6">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Border Width="18" Height="18" CornerRadius="3"
+                                                Background="{Binding Brush}" Margin="0,0,5,0"/>
+                                        <TextBox Text="{Binding Hex, UpdateSourceTrigger=PropertyChanged}"
+                                                 Style="{StaticResource Txt}" Width="70"/>
+                                        <Button Content="&#x2715;" Tag="{Binding}" Click="RemoveColor_Click"
+                                                Style="{StaticResource Btn}" Margin="5,0,0,0" Padding="5,2"/>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Button x:Name="AddColorBtn" Content="+ Add color" Click="AddColor_Click"
+                            Style="{StaticResource Btn}" HorizontalAlignment="Left"/>
+
+                    <TextBlock Text="POINT REDEEMS (STREAM EFFECTS)" Style="{StaticResource SecHdr}"/>
+                    <TextBlock Foreground="#7a9070" FontSize="11" Margin="0,0,0,6" TextWrapping="Wrap"
+                               Text="Chat commands that spend points to fire an effect on the overlay. Custom = your own sound and/or image. ▶ tests the effect (no points needed)."/>
+                    <ItemsControl x:Name="RedeemList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Background="#0f1812" BorderBrush="#2e4a30" BorderThickness="1"
+                                        CornerRadius="4" Padding="6" Margin="0,0,0,6">
+                                    <StackPanel>
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="110"/>
+                                                <ColumnDefinition Width="110"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="60"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBox Grid.Column="0" Text="{Binding Command, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource Txt}" Margin="0,0,6,0"
+                                                     ToolTip="Chat command, e.g. !confetti"/>
+                                            <ComboBox Grid.Column="1" SelectedValue="{Binding Effect}"
+                                                      SelectedValuePath="Tag" Margin="0,0,6,0">
+                                                <ComboBoxItem Tag="confetti" Content="Confetti"/>
+                                                <ComboBoxItem Tag="fireworks" Content="Fireworks"/>
+                                                <ComboBoxItem Tag="shake" Content="Screen shake"/>
+                                                <ComboBoxItem Tag="custom" Content="Custom"/>
+                                            </ComboBox>
+                                            <TextBlock Grid.Column="2" Text="cost" Style="{StaticResource Lbl}"/>
+                                            <TextBox Grid.Column="3" Text="{Binding Cost, UpdateSourceTrigger=PropertyChanged}"
+                                                     Style="{StaticResource Num}" Width="52" Margin="0,0,6,0"/>
+                                            <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Text="&#128266;" FontSize="12" Foreground="#a8c488"
+                                                           VerticalAlignment="Center" Margin="0,0,3,0"/>
+                                                <Slider Width="70" Minimum="0" Maximum="1" Value="{Binding Volume, Mode=TwoWay}"
+                                                        VerticalAlignment="Center" Foreground="#7cc44a"
+                                                        ToolTip="Volume for this redeem's sound (saved per redeem)"/>
+                                            </StackPanel>
+                                            <Button Grid.Column="5" Content="&#9654;" Tag="{Binding}" Click="TestRedeem_Click"
+                                                    Style="{StaticResource Btn}" Margin="0,0,5,0"
+                                                    ToolTip="Test this effect now (plays sound + fires the overlay effect)"/>
+                                            <Button Grid.Column="6" Content="&#x2715;" Tag="{Binding}" Click="RemoveRedeem_Click"
+                                                    Style="{StaticResource Btn}" ToolTip="Remove"/>
+                                        </Grid>
+                                        <Grid Margin="0,5,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Button Grid.Column="0" Content="&#9835; Sound" Tag="{Binding}" Click="PickSound_Click"
+                                                    Style="{StaticResource Btn}" Margin="0,0,5,0"
+                                                    ToolTip="Optional sound file (any effect can have one)"/>
+                                            <TextBlock Grid.Column="1" Text="{Binding SoundName}" Foreground="#a8c488"
+                                                       FontSize="11" VerticalAlignment="Center" Margin="0,0,10,0"
+                                                       TextTrimming="CharacterEllipsis" ToolTip="{Binding SoundPath}"/>
+                                            <Button Grid.Column="2" Content="&#128444; Image" Tag="{Binding}" Click="PickImage_Click"
+                                                    Style="{StaticResource Btn}" Margin="0,0,5,0"
+                                                    ToolTip="Optional image shown on the overlay (used by Custom)"/>
+                                            <TextBlock Grid.Column="3" Text="{Binding ImageName}" Foreground="#a8c488"
+                                                       FontSize="11" VerticalAlignment="Center"
+                                                       TextTrimming="CharacterEllipsis" ToolTip="{Binding ImagePath}"/>
+                                        </Grid>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                    <Button Content="+ Add redeem" Click="AddRedeem_Click" Style="{StaticResource Btn}"
+                            HorizontalAlignment="Left"/>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Footer -->
+            <Grid Grid.Row="2" Margin="14,8,14,12">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="StatusText" Foreground="#7a9070" FontSize="11" VerticalAlignment="Center"
+                           TextTrimming="CharacterEllipsis"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Content="Cancel" Click="Cancel_Click" Style="{StaticResource Btn}" Margin="0,0,7,0"/>
+                    <Button Content="Save" Click="Save_Click" Style="{StaticResource SaveBtn}"/>
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

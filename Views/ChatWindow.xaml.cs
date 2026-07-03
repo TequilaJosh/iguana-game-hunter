@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
@@ -174,6 +175,24 @@ namespace GameTracker.Views
         {
             try { Clipboard.SetText(OverlayUrl); OverlayStatus.Text = "Copied: " + OverlayUrl; }
             catch { /* clipboard can be momentarily locked by another app */ }
+        }
+
+        private void EditLayout_Click(object sender, RoutedEventArgs e)
+        {
+            if (!OverlayServer.IsRunning)
+            {
+                OverlayStatus.Text = "Overlay server isn't running — can't open the editor.";
+                OverlayStatus.Foreground = new SolidColorBrush(Color.FromRgb(0xd4, 0x5a, 0x37));
+                return;
+            }
+            var url = OverlayUrl + "?edit=1";
+            try
+            {
+                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
+                OverlayStatus.Text = "Opened the layout editor in your browser. Drag/resize blocks, set fonts — it saves automatically.";
+                OverlayStatus.Foreground = new SolidColorBrush(Color.FromRgb(0x7a, 0x90, 0x70));
+            }
+            catch { OverlayStatus.Text = "Couldn't open a browser. Go to " + url + " manually."; }
         }
 
         private void ChatLines_Changed(object sender, RoutedEventArgs e)

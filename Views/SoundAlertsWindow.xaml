@@ -3,8 +3,8 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         Title="Sound Alerts"
-        Width="540" Height="470"
-        MinWidth="460" MinHeight="360"
+        Width="640" Height="470"
+        MinWidth="560" MinHeight="360"
         WindowStartupLocation="CenterOwner"
         WindowStyle="None" ResizeMode="CanResize"
         Icon="/iguana-eye.ico"
@@ -120,6 +120,7 @@
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
                                     <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
                                 </Grid.ColumnDefinitions>
                                 <TextBox Grid.Column="0" Text="{Binding Command, UpdateSourceTrigger=PropertyChanged}"
                                          Style="{StaticResource InputBox}" Margin="0,0,6,0"
@@ -127,11 +128,19 @@
                                 <TextBox Grid.Column="1" Text="{Binding FilePath}" IsReadOnly="True"
                                          Style="{StaticResource InputBox}" Margin="0,0,6,0"
                                          Foreground="#a8c488" ToolTip="{Binding FilePath}"/>
-                                <Button Grid.Column="2" Content="Browse" Tag="{Binding}" Click="Browse_Click"
+                                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center"
+                                            Margin="0,0,6,0">
+                                    <TextBlock Text="&#128266;" FontSize="12" Foreground="#a8c488"
+                                               VerticalAlignment="Center" Margin="0,0,3,0"/>
+                                    <Slider Width="66" Minimum="0" Maximum="1" SmallChange="0.05" LargeChange="0.1"
+                                            Value="{Binding Volume, Mode=TwoWay}" VerticalAlignment="Center"
+                                            Foreground="#7cc44a" ToolTip="Alert volume (saved per alert)"/>
+                                </StackPanel>
+                                <Button Grid.Column="3" Content="Browse" Tag="{Binding}" Click="Browse_Click"
                                         Style="{StaticResource SmallBtn}"/>
-                                <Button Grid.Column="3" Content="&#9654;" Tag="{Binding}" Click="Test_Click"
-                                        Style="{StaticResource SmallBtn}" ToolTip="Test play"/>
-                                <Button Grid.Column="4" Content="&#x2715;" Tag="{Binding}" Click="Remove_Click"
+                                <Button Grid.Column="4" Content="&#9654;" Tag="{Binding}" Click="Test_Click"
+                                        Style="{StaticResource SmallBtn}" ToolTip="Test play (at this volume)"/>
+                                <Button Grid.Column="5" Content="&#x2715;" Tag="{Binding}" Click="Remove_Click"
                                         Style="{StaticResource SmallBtn}" Margin="0" ToolTip="Remove"/>
                             </Grid>
                         </DataTemplate>

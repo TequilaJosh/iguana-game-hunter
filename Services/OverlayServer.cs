@@ -12,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using GameTracker.Models;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace GameTracker.Services
 {
@@ -62,6 +63,7 @@ namespace GameTracker.Services
         // Last-known snapshot, sent verbatim to every newly connected client.
         private static object _state = new { live = false };
         private static object[] _chat = Array.Empty<object>();
+        private static JToken? _layout;   // per-element layout (position/size/font), or null = default
 
         // The overlay HTML (loaded once, from the embedded resource or disk).
         private static string _html = string.Empty;
@@ -79,6 +81,7 @@ namespace GameTracker.Services
             {
                 Port = NormalizePort(SettingsService.LoadOverlayPort());
                 _html = LoadOverlayHtml();          // injects the live port for file:// use
+                _layout = ParseLayout(SettingsService.LoadOverlayLayout());
                 _cts = new CancellationTokenSource();
                 _listener = new TcpListener(IPAddress.Loopback, Port);
                 _listener.Start();
@@ -152,16 +155,19 @@ namespace GameTracker.Services
                 bool wantsWs = headers.TryGetValue("upgrade", out var up) &&
                                up.Contains("websocket", StringComparison.OrdinalIgnoreCase);
 
-                if (wantsWs && (path == "/ws"))
+                // Route on the path only; ignore any ?query (e.g. /?edit for the editor).
+                var route = path.Contains('?') ? path[..path.IndexOf('?')] : path;
+
+                if (wantsWs && (route == "/ws"))
                 {
                     await Upgrade(stream, headers, ct);
                     // Upgrade() owns the socket until it closes; keep tcp alive.
                     return;
                 }
 
-                if (method == "GET" && (path == "/" || path == "/index.html" ||
-                                        path == "/live" || path == "/overlay" ||
-                                        path == "/LiveOverlay.html"))
+                if (method == "GET" && (route == "/" || route == "/index.html" ||
+                                        route == "/live" || route == "/overlay" ||
+                                        route == "/LiveOverlay.html"))
                 {
                     await ServeHtml(stream, ct);
                 }
@@ -278,7 +284,7 @@ namespace GameTracker.Services
 
             // Send the current snapshot immediately so the overlay renders at once.
             object snapshot;
-            lock (Gate) snapshot = new { type = "snapshot", state = _state, chat = _chat };
+            lock (Gate) snapshot = new { type = "snapshot", state = _state, chat = _chat, layout = _layout };
             await SendText(client, JsonConvert.SerializeObject(snapshot), ct);
 
             await ReceiveLoop(client, ct);
@@ -324,13 +330,36 @@ namespace GameTracker.Services
 
         private static void HandleClientMessage(Client client, string msg, CancellationToken ct)
         {
-            // The only client->server message we expect is the heartbeat ping.
             try
             {
+                // Heartbeat.
                 if (msg.Contains("\"ping\""))
+                {
                     _ = SendText(client, "{\"type\":\"pong\"}", ct);
+                    return;
+                }
+
+                // Layout editor saved a new arrangement -> persist and push to every client
+                // (so the OBS source updates live while you edit in the browser).
+                if (msg.Contains("\"saveLayout\""))
+                {
+                    var o = JObject.Parse(msg);
+                    if ((string?)o["type"] == "saveLayout" && o["layout"] is JToken layout)
+                    {
+                        SettingsService.SaveOverlayLayout(layout.ToString(Formatting.None));
+                        lock (Gate) _layout = layout;
+                        Broadcast(new { type = "layout", layout });
+                    }
+                }
             }
-            catch { }
+            catch { /* ignore malformed client messages */ }
+        }
+
+        private static JToken? ParseLayout(string? json)
+        {
+            if (string.IsNullOrWhiteSpace(json)) return null;
+            try { return JToken.Parse(json); }
+            catch { return null; }
         }
 
         // -----------------------------------------------------------------

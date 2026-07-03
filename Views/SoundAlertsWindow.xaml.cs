@@ -18,7 +18,7 @@ namespace GameTracker.Views
         {
             InitializeComponent();
             foreach (var a in SettingsService.LoadSoundAlerts())
-                _items.Add(new AlertItem { Command = a.Command, FilePath = a.FilePath });
+                _items.Add(new AlertItem { Command = a.Command, FilePath = a.FilePath, Volume = a.Volume });
             AlertList.ItemsSource = _items;
         }
 
@@ -54,14 +54,14 @@ namespace GameTracker.Views
                 return;
             }
             TestStatus.Text = "▶ Playing " + System.IO.Path.GetFileName(item.FilePath);
-            _tester.Play(item.FilePath, msg => Dispatcher.Invoke(() => TestStatus.Text = msg));
+            _tester.Play(item.FilePath, item.Volume, msg => Dispatcher.Invoke(() => TestStatus.Text = msg));
         }
 
         private void Save_Click(object sender, RoutedEventArgs e)
         {
             var list = _items
                 .Where(i => !string.IsNullOrWhiteSpace(i.Command) && !string.IsNullOrWhiteSpace(i.FilePath))
-                .Select(i => new SoundAlert { Command = i.Command.Trim(), FilePath = i.FilePath.Trim() })
+                .Select(i => new SoundAlert { Command = i.Command.Trim(), FilePath = i.FilePath.Trim(), Volume = i.Volume })
                 .ToList();
             SettingsService.SaveSoundAlerts(list);
             DialogResult = true;
@@ -73,6 +73,7 @@ namespace GameTracker.Views
         {
             private string _command = string.Empty;
             private string _filePath = string.Empty;
+            private double _volume = 1.0;
 
             public string Command
             {
@@ -83,6 +84,11 @@ namespace GameTracker.Views
             {
                 get => _filePath;
                 set { _filePath = value; OnChanged(nameof(FilePath)); }
+            }
+            public double Volume
+            {
+                get => _volume;
+                set { _volume = value; OnChanged(nameof(Volume)); }
             }
 
             public event PropertyChangedEventHandler? PropertyChanged;

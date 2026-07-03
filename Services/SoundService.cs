@@ -50,14 +50,14 @@ namespace GameTracker.Services
                 string.Equals(a.Command.Trim(), first, StringComparison.OrdinalIgnoreCase));
             if (alert == null) return null;
 
-            Play(alert.FilePath);
+            Play(alert.FilePath, alert.Volume);
             return alert.Command;
         }
 
-        public void Play(string filePath) => Play(filePath, null);
+        public void Play(string filePath) => Play(filePath, 1.0, null);
 
-        /// <summary>Play a sound. <paramref name="onError"/> (raised on the caller's context) reports failures.</summary>
-        public void Play(string filePath, Action<string>? onError)
+        /// <summary>Play a sound at <paramref name="volume"/> (0–1). <paramref name="onError"/> reports failures.</summary>
+        public void Play(string filePath, double volume, Action<string>? onError = null)
         {
             if (string.IsNullOrWhiteSpace(filePath)) { onError?.Invoke("No sound file set."); return; }
             if (!File.Exists(filePath)) { onError?.Invoke("File not found: " + filePath); return; }
@@ -92,6 +92,7 @@ namespace GameTracker.Services
             try
             {
                 output.Init(reader);
+                output.Volume = (float)Math.Clamp(volume, 0.0, 1.0);
                 _active.Add(output);
                 output.Play();
             }

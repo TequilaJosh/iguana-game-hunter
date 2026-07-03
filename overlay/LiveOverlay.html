@@ -114,126 +114,110 @@
     font-family: 'Segoe UI', Segoe, system-ui, sans-serif;
   }
 
-  #vp { position: absolute; top: 0; left: 0; }
+  /* Free-form layout: a fixed 1280x720 design stage scaled to fit the OBS source.
+     Each block is independently positioned/sized/fonted (editable at ?edit). */
+  #stage {
+    position: absolute; left: 50%; top: 50%;
+    width: 1280px; height: 720px;
+    transform-origin: center center;
+  }
 
-  #panel {
-    position: absolute;
-    inset: 8px;
-    display: flex;
-    flex-direction: row;              /* left column (now playing + challenges) | chat */
+  .box {
+    position: absolute; box-sizing: border-box;
+    display: flex; flex-direction: column; overflow: hidden;
     background: rgba(10, 20, 16, 0.92);
-    border: 2px solid #4a7c3a;
-    border-radius: 12px;
-    box-sizing: border-box;
-    overflow: hidden;
-    /* Static chrome only -> shadow is fine here (it never re-paints per frame). */
+    border: 2px solid #4a7c3a; border-radius: 12px;
     box-shadow: 0 6px 22px rgba(0, 0, 0, 0.55);
-    /* Promote the whole overlay to its own GPU layer. */
+    padding: 10px 14px;
+    color: #e8e0c4;
+    font-size: 22px;                 /* per-element size from the layout; inner text uses em */
     transform: translateZ(0);
   }
+  .box[hidden] { display: none; }
 
-  /* Left column: now playing + challenges, stacked. */
-  #left {
-    flex: 0 0 42%;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    min-height: 0;
-    border-right: 1px solid #2e4a30;
+  /* ---- Edit mode ---- */
+  body.editing .box { cursor: move; outline: 1px dashed rgba(124, 196, 74, 0.55); }
+  body.editing .box.sel { outline: 2px solid #7cc44a; }
+  .rz {
+    display: none; position: absolute; right: -7px; bottom: -7px;
+    width: 15px; height: 15px; border-radius: 3px;
+    background: #7cc44a; border: 2px solid #0a1410; cursor: nwse-resize; z-index: 5;
   }
-  #left[hidden] { display: none; }
-
-  .sec {
-    padding: 7px 14px;
-    flex: 0 0 auto;
+  body.editing .rz { display: block; }
+  #editbar {
+    display: none; position: fixed; left: 12px; top: 12px; z-index: 10000; width: 250px;
+    background: rgba(10, 20, 16, 0.96); border: 1px solid #4a7c3a; border-radius: 8px;
+    padding: 10px 12px; color: #e8e0c4; font-family: 'Segoe UI', sans-serif; font-size: 13px;
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6);
   }
-  .sec[hidden] { display: none; }
-  #left .sec { border-bottom: 1px solid #2e4a30; }
-  #left .sec:last-child { border-bottom: 0; }
-  /* Challenges fill the rest of the left column. */
-  .sec.chlist { flex: 1 1 auto; min-height: 0; overflow: hidden; }
-  /* Chat is the whole right column. */
-  .sec.chat {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: column;
-    min-width: 0;
-    min-height: 0;
+  body.editing #editbar { display: block; }
+  #editbar h4 { margin: 0 0 6px; color: #7cc44a; font-size: 12px; letter-spacing: 1px; }
+  #editbar #ebSel { color: #d4a437; font-weight: 700; margin-bottom: 4px; }
+  #editbar label { display: block; margin: 7px 0 2px; color: #a8c488; font-size: 11px; }
+  #editbar select, #editbar input[type=number] {
+    width: 100%; box-sizing: border-box; background: #142016; color: #e8e0c4;
+    border: 1px solid #2e4a30; border-radius: 4px; padding: 4px 6px; font-size: 13px;
   }
+  #editbar input[type=color] {
+    width: 100%; height: 26px; background: #142016; border: 1px solid #2e4a30; border-radius: 4px;
+  }
+  #editbar .hint { color: #7a9070; font-size: 11px; margin-top: 8px; line-height: 1.4; }
+  #editbar .savemark { color: #7cc44a; font-size: 11px; height: 13px; margin-top: 5px; }
 
   .hd {
-    color: #7cc44a;
-    font-size: 12px;
-    font-weight: 700;
-    letter-spacing: 1px;
-    margin-bottom: 6px;
-    display: flex;
-    align-items: center;
-    gap: 6px;
+    color: #7cc44a; font-size: 0.55em; font-weight: 700; letter-spacing: 1px;
+    margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.3em; flex: 0 0 auto;
   }
 
   /* Now Playing */
-  .np-row { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+  .np-row { display: flex; align-items: center; flex-wrap: wrap; gap: 0.4em; }
   .np-row .dot {
-    width: 11px; height: 11px; border-radius: 50%;
+    width: 0.5em; height: 0.5em; border-radius: 50%;
     background: #7cc44a; box-shadow: 0 0 8px #7cc44a; flex: 0 0 auto;
   }
-  .np-row .title { font-size: 20px; font-weight: 700; color: #e8e0c4; }
+  .np-row .title { font-size: 1em; font-weight: 700; color: inherit; }
   .np-row .time {
-    font-family: Consolas, monospace; font-size: 20px; font-weight: 700;
+    font-family: Consolas, monospace; font-size: 1em; font-weight: 700;
     color: #7cc44a; margin-left: auto;
   }
-  .np-row .req { font-size: 13px; font-weight: 600; color: #d4a437; flex-basis: 100%; }
+  .np-row .req { font-size: 0.58em; font-weight: 600; color: #d4a437; flex-basis: 100%; }
   .np-row .req:empty { display: none; }
 
   /* Challenges */
-  .ch-row { display: flex; align-items: flex-start; margin: 3px 0; }
+  #chRows { flex: 1 1 auto; overflow: hidden; }
+  .ch-row { display: flex; align-items: flex-start; margin: 0.12em 0; }
   .num {
-    min-width: 20px; height: 20px; border-radius: 50%;
-    background: #243a26; color: #7cc44a; font-weight: 700; font-size: 12px;
-    text-align: center; line-height: 20px; margin-right: 9px; flex: 0 0 auto;
+    min-width: 1.15em; height: 1.15em; border-radius: 50%;
+    background: #243a26; color: #7cc44a; font-weight: 700; font-size: 0.62em;
+    text-align: center; line-height: 1.15em; margin-right: 0.5em; flex: 0 0 auto;
   }
-  .ch-txt { color: #e8e0c4; font-size: 15px; line-height: 20px; }
+  .ch-txt { color: inherit; font-size: 0.78em; line-height: 1.25; }
 
   /* Live chat */
   .live-dot {
-    width: 9px; height: 9px; border-radius: 50%; background: #7cc44a;
-    /* opacity-only pulse (no shadow/filter animation). */
+    width: 0.45em; height: 0.45em; border-radius: 50%; background: #7cc44a;
     animation: pulse 2s ease-in-out infinite;
   }
   @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
 
-  .chat .wrap {
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding-top: 2px;
-    /* Avoid compositor thrash while the list scrolls. */
-    will-change: transform;
-    scrollbar-width: none;            /* Firefox */
+  .wrap {
+    flex: 1 1 auto; min-height: 0; overflow-y: auto; overflow-x: hidden;
+    padding-top: 2px; will-change: transform; scrollbar-width: none;
   }
-  .chat .wrap::-webkit-scrollbar { width: 0; height: 0; }  /* Chromium/OBS */
+  .wrap::-webkit-scrollbar { width: 0; height: 0; }
 
   .msgs {
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-end;        /* bottom-anchored when under-full */
-    min-height: 100%;
-    /* Isolate reflow of the (frequently mutated) message list. */
-    contain: layout style;
+    display: flex; flex-direction: column; justify-content: flex-end;
+    min-height: 100%; contain: layout style;
   }
 
   .row {
-    margin: 2px 0;
-    font-size: 16px;
-    line-height: 1.25;
-    /* transform + opacity only */
+    margin: 0.12em 0; font-size: 0.9em; line-height: 1.25;
     transition: opacity 0.18s ease, transform 0.18s ease;
   }
   .row.enter { opacity: 0; transform: translateY(6px); }
-  .sym { margin-right: 6px; font-weight: bold; }
-  .user { font-weight: 700; margin-right: 5px; }
+  .sym { margin-right: 0.3em; font-weight: bold; }
+  .user { font-weight: 700; margin-right: 0.25em; }
   .msg { color: #ffffff; word-break: break-word; }
   .emote { height: 1.2em; vertical-align: middle; margin: 0 1px; }
 
@@ -269,31 +253,44 @@
 </style>
 </head>
 <body>
-  <div id="vp">
-    <div id="panel">
-      <div id="left">
-        <section id="np" class="sec" hidden>
-          <div class="hd">● NOW PLAYING</div>
-          <div class="np-row">
-            <span class="dot"></span>
-            <span class="title" id="npTitle"></span>
-            <span class="time" id="npTime"></span>
-            <span class="req" id="npReq"></span>
-          </div>
-        </section>
-
-        <section id="ch" class="sec chlist" hidden>
-          <div class="hd">🎡 CHALLENGES</div>
-          <div id="chRows"></div>
-        </section>
+  <div id="stage">
+    <section id="np" class="box" hidden>
+      <div class="hd">● NOW PLAYING</div>
+      <div class="np-row">
+        <span class="dot"></span>
+        <span class="title" id="npTitle"></span>
+        <span class="time" id="npTime"></span>
+        <span class="req" id="npReq"></span>
       </div>
+      <div class="rz" data-el="np"></div>
+    </section>
 
-      <section id="chat" class="sec chat">
-        <div class="hd"><span class="live-dot"></span> LIVE CHAT</div>
-        <div id="chatWrap" class="wrap"><div id="chatMsgs" class="msgs"></div></div>
-      </section>
-    </div>
+    <section id="ch" class="box" hidden>
+      <div class="hd">🎡 CHALLENGES</div>
+      <div id="chRows"></div>
+      <div class="rz" data-el="ch"></div>
+    </section>
+
+    <section id="chat" class="box">
+      <div class="hd"><span class="live-dot"></span> LIVE CHAT</div>
+      <div id="chatWrap" class="wrap"><div id="chatMsgs" class="msgs"></div></div>
+      <div class="rz" data-el="chat"></div>
+    </section>
+
     <div id="status" class="status"></div>
+  </div>
+
+  <div id="editbar">
+    <h4>OVERLAY EDITOR</h4>
+    <div id="ebSel">Now Playing</div>
+    <label>Font</label>
+    <select id="ebFont"></select>
+    <label>Text size (px)</label>
+    <input id="ebSize" type="number" min="8" max="200" step="1"/>
+    <label>Text color</label>
+    <input id="ebColor" type="color"/>
+    <div class="hint">Click a block to select it. Drag to move, drag the green corner to resize. Changes save automatically.</div>
+    <div class="savemark" id="ebSaved"></div>
   </div>
   <div id="debug"></div>
 
@@ -413,7 +410,7 @@
   let autoScroll = true;           // are we pinned to the bottom?
 
   // DOM refs (filled on init).
-  let elPanel, elLeft, elNp, elNpTitle, elNpTime, elNpReq, elCh, elChRows,
+  let elNp, elNpTitle, elNpTime, elNpReq, elCh, elChRows,
       elChatWrap, elChatMsgs, elStatus;
 
   function uptimeStr() {
@@ -559,6 +556,7 @@
       case "snapshot":
         // Full state given on (re)connect: rebuild from scratch.
         clearChat();
+        if (data.layout) applyLayout(data.layout);
         if (data.state) renderState(data.state);
         if (Array.isArray(data.chat)) {
           for (let i = 0; i < data.chat.length; i++) appendMessage(data.chat[i]);
@@ -566,6 +564,10 @@
         break;
       case "state":
         if (data.state) renderState(data.state);
+        break;
+      case "layout":
+        // Live layout update pushed while editing — apply on OBS viewers, not the editor itself.
+        if (!EDIT && data.layout) applyLayout(data.layout);
         break;
       case "chat":
         if (Array.isArray(data.messages)) {
@@ -584,6 +586,7 @@
   //  Rendering — state sections (low frequency, rebuild only when changed)
   // =========================================================================
   function renderState(s) {
+    if (EDIT) return;                                // keep placeholder content while editing
     try {
       const live = !!s.live;
       const title = s.title || "";
@@ -625,9 +628,6 @@
       } else {
         elCh.hidden = true;
       }
-
-      // Collapse the left column when it has nothing, so chat spans full width.
-      if (elLeft) elLeft.hidden = (elNp.hidden && elCh.hidden);
     } catch (e) {
       logErr("renderState failed: " + (e && e.message));
     }
@@ -782,18 +782,173 @@
   // =========================================================================
   //  Scaling — author at designWidth, scale uniformly to the OBS source size.
   // =========================================================================
+  const CANVAS_W = 1280, CANVAS_H = 720;
+  let stageScale = 1;
   function applyScale() {
-    const vp = document.getElementById("vp");
-    if (!vp) return;
-    const s = window.innerWidth / CONFIG.designWidth;
-    vp.style.transformOrigin = "top left";
-    vp.style.transform = "scale(" + s + ")";
-    vp.style.width = CONFIG.designWidth + "px";
-    vp.style.height = (window.innerHeight / s) + "px";
+    const stage = document.getElementById("stage");
+    if (!stage) return;
+    stageScale = Math.min(window.innerWidth / CANVAS_W, window.innerHeight / CANVAS_H);
+    stage.style.transform = "translate(-50%,-50%) scale(" + stageScale + ")";
   }
   function onResize() {
     if (scaleRaf) return;
     scaleRaf = requestAnimationFrame(function () { scaleRaf = 0; applyScale(); });
+  }
+
+  // =========================================================================
+  //  Layout (per-element position / size / font) + in-browser editor (?edit)
+  // =========================================================================
+  const ELEMENTS = ["np", "ch", "chat"];
+  const ELEMENT_NAMES = { np: "Now Playing", ch: "Challenges", chat: "Live Chat" };
+  const DEFAULT_LAYOUT = {
+    np:   { x: 40,  y: 36,  w: 560, h: 92,  font: "", size: 30, color: "#e8e0c4" },
+    ch:   { x: 40,  y: 150, w: 380, h: 534, font: "", size: 26, color: "#e8e0c4" },
+    chat: { x: 864, y: 36,  w: 376, h: 648, font: "", size: 26, color: "#ffffff" }
+  };
+  const FONTS = ["", "Segoe UI", "Arial", "Verdana", "Tahoma", "Trebuchet MS",
+                 "Georgia", "Times New Roman", "Courier New", "Consolas",
+                 "Impact", "Comic Sans MS", "Bebas Neue", "Oswald", "Roboto"];
+  const EDIT = new URLSearchParams(location.search).has("edit");
+  let layout = clone(DEFAULT_LAYOUT);
+  let selEl = null;
+
+  function clone(o) { return JSON.parse(JSON.stringify(o)); }
+
+  function applyLayout(next) {
+    if (next && typeof next === "object") {
+      const merged = clone(DEFAULT_LAYOUT);
+      for (const k of ELEMENTS) {
+        if (next[k]) for (const p in next[k]) merged[k][p] = next[k][p];
+      }
+      layout = merged;
+    }
+    for (const k of ELEMENTS) applyBox(k);
+  }
+
+  function applyBox(k) {
+    const el = document.getElementById(k);
+    if (!el) return;
+    const c = layout[k];
+    el.style.left = c.x + "px";
+    el.style.top = c.y + "px";
+    el.style.width = c.w + "px";
+    el.style.height = c.h + "px";
+    el.style.fontFamily = c.font ? ("'" + c.font + "', 'Segoe UI', sans-serif") : "";
+    el.style.fontSize = (c.size || 22) + "px";
+    el.style.color = c.color || "";
+  }
+
+  // ---- editor ----
+  let saveTimer = null;
+  function scheduleSave() {
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () {
+      saveTimer = null;
+      send({ type: "saveLayout", layout: layout });
+      const m = document.getElementById("ebSaved");
+      if (m) { m.textContent = "Saved ✓"; setTimeout(function () { if (m) m.textContent = ""; }, 1200); }
+    }, 300);
+  }
+
+  function selectEl(k) {
+    selEl = k;
+    for (const e of ELEMENTS) {
+      const el = document.getElementById(e);
+      if (el) el.classList.toggle("sel", e === k);
+    }
+    const c = layout[k];
+    document.getElementById("ebSel").textContent = ELEMENT_NAMES[k];
+    document.getElementById("ebFont").value = c.font || "";
+    document.getElementById("ebSize").value = c.size || 22;
+    document.getElementById("ebColor").value = /^#[0-9a-fA-F]{6}$/.test(c.color) ? c.color : "#e8e0c4";
+  }
+
+  function initEditor() {
+    document.body.classList.add("editing");
+    // Placeholder content so empty blocks are visible and positionable.
+    document.getElementById("np").hidden = false;
+    document.getElementById("ch").hidden = false;
+    elNpTitle.textContent = "Game Title";
+    elNpTime.textContent = "1:23:45";
+    elNpReq.textContent = "req: viewer";
+    elChRows.innerHTML =
+      '<div class="ch-row"><span class="num">1</span><span class="ch-txt">No Cure Spells</span></div>' +
+      '<div class="ch-row"><span class="num">2</span><span class="ch-txt">Any Mage</span></div>' +
+      '<div class="ch-row"><span class="num">3</span><span class="ch-txt">Must Defeat WARMECH</span></div>';
+    if (!elChatMsgs.children.length) {
+      elChatMsgs.innerHTML =
+        '<div class="row"><span class="sym" style="color:#9146FF">♥</span><span class="user" style="color:#FF69B4">shroud</span><span class="msg">good luck!</span></div>' +
+        '<div class="row"><span class="sym" style="color:#FF0000">▶</span><span class="user" style="color:#00FF7F">viewer22</span><span class="msg">lets go</span></div>';
+    }
+
+    const fsel = document.getElementById("ebFont");
+    for (const f of FONTS) {
+      const o = document.createElement("option");
+      o.value = f; o.textContent = f || "(default)";
+      if (f) o.style.fontFamily = f;
+      fsel.appendChild(o);
+    }
+    fsel.addEventListener("change", function () {
+      if (!selEl) return; layout[selEl].font = fsel.value; applyBox(selEl); scheduleSave();
+    });
+    document.getElementById("ebSize").addEventListener("input", function () {
+      if (!selEl) return;
+      let n = parseInt(this.value, 10); if (isNaN(n)) return;
+      layout[selEl].size = Math.max(8, Math.min(200, n)); applyBox(selEl); scheduleSave();
+    });
+    document.getElementById("ebColor").addEventListener("input", function () {
+      if (!selEl) return; layout[selEl].color = this.value; applyBox(selEl); scheduleSave();
+    });
+
+    for (const k of ELEMENTS) attachDragResize(k);
+    selectEl("np");
+  }
+
+  function attachDragResize(k) {
+    const el = document.getElementById(k);
+    const rz = el.querySelector(".rz");
+
+    el.addEventListener("pointerdown", function (e) {
+      if (e.target.classList.contains("rz")) return;   // resize is separate
+      selectEl(k);
+      const sx = e.clientX, sy = e.clientY, ox = layout[k].x, oy = layout[k].y;
+      el.setPointerCapture(e.pointerId);
+      function move(ev) {
+        layout[k].x = Math.round(ox + (ev.clientX - sx) / stageScale);
+        layout[k].y = Math.round(oy + (ev.clientY - sy) / stageScale);
+        applyBox(k);
+      }
+      function up() {
+        try { el.releasePointerCapture(e.pointerId); } catch (x) {}
+        el.removeEventListener("pointermove", move);
+        el.removeEventListener("pointerup", up);
+        scheduleSave();
+      }
+      el.addEventListener("pointermove", move);
+      el.addEventListener("pointerup", up);
+      e.preventDefault();
+    });
+
+    rz.addEventListener("pointerdown", function (e) {
+      selectEl(k);
+      const sx = e.clientX, sy = e.clientY, ow = layout[k].w, oh = layout[k].h;
+      rz.setPointerCapture(e.pointerId);
+      function move(ev) {
+        layout[k].w = Math.max(60, Math.round(ow + (ev.clientX - sx) / stageScale));
+        layout[k].h = Math.max(40, Math.round(oh + (ev.clientY - sy) / stageScale));
+        applyBox(k);
+      }
+      function up() {
+        try { rz.releasePointerCapture(e.pointerId); } catch (x) {}
+        rz.removeEventListener("pointermove", move);
+        rz.removeEventListener("pointerup", up);
+        scheduleSave();
+      }
+      rz.addEventListener("pointermove", move);
+      rz.addEventListener("pointerup", up);
+      e.stopPropagation();
+      e.preventDefault();
+    });
   }
 
   function setStatus(up) {
@@ -808,8 +963,6 @@
   //  Init
   // =========================================================================
   function init() {
-    elPanel = document.getElementById("panel");
-    elLeft = document.getElementById("left");
     elNp = document.getElementById("np");
     elNpTitle = document.getElementById("npTitle");
     elNpTime = document.getElementById("npTime");
@@ -837,6 +990,8 @@
 
     window.addEventListener("resize", onResize);
     applyScale();
+    applyLayout();                 // position boxes at defaults (a snapshot may override)
+    if (EDIT) initEditor();
 
     hidden = (document.visibilityState === "hidden");
     maintenanceTimer = setInterval(maintenance, CONFIG.maintenanceIntervalMs);

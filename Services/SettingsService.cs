@@ -33,6 +33,7 @@ namespace GameTracker.Services
             public List<SoundAlert> SoundAlerts { get; set; } = new(); // chat command -> sound file
             public int OverlayPort { get; set; } = 3620; // port for the live OBS overlay server
             public int OverlayChatLines { get; set; } = 20; // chat lines shown on the overlay
+            public string? OverlayLayout { get; set; } // JSON: per-element position/size/font (null = default)
         }
 
         private static AppSettings LoadAll()
@@ -128,6 +129,16 @@ namespace GameTracker.Services
         {
             var s = LoadAll();
             s.OverlayChatLines = (lines is >= 5 and <= 100) ? lines : 20;
+            SaveAll(s);
+        }
+
+        /// <summary>Saved overlay layout JSON (per-element position/size/font), or null for the default.</summary>
+        public static string? LoadOverlayLayout() => LoadAll().OverlayLayout;
+
+        public static void SaveOverlayLayout(string? layoutJson)
+        {
+            var s = LoadAll();
+            s.OverlayLayout = layoutJson;
             SaveAll(s);
         }
     }

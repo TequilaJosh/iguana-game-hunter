@@ -5,5 +5,6 @@ namespace GameTracker.Models
     {
         public string Command { get; set; } = string.Empty;   // e.g. "!airhorn"
         public string FilePath { get; set; } = string.Empty;  // full path to a .mp3 / .wav
+        public double Volume { get; set; } = 1.0;             // 0.0–1.0 playback volume
     }
 }

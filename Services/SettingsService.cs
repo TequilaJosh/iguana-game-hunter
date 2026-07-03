@@ -34,6 +34,7 @@ namespace GameTracker.Services
             public int OverlayPort { get; set; } = 3620; // port for the live OBS overlay server
             public int OverlayChatLines { get; set; } = 20; // chat lines shown on the overlay
             public string? OverlayLayout { get; set; } // JSON: per-element position/size/font (null = default)
+            public string? OverlayPresets { get; set; } // JSON array of saved layout presets
         }
 
         private static AppSettings LoadAll()
@@ -139,6 +140,16 @@ namespace GameTracker.Services
         {
             var s = LoadAll();
             s.OverlayLayout = layoutJson;
+            SaveAll(s);
+        }
+
+        /// <summary>Saved overlay layout presets (JSON array), or null if none.</summary>
+        public static string? LoadOverlayPresets() => LoadAll().OverlayPresets;
+
+        public static void SaveOverlayPresets(string? presetsJson)
+        {
+            var s = LoadAll();
+            s.OverlayPresets = presetsJson;
             SaveAll(s);
         }
     }

@@ -163,6 +163,26 @@
   }
   #editbar .hint { color: #7a9070; font-size: 11px; margin-top: 8px; line-height: 1.4; }
   #editbar .savemark { color: #7cc44a; font-size: 11px; height: 13px; margin-top: 5px; }
+  #editbar button {
+    background: #243a26; color: #7cc44a; border: 1px solid #4a7c3a; border-radius: 4px;
+    padding: 4px 9px; font-size: 12px; cursor: pointer; font-family: 'Segoe UI', sans-serif;
+  }
+  #editbar button:hover { background: #4a7c3a; color: #0a1410; }
+  #editbar input[type=text] {
+    background: #142016; color: #e8e0c4; border: 1px solid #2e4a30; border-radius: 4px;
+    padding: 4px 6px; font-size: 12px; box-sizing: border-box;
+  }
+  #editbar .ebsplit { border-top: 1px solid #2e4a30; margin-top: 10px; padding-top: 8px; }
+  #editbar .prow { display: flex; gap: 5px; }
+  #editbar .prow input { flex: 1 1 auto; min-width: 0; }
+  #editbar #ebPresetList { margin: 6px 0; }
+  #editbar #ebPresetList .p { display: flex; align-items: center; gap: 5px; margin: 4px 0; }
+  #editbar #ebPresetList .p .nm {
+    flex: 1 1 auto; min-width: 0; color: #e8e0c4; font-size: 12px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  #editbar #ebPresetList .p button { padding: 2px 7px; }
+  #editbar #ebReset { width: 100%; margin-top: 4px; }
 
   .hd {
     color: #7cc44a; font-size: 0.55em; font-weight: 700; letter-spacing: 1px;
@@ -291,6 +311,16 @@
     <input id="ebColor" type="color"/>
     <div class="hint">Click a block to select it. Drag to move, drag the green corner to resize. Changes save automatically.</div>
     <div class="savemark" id="ebSaved"></div>
+
+    <div class="ebsplit">
+      <label>Presets (up to 10)</label>
+      <div class="prow">
+        <input id="ebPresetName" type="text" placeholder="preset name" maxlength="24"/>
+        <button id="ebPresetSave">Save</button>
+      </div>
+      <div id="ebPresetList"></div>
+      <button id="ebReset">↺ Reset to default</button>
+    </div>
   </div>
   <div id="debug"></div>
 
@@ -557,6 +587,7 @@
         // Full state given on (re)connect: rebuild from scratch.
         clearChat();
         if (data.layout) applyLayout(data.layout);
+        if (Array.isArray(data.presets)) { presets = data.presets; if (EDIT) renderPresets(); }
         if (data.state) renderState(data.state);
         if (Array.isArray(data.chat)) {
           for (let i = 0; i < data.chat.length; i++) appendMessage(data.chat[i]);
@@ -801,15 +832,16 @@
   const ELEMENTS = ["np", "ch", "chat"];
   const ELEMENT_NAMES = { np: "Now Playing", ch: "Challenges", chat: "Live Chat" };
   const DEFAULT_LAYOUT = {
-    np:   { x: 40,  y: 36,  w: 560, h: 92,  font: "", size: 30, color: "#e8e0c4" },
-    ch:   { x: 40,  y: 150, w: 380, h: 534, font: "", size: 26, color: "#e8e0c4" },
-    chat: { x: 864, y: 36,  w: 376, h: 648, font: "", size: 26, color: "#ffffff" }
+    np:   { x: 246, y: 48,  w: 618, h: 72,  font: "", size: 22, color: "#e8e0c4" },
+    ch:   { x: 246, y: 128, w: 294, h: 372, font: "", size: 18, color: "#e8e0c4" },
+    chat: { x: 548, y: 128, w: 316, h: 372, font: "", size: 24, color: "#ffffff" }
   };
   const FONTS = ["", "Segoe UI", "Arial", "Verdana", "Tahoma", "Trebuchet MS",
                  "Georgia", "Times New Roman", "Courier New", "Consolas",
                  "Impact", "Comic Sans MS", "Bebas Neue", "Oswald", "Roboto"];
   const EDIT = new URLSearchParams(location.search).has("edit");
   let layout = clone(DEFAULT_LAYOUT);
+  let presets = [];        // [{ name, layout }] — editor-managed, persisted server-side
   let selEl = null;
 
   function clone(o) { return JSON.parse(JSON.stringify(o)); }
@@ -848,6 +880,48 @@
       const m = document.getElementById("ebSaved");
       if (m) { m.textContent = "Saved ✓"; setTimeout(function () { if (m) m.textContent = ""; }, 1200); }
     }, 300);
+  }
+
+  function flashSaved(txt) {
+    const m = document.getElementById("ebSaved");
+    if (!m) return;
+    m.textContent = txt || "Saved ✓";
+    setTimeout(function () { if (m) m.textContent = ""; }, 1400);
+  }
+
+  function savePresets() { send({ type: "savePresets", presets: presets }); }
+
+  function renderPresets() {
+    const list = document.getElementById("ebPresetList");
+    if (!list) return;
+    list.innerHTML = "";
+    presets.forEach(function (p, i) {
+      const row = document.createElement("div"); row.className = "p";
+      const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = p.name; nm.title = p.name;
+      const load = document.createElement("button"); load.textContent = "Load";
+      load.addEventListener("click", function () {
+        applyLayout(clone(p.layout)); selectEl(selEl || "np"); scheduleSave(); flashSaved("Loaded " + p.name);
+      });
+      const del = document.createElement("button"); del.textContent = "✕"; del.title = "Delete";
+      del.addEventListener("click", function () { presets.splice(i, 1); renderPresets(); savePresets(); });
+      row.appendChild(nm); row.appendChild(load); row.appendChild(del);
+      list.appendChild(row);
+    });
+  }
+
+  function savePresetClick() {
+    const inp = document.getElementById("ebPresetName");
+    let name = (inp.value || "").trim();
+    if (!name) name = "Preset " + (presets.length + 1);
+    const ex = presets.find(function (p) { return p.name.toLowerCase() === name.toLowerCase(); });
+    if (ex) { ex.layout = clone(layout); flashSaved("Updated " + name); }
+    else {
+      if (presets.length >= 10) { flashSaved("Max 10 presets — delete one"); return; }
+      presets.push({ name: name, layout: clone(layout) });
+      flashSaved("Saved " + name);
+    }
+    inp.value = "";
+    renderPresets(); savePresets();
   }
 
   function selectEl(k) {
@@ -899,6 +973,12 @@
     document.getElementById("ebColor").addEventListener("input", function () {
       if (!selEl) return; layout[selEl].color = this.value; applyBox(selEl); scheduleSave();
     });
+
+    document.getElementById("ebPresetSave").addEventListener("click", savePresetClick);
+    document.getElementById("ebReset").addEventListener("click", function () {
+      applyLayout(clone(DEFAULT_LAYOUT)); selectEl(selEl || "np"); scheduleSave(); flashSaved("Reset to default");
+    });
+    renderPresets();
 
     for (const k of ELEMENTS) attachDragResize(k);
     selectEl("np");

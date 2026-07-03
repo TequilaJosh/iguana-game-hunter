@@ -64,6 +64,7 @@ namespace GameTracker.Services
         private static object _state = new { live = false };
         private static object[] _chat = Array.Empty<object>();
         private static JToken? _layout;   // per-element layout (position/size/font), or null = default
+        private static JToken? _presets;  // saved layout presets (editor-only)
 
         // The overlay HTML (loaded once, from the embedded resource or disk).
         private static string _html = string.Empty;
@@ -82,6 +83,7 @@ namespace GameTracker.Services
                 Port = NormalizePort(SettingsService.LoadOverlayPort());
                 _html = LoadOverlayHtml();          // injects the live port for file:// use
                 _layout = ParseLayout(SettingsService.LoadOverlayLayout());
+                _presets = ParseLayout(SettingsService.LoadOverlayPresets());
                 _cts = new CancellationTokenSource();
                 _listener = new TcpListener(IPAddress.Loopback, Port);
                 _listener.Start();
@@ -284,7 +286,7 @@ namespace GameTracker.Services
 
             // Send the current snapshot immediately so the overlay renders at once.
             object snapshot;
-            lock (Gate) snapshot = new { type = "snapshot", state = _state, chat = _chat, layout = _layout };
+            lock (Gate) snapshot = new { type = "snapshot", state = _state, chat = _chat, layout = _layout, presets = _presets };
             await SendText(client, JsonConvert.SerializeObject(snapshot), ct);
 
             await ReceiveLoop(client, ct);
@@ -349,6 +351,17 @@ namespace GameTracker.Services
                         SettingsService.SaveOverlayLayout(layout.ToString(Formatting.None));
                         lock (Gate) _layout = layout;
                         Broadcast(new { type = "layout", layout });
+                    }
+                }
+
+                // Editor saved its preset list (editor-only, not broadcast to viewers).
+                if (msg.Contains("\"savePresets\""))
+                {
+                    var o = JObject.Parse(msg);
+                    if ((string?)o["type"] == "savePresets" && o["presets"] is JToken presets)
+                    {
+                        SettingsService.SaveOverlayPresets(presets.ToString(Formatting.None));
+                        lock (Gate) _presets = presets;
                     }
                 }
             }

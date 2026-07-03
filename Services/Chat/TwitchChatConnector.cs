@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
@@ -128,7 +129,7 @@ namespace GameTracker.Services.Chat
                 if (bang > 1) nick = rest.Substring(1, bang - 1);
             }
 
-            string display = nick, color = string.Empty, emotes = string.Empty;
+            string display = nick, color = string.Empty, emotes = string.Empty, badges = string.Empty;
             foreach (var kv in tags.Split(';'))
             {
                 int eq = kv.IndexOf('=');
@@ -138,6 +139,7 @@ namespace GameTracker.Services.Chat
                 if (k == "display-name" && v.Length > 0) display = v;
                 else if (k == "color" && v.Length > 0) color = v;
                 else if (k == "emotes") emotes = v;
+                else if (k == "badges") badges = v;
             }
 
             if (message.Length == 0) return;
@@ -147,7 +149,39 @@ namespace GameTracker.Services.Chat
                 User = display,
                 Segments = ChatText.ParseTwitch(message, emotes),
                 UserColor = color,
+                Badges = ParseBadges(badges),
             });
+        }
+
+        // Twitch "badges" tag -> role labels. e.g. "broadcaster/1,subscriber/12,moderator/1".
+        private static readonly Dictionary<string, (string label, string color)> BadgeMap =
+            new(StringComparer.OrdinalIgnoreCase)
+            {
+                { "broadcaster", ("HOST",  "#e91916") },
+                { "moderator",   ("MOD",   "#00ad03") },
+                { "vip",         ("VIP",   "#e005b9") },
+                { "subscriber",  ("SUB",   "#6441a5") },
+                { "founder",     ("SUB",   "#6441a5") },
+                { "staff",       ("STAFF", "#666666") },
+                { "admin",       ("ADMIN", "#666666") },
+                { "global_mod",  ("GMOD",  "#0c6f20") },
+                { "partner",     ("✓",     "#9146FF") },
+                { "turbo",       ("TURBO", "#6441a5") },
+                { "premium",     ("PRIME", "#00a0d1") },
+            };
+
+        private static List<ChatBadge> ParseBadges(string badges)
+        {
+            var list = new List<ChatBadge>();
+            if (string.IsNullOrEmpty(badges)) return list;
+            foreach (var b in badges.Split(','))
+            {
+                var name = b.Split('/')[0];
+                if (BadgeMap.TryGetValue(name, out var m))
+                    list.Add(new ChatBadge { Label = m.label, Color = m.color });
+                if (list.Count >= 3) break;
+            }
+            return list;
         }
 
         public async Task DisconnectAsync()

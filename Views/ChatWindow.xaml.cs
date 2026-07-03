@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Windows;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 using System.Windows.Threading;
 using GameTracker.Models;
 using GameTracker.Services;
@@ -221,6 +222,10 @@ namespace GameTracker.Views
             }
         }
 
+        private int _zebra;
+        private static readonly Brush ZebraNone = Brushes.Transparent;
+        private static readonly Brush ZebraDark = Frozen("#22000000");
+
         private ChatRow ToRow(ChatMessage m)
         {
             Brush userBrush = DefaultUser;
@@ -232,14 +237,47 @@ namespace GameTracker.Views
             Brush symbolBrush = DefaultUser;
             try { symbolBrush = Frozen(OverlayService.ChatColorHex(m.Platform)); } catch { }
 
+            // Avatar: photo if provided, otherwise a colored circle with the user's initial.
+            Brush avatarBrush = symbolBrush;
+            string initial = string.Empty;
+            bool hasPhoto = false;
+            if (IsHttp(m.AvatarUrl))
+            {
+                try { avatarBrush = AvatarImage(m.AvatarUrl); hasPhoto = true; } catch { }
+            }
+            if (!hasPhoto) initial = FirstLetter(m.User);
+
             return new ChatRow
             {
                 Symbol = OverlayService.ChatSymbol(m.Platform),
                 SymbolBrush = symbolBrush,
                 User = m.User,
                 Segments = m.Segments,
+                Badges = m.Badges ?? new List<ChatBadge>(),
                 UserBrush = userBrush,
+                AvatarBrush = avatarBrush,
+                Initial = initial,
+                RowBrush = (_zebra++ % 2 == 0) ? ZebraNone : ZebraDark,
             };
+        }
+
+        private static bool IsHttp(string? s) =>
+            !string.IsNullOrWhiteSpace(s) &&
+            (s.StartsWith("http://", StringComparison.OrdinalIgnoreCase) ||
+             s.StartsWith("https://", StringComparison.OrdinalIgnoreCase));
+
+        private static string FirstLetter(string? user) =>
+            string.IsNullOrWhiteSpace(user) ? "?" : user.Trim()[0].ToString().ToUpperInvariant();
+
+        private static ImageBrush AvatarImage(string url)
+        {
+            var bmp = new BitmapImage();
+            bmp.BeginInit();
+            bmp.CacheOption = BitmapCacheOption.OnLoad;
+            bmp.UriSource = new Uri(url, UriKind.Absolute);
+            bmp.DecodePixelWidth = 44;
+            bmp.EndInit();
+            return new ImageBrush(bmp) { Stretch = Stretch.UniformToFill };
         }
 
         private void SaveChat() => SettingsService.SaveChat(new ChatSettings
@@ -252,6 +290,9 @@ namespace GameTracker.Views
         });
 
         private void AutoConnect_Changed(object sender, RoutedEventArgs e) => SaveChat();
+
+        private void SsnGuide_Click(object sender, RoutedEventArgs e) =>
+            new SsnGuideWindow { Owner = this }.ShowDialog();
 
         private void Opacity_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
@@ -325,7 +366,11 @@ namespace GameTracker.Views
             public Brush SymbolBrush { get; set; } = Brushes.Gray;
             public string User { get; set; } = string.Empty;
             public List<ChatSegment> Segments { get; set; } = new();
+            public List<ChatBadge> Badges { get; set; } = new();
             public Brush UserBrush { get; set; } = Brushes.White;
+            public Brush AvatarBrush { get; set; } = Brushes.Gray;
+            public string Initial { get; set; } = string.Empty;
+            public Brush RowBrush { get; set; } = Brushes.Transparent;
         }
     }
 }

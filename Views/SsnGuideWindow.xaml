@@ -1,0 +1,135 @@
+<Window x:Class="GameTracker.Views.SsnGuideWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="Social Stream Ninja Setup"
+        Width="480" Height="540"
+        MinWidth="420" MinHeight="420"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None" ResizeMode="CanResize"
+        Icon="/iguana-eye.ico"
+        Background="{StaticResource ScaleBrush}">
+
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="32" ResizeBorderThickness="6"
+                            GlassFrameThickness="0" CornerRadius="0"
+                            UseAeroCaptionButtons="False"/>
+    </shell:WindowChrome.WindowChrome>
+
+    <Window.Resources>
+        <Style x:Key="Step" TargetType="TextBlock">
+            <Setter Property="Foreground" Value="#e8e0c4"/>
+            <Setter Property="FontSize" Value="13"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin" Value="0,0,0,10"/>
+        </Style>
+        <Style x:Key="ActionBtn" TargetType="Button">
+            <Setter Property="Background" Value="#243a26"/>
+            <Setter Property="Foreground" Value="#7cc44a"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="12,6"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="4"
+                                Padding="{TemplateBinding Padding}" BorderBrush="#4a7c3a" BorderThickness="1">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#4a7c3a"/>
+                                <Setter Property="Foreground" Value="#0a1410"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Border BorderBrush="#4a7c3a" BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="32"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Title bar -->
+            <Border Grid.Row="0" Background="#0a1410" BorderBrush="#2e4a30" BorderThickness="0,0,0,1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
+                        <Image Source="/iguana-eye.ico" Width="16" Height="16" Margin="0,0,8,0"
+                               VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
+                        <TextBlock Text="SOCIAL STREAM NINJA SETUP" Foreground="#7cc44a" FontSize="11"
+                                   FontWeight="Bold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <Button Grid.Column="1" Content="&#x2715;" Click="Close_Click"
+                            Style="{StaticResource WindowCloseButton}" Height="32"
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True"/>
+                </Grid>
+            </Border>
+
+            <!-- Steps -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="18,16,18,8">
+                <StackPanel>
+                    <TextBlock Foreground="#a8c488" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,14"
+                               Text="To read chat here, Social Stream Ninja must be told to send chat to its API server. Do this once:"/>
+
+                    <TextBlock Style="{StaticResource Step}">
+                        <Run Foreground="#7cc44a" FontWeight="Bold">1.</Run>
+                        Open Social Stream Ninja and go into its <Run FontWeight="Bold">Global settings</Run>
+                        (the gear / settings in the dock or extension).
+                    </TextBlock>
+                    <TextBlock Style="{StaticResource Step}">
+                        <Run Foreground="#7cc44a" FontWeight="Bold">2.</Run>
+                        Open the <Run FontWeight="Bold">Mechanics</Run> section.
+                    </TextBlock>
+                    <TextBlock Style="{StaticResource Step}">
+                        <Run Foreground="#7cc44a" FontWeight="Bold">3.</Run>
+                        Turn ON <Run FontWeight="Bold">"Enable remote API control of extension"</Run>.
+                    </TextBlock>
+                    <TextBlock Style="{StaticResource Step}">
+                        <Run Foreground="#7cc44a" FontWeight="Bold">4.</Run>
+                        Turn ON <Run FontWeight="Bold" Foreground="#d4a437">"Send chat messages to API server"</Run>.
+                        This is the key one — without it, chat never reaches this app.
+                    </TextBlock>
+                    <TextBlock Style="{StaticResource Step}">
+                        <Run Foreground="#7cc44a" FontWeight="Bold">5.</Run>
+                        Make sure your chat sources (Twitch / YouTube / TikTok / etc.) are connected and live in SSN.
+                    </TextBlock>
+                    <TextBlock Style="{StaticResource Step}">
+                        <Run Foreground="#7cc44a" FontWeight="Bold">6.</Run>
+                        Copy your <Run FontWeight="Bold">session ID</Run> from the dock URL — the part after
+                        <Run FontFamily="Consolas" Foreground="#a8c488">session=</Run>
+                        (e.g. <Run FontFamily="Consolas" Foreground="#a8c488">…dock.html?session=4zqP2cuW4i</Run>
+                        → <Run FontFamily="Consolas" Foreground="#7cc44a">4zqP2cuW4i</Run>).
+                    </TextBlock>
+                    <TextBlock Style="{StaticResource Step}">
+                        <Run Foreground="#7cc44a" FontWeight="Bold">7.</Run>
+                        Paste it into the <Run FontWeight="Bold">SSN</Run> box here and click
+                        <Run FontWeight="Bold">Connect</Run>. It should read "Connected — waiting for chat," then
+                        messages appear as chat comes in.
+                    </TextBlock>
+
+                    <TextBlock Foreground="#7a9070" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"
+                               Text="Still quiet? Re-check step 4 and that at least one chat source is live in SSN."/>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Footer -->
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right" Margin="12,10,12,12">
+                <Button Content="Open socialstream.ninja" Click="OpenSsn_Click"
+                        Style="{StaticResource ActionBtn}" Margin="0,0,8,0"/>
+                <Button Content="Close" Click="Close_Click" Style="{StaticResource ActionBtn}"/>
+            </StackPanel>
+        </Grid>
+    </Border>
+</Window>

@@ -100,6 +100,8 @@ namespace GameTracker.Services.Chat
                     Platform = MapSource(sourceId),
                     User = user,
                     Segments = segments,
+                    AvatarUrl = (string?)author?["avatar"] ?? (string?)author?["profileImageUrl"]
+                                ?? (string?)author?["photoUrl"] ?? string.Empty,
                 });
             }
             catch { }

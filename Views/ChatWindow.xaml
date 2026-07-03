@@ -150,6 +150,11 @@
                                    Foreground="#7a9070" FontSize="11" Margin="0,3,0,0"
                                    TextTrimming="CharacterEllipsis"/>
                     </Grid>
+                    <TextBlock Margin="42,-3,0,9" FontSize="11" TextWrapping="Wrap">
+                        <Hyperlink Foreground="#7cc44a" TextDecorations="Underline" Click="SsnGuide_Click">
+                            SSN not showing chat? Setup guide
+                        </Hyperlink>
+                    </TextBlock>
 
                     <!-- Restream -->
                     <Grid>
@@ -253,16 +258,22 @@
                 <ItemsControl x:Name="MessageList">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Grid Margin="0,3">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="Auto"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Text="{Binding Symbol}" Foreground="{Binding SymbolBrush}"
-                                           FontSize="14" FontWeight="Bold" VerticalAlignment="Top" Margin="0,0,7,0"/>
-                                <TextBlock Grid.Column="1" TextWrapping="Wrap" FontSize="13"
-                                           local:ChatInlines.Row="{Binding}"/>
-                            </Grid>
+                            <Border Margin="0,1" Padding="4,2" CornerRadius="4" Background="{Binding RowBrush}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Grid.Column="0" Width="22" Height="22" CornerRadius="11"
+                                            Background="{Binding AvatarBrush}" VerticalAlignment="Top" Margin="0,0,7,0">
+                                        <TextBlock Text="{Binding Initial}" Foreground="#0a1410" FontSize="11"
+                                                   FontWeight="Bold" HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"/>
+                                    </Border>
+                                    <TextBlock Grid.Column="1" TextWrapping="Wrap" FontSize="13"
+                                               VerticalAlignment="Center" local:ChatInlines.Row="{Binding}"/>
+                                </Grid>
+                            </Border>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>

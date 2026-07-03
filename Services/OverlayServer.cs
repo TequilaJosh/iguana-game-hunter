@@ -428,12 +428,21 @@ namespace GameTracker.Services
 
             string color = IsHex(m.UserColor) ? m.UserColor : string.Empty;
 
+            var badges = (m.Badges ?? new List<ChatBadge>()).Select(b => new
+            {
+                label = b.Label ?? string.Empty,
+                url = b.Url ?? string.Empty,
+                color = b.Color ?? "#4a7c3a",
+            }).ToArray();
+
             return new
             {
                 id,
                 platform = m.Platform ?? string.Empty,
                 user = m.User ?? string.Empty,
                 color,
+                avatar = m.AvatarUrl ?? string.Empty,
+                badges,
                 symbol = OverlayService.ChatSymbol(m.Platform),
                 symbolColor = OverlayService.ChatColorHex(m.Platform),
                 at = m.At.Ticks,

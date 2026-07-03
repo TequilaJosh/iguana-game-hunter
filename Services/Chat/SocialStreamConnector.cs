@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
@@ -113,7 +114,26 @@ namespace GameTracker.Services.Chat
                 User = name,
                 Segments = segments,
                 UserColor = (string?)msg?["nameColor"] ?? string.Empty,
+                AvatarUrl = (string?)msg?["chatimg"] ?? string.Empty,   // SSN forwards the avatar
+                Badges = ParseBadges(msg?["chatbadges"]),
             });
+        }
+
+        // SSN "chatbadges": an array of image URLs (strings) or objects with a url field.
+        private static List<ChatBadge> ParseBadges(JToken? badges)
+        {
+            var list = new List<ChatBadge>();
+            if (badges is not JArray arr) return list;
+            foreach (var b in arr)
+            {
+                string url = b.Type == JTokenType.String
+                    ? (string?)b ?? string.Empty
+                    : (string?)b["url"] ?? (string?)b["src"] ?? string.Empty;
+                if (url.StartsWith("http", StringComparison.OrdinalIgnoreCase))
+                    list.Add(new ChatBadge { Url = url });
+                if (list.Count >= 3) break;
+            }
+            return list;
         }
 
         public Task DisconnectAsync()

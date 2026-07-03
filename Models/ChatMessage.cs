@@ -18,6 +18,14 @@ namespace GameTracker.Models
             new() { Kind = ChatSegmentKind.Emote, Url = url, Text = alt };
     }
 
+    /// <summary>A chat badge: an image (Url) if available, else a short colored text label.</summary>
+    public class ChatBadge
+    {
+        public string Label { get; set; } = string.Empty;  // e.g. "MOD" (used when no image)
+        public string Url { get; set; } = string.Empty;    // badge image URL (preferred if set)
+        public string Color { get; set; } = "#4a7c3a";     // background for the text label
+    }
+
     /// <summary>A single chat message from a connected live source.</summary>
     public class ChatMessage
     {
@@ -25,6 +33,8 @@ namespace GameTracker.Models
         public string Platform { get; set; } = string.Empty;
         public string User { get; set; } = string.Empty;
         public string UserColor { get; set; } = string.Empty; // hex (#RRGGBB) if provided
+        public string AvatarUrl { get; set; } = string.Empty; // account photo, if the source provides one
+        public List<ChatBadge> Badges { get; set; } = new();  // role/platform badges
         public DateTime At { get; set; } = DateTime.Now;
 
         /// <summary>The message broken into text + emote segments (for rich rendering).</summary>

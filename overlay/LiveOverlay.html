@@ -232,10 +232,23 @@
   }
 
   .row {
-    margin: 0.12em 0; font-size: 0.9em; line-height: 1.25;
+    margin: 0.1em 0; padding: 0.08em 0.35em; border-radius: 5px;
+    font-size: 0.9em; line-height: 1.3;
     transition: opacity 0.18s ease, transform 0.18s ease;
   }
+  .row.odd { background: rgba(0, 0, 0, 0.22); }   /* zebra striping */
   .row.enter { opacity: 0; transform: translateY(6px); }
+  .avatar {
+    display: inline-block; width: 1.25em; height: 1.25em; border-radius: 50%;
+    overflow: hidden; vertical-align: middle; margin-right: 0.3em;
+    text-align: center; line-height: 1.25em; font-size: 0.72em; font-weight: 700; color: #0a1410;
+  }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .badge {
+    display: inline-block; font-size: 0.5em; font-weight: 700; color: #fff;
+    padding: 0.05em 0.35em; border-radius: 3px; margin-right: 0.28em; vertical-align: middle;
+  }
+  .badge-img { height: 1em; vertical-align: middle; margin-right: 0.28em; }
   .sym { margin-right: 0.3em; font-weight: bold; }
   .user { font-weight: 700; margin-right: 0.25em; }
   .msg { color: #ffffff; word-break: break-word; }
@@ -425,6 +438,8 @@
 
   let lastStateSig = "";           // dedupe re-render of the static sections
   const renderedKeys = new Set();  // chat dedupe by stable message id
+  let chatZebra = 0;               // alternate row shading counter
+  function initialOf(u) { u = (u || "").trim(); return u ? u[0].toUpperCase() : "?"; }
   let lastMessageAt = Date.now();  // for the quiet-period soft reload
   const pageStart = Date.now();
   let lastClearAt = Date.now();
@@ -676,14 +691,49 @@
       renderedKeys.add(id);
 
       const row = document.createElement("div");
-      row.className = "row enter";
+      row.className = "row enter" + ((chatZebra++ % 2) ? " odd" : "");
       row.dataset.key = id;
+
+      // Avatar: photo, or a colored circle with the initial.
+      const av = document.createElement("span");
+      av.className = "avatar";
+      if (m.avatar) {
+        const aimg = document.createElement("img");
+        aimg.src = m.avatar;
+        aimg.addEventListener("error", function () {
+          if (aimg.parentNode) aimg.remove();
+          av.textContent = initialOf(m.user);
+          av.style.background = m.symbolColor || "#4a7c3a";
+        });
+        av.appendChild(aimg);
+      } else {
+        av.textContent = initialOf(m.user);
+        av.style.background = m.symbolColor || "#4a7c3a";
+      }
+      row.appendChild(av);
 
       const sym = document.createElement("span");
       sym.className = "sym";
       if (m.symbolColor) sym.style.color = m.symbolColor;
       sym.textContent = m.symbol || "●";
       row.appendChild(sym);
+
+      // Badges: image (SSN) or a colored text label (Twitch roles).
+      const badges = Array.isArray(m.badges) ? m.badges : [];
+      for (let bi = 0; bi < badges.length; bi++) {
+        const b = badges[bi];
+        if (b && b.url) {
+          const im = document.createElement("img");
+          im.className = "badge-img"; im.src = b.url; im.alt = b.label || "";
+          im.addEventListener("error", function () { if (im.parentNode) im.remove(); });
+          row.appendChild(im);
+        } else if (b && b.label) {
+          const sp = document.createElement("span");
+          sp.className = "badge"; sp.textContent = b.label;
+          sp.style.background = b.color || "#4a7c3a";
+          row.appendChild(sp);
+        }
+      }
 
       const user = document.createElement("span");
       user.className = "user";

@@ -37,6 +37,12 @@ namespace GameTracker.Views
             tb.Inlines.Clear();
             if (e.NewValue is not ChatWindow.ChatRow row) return;
 
+            if (!string.IsNullOrEmpty(row.Symbol))
+                tb.Inlines.Add(new Run(row.Symbol + " ") { Foreground = row.SymbolBrush, FontWeight = FontWeights.Bold });
+
+            foreach (var b in row.Badges)
+                tb.Inlines.Add(BuildBadge(b));
+
             tb.Inlines.Add(new Run(row.User) { FontWeight = FontWeights.Bold, Foreground = row.UserBrush });
             tb.Inlines.Add(new Run(": ") { Foreground = Gray });
 
@@ -75,6 +81,46 @@ namespace GameTracker.Views
             {
                 return new Run(seg.Text) { Foreground = Body }; // fall back to alt text
             }
+        }
+
+        private static Inline BuildBadge(ChatBadge b)
+        {
+            // Image badge (from SSN) — small icon.
+            if (!string.IsNullOrEmpty(b.Url))
+            {
+                try
+                {
+                    var bmp = new BitmapImage();
+                    bmp.BeginInit();
+                    bmp.CacheOption = BitmapCacheOption.OnLoad;
+                    bmp.UriSource = new Uri(b.Url, UriKind.Absolute);
+                    bmp.DecodePixelHeight = 30;
+                    bmp.EndInit();
+                    var img = new Image { Source = bmp, Height = 15, Margin = new Thickness(0, 0, 3, 0) };
+                    img.ImageFailed += (_, _) => { };
+                    return new InlineUIContainer(img) { BaselineAlignment = BaselineAlignment.Center };
+                }
+                catch { /* fall through to a text label */ }
+            }
+
+            // Text label badge (e.g. MOD / VIP / SUB).
+            var badgeColor = Body;
+            try { badgeColor = new SolidColorBrush((Color)ColorConverter.ConvertFromString(b.Color)); } catch { }
+            var border = new Border
+            {
+                Background = badgeColor,
+                CornerRadius = new CornerRadius(3),
+                Padding = new Thickness(3, 0, 3, 1),
+                Margin = new Thickness(0, 0, 3, 0),
+                Child = new TextBlock
+                {
+                    Text = b.Label,
+                    Foreground = Brushes.White,
+                    FontSize = 9,
+                    FontWeight = FontWeights.Bold,
+                },
+            };
+            return new InlineUIContainer(border) { BaselineAlignment = BaselineAlignment.Center };
         }
     }
 }

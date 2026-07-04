@@ -433,6 +433,16 @@ namespace GameTracker.Views
             UpdateChattersUi();
         }
 
+        private TextPanelsWindow? _textPanelsWindow;
+
+        private void TextPanels_Click(object sender, RoutedEventArgs e)
+        {
+            if (_textPanelsWindow != null) { _textPanelsWindow.Activate(); return; }
+            _textPanelsWindow = new TextPanelsWindow { Owner = this };
+            _textPanelsWindow.Closed += (_, _) => _textPanelsWindow = null;
+            _textPanelsWindow.Show();
+        }
+
         private void Chatters_Click(object sender, RoutedEventArgs e)
         {
             if (_chattersWindow != null) { _chattersWindow.Activate(); return; }

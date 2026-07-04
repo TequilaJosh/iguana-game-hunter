@@ -67,6 +67,8 @@ namespace GameTracker.Services
         private static JToken? _presets;  // saved layout presets (editor-only)
         private static object? _style;    // chat style: { mode, colors[] }
         private static object? _chatters; // counts + chatters list state
+        private static object? _panels;   // custom text-panel overlays (wire form)
+        private static string? _panelHtml; // PanelOverlay.html template (index injected per request)
 
         // The overlay HTML (loaded once, from the embedded resource or disk).
         private static string _html = string.Empty;
@@ -88,6 +90,7 @@ namespace GameTracker.Services
                 _presets = ParseLayout(SettingsService.LoadOverlayPresets());
                 var f = SettingsService.LoadChatFeatures();
                 _style = new { mode = f.ChatStyle, colors = f.BoxColors.ToArray() };
+                _panels = PanelsToWire(SettingsService.LoadTextPanels());
                 _cts = new CancellationTokenSource();
                 _listener = new TcpListener(IPAddress.Loopback, Port);
                 _listener.Start();
@@ -188,6 +191,10 @@ namespace GameTracker.Services
                 else if (method == "GET" && route == "/font/saturn.ttf")
                 {
                     await ServeBundledFont(stream, ct);
+                }
+                else if (method == "GET" && route.StartsWith("/panel/", StringComparison.Ordinal))
+                {
+                    await ServePanel(stream, route, ct);
                 }
                 else
                 {
@@ -345,6 +352,44 @@ namespace GameTracker.Services
             catch { /* drop */ }
         }
 
+        // Serve a text-panel overlay page (/panel/1 .. /panel/5) with its index baked in.
+        private static async Task ServePanel(NetworkStream stream, string route, CancellationToken ct)
+        {
+            if (!int.TryParse(route.Substring(7).TrimEnd('/'), out int idx) || idx is < 1 or > 5)
+            {
+                await WriteSimple(stream, "404 Not Found", "text/plain", "Not found", ct);
+                return;
+            }
+
+            if (_panelHtml == null)
+            {
+                try
+                {
+                    var asm = Assembly.GetExecutingAssembly();
+                    var name = asm.GetManifestResourceNames()
+                        .FirstOrDefault(n => n.EndsWith("PanelOverlay.html", StringComparison.OrdinalIgnoreCase));
+                    if (name != null)
+                    {
+                        using var s = asm.GetManifestResourceStream(name);
+                        if (s != null)
+                        {
+                            using var r = new StreamReader(s, Encoding.UTF8);
+                            _panelHtml = await r.ReadToEndAsync(ct);
+                        }
+                    }
+                }
+                catch { }
+            }
+            if (_panelHtml == null)
+            {
+                await WriteSimple(stream, "404 Not Found", "text/plain", "PanelOverlay.html missing", ct);
+                return;
+            }
+
+            var html = _panelHtml.Replace("__PANEL_INDEX__", idx.ToString());
+            await WriteSimple(stream, "200 OK", "text/html", html, ct);
+        }
+
         private static string? _fontsJson; // enumerated once; installed fonts rarely change mid-run
 
         // The fonts installed on this PC, for the overlay editor's font picker. The OBS
@@ -425,6 +470,7 @@ namespace GameTracker.Services
             {
                 type = "snapshot", state = _state, chat = _chat,
                 layout = _layout, presets = _presets, style = _style, chatters = _chatters,
+                panels = _panels,
             };
             await SendText(client, JsonConvert.SerializeObject(snapshot), ct);
 
@@ -566,6 +612,36 @@ namespace GameTracker.Services
             if (!_running) return;
             lock (Gate) _chatters = chatters;
             Broadcast(new { type = "chatters", chatters });
+        }
+
+        private static object PanelsToWire(IEnumerable<TextPanel>? panels) =>
+            (panels ?? Enumerable.Empty<TextPanel>()).Take(5).Select(p => new
+            {
+                header = new
+                {
+                    text = p.HeaderText ?? string.Empty,
+                    font = p.HeaderFont ?? string.Empty,
+                    size = p.HeaderSize,
+                    color = p.HeaderColor ?? "#7cc44a",
+                },
+                lines = (p.Lines ?? new List<TextPanelLine>()).Take(10).Select(l => new
+                {
+                    text = l.Text ?? string.Empty,
+                    font = l.Font ?? string.Empty,
+                    size = l.Size,
+                    color = l.Color ?? "#e8e0c4",
+                    scroll = l.Scroll,
+                    speed = l.Speed,
+                }).ToArray(),
+            }).ToArray();
+
+        /// <summary>Push the streamer's text panels to all clients (live while typing).</summary>
+        public static void PushTextPanels(IEnumerable<TextPanel> panels)
+        {
+            if (!_running) return;
+            var wire = PanelsToWire(panels);
+            lock (Gate) _panels = wire;
+            Broadcast(new { type = "panels", panels = wire });
         }
 
         /// <summary>Show a big on-stream toast (optionally with a confetti puff).</summary>

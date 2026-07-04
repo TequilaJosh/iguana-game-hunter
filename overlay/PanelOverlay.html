@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Text Overlay</title>
+<style>
+  /* Bundled bonus font, served from inside the app. */
+  @font-face {
+    font-family: 'MR. Saturn';
+    src: url('/font/saturn.ttf') format('truetype');
+    font-display: swap;
+  }
+
+  html, body {
+    margin: 0; padding: 0; background: transparent; overflow: hidden;
+    font-family: 'Segoe UI', Segoe, system-ui, sans-serif;
+  }
+
+  #box {
+    position: absolute; inset: 8px; box-sizing: border-box;
+    display: flex; flex-direction: column; overflow: hidden;
+    background: rgba(10, 20, 16, 0.92);
+    border: 2px solid #4a7c3a; border-radius: 12px;
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.55);
+  }
+  #box.empty { display: none; }
+
+  /* Header + the divider border below it */
+  #hdr {
+    flex: 0 0 auto; padding: 10px 16px 8px;
+    border-bottom: 2px solid #2e4a30;
+    font-weight: 700; line-height: 1.25; word-break: break-word;
+  }
+  #hdr:empty { display: none; }
+
+  #lines { flex: 1 1 auto; overflow: hidden; padding: 8px 16px 10px; }
+  .line { margin: 4px 0; line-height: 1.3; word-break: break-word; }
+
+  /* Marquee lines: content duplicated, shifted by exactly one copy for a seamless loop */
+  .marq { overflow: hidden; white-space: nowrap; }
+  .marq .mi {
+    display: inline-block; white-space: nowrap;
+    animation: marq linear infinite;
+  }
+  .marq .mi > span { padding-right: 3em; }
+  @keyframes marq { to { transform: translateX(-50%); } }
+</style>
+</head>
+<body>
+  <div id="box" class="empty">
+    <div id="hdr"></div>
+    <div id="lines"></div>
+  </div>
+
+<script>
+"use strict";
+(function () {
+  var PANEL_INDEX = __PANEL_INDEX__;   // injected by the server (1-based)
+  var ws = null, retryMs = 1000;
+
+  function wsUrl() {
+    var p = location.protocol;
+    if (p === "http:" || p === "https:") {
+      return (p === "https:" ? "wss:" : "ws:") + "//" + location.host + "/ws";
+    }
+    return "ws://localhost:3620/ws";
+  }
+
+  function connect() {
+    try { ws = new WebSocket(wsUrl()); } catch (e) { schedule(); return; }
+    ws.onopen = function () { retryMs = 1000; };
+    ws.onmessage = function (ev) {
+      try {
+        var d = JSON.parse(ev.data);
+        if (d.type === "snapshot" && Array.isArray(d.panels)) render(d.panels);
+        else if (d.type === "panels" && Array.isArray(d.panels)) render(d.panels);
+      } catch (e) { /* ignore bad frames */ }
+    };
+    ws.onclose = function () { schedule(); };
+    ws.onerror = function () { /* onclose follows */ };
+  }
+  function schedule() {
+    setTimeout(connect, retryMs);
+    retryMs = Math.min(15000, retryMs * 2);
+  }
+
+  function fam(f) { return f ? "'" + f + "', 'Segoe UI', sans-serif" : ""; }
+
+  function render(panels) {
+    var box = document.getElementById("box");
+    var hdr = document.getElementById("hdr");
+    var wrap = document.getElementById("lines");
+    var p = panels[PANEL_INDEX - 1];
+
+    var hasContent = p && ((p.header && p.header.text) ||
+                           (Array.isArray(p.lines) && p.lines.length));
+    box.className = hasContent ? "" : "empty";
+    if (!hasContent) return;
+
+    hdr.textContent = (p.header && p.header.text) || "";
+    if (p.header) {
+      hdr.style.fontFamily = fam(p.header.font);
+      hdr.style.fontSize = (p.header.size || 28) + "px";
+      hdr.style.color = p.header.color || "#7cc44a";
+    }
+
+    while (wrap.firstChild) wrap.removeChild(wrap.firstChild);
+    var lines = Array.isArray(p.lines) ? p.lines : [];
+    var marquees = [];
+    for (var i = 0; i < lines.length; i++) {
+      var ln = lines[i];
+      var div = document.createElement("div");
+      div.style.fontFamily = fam(ln.font);
+      div.style.fontSize = (ln.size || 24) + "px";
+      div.style.color = ln.color || "#e8e0c4";
+
+      if (ln.scroll && ln.text) {
+        div.className = "line marq";
+        var mi = document.createElement("span");
+        mi.className = "mi";
+        // Two copies -> translateX(-50%) loops seamlessly.
+        var a = document.createElement("span"); a.textContent = ln.text;
+        var b = document.createElement("span"); b.textContent = ln.text;
+        mi.appendChild(a); mi.appendChild(b);
+        div.appendChild(mi);
+        marquees.push({ el: mi, speed: Math.max(10, ln.speed || 80) });
+      } else {
+        div.className = "line";
+        div.textContent = ln.text || " ";
+      }
+      wrap.appendChild(div);
+    }
+
+    // Set marquee durations from measured width so "speed" means pixels/second.
+    requestAnimationFrame(function () {
+      for (var i = 0; i < marquees.length; i++) {
+        var m = marquees[i];
+        var px = m.el.scrollWidth / 2;
+        if (px > 0) m.el.style.animationDuration = (px / m.speed) + "s";
+      }
+    });
+  }
+
+  connect();
+})();
+</script>
+</body>
+</html>

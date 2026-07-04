@@ -37,6 +37,7 @@ namespace GameTracker.Services
             public string? OverlayLayout { get; set; } // JSON: per-element position/size/font (null = default)
             public string? OverlayPresets { get; set; } // JSON array of saved layout presets
             public ChatFeatureSettings Features { get; set; } = new(); // counts/chatters/points/style/redeems
+            public List<TextPanel> TextPanels { get; set; } = new();   // custom OBS text overlays (max 5)
         }
 
         // Replace initialized collections instead of appending to them — otherwise lists
@@ -176,6 +177,15 @@ namespace GameTracker.Services
         {
             var s = LoadAll();
             s.Features = features;
+            SaveAll(s);
+        }
+
+        public static List<TextPanel> LoadTextPanels() => LoadAll().TextPanels ?? new List<TextPanel>();
+
+        public static void SaveTextPanels(List<TextPanel> panels)
+        {
+            var s = LoadAll();
+            s.TextPanels = panels;
             SaveAll(s);
         }
     }

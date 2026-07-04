@@ -62,6 +62,15 @@ namespace GameTracker.Views
             if (sender is FrameworkElement fe && fe.Tag is ColorItem c) _colors.Remove(c);
         }
 
+        private void PickBoxColor_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement fe && fe.Tag is ColorItem c)
+            {
+                var hex = ColorPickerWindow.Pick(this, c.Hex);
+                if (hex != null) c.Hex = hex;
+            }
+        }
+
         // ---- redeems ----
 
         private void AddRedeem_Click(object sender, RoutedEventArgs e) =>

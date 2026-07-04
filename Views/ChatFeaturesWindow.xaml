@@ -163,8 +163,16 @@
                                 <Border Background="#0f1812" BorderBrush="#2e4a30" BorderThickness="1"
                                         CornerRadius="4" Padding="4" Margin="0,0,6,6">
                                     <StackPanel Orientation="Horizontal">
-                                        <Border Width="18" Height="18" CornerRadius="3"
-                                                Background="{Binding Brush}" Margin="0,0,5,0"/>
+                                        <Button Tag="{Binding}" Click="PickBoxColor_Click" Cursor="Hand"
+                                                Margin="0,0,5,0" ToolTip="Pick a color">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Width="18" Height="18" CornerRadius="3"
+                                                            Background="{Binding Brush}"
+                                                            BorderBrush="#4a7c3a" BorderThickness="1"/>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
                                         <TextBox Text="{Binding Hex, UpdateSourceTrigger=PropertyChanged}"
                                                  Style="{StaticResource Txt}" Width="70"/>
                                         <Button Content="&#x2715;" Tag="{Binding}" Click="RemoveColor_Click"

@@ -254,9 +254,14 @@
                         <TextBlock Grid.Column="2" Text="(refresh OBS source to apply)" Foreground="#506050"
                                    FontSize="10" VerticalAlignment="Center" Margin="8,0,0,0"/>
                     </Grid>
-                    <Button x:Name="EditLayoutBtn" Content="&#127912; Edit overlay layout" Click="EditLayout_Click"
-                            Style="{StaticResource ConnectBtn}" HorizontalAlignment="Left" Margin="0,2,0,6"
-                            ToolTip="Open the overlay in your browser to drag/resize the blocks and set fonts"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,2,0,6">
+                        <Button x:Name="EditLayoutBtn" Content="&#127912; Edit overlay layout" Click="EditLayout_Click"
+                                Style="{StaticResource ConnectBtn}"
+                                ToolTip="Open the overlay in your browser to drag/resize the blocks and set fonts"/>
+                        <Button x:Name="TextPanelsBtn" Content="&#128221; Text overlays" Click="TextPanels_Click"
+                                Style="{StaticResource ConnectBtn}" Margin="6,0,0,0"
+                                ToolTip="Up to 5 custom text panels for OBS: styled header, divider, and scrolling lines"/>
+                    </StackPanel>
                     <TextBlock x:Name="OverlayStatus" Foreground="#7a9070" FontSize="11"
                                TextWrapping="Wrap"
                                Text="Add an OBS Browser source with this URL (not Local file)."/>

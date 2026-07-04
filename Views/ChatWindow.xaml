@@ -323,11 +323,15 @@
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
                     <TextBox x:Name="SendBox" Grid.Column="0" Style="{StaticResource ChanBox}"
                              KeyDown="SendBox_KeyDown" Margin="0,0,6,0"
-                             ToolTip="Send a message to all your chats through Social Stream Ninja (needs SSN connected)"/>
-                    <Button x:Name="SendBtn" Grid.Column="1" Content="Send" Click="Send_Click"
+                             ToolTip="Send a message to your chats through Social Stream Ninja (needs SSN connected)"/>
+                    <ComboBox x:Name="SendTargetCombo" Grid.Column="1" MinWidth="92" Margin="0,0,6,0"
+                              VerticalAlignment="Center" SelectionChanged="SendTarget_Changed"
+                              ToolTip="Where to send: all connected chats, or just one platform"/>
+                    <Button x:Name="SendBtn" Grid.Column="2" Content="Send" Click="Send_Click"
                             Style="{StaticResource ConnectBtn}"/>
                 </Grid>
             </Border>

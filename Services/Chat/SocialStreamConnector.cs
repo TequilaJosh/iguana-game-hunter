@@ -143,10 +143,11 @@ namespace GameTracker.Services.Chat
 
         /// <summary>
         /// Send a chat message out through Social Stream Ninja: the SSN extension posts it
-        /// into every connected platform's chat box using the streamer's own logins.
+        /// into the connected platforms' chat boxes using the streamer's own logins.
+        /// <paramref name="target"/> limits it to one platform (e.g. "twitch"); null/empty = all.
         /// Returns false if it couldn't be sent.
         /// </summary>
-        public async Task<bool> SendChatAsync(string message)
+        public async Task<bool> SendChatAsync(string message, string? target = null)
         {
             message = (message ?? string.Empty).Trim();
             if (message.Length == 0 || string.IsNullOrEmpty(_session)) return false;
@@ -164,8 +165,11 @@ namespace GameTracker.Services.Chat
                         new Uri($"wss://io.socialstream.ninja/join/{_session}"), cts.Token);
                 }
 
-                var payload = Newtonsoft.Json.JsonConvert.SerializeObject(
-                    new { action = "sendChat", value = message });
+                var payload = string.IsNullOrWhiteSpace(target) || target == "*"
+                    ? Newtonsoft.Json.JsonConvert.SerializeObject(
+                          new { action = "sendChat", value = message })
+                    : Newtonsoft.Json.JsonConvert.SerializeObject(
+                          new { action = "sendChat", value = message, target });
                 using var sendCts = new CancellationTokenSource(TimeSpan.FromSeconds(6));
                 await _sendWs.SendAsync(Encoding.UTF8.GetBytes(payload),
                     WebSocketMessageType.Text, true, sendCts.Token);

@@ -173,6 +173,11 @@
     padding: 4px 6px; font-size: 12px; box-sizing: border-box;
   }
   #editbar .ebsplit { border-top: 1px solid #2e4a30; margin-top: 10px; padding-top: 8px; }
+  #editbar #ebElems label {
+    display: flex; align-items: center; gap: 6px; margin: 4px 0;
+    color: #e8e0c4; font-size: 12px; cursor: pointer;
+  }
+  #editbar #ebElems input { accent-color: #7cc44a; }
   #editbar .prow { display: flex; gap: 5px; }
   #editbar .prow input { flex: 1 1 auto; min-width: 0; }
   #editbar #ebPresetList { margin: 6px 0; }
@@ -202,6 +207,10 @@
   }
   .np-row .req { font-size: 0.58em; font-weight: 600; color: #d4a437; flex-basis: 100%; }
   .np-row .req:empty { display: none; }
+  /* Idle (no session yet): dim dot, muted title, timer parked at 0:00:00. */
+  .np-row .dot.idle { background: #506050; box-shadow: none; }
+  .np-row .title.waiting { color: #7a9070; font-weight: 600; }
+  .ch-empty { color: #506050; font-size: 0.7em; font-style: italic; }
 
   /* Challenges */
   #chRows { flex: 1 1 auto; overflow: hidden; }
@@ -340,20 +349,20 @@
 </head>
 <body>
   <div id="stage">
-    <section id="np" class="box" hidden>
+    <section id="np" class="box">
       <div class="hd">● NOW PLAYING</div>
       <div class="np-row">
-        <span class="dot"></span>
-        <span class="title" id="npTitle"></span>
-        <span class="time" id="npTime"></span>
+        <span class="dot idle" id="npDot"></span>
+        <span class="title waiting" id="npTitle">Waiting for a game…</span>
+        <span class="time" id="npTime">0:00:00</span>
         <span class="req" id="npReq"></span>
       </div>
       <div class="rz" data-el="np"></div>
     </section>
 
-    <section id="ch" class="box" hidden>
+    <section id="ch" class="box">
       <div class="hd">🎡 CHALLENGES</div>
-      <div id="chRows"></div>
+      <div id="chRows"><div class="ch-empty">spin a wheel to add challenges</div></div>
       <div class="rz" data-el="ch"></div>
     </section>
 
@@ -386,6 +395,11 @@
     <input id="ebColor" type="color"/>
     <div class="hint">Click a block to select it. Drag to move, drag the green corner to resize. Changes save automatically.</div>
     <div class="savemark" id="ebSaved"></div>
+
+    <div class="ebsplit">
+      <label>Elements (on the overlay)</label>
+      <div id="ebElems"></div>
+    </div>
 
     <div class="ebsplit">
       <label>Presets (up to 10)</label>
@@ -725,17 +739,24 @@
       if (sig === lastStateSig) return;            // nothing changed
       lastStateSig = sig;
 
-      // Now Playing
+      // Now Playing — the block stays on screen; content switches between live and waiting.
+      const npDot = document.getElementById("npDot");
       if (live) {
         elNpTitle.textContent = title;
+        elNpTitle.classList.remove("waiting");
         elNpTime.textContent = elapsed;
         elNpReq.textContent = requester ? "req: " + requester : "";
-        elNp.hidden = false;
+        if (npDot) npDot.classList.remove("idle");
       } else {
-        elNp.hidden = true;
+        elNpTitle.textContent = "Waiting for a game…";
+        elNpTitle.classList.add("waiting");
+        elNpTime.textContent = "0:00:00";
+        elNpReq.textContent = "";
+        if (npDot) npDot.classList.add("idle");
       }
 
-      // Challenges (small list; rebuild via DOM, not innerHTML, to stay XSS-safe)
+      // Challenges — rolled challenges appear in real time; a hint fills the empty box.
+      // (Rebuild via DOM, not innerHTML, to stay XSS-safe.)
       while (elChRows.firstChild) elChRows.removeChild(elChRows.firstChild);
       if (challenges.length) {
         for (let i = 0; i < challenges.length; i++) {
@@ -751,9 +772,11 @@
           row.appendChild(txt);
           elChRows.appendChild(row);
         }
-        elCh.hidden = false;
       } else {
-        elCh.hidden = true;
+        const hint = document.createElement("div");
+        hint.className = "ch-empty";
+        hint.textContent = "spin a wheel to add challenges";
+        elChRows.appendChild(hint);
       }
     } catch (e) {
       logErr("renderState failed: " + (e && e.message));
@@ -935,8 +958,9 @@
         }
       }
 
+      lastChattersData = d;
       const cl = document.getElementById("cl");
-      if (cl) cl.hidden = EDIT ? false : !d.showList;
+      if (cl) cl.hidden = EDIT ? !isOn("cl") : !(d.showList && isOn("cl"));
       const clCount = document.getElementById("clCount");
       if (clCount) clCount.textContent = d.total ? "(" + d.total + ")" : "";
       const rowsEl = document.getElementById("clRows");
@@ -1196,8 +1220,14 @@
   let layout = clone(DEFAULT_LAYOUT);
   let presets = [];        // [{ name, layout }] — editor-managed, persisted server-side
   let selEl = null;
+  let editorSetFont = null; // set by initEditor: selects a font in the picker, adding it if missing
 
   function clone(o) { return JSON.parse(JSON.stringify(o)); }
+
+  // Element enabled? Missing "on" means true (backward compatible with older layouts).
+  function isOn(k) { return !layout[k] || layout[k].on !== false; }
+
+  let lastChattersData = null;   // latest chatters frame, for visibility recalc
 
   function applyLayout(next) {
     if (next && typeof next === "object") {
@@ -1208,6 +1238,38 @@
       layout = merged;
     }
     for (const k of ELEMENTS) applyBox(k);
+    applyElementVisibility();
+  }
+
+  function syncElemChecks() {
+    const box = document.getElementById("ebElems");
+    if (!box) return;
+    const inputs = box.querySelectorAll("input[data-el]");
+    for (let i = 0; i < inputs.length; i++) {
+      inputs[i].checked = isOn(inputs[i].dataset.el);
+    }
+  }
+
+  function applyElementVisibility() {
+    const chat = document.getElementById("chat");
+    const cl = document.getElementById("cl");
+    if (EDIT) {
+      // Editor: disabled elements disappear from the canvas entirely.
+      for (const k of ELEMENTS) {
+        const el = document.getElementById(k);
+        if (el) el.hidden = !isOn(k);
+      }
+      syncElemChecks();
+      return;
+    }
+    // Enabled elements are always on screen; only their content changes with state.
+    const np = document.getElementById("np");
+    const ch = document.getElementById("ch");
+    if (np) np.hidden = !isOn("np");
+    if (ch) ch.hidden = !isOn("ch");
+    if (chat) chat.hidden = !isOn("chat");
+    if (cl) cl.hidden = !(isOn("cl") && lastChattersData && lastChattersData.showList);
+    lastStateSig = "";   // let the next state frame re-fill content
   }
 
   function applyBox(k) {
@@ -1285,7 +1347,8 @@
     }
     const c = layout[k];
     document.getElementById("ebSel").textContent = ELEMENT_NAMES[k];
-    document.getElementById("ebFont").value = c.font || "";
+    if (editorSetFont) editorSetFont(c.font || "");
+    else document.getElementById("ebFont").value = c.font || "";
     document.getElementById("ebSize").value = c.size || 22;
     document.getElementById("ebColor").value = /^#[0-9a-fA-F]{6}$/.test(c.color) ? c.color : "#e8e0c4";
   }
@@ -1315,12 +1378,40 @@
     }
 
     const fsel = document.getElementById("ebFont");
-    for (const f of FONTS) {
-      const o = document.createElement("option");
-      o.value = f; o.textContent = f || "(default)";
-      if (f) o.style.fontFamily = f;
-      fsel.appendChild(o);
+    function populateFonts(list) {
+      const current = selEl ? (layout[selEl].font || "") : "";
+      fsel.innerHTML = "";
+      const opts = [""].concat(list.filter(function (f) { return f; }));
+      for (const f of opts) {
+        const o = document.createElement("option");
+        o.value = f; o.textContent = f || "(default)";
+        if (f) o.style.fontFamily = "'" + f + "'";
+        fsel.appendChild(o);
+      }
+      setFontValue(current);
     }
+    function setFontValue(font) {
+      fsel.value = font || "";
+      if (fsel.value !== (font || "")) {
+        // Saved font isn't in the list (e.g. uninstalled) — keep it selectable anyway.
+        const o = document.createElement("option");
+        o.value = font; o.textContent = font;
+        o.style.fontFamily = "'" + font + "'";
+        fsel.appendChild(o);
+        fsel.value = font;
+      }
+    }
+    editorSetFont = setFontValue;
+    populateFonts(FONTS);
+    // Ask the app for the fonts actually installed on this PC (same machine as OBS,
+    // so anything listed renders on the overlay too). Falls back to the built-in list.
+    fetch("/fonts")
+      .then(function (r) { return r.json(); })
+      .then(function (list) {
+        if (Array.isArray(list) && list.length) populateFonts(list);
+      })
+      .catch(function () { /* keep fallback list */ });
+
     fsel.addEventListener("change", function () {
       if (!selEl) return; layout[selEl].font = fsel.value; applyBox(selEl); scheduleSave();
     });
@@ -1332,6 +1423,25 @@
     document.getElementById("ebColor").addEventListener("input", function () {
       if (!selEl) return; layout[selEl].color = this.value; applyBox(selEl); scheduleSave();
     });
+
+    // Element on/off checkboxes (add or remove blocks from the overlay).
+    const elemsBox = document.getElementById("ebElems");
+    for (const k of ELEMENTS) {
+      const lab = document.createElement("label");
+      const cb = document.createElement("input");
+      cb.type = "checkbox";
+      cb.dataset.el = k;
+      cb.checked = isOn(k);
+      cb.addEventListener("change", function () {
+        layout[k].on = cb.checked;
+        applyElementVisibility();
+        scheduleSave();
+        flashSaved((cb.checked ? "Added " : "Removed ") + ELEMENT_NAMES[k]);
+      });
+      lab.appendChild(cb);
+      lab.appendChild(document.createTextNode(ELEMENT_NAMES[k]));
+      elemsBox.appendChild(lab);
+    }
 
     document.getElementById("ebPresetSave").addEventListener("click", savePresetClick);
     document.getElementById("ebReset").addEventListener("click", function () {

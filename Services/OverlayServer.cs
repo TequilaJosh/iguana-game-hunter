@@ -181,6 +181,10 @@ namespace GameTracker.Services
                 {
                     await ServeRedeemImage(stream, route, ct);
                 }
+                else if (method == "GET" && route == "/fonts")
+                {
+                    await ServeFonts(stream, ct);
+                }
                 else
                 {
                     await WriteSimple(stream, "404 Not Found", "text/plain", "Not found", ct);
@@ -291,6 +295,36 @@ namespace GameTracker.Services
                 await stream.FlushAsync(ct);
             }
             catch { /* drop */ }
+        }
+
+        private static string? _fontsJson; // enumerated once; installed fonts rarely change mid-run
+
+        // The fonts installed on this PC, for the overlay editor's font picker. The OBS
+        // browser renders on the same machine, so every listed font will work there too.
+        private static async Task ServeFonts(NetworkStream stream, CancellationToken ct)
+        {
+            if (_fontsJson == null)
+            {
+                var names = new SortedSet<string>(StringComparer.OrdinalIgnoreCase);
+                try
+                {
+                    var en = System.Windows.Markup.XmlLanguage.GetLanguage("en-us");
+                    foreach (var ff in System.Windows.Media.Fonts.SystemFontFamilies)
+                    {
+                        try
+                        {
+                            var name = ff.FamilyNames.TryGetValue(en, out var n)
+                                ? n
+                                : ff.FamilyNames.Values.FirstOrDefault() ?? ff.Source;
+                            if (!string.IsNullOrWhiteSpace(name)) names.Add(name);
+                        }
+                        catch { /* skip odd families */ }
+                    }
+                }
+                catch { /* fall through to whatever we collected */ }
+                _fontsJson = JsonConvert.SerializeObject(names);
+            }
+            await WriteSimple(stream, "200 OK", "application/json", _fontsJson, ct);
         }
 
         private static async Task WriteSimple(NetworkStream stream, string status, string type,

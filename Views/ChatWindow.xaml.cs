@@ -32,6 +32,9 @@ namespace GameTracker.Views
 
         private readonly SoundService _sound = new();
 
+        private const string AllChats = "All chats";
+        private readonly ObservableCollection<string> _sendTargets = new() { AllChats };
+
         private ChatFeatureSettings _features = new();
         private readonly ChattersService _chattersSvc = new();
         private DispatcherTimer? _chattersTimer;
@@ -39,8 +42,8 @@ namespace GameTracker.Views
         private bool _chattersDirty;
         private int _boxColorIdx;
 
-        /// <summary>Raised when a viewer runs "!request &lt;game&gt;" — (game title, requester).</summary>
-        public Action<string, string>? OnGameRequested;
+        /// <summary>Raised when a viewer runs "!request &lt;game&gt;" — (game title, requester, platform).</summary>
+        public Action<string, string, string>? OnGameRequested;
 
         private static readonly Brush DefaultUser = Frozen("#a8c488");
 
@@ -53,6 +56,9 @@ namespace GameTracker.Views
             Wire(_ssn, s => SsnStatus.Text = s);
             Wire(_restream, s => RestreamStatus.Text = s);
 
+            // Discover send targets from the platforms flowing through SSN.
+            _ssn.MessageReceived += m => Dispatcher.Invoke(() => AddSendTarget(m.Platform));
+
             // Restore saved connection details (the SSN session ID is persistent).
             var saved = SettingsService.LoadChat();
             TwitchBox.Text = saved.TwitchChannel;
@@ -63,6 +69,11 @@ namespace GameTracker.Views
             var op = saved.Opacity is >= 0.25 and <= 1.0 ? saved.Opacity : 1.0;
             OpacitySlider.Value = op;
             Opacity = op;
+
+            // Send-target picker: "All chats" + platforms seen via SSN. Always starts on
+            // All chats so a leftover platform pick can't surprise the streamer later.
+            SendTargetCombo.ItemsSource = _sendTargets;
+            SendTargetCombo.SelectedItem = AllChats;
 
             _sound.SetAlerts(SettingsService.LoadSoundAlerts());
             UpdateMuteButton();
@@ -152,7 +163,7 @@ namespace GameTracker.Views
             if (parts.Length == 2 && string.Equals(cmd, "!request", StringComparison.OrdinalIgnoreCase))
             {
                 var game = parts[1].Trim();
-                if (game.Length > 0) OnGameRequested?.Invoke(game, m.User);
+                if (game.Length > 0) OnGameRequested?.Invoke(game, m.User, m.Platform ?? string.Empty);
                 return;
             }
 
@@ -161,7 +172,7 @@ namespace GameTracker.Views
             {
                 var bal = PointsService.Get(m.Platform, m.User);
                 OverlayServer.Toast($"{m.User} has {bal} {_features.PointsName}");
-                SendChatReply($"@{m.User} you have {bal} {_features.PointsName}");
+                SendChatReply($"@{m.User} you have {bal} {_features.PointsName}", m.Platform);
                 return;
             }
 
@@ -180,13 +191,13 @@ namespace GameTracker.Views
                     OverlayServer.TriggerEffect(r.Effect,
                         r.Effect == "custom" && !string.IsNullOrWhiteSpace(r.ImagePath) ? "/fx/" + idx : null);
                     OverlayServer.Toast($"{m.User} redeemed {r.Command.TrimStart('!')}!", confetti: false);
-                    SendChatReply($"@{m.User} redeemed {r.Command.TrimStart('!')}!");
+                    SendChatReply($"@{m.User} redeemed {r.Command.TrimStart('!')}!", m.Platform);
                 }
                 else
                 {
                     var missing = r.Cost - PointsService.Get(m.Platform, m.User);
                     OverlayServer.Toast($"{m.User} needs {missing} more {_features.PointsName} for {r.Command}");
-                    SendChatReply($"@{m.User} you need {missing} more {_features.PointsName} for {r.Command}");
+                    SendChatReply($"@{m.User} you need {missing} more {_features.PointsName} for {r.Command}", m.Platform);
                 }
             }
         }
@@ -468,12 +479,39 @@ namespace GameTracker.Views
 
         /// <summary>
         /// Send an @mention reply through SSN if "Reply in chat" is enabled and SSN is
-        /// connected. Fire-and-forget: replies are best-effort and must never block chat.
+        /// connected. When <paramref name="platform"/> is a real platform name, the reply
+        /// goes only to that chat so the others aren't spammed. Fire-and-forget.
         /// </summary>
-        public void SendChatReply(string text)
+        public void SendChatReply(string text, string? platform = null)
         {
             if (!_features.ReplyInChat || !_ssn.IsConnected || string.IsNullOrWhiteSpace(text)) return;
-            _ = _ssn.SendChatAsync(text);
+            _ = _ssn.SendChatAsync(text, ReplyTarget(platform));
+        }
+
+        // Map a message's platform to an SSN send target. Unknown/aggregate sources
+        // ("social", "restream", empty) have no reliable SSN label -> send to all.
+        private static string? ReplyTarget(string? platform)
+        {
+            var p = (platform ?? string.Empty).Trim().ToLowerInvariant();
+            return p.Length == 0 || p == "social" || p == "restream" ? null : p;
+        }
+
+        private void AddSendTarget(string? platform)
+        {
+            platform = (platform ?? string.Empty).Trim().ToLowerInvariant();
+            if (platform.Length == 0 || platform == "social") return;
+            if (!_sendTargets.Contains(platform)) _sendTargets.Add(platform);
+        }
+
+        private string? SelectedSendTarget()
+        {
+            var t = SendTargetCombo.SelectedItem as string;
+            return string.IsNullOrWhiteSpace(t) || t == AllChats ? null : t;
+        }
+
+        private void SendTarget_Changed(object sender, System.Windows.Controls.SelectionChangedEventArgs e)
+        {
+            // Selection is intentionally session-only (always defaults back to All chats).
         }
 
         private void SendBox_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
@@ -497,11 +535,12 @@ namespace GameTracker.Views
             SendBtn.IsEnabled = false;
             try
             {
-                bool ok = await _ssn.SendChatAsync(text);
+                var target = SelectedSendTarget();
+                bool ok = await _ssn.SendChatAsync(text, target);
                 if (ok)
                 {
                     SendBox.Clear();   // the message echoes back through SSN's chat feed
-                    SsnStatus.Text = "Sent.";
+                    SsnStatus.Text = target == null ? "Sent to all chats." : $"Sent to {target}.";
                 }
                 else
                 {

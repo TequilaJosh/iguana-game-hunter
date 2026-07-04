@@ -47,6 +47,14 @@ namespace GameTracker.Services
             catch { /* best-effort */ }
         }
 
+        // Challenges rolled from any game's wheel — shown on the overlay immediately,
+        // even before a play session starts.
+        private static List<string> _wheelChallenges = new();
+
+        /// <summary>Show these challenges on the overlay right away (wheel rolls in real time).</summary>
+        public static void SetChallenges(IReadOnlyList<string> challenges) =>
+            _wheelChallenges = (challenges ?? Array.Empty<string>()).ToList();
+
         public static void Update(Game? active)
         {
             try
@@ -58,7 +66,8 @@ namespace GameTracker.Services
                 string requester = live ? active!.Requester : string.Empty;
                 string elapsed = live && session != null ? Format(session.Duration) : string.Empty;
                 string status = live ? "Now Playing" : "Offline";
-                var challenges = live ? active!.WheelResults : new List<string>();
+                // Live session's rolled challenges win; otherwise the most recent wheel rolls.
+                var challenges = live ? active!.WheelResults : _wheelChallenges;
 
                 // Only rewrite when something changed (keeps idle quiet; ticks while live).
                 var sig = $"{live}|{title}|{requester}|{elapsed}|{string.Join("␟", challenges)}";

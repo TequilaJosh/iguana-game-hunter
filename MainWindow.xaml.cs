@@ -597,6 +597,8 @@ namespace GameTracker
                 {
                     game.WheelResults = new List<string>(results);
                     Save();
+                    // Rolled challenges hit the overlay immediately, session or not.
+                    Services.OverlayService.SetChallenges(game.WheelResults);
                     Services.OverlayService.Update(CurrentlyStreaming());
                 },
                 onRolled: challenge => LogChallengeToSession(game, challenge),
@@ -696,7 +698,7 @@ namespace GameTracker
         }
 
         // A viewer typed "!request <game>". Add it to Dormant if we don't already have it.
-        private void HandleGameRequest(string title, string requester)
+        private void HandleGameRequest(string title, string requester, string platform)
         {
             title = (title ?? string.Empty).Trim();
             if (title.Length == 0) return;
@@ -705,7 +707,7 @@ namespace GameTracker
             {
                 StatusText.Text = $"“{title}” is already in the list (requested by {requester}).";
                 Services.OverlayServer.Toast($"{title} is already on the list, {requester}!");
-                _chatWindow?.SendChatReply($"@{requester} {title} is already on the list!");
+                _chatWindow?.SendChatReply($"@{requester} {title} is already on the list!", platform);
                 return;
             }
 
@@ -720,7 +722,7 @@ namespace GameTracker
             RefreshView();
             StatusText.Text = $"Added “{title}” to Dormant (requested by {requester}).";
             Services.OverlayServer.Toast($"✔ {title} added — requested by {requester}!", confetti: true);
-            _chatWindow?.SendChatReply($"@{requester} ✔ {title} was added to the request list!");
+            _chatWindow?.SendChatReply($"@{requester} ✔ {title} was added to the request list!", platform);
         }
 
         private void OpenEditDialog(Guid id)

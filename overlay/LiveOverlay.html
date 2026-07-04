@@ -105,6 +105,13 @@
   }
   ------------------------------------------------------------------------- */
 
+  /* Bundled bonus font, served from inside the app — every user has it. */
+  @font-face {
+    font-family: 'MR. Saturn';
+    src: url('/font/saturn.ttf') format('truetype');
+    font-display: swap;
+  }
+
   html, body {
     margin: 0;
     padding: 0;
@@ -1213,7 +1220,7 @@
     chat: { x: 548, y: 128, w: 316, h: 372, font: "", size: 24, color: "#ffffff" },
     cl:   { x: 872, y: 128, w: 200, h: 372, font: "", size: 20, color: "#e8e0c4" }
   };
-  const FONTS = ["", "Segoe UI", "Arial", "Verdana", "Tahoma", "Trebuchet MS",
+  const FONTS = ["", "MR. Saturn", "Segoe UI", "Arial", "Verdana", "Tahoma", "Trebuchet MS",
                  "Georgia", "Times New Roman", "Courier New", "Consolas",
                  "Impact", "Comic Sans MS", "Bebas Neue", "Oswald", "Roboto"];
   const EDIT = new URLSearchParams(location.search).has("edit");

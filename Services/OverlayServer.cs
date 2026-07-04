@@ -185,6 +185,10 @@ namespace GameTracker.Services
                 {
                     await ServeFonts(stream, ct);
                 }
+                else if (method == "GET" && route == "/font/saturn.ttf")
+                {
+                    await ServeBundledFont(stream, ct);
+                }
                 else
                 {
                     await WriteSimple(stream, "404 Not Found", "text/plain", "Not found", ct);
@@ -297,6 +301,50 @@ namespace GameTracker.Services
             catch { /* drop */ }
         }
 
+        /// <summary>Fonts bundled with the app (name shown in the picker; loaded via @font-face).</summary>
+        public const string BundledFontName = "MR. Saturn";
+
+        private static byte[]? _bundledFont;
+
+        // Serve the bundled "MR. Saturn" font (embedded TTF) for the overlay's @font-face.
+        private static async Task ServeBundledFont(NetworkStream stream, CancellationToken ct)
+        {
+            try
+            {
+                if (_bundledFont == null)
+                {
+                    var asm = Assembly.GetExecutingAssembly();
+                    var name = asm.GetManifestResourceNames()
+                        .FirstOrDefault(n => n.EndsWith("SaturnBoingNew.ttf", StringComparison.OrdinalIgnoreCase));
+                    if (name != null)
+                    {
+                        using var s = asm.GetManifestResourceStream(name);
+                        if (s != null)
+                        {
+                            using var ms = new MemoryStream();
+                            await s.CopyToAsync(ms, ct);
+                            _bundledFont = ms.ToArray();
+                        }
+                    }
+                }
+                if (_bundledFont == null)
+                {
+                    await WriteSimple(stream, "404 Not Found", "text/plain", "Not found", ct);
+                    return;
+                }
+                var head =
+                    "HTTP/1.1 200 OK\r\n" +
+                    "Content-Type: font/ttf\r\n" +
+                    "Cache-Control: max-age=86400\r\n" +
+                    "Content-Length: " + _bundledFont.Length + "\r\n" +
+                    "Connection: close\r\n\r\n";
+                await stream.WriteAsync(Encoding.ASCII.GetBytes(head), ct);
+                await stream.WriteAsync(_bundledFont, ct);
+                await stream.FlushAsync(ct);
+            }
+            catch { /* drop */ }
+        }
+
         private static string? _fontsJson; // enumerated once; installed fonts rarely change mid-run
 
         // The fonts installed on this PC, for the overlay editor's font picker. The OBS
@@ -322,7 +370,10 @@ namespace GameTracker.Services
                     }
                 }
                 catch { /* fall through to whatever we collected */ }
-                _fontsJson = JsonConvert.SerializeObject(names);
+                // Bundled bonus font first so it's easy to find.
+                var all = new List<string> { BundledFontName };
+                all.AddRange(names.Where(n => !string.Equals(n, BundledFontName, StringComparison.OrdinalIgnoreCase)));
+                _fontsJson = JsonConvert.SerializeObject(all);
             }
             await WriteSimple(stream, "200 OK", "application/json", _fontsJson, ct);
         }

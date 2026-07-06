@@ -300,12 +300,16 @@ namespace GameTracker.Services
                     var panels = SettingsService.LoadTextPanels();
                     if (n <= panels.Count)
                     {
-                        var side = parts[2].Split('?')[0];
-                        path = side.Equals("left", StringComparison.OrdinalIgnoreCase)
-                            ? panels[n - 1].LeftImage
-                            : side.Equals("right", StringComparison.OrdinalIgnoreCase)
-                                ? panels[n - 1].RightImage
-                                : null;
+                        var panel = panels[n - 1];
+                        var key = parts[2].Split('?')[0];
+                        if (key.Equals("left", StringComparison.OrdinalIgnoreCase))
+                            path = panel.LeftImage;
+                        else if (key.Equals("right", StringComparison.OrdinalIgnoreCase))
+                            path = panel.RightImage;
+                        else if (key.StartsWith("line", StringComparison.OrdinalIgnoreCase) &&
+                                 int.TryParse(key.AsSpan(4), out int li) &&
+                                 li >= 0 && li < panel.Lines.Count)
+                            path = panel.Lines[li].Image;
                     }
                 }
             }
@@ -671,6 +675,9 @@ namespace GameTracker.Services
                     img = !string.IsNullOrWhiteSpace(p.LeftImage) && File.Exists(p.LeftImage),
                     imgw = Math.Clamp(p.LeftImageWidth, 20, 1600),
                     imgv = ImageVersion(p.LeftImage),
+                    dir = p.LeftDir == "h" ? "h" : "v",
+                    scroll = p.LeftScroll,
+                    speed = p.LeftSpeed,
                 },
                 right = new
                 {
@@ -681,6 +688,9 @@ namespace GameTracker.Services
                     img = !string.IsNullOrWhiteSpace(p.RightImage) && File.Exists(p.RightImage),
                     imgw = Math.Clamp(p.RightImageWidth, 20, 1600),
                     imgv = ImageVersion(p.RightImage),
+                    dir = p.RightDir == "h" ? "h" : "v",
+                    scroll = p.RightScroll,
+                    speed = p.RightSpeed,
                 },
                 opacity = Math.Clamp(p.Opacity, 0, 100),
                 lines = (p.Lines ?? new List<TextPanelLine>()).Take(10).Select(l => new
@@ -691,6 +701,9 @@ namespace GameTracker.Services
                     color = l.Color ?? "#e8e0c4",
                     scroll = l.Scroll,
                     speed = l.Speed,
+                    img = !string.IsNullOrWhiteSpace(l.Image) && File.Exists(l.Image),
+                    imgw = Math.Clamp(l.ImageWidth, 20, 1600),
+                    imgv = ImageVersion(l.Image),
                 }).ToArray(),
             }).ToArray();
 

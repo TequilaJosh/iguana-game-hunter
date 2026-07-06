@@ -225,6 +225,20 @@
                                         <Button Grid.Column="4" Content="&#x2715;" Tag="{Binding}" Click="ClearLeftImage_Click"
                                                 Style="{StaticResource Btn}" ToolTip="Remove image"/>
                                     </Grid>
+                                    <StackPanel Orientation="Horizontal" Margin="44,0,0,8">
+                                        <TextBlock Text="Direction" Style="{StaticResource Lb}"/>
+                                        <ComboBox Width="104" Margin="0,0,10,0" SelectedValue="{Binding LeftDir}"
+                                                  SelectedValuePath="Tag" VerticalAlignment="Center">
+                                            <ComboBoxItem Tag="v" Content="Vertical"/>
+                                            <ComboBoxItem Tag="h" Content="Horizontal"/>
+                                        </ComboBox>
+                                        <CheckBox Content="scroll" IsChecked="{Binding LeftScroll}" Foreground="#a8c488"
+                                                  FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"
+                                                  ToolTip="Scroll the block (up if Vertical, sideways if Horizontal)"/>
+                                        <Slider Width="90" Minimum="20" Maximum="300" Value="{Binding LeftSpeed}"
+                                                VerticalAlignment="Center" Foreground="#7cc44a"
+                                                IsEnabled="{Binding LeftScroll}" ToolTip="Scroll speed (pixels per second)"/>
+                                    </StackPanel>
                                     <Grid Margin="0,0,0,6">
                                         <Grid.ColumnDefinitions>
                                             <ColumnDefinition Width="Auto"/>
@@ -277,6 +291,20 @@
                                         <Button Grid.Column="4" Content="&#x2715;" Tag="{Binding}" Click="ClearRightImage_Click"
                                                 Style="{StaticResource Btn}" ToolTip="Remove image"/>
                                     </Grid>
+                                    <StackPanel Orientation="Horizontal" Margin="44,0,0,8">
+                                        <TextBlock Text="Direction" Style="{StaticResource Lb}"/>
+                                        <ComboBox Width="104" Margin="0,0,10,0" SelectedValue="{Binding RightDir}"
+                                                  SelectedValuePath="Tag" VerticalAlignment="Center">
+                                            <ComboBoxItem Tag="v" Content="Vertical"/>
+                                            <ComboBoxItem Tag="h" Content="Horizontal"/>
+                                        </ComboBox>
+                                        <CheckBox Content="scroll" IsChecked="{Binding RightScroll}" Foreground="#a8c488"
+                                                  FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"
+                                                  ToolTip="Scroll the block (up if Vertical, sideways if Horizontal)"/>
+                                        <Slider Width="90" Minimum="20" Maximum="300" Value="{Binding RightSpeed}"
+                                                VerticalAlignment="Center" Foreground="#7cc44a"
+                                                IsEnabled="{Binding RightScroll}" ToolTip="Scroll speed (pixels per second)"/>
+                                    </StackPanel>
 
                                     <Border Background="#2e4a30" Height="1" Margin="0,2,0,8"/>
 
@@ -284,7 +312,8 @@
                                     <ItemsControl ItemsSource="{Binding Lines}">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
-                                                <Grid Margin="0,0,0,5">
+                                                <StackPanel Margin="0,0,0,8">
+                                                <Grid>
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="*"/>
                                                         <ColumnDefinition Width="Auto"/>
@@ -323,6 +352,27 @@
                                                     <Button Grid.Column="7" Content="&#x2715;" Tag="{Binding}" Click="RemoveLine_Click"
                                                             Style="{StaticResource Btn}" ToolTip="Remove line"/>
                                                 </Grid>
+                                                <Grid Margin="0,3,0,0">
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    <Button Grid.Column="0" Content="&#128444; Image" Tag="{Binding}" Click="PickLineImage_Click"
+                                                            Style="{StaticResource Btn}" Margin="0,0,6,0"
+                                                            ToolTip="Optional image shown before this line"/>
+                                                    <TextBlock Grid.Column="1" Text="{Binding ImageName}" Foreground="#7a9070"
+                                                               FontSize="11" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                                               ToolTip="{Binding Image}"/>
+                                                    <TextBlock Grid.Column="2" Text="width" Style="{StaticResource Lb}" Margin="8,0,4,0"/>
+                                                    <TextBox Grid.Column="3" Width="48" Text="{Binding ImageWidth, UpdateSourceTrigger=PropertyChanged}"
+                                                             Style="{StaticResource In}" Margin="0,0,6,0" ToolTip="Image width in pixels (height keeps aspect)"/>
+                                                    <Button Grid.Column="4" Content="&#x2715;" Tag="{Binding}" Click="ClearLineImage_Click"
+                                                            Style="{StaticResource Btn}" ToolTip="Remove image"/>
+                                                </Grid>
+                                                </StackPanel>
                                             </DataTemplate>
                                         </ItemsControl.ItemTemplate>
                                     </ItemsControl>

@@ -11,6 +11,8 @@ namespace GameTracker.Models
         public string Color { get; set; } = "#e8e0c4";
         public bool Scroll { get; set; } = false;          // marquee left-scroll
         public int Speed { get; set; } = 80;               // pixels per second
+        public string Image { get; set; } = string.Empty;  // local image path ("" = none)
+        public int ImageWidth { get; set; } = 120;         // display width in px
     }
 
     /// <summary>
@@ -32,12 +34,18 @@ namespace GameTracker.Models
         public string LeftColor { get; set; } = "#e8e0c4";
         public string LeftImage { get; set; } = string.Empty;      // local image path ("" = none)
         public int LeftImageWidth { get; set; } = 200;             // display width in px
+        public string LeftDir { get; set; } = "v";                 // "v" vertical (default) | "h" horizontal
+        public bool LeftScroll { get; set; } = false;
+        public int LeftSpeed { get; set; } = 60;                   // pixels per second
         public string RightText { get; set; } = string.Empty;
         public string RightFont { get; set; } = string.Empty;
         public int RightSize { get; set; } = 20;
         public string RightColor { get; set; } = "#e8e0c4";
         public string RightImage { get; set; } = string.Empty;
         public int RightImageWidth { get; set; } = 200;
+        public string RightDir { get; set; } = "v";
+        public bool RightScroll { get; set; } = false;
+        public int RightSpeed { get; set; } = 60;
 
         // Background opacity for this overlay, 0–100 (default fully opaque).
         public int Opacity { get; set; } = 100;

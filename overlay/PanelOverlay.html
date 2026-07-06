@@ -40,6 +40,18 @@
     display: block; max-width: 100%; height: auto;
     margin: 0 auto 6px; border-radius: 6px;
   }
+  /* Horizontal side blocks: single-line flow, image inline before text */
+  #left.horiz, #right.horiz { white-space: nowrap; }
+  #left.horiz img, #right.horiz img {
+    display: inline-block; vertical-align: middle; margin: 0 8px 0 0; max-width: none;
+  }
+  /* Vertical (credits-style) marquee used by side blocks */
+  .marqv { overflow: hidden; }
+  .marqv .miv { display: block; animation: marqv linear infinite; }
+  .marqv .miv > .cpv { padding-bottom: 1em; }
+  @keyframes marqv { to { transform: translateY(-50%); } }
+  .marq .miv, #left.marq, #right.marq { white-space: nowrap; }
+  .marq .mi > .cp { padding-right: 3em; }
 
   #center { flex: 1 1 auto; display: flex; flex-direction: column; }
 
@@ -53,6 +65,9 @@
 
   #lines { flex: 1 1 auto; overflow: hidden; padding: 8px 16px 10px; }
   .line { margin: 4px 0; line-height: 1.3; word-break: break-word; }
+  .line img.linepic {
+    vertical-align: middle; margin-right: 8px; border-radius: 4px; max-width: 100%;
+  }
 
   /* Marquee lines: content duplicated, shifted by exactly one copy for a seamless loop */
   .marq { overflow: hidden; white-space: nowrap; }
@@ -108,27 +123,64 @@
 
   function fam(f) { return f ? "'" + f + "', 'Segoe UI', sans-serif" : ""; }
 
-  function sideBlock(el, s, side) {
-    while (el.firstChild) el.removeChild(el.firstChild);
-    var has = s && (s.text || s.img);
-    if (!has) { el.style.display = "none"; return; }
-
+  function makeSideContent(s, side) {
+    // Fresh copy of the block's image + text nodes (marquee needs two identical copies).
+    var nodes = [];
     if (s.img) {
       var img = document.createElement("img");
       img.src = "/pimg/" + PANEL_INDEX + "/" + side + "?v=" + (s.imgv || "0");
       if (s.imgw) img.style.width = s.imgw + "px";
-      img.addEventListener("error", function () { if (img.parentNode) img.remove(); });
-      el.appendChild(img);
+      img.addEventListener("error", function () { if (this.parentNode) this.remove(); });
+      nodes.push(img);
     }
     if (s.text) {
-      var t = document.createElement("div");
+      var t = document.createElement("span");
       t.textContent = s.text;
-      el.appendChild(t);
+      nodes.push(t);
     }
+    return nodes;
+  }
+
+  function sideBlock(el, s, side, marquees) {
+    while (el.firstChild) el.removeChild(el.firstChild);
+    el.classList.remove("horiz", "marq", "marqv");
+    if (!(s && (s.text || s.img))) { el.style.display = "none"; return; }
+
     el.style.fontFamily = fam(s.font);
     el.style.fontSize = (s.size || 20) + "px";
     el.style.color = s.color || "#e8e0c4";
     el.style.display = "block";
+
+    var horizontal = (s.dir === "h");
+    if (horizontal) el.classList.add("horiz");
+
+    if (s.scroll) {
+      if (horizontal) {
+        // Sideways ticker.
+        el.classList.add("marq");
+        var mi = document.createElement("span"); mi.className = "mi";
+        for (var k = 0; k < 2; k++) {
+          var cp = document.createElement("span"); cp.className = "cp";
+          makeSideContent(s, side).forEach(function (n) { cp.appendChild(n); });
+          mi.appendChild(cp);
+        }
+        el.appendChild(mi);
+        marquees.push({ el: mi, axis: "x", speed: Math.max(10, s.speed || 60) });
+      } else {
+        // Upward credits roll.
+        el.classList.add("marqv");
+        var miv = document.createElement("div"); miv.className = "miv";
+        for (var k2 = 0; k2 < 2; k2++) {
+          var cpv = document.createElement("div"); cpv.className = "cpv";
+          makeSideContent(s, side).forEach(function (n) { cpv.appendChild(n); });
+          miv.appendChild(cpv);
+        }
+        el.appendChild(miv);
+        marquees.push({ el: miv, axis: "y", speed: Math.max(10, s.speed || 60) });
+      }
+    } else {
+      makeSideContent(s, side).forEach(function (n) { el.appendChild(n); });
+    }
   }
 
   function render(panels) {
@@ -155,8 +207,9 @@
     centerEl.style.background = bg;
     rightEl.style.background = bg;
 
-    sideBlock(leftEl, p.left, "left");
-    sideBlock(rightEl, p.right, "right");
+    var marquees = [];
+    sideBlock(leftEl, p.left, "left", marquees);
+    sideBlock(rightEl, p.right, "right", marquees);
 
     hdr.textContent = (p.header && p.header.text) || "";
     if (p.header) {
@@ -167,7 +220,6 @@
 
     while (linesEl.firstChild) linesEl.removeChild(linesEl.firstChild);
     var lines = Array.isArray(p.lines) ? p.lines : [];
-    var marquees = [];
     for (var i = 0; i < lines.length; i++) {
       var ln = lines[i];
       var div = document.createElement("div");
@@ -175,8 +227,19 @@
       div.style.fontSize = (ln.size || 24) + "px";
       div.style.color = ln.color || "#e8e0c4";
 
+      // Optional per-line image (sits before the text; stays put even on scroll lines).
+      var limg = null;
+      if (ln.img) {
+        limg = document.createElement("img");
+        limg.className = "linepic";
+        limg.src = "/pimg/" + PANEL_INDEX + "/line" + i + "?v=" + (ln.imgv || "0");
+        if (ln.imgw) limg.style.width = ln.imgw + "px";
+        limg.addEventListener("error", function () { if (this.parentNode) this.remove(); });
+      }
+
       if (ln.scroll && ln.text) {
         div.className = "line marq";
+        if (limg) div.appendChild(limg);
         var mi = document.createElement("span");
         mi.className = "mi";
         // Two copies -> translateX(-50%) loops seamlessly.
@@ -184,10 +247,12 @@
         var b = document.createElement("span"); b.textContent = ln.text;
         mi.appendChild(a); mi.appendChild(b);
         div.appendChild(mi);
-        marquees.push({ el: mi, speed: Math.max(10, ln.speed || 80) });
+        marquees.push({ el: mi, axis: "x", speed: Math.max(10, ln.speed || 80) });
       } else {
         div.className = "line";
-        div.textContent = ln.text || " ";
+        if (limg) div.appendChild(limg);
+        if (ln.text) div.appendChild(document.createTextNode(ln.text));
+        else if (!limg) div.textContent = " ";
       }
       linesEl.appendChild(div);
     }
@@ -196,7 +261,7 @@
     requestAnimationFrame(function () {
       for (var i = 0; i < marquees.length; i++) {
         var m = marquees[i];
-        var px = m.el.scrollWidth / 2;
+        var px = (m.axis === "y" ? m.el.scrollHeight : m.el.scrollWidth) / 2;
         if (px > 0) m.el.style.animationDuration = (px / m.speed) + "s";
       }
     });

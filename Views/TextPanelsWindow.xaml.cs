@@ -168,6 +168,17 @@ namespace GameTracker.Views
             if (sender is FrameworkElement fe && fe.Tag is PanelVm vm) vm.RightImage = "";
         }
 
+        private void PickLineImage_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement fe && fe.Tag is LineVm vm &&
+                BrowseImage(this) is string path) vm.Image = path;
+        }
+
+        private void ClearLineImage_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement fe && fe.Tag is LineVm vm) vm.Image = "";
+        }
+
         private void PickLeftColor_Click(object sender, RoutedEventArgs e)
         {
             if (sender is FrameworkElement fe && fe.Tag is PanelVm vm)
@@ -218,10 +229,12 @@ namespace GameTracker.Views
             private int _index = 1;
             private string _headerText = "", _headerFont = "", _headerColor = "#7cc44a";
             private int _headerSize = 28;
-            private string _leftText = "", _leftFont = "", _leftColor = "#e8e0c4", _leftImage = "";
-            private int _leftSize = 20, _leftImageWidth = 200;
-            private string _rightText = "", _rightFont = "", _rightColor = "#e8e0c4", _rightImage = "";
-            private int _rightSize = 20, _rightImageWidth = 200;
+            private string _leftText = "", _leftFont = "", _leftColor = "#e8e0c4", _leftImage = "", _leftDir = "v";
+            private int _leftSize = 20, _leftImageWidth = 200, _leftSpeed = 60;
+            private bool _leftScroll;
+            private string _rightText = "", _rightFont = "", _rightColor = "#e8e0c4", _rightImage = "", _rightDir = "v";
+            private int _rightSize = 20, _rightImageWidth = 200, _rightSpeed = 60;
+            private bool _rightScroll;
             private int _opacity = 100;
 
             public ObservableCollection<LineVm> Lines { get; } = new();
@@ -261,6 +274,9 @@ namespace GameTracker.Views
             }
             public string LeftImageName =>
                 string.IsNullOrWhiteSpace(_leftImage) ? "(no image)" : System.IO.Path.GetFileName(_leftImage);
+            public string LeftDir { get => _leftDir; set { _leftDir = value ?? "v"; Bump(nameof(LeftDir)); } }
+            public bool LeftScroll { get => _leftScroll; set { _leftScroll = value; Bump(nameof(LeftScroll)); } }
+            public int LeftSpeed { get => _leftSpeed; set { _leftSpeed = Math.Clamp(value, 20, 300); Bump(nameof(LeftSpeed)); } }
 
             public string RightText { get => _rightText; set { _rightText = value; Bump(nameof(RightText)); } }
             public string RightFont { get => _rightFont; set { _rightFont = value ?? ""; Bump(nameof(RightFont)); } }
@@ -283,6 +299,9 @@ namespace GameTracker.Views
             }
             public string RightImageName =>
                 string.IsNullOrWhiteSpace(_rightImage) ? "(no image)" : System.IO.Path.GetFileName(_rightImage);
+            public string RightDir { get => _rightDir; set { _rightDir = value ?? "v"; Bump(nameof(RightDir)); } }
+            public bool RightScroll { get => _rightScroll; set { _rightScroll = value; Bump(nameof(RightScroll)); } }
+            public int RightSpeed { get => _rightSpeed; set { _rightSpeed = Math.Clamp(value, 20, 300); Bump(nameof(RightSpeed)); } }
 
             public int Opacity
             {
@@ -307,12 +326,18 @@ namespace GameTracker.Views
                     _leftColor = p.LeftColor ?? "#e8e0c4",
                     _leftImage = p.LeftImage ?? "",
                     _leftImageWidth = Math.Clamp(p.LeftImageWidth, 20, 1600),
+                    _leftDir = p.LeftDir == "h" ? "h" : "v",
+                    _leftScroll = p.LeftScroll,
+                    _leftSpeed = Math.Clamp(p.LeftSpeed, 20, 300),
                     _rightText = p.RightText ?? "",
                     _rightFont = p.RightFont ?? "",
                     _rightSize = p.RightSize,
                     _rightColor = p.RightColor ?? "#e8e0c4",
                     _rightImage = p.RightImage ?? "",
                     _rightImageWidth = Math.Clamp(p.RightImageWidth, 20, 1600),
+                    _rightDir = p.RightDir == "h" ? "h" : "v",
+                    _rightScroll = p.RightScroll,
+                    _rightSpeed = Math.Clamp(p.RightSpeed, 20, 300),
                     _opacity = Math.Clamp(p.Opacity, 0, 100),
                 };
                 foreach (var l in (p.Lines ?? new List<TextPanelLine>()).Take(MaxLines))
@@ -329,8 +354,10 @@ namespace GameTracker.Views
                 HeaderColor = HeaderColor,
                 LeftText = LeftText, LeftFont = LeftFont, LeftSize = LeftSize, LeftColor = LeftColor,
                 LeftImage = LeftImage, LeftImageWidth = LeftImageWidth,
+                LeftDir = LeftDir, LeftScroll = LeftScroll, LeftSpeed = LeftSpeed,
                 RightText = RightText, RightFont = RightFont, RightSize = RightSize, RightColor = RightColor,
                 RightImage = RightImage, RightImageWidth = RightImageWidth,
+                RightDir = RightDir, RightScroll = RightScroll, RightSpeed = RightSpeed,
                 Opacity = Opacity,
                 Lines = Lines.Select(l => l.ToModel()).ToList(),
             };
@@ -343,8 +370,8 @@ namespace GameTracker.Views
         public class LineVm : INotifyPropertyChanged
         {
             private Action _changed = () => { };
-            private string _text = "", _font = "", _color = "#e8e0c4";
-            private int _size = 24, _speed = 80;
+            private string _text = "", _font = "", _color = "#e8e0c4", _image = "";
+            private int _size = 24, _speed = 80, _imageWidth = 120;
             private bool _scroll;
 
             public List<string> Fonts => FontChoices;
@@ -360,6 +387,18 @@ namespace GameTracker.Views
                 set { _color = value; Bump(nameof(Color)); Raise(nameof(ColorBrush)); }
             }
             public Brush ColorBrush => TryBrush(_color);
+            public string Image
+            {
+                get => _image;
+                set { _image = value ?? ""; Bump(nameof(Image)); Raise(nameof(ImageName)); }
+            }
+            public int ImageWidth
+            {
+                get => _imageWidth;
+                set { _imageWidth = Math.Clamp(value, 20, 1600); Bump(nameof(ImageWidth)); }
+            }
+            public string ImageName =>
+                string.IsNullOrWhiteSpace(_image) ? "(no image)" : System.IO.Path.GetFileName(_image);
 
             public static LineVm From(TextPanelLine l, Action changed) => new()
             {
@@ -369,12 +408,15 @@ namespace GameTracker.Views
                 _color = l.Color ?? "#e8e0c4",
                 _scroll = l.Scroll,
                 _speed = l.Speed,
+                _image = l.Image ?? "",
+                _imageWidth = Math.Clamp(l.ImageWidth, 20, 1600),
                 _changed = changed,
             };
 
             public TextPanelLine ToModel() => new()
             {
                 Text = Text, Font = Font, Size = Size, Color = Color, Scroll = Scroll, Speed = Speed,
+                Image = Image, ImageWidth = ImageWidth,
             };
 
             private void Bump(string n) { Raise(n); _changed(); }

@@ -16,14 +16,32 @@
     font-family: 'Segoe UI', Segoe, system-ui, sans-serif;
   }
 
-  #box {
+  /* Row of bordered boxes: [left] [center: header/divider/lines] [right] */
+  #wrap {
     position: absolute; inset: 8px; box-sizing: border-box;
-    display: flex; flex-direction: column; overflow: hidden;
-    background: rgba(10, 20, 16, 0.92);
+    display: flex; align-items: stretch; gap: 10px;
+  }
+  #wrap.empty { display: none; }
+
+  .pbox {
+    box-sizing: border-box; overflow: hidden;
     border: 2px solid #4a7c3a; border-radius: 12px;
     box-shadow: 0 6px 22px rgba(0, 0, 0, 0.55);
+    /* background set from JS so the streamer's opacity applies */
   }
-  #box.empty { display: none; }
+
+  #left, #right {
+    flex: 0 1 auto; max-width: 34%;
+    padding: 10px 14px; line-height: 1.3;
+    white-space: pre-wrap; word-break: break-word;
+    display: none;
+  }
+  #left img, #right img {
+    display: block; max-width: 100%; height: auto;
+    margin: 0 auto 6px; border-radius: 6px;
+  }
+
+  #center { flex: 1 1 auto; display: flex; flex-direction: column; }
 
   /* Header + the divider border below it */
   #hdr {
@@ -47,9 +65,13 @@
 </style>
 </head>
 <body>
-  <div id="box" class="empty">
-    <div id="hdr"></div>
-    <div id="lines"></div>
+  <div id="wrap" class="empty">
+    <div id="left" class="pbox"></div>
+    <div id="center" class="pbox">
+      <div id="hdr"></div>
+      <div id="lines"></div>
+    </div>
+    <div id="right" class="pbox"></div>
   </div>
 
 <script>
@@ -86,16 +108,55 @@
 
   function fam(f) { return f ? "'" + f + "', 'Segoe UI', sans-serif" : ""; }
 
+  function sideBlock(el, s, side) {
+    while (el.firstChild) el.removeChild(el.firstChild);
+    var has = s && (s.text || s.img);
+    if (!has) { el.style.display = "none"; return; }
+
+    if (s.img) {
+      var img = document.createElement("img");
+      img.src = "/pimg/" + PANEL_INDEX + "/" + side + "?v=" + (s.imgv || "0");
+      if (s.imgw) img.style.width = s.imgw + "px";
+      img.addEventListener("error", function () { if (img.parentNode) img.remove(); });
+      el.appendChild(img);
+    }
+    if (s.text) {
+      var t = document.createElement("div");
+      t.textContent = s.text;
+      el.appendChild(t);
+    }
+    el.style.fontFamily = fam(s.font);
+    el.style.fontSize = (s.size || 20) + "px";
+    el.style.color = s.color || "#e8e0c4";
+    el.style.display = "block";
+  }
+
   function render(panels) {
-    var box = document.getElementById("box");
+    var wrap = document.getElementById("wrap");
+    var leftEl = document.getElementById("left");
+    var centerEl = document.getElementById("center");
+    var rightEl = document.getElementById("right");
     var hdr = document.getElementById("hdr");
-    var wrap = document.getElementById("lines");
+    var linesEl = document.getElementById("lines");
     var p = panels[PANEL_INDEX - 1];
 
     var hasContent = p && ((p.header && p.header.text) ||
-                           (Array.isArray(p.lines) && p.lines.length));
-    box.className = hasContent ? "" : "empty";
+                           (Array.isArray(p.lines) && p.lines.length) ||
+                           (p.left && (p.left.text || p.left.img)) ||
+                           (p.right && (p.right.text || p.right.img)));
+    wrap.className = hasContent ? "" : "empty";
     if (!hasContent) return;
+
+    // Background opacity (default fully opaque).
+    var alpha = 1;
+    if (typeof p.opacity === "number") alpha = Math.max(0, Math.min(100, p.opacity)) / 100;
+    var bg = "rgba(10, 20, 16, " + alpha + ")";
+    leftEl.style.background = bg;
+    centerEl.style.background = bg;
+    rightEl.style.background = bg;
+
+    sideBlock(leftEl, p.left, "left");
+    sideBlock(rightEl, p.right, "right");
 
     hdr.textContent = (p.header && p.header.text) || "";
     if (p.header) {
@@ -104,7 +165,7 @@
       hdr.style.color = p.header.color || "#7cc44a";
     }
 
-    while (wrap.firstChild) wrap.removeChild(wrap.firstChild);
+    while (linesEl.firstChild) linesEl.removeChild(linesEl.firstChild);
     var lines = Array.isArray(p.lines) ? p.lines : [];
     var marquees = [];
     for (var i = 0; i < lines.length; i++) {
@@ -126,9 +187,9 @@
         marquees.push({ el: mi, speed: Math.max(10, ln.speed || 80) });
       } else {
         div.className = "line";
-        div.textContent = ln.text || " ";
+        div.textContent = ln.text || " ";
       }
-      wrap.appendChild(div);
+      linesEl.appendChild(div);
     }
 
     // Set marquee durations from measured width so "speed" means pixels/second.

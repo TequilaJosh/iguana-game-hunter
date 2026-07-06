@@ -136,6 +136,56 @@ namespace GameTracker.Views
             }
         }
 
+        private static string? BrowseImage(Window owner)
+        {
+            var dlg = new Microsoft.Win32.OpenFileDialog
+            {
+                Title = "Choose an image",
+                Filter = "Images|*.png;*.jpg;*.jpeg;*.gif;*.webp;*.bmp|All files (*.*)|*.*",
+            };
+            return dlg.ShowDialog(owner) == true ? dlg.FileName : null;
+        }
+
+        private void PickLeftImage_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement fe && fe.Tag is PanelVm vm &&
+                BrowseImage(this) is string path) vm.LeftImage = path;
+        }
+
+        private void ClearLeftImage_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement fe && fe.Tag is PanelVm vm) vm.LeftImage = "";
+        }
+
+        private void PickRightImage_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement fe && fe.Tag is PanelVm vm &&
+                BrowseImage(this) is string path) vm.RightImage = path;
+        }
+
+        private void ClearRightImage_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement fe && fe.Tag is PanelVm vm) vm.RightImage = "";
+        }
+
+        private void PickLeftColor_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement fe && fe.Tag is PanelVm vm)
+            {
+                var hex = ColorPickerWindow.Pick(this, vm.LeftColor);
+                if (hex != null) vm.LeftColor = hex;
+            }
+        }
+
+        private void PickRightColor_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement fe && fe.Tag is PanelVm vm)
+            {
+                var hex = ColorPickerWindow.Pick(this, vm.RightColor);
+                if (hex != null) vm.RightColor = hex;
+            }
+        }
+
         private void PickLineColor_Click(object sender, RoutedEventArgs e)
         {
             if (sender is FrameworkElement fe && fe.Tag is LineVm vm)
@@ -168,6 +218,11 @@ namespace GameTracker.Views
             private int _index = 1;
             private string _headerText = "", _headerFont = "", _headerColor = "#7cc44a";
             private int _headerSize = 28;
+            private string _leftText = "", _leftFont = "", _leftColor = "#e8e0c4", _leftImage = "";
+            private int _leftSize = 20, _leftImageWidth = 200;
+            private string _rightText = "", _rightFont = "", _rightColor = "#e8e0c4", _rightImage = "";
+            private int _rightSize = 20, _rightImageWidth = 200;
+            private int _opacity = 100;
 
             public ObservableCollection<LineVm> Lines { get; } = new();
             public List<string> Fonts => FontChoices;
@@ -185,6 +240,57 @@ namespace GameTracker.Views
             }
             public Brush HeaderBrush => TryBrush(_headerColor);
 
+            public string LeftText { get => _leftText; set { _leftText = value; Bump(nameof(LeftText)); } }
+            public string LeftFont { get => _leftFont; set { _leftFont = value ?? ""; Bump(nameof(LeftFont)); } }
+            public int LeftSize { get => _leftSize; set { _leftSize = Math.Clamp(value, 8, 200); Bump(nameof(LeftSize)); } }
+            public string LeftColor
+            {
+                get => _leftColor;
+                set { _leftColor = value; Bump(nameof(LeftColor)); Raise(nameof(LeftBrush)); }
+            }
+            public Brush LeftBrush => TryBrush(_leftColor);
+            public string LeftImage
+            {
+                get => _leftImage;
+                set { _leftImage = value ?? ""; Bump(nameof(LeftImage)); Raise(nameof(LeftImageName)); }
+            }
+            public int LeftImageWidth
+            {
+                get => _leftImageWidth;
+                set { _leftImageWidth = Math.Clamp(value, 20, 1600); Bump(nameof(LeftImageWidth)); }
+            }
+            public string LeftImageName =>
+                string.IsNullOrWhiteSpace(_leftImage) ? "(no image)" : System.IO.Path.GetFileName(_leftImage);
+
+            public string RightText { get => _rightText; set { _rightText = value; Bump(nameof(RightText)); } }
+            public string RightFont { get => _rightFont; set { _rightFont = value ?? ""; Bump(nameof(RightFont)); } }
+            public int RightSize { get => _rightSize; set { _rightSize = Math.Clamp(value, 8, 200); Bump(nameof(RightSize)); } }
+            public string RightColor
+            {
+                get => _rightColor;
+                set { _rightColor = value; Bump(nameof(RightColor)); Raise(nameof(RightBrush)); }
+            }
+            public Brush RightBrush => TryBrush(_rightColor);
+            public string RightImage
+            {
+                get => _rightImage;
+                set { _rightImage = value ?? ""; Bump(nameof(RightImage)); Raise(nameof(RightImageName)); }
+            }
+            public int RightImageWidth
+            {
+                get => _rightImageWidth;
+                set { _rightImageWidth = Math.Clamp(value, 20, 1600); Bump(nameof(RightImageWidth)); }
+            }
+            public string RightImageName =>
+                string.IsNullOrWhiteSpace(_rightImage) ? "(no image)" : System.IO.Path.GetFileName(_rightImage);
+
+            public int Opacity
+            {
+                get => _opacity;
+                set { _opacity = Math.Clamp(value, 0, 100); Bump(nameof(Opacity)); Raise(nameof(OpacityLabel)); }
+            }
+            public string OpacityLabel => _opacity + "%";
+
             public void SetIndex(int i) { _index = i; Raise(nameof(Title)); Raise(nameof(Url)); }
 
             public static PanelVm From(TextPanel p, Action changed)
@@ -195,6 +301,19 @@ namespace GameTracker.Views
                     _headerFont = p.HeaderFont ?? "",
                     _headerSize = p.HeaderSize,
                     _headerColor = p.HeaderColor ?? "#7cc44a",
+                    _leftText = p.LeftText ?? "",
+                    _leftFont = p.LeftFont ?? "",
+                    _leftSize = p.LeftSize,
+                    _leftColor = p.LeftColor ?? "#e8e0c4",
+                    _leftImage = p.LeftImage ?? "",
+                    _leftImageWidth = Math.Clamp(p.LeftImageWidth, 20, 1600),
+                    _rightText = p.RightText ?? "",
+                    _rightFont = p.RightFont ?? "",
+                    _rightSize = p.RightSize,
+                    _rightColor = p.RightColor ?? "#e8e0c4",
+                    _rightImage = p.RightImage ?? "",
+                    _rightImageWidth = Math.Clamp(p.RightImageWidth, 20, 1600),
+                    _opacity = Math.Clamp(p.Opacity, 0, 100),
                 };
                 foreach (var l in (p.Lines ?? new List<TextPanelLine>()).Take(MaxLines))
                     vm.Lines.Add(LineVm.From(l, changed));
@@ -208,6 +327,11 @@ namespace GameTracker.Views
                 HeaderFont = HeaderFont,
                 HeaderSize = HeaderSize,
                 HeaderColor = HeaderColor,
+                LeftText = LeftText, LeftFont = LeftFont, LeftSize = LeftSize, LeftColor = LeftColor,
+                LeftImage = LeftImage, LeftImageWidth = LeftImageWidth,
+                RightText = RightText, RightFont = RightFont, RightSize = RightSize, RightColor = RightColor,
+                RightImage = RightImage, RightImageWidth = RightImageWidth,
+                Opacity = Opacity,
                 Lines = Lines.Select(l => l.ToModel()).ToList(),
             };
 

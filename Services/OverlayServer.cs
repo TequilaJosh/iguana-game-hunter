@@ -196,6 +196,10 @@ namespace GameTracker.Services
                 {
                     await ServePanel(stream, route, ct);
                 }
+                else if (method == "GET" && route.StartsWith("/pimg/", StringComparison.Ordinal))
+                {
+                    await ServePanelImage(stream, route, ct);
+                }
                 else
                 {
                     await WriteSimple(stream, "404 Not Found", "text/plain", "Not found", ct);
@@ -270,15 +274,49 @@ namespace GameTracker.Services
         // the redeems editor are reachable — the index maps into that saved list.
         private static async Task ServeRedeemImage(NetworkStream stream, string route, CancellationToken ct)
         {
+            string? path = null;
             try
             {
-                if (!int.TryParse(route.Substring(4), out int idx))
+                if (int.TryParse(route.Substring(4), out int idx))
                 {
-                    await WriteSimple(stream, "404 Not Found", "text/plain", "Not found", ct);
-                    return;
+                    var redeems = SettingsService.LoadChatFeatures().Redeems;
+                    if (idx >= 0 && idx < redeems.Count) path = redeems[idx].ImagePath;
                 }
-                var redeems = SettingsService.LoadChatFeatures().Redeems;
-                var path = (idx >= 0 && idx < redeems.Count) ? redeems[idx].ImagePath : null;
+            }
+            catch { }
+            await ServeImageFile(stream, path, ct);
+        }
+
+        // Serve a text-panel side image (/pimg/<panel 1-5>/<left|right>). Only files the
+        // streamer picked in the Text Overlays editor are reachable.
+        private static async Task ServePanelImage(NetworkStream stream, string route, CancellationToken ct)
+        {
+            string? path = null;
+            try
+            {
+                var parts = route.Split('/', StringSplitOptions.RemoveEmptyEntries); // pimg, N, side
+                if (parts.Length >= 3 && int.TryParse(parts[1], out int n) && n is >= 1 and <= 5)
+                {
+                    var panels = SettingsService.LoadTextPanels();
+                    if (n <= panels.Count)
+                    {
+                        var side = parts[2].Split('?')[0];
+                        path = side.Equals("left", StringComparison.OrdinalIgnoreCase)
+                            ? panels[n - 1].LeftImage
+                            : side.Equals("right", StringComparison.OrdinalIgnoreCase)
+                                ? panels[n - 1].RightImage
+                                : null;
+                    }
+                }
+            }
+            catch { }
+            await ServeImageFile(stream, path, ct);
+        }
+
+        private static async Task ServeImageFile(NetworkStream stream, string? path, CancellationToken ct)
+        {
+            try
+            {
                 if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
                 {
                     await WriteSimple(stream, "404 Not Found", "text/plain", "Not found", ct);
@@ -624,6 +662,27 @@ namespace GameTracker.Services
                     size = p.HeaderSize,
                     color = p.HeaderColor ?? "#7cc44a",
                 },
+                left = new
+                {
+                    text = p.LeftText ?? string.Empty,
+                    font = p.LeftFont ?? string.Empty,
+                    size = p.LeftSize,
+                    color = p.LeftColor ?? "#e8e0c4",
+                    img = !string.IsNullOrWhiteSpace(p.LeftImage) && File.Exists(p.LeftImage),
+                    imgw = Math.Clamp(p.LeftImageWidth, 20, 1600),
+                    imgv = ImageVersion(p.LeftImage),
+                },
+                right = new
+                {
+                    text = p.RightText ?? string.Empty,
+                    font = p.RightFont ?? string.Empty,
+                    size = p.RightSize,
+                    color = p.RightColor ?? "#e8e0c4",
+                    img = !string.IsNullOrWhiteSpace(p.RightImage) && File.Exists(p.RightImage),
+                    imgw = Math.Clamp(p.RightImageWidth, 20, 1600),
+                    imgv = ImageVersion(p.RightImage),
+                },
+                opacity = Math.Clamp(p.Opacity, 0, 100),
                 lines = (p.Lines ?? new List<TextPanelLine>()).Take(10).Select(l => new
                 {
                     text = l.Text ?? string.Empty,
@@ -634,6 +693,17 @@ namespace GameTracker.Services
                     speed = l.Speed,
                 }).ToArray(),
             }).ToArray();
+
+        // Cache-busting token so the browser refetches when the picked file changes.
+        private static string ImageVersion(string? path)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(path) || !File.Exists(path)) return "0";
+                return ((uint)(path + File.GetLastWriteTimeUtc(path).Ticks).GetHashCode()).ToString("x");
+            }
+            catch { return "0"; }
+        }
 
         /// <summary>Push the streamer's text panels to all clients (live while typing).</summary>
         public static void PushTextPanels(IEnumerable<TextPanel> panels)

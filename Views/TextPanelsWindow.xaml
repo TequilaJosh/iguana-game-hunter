@@ -156,6 +156,128 @@
                                                  Style="{StaticResource In}" ToolTip="Hex color, e.g. #7cc44a"/>
                                     </Grid>
 
+                                    <!-- Background opacity -->
+                                    <Grid Margin="0,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Background" Style="{StaticResource Lb}"/>
+                                        <Slider Grid.Column="1" Minimum="0" Maximum="100" SmallChange="5"
+                                                Value="{Binding Opacity}" VerticalAlignment="Center"
+                                                Foreground="#7cc44a" ToolTip="Background opacity (100 = solid)"/>
+                                        <TextBlock Grid.Column="2" Text="{Binding OpacityLabel}" Foreground="#a8c488"
+                                                   FontSize="11" VerticalAlignment="Center" Width="38"
+                                                   TextAlignment="Right"/>
+                                    </Grid>
+
+                                    <!-- Side blocks (bordered boxes left/right of the panel; empty = hidden) -->
+                                    <Grid Margin="0,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Left" Style="{StaticResource Lb}" Width="38"/>
+                                        <TextBox Grid.Column="1" Text="{Binding LeftText, UpdateSourceTrigger=PropertyChanged}"
+                                                 Style="{StaticResource In}" Margin="0,0,6,0" AcceptsReturn="True"
+                                                 TextWrapping="Wrap" MinHeight="40" VerticalScrollBarVisibility="Auto"
+                                                 ToolTip="Left side block (leave empty to hide). Enter for new lines."/>
+                                        <ComboBox Grid.Column="2" Width="110" Margin="0,0,6,0" VerticalAlignment="Top"
+                                                  ItemsSource="{Binding Fonts}" SelectedItem="{Binding LeftFont}"/>
+                                        <TextBox Grid.Column="3" Width="40" Text="{Binding LeftSize, UpdateSourceTrigger=PropertyChanged}"
+                                                 Style="{StaticResource In}" Margin="0,0,6,0" VerticalAlignment="Top"
+                                                 ToolTip="Font size (px)"/>
+                                        <Button Grid.Column="4" Tag="{Binding}" Click="PickLeftColor_Click"
+                                                Cursor="Hand" Margin="0,4,4,0" VerticalAlignment="Top" ToolTip="Pick a color">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Width="18" Height="18" CornerRadius="3"
+                                                            Background="{Binding LeftBrush}"
+                                                            BorderBrush="#4a7c3a" BorderThickness="1"/>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+                                        <TextBox Grid.Column="5" Width="62" Text="{Binding LeftColor, UpdateSourceTrigger=PropertyChanged}"
+                                                 Style="{StaticResource In}" VerticalAlignment="Top" ToolTip="Hex color"/>
+                                    </Grid>
+                                    <Grid Margin="44,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Button Grid.Column="0" Content="&#128444; Image" Tag="{Binding}" Click="PickLeftImage_Click"
+                                                Style="{StaticResource Btn}" Margin="0,0,6,0"
+                                                ToolTip="Optional image shown in the left block"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding LeftImageName}" Foreground="#7a9070"
+                                                   FontSize="11" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                                   ToolTip="{Binding LeftImage}"/>
+                                        <TextBlock Grid.Column="2" Text="width" Style="{StaticResource Lb}" Margin="8,0,4,0"/>
+                                        <TextBox Grid.Column="3" Width="48" Text="{Binding LeftImageWidth, UpdateSourceTrigger=PropertyChanged}"
+                                                 Style="{StaticResource In}" Margin="0,0,6,0" ToolTip="Image width in pixels (height keeps aspect)"/>
+                                        <Button Grid.Column="4" Content="&#x2715;" Tag="{Binding}" Click="ClearLeftImage_Click"
+                                                Style="{StaticResource Btn}" ToolTip="Remove image"/>
+                                    </Grid>
+                                    <Grid Margin="0,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Grid.Column="0" Text="Right" Style="{StaticResource Lb}" Width="38"/>
+                                        <TextBox Grid.Column="1" Text="{Binding RightText, UpdateSourceTrigger=PropertyChanged}"
+                                                 Style="{StaticResource In}" Margin="0,0,6,0" AcceptsReturn="True"
+                                                 TextWrapping="Wrap" MinHeight="40" VerticalScrollBarVisibility="Auto"
+                                                 ToolTip="Right side block (leave empty to hide). Enter for new lines."/>
+                                        <ComboBox Grid.Column="2" Width="110" Margin="0,0,6,0" VerticalAlignment="Top"
+                                                  ItemsSource="{Binding Fonts}" SelectedItem="{Binding RightFont}"/>
+                                        <TextBox Grid.Column="3" Width="40" Text="{Binding RightSize, UpdateSourceTrigger=PropertyChanged}"
+                                                 Style="{StaticResource In}" Margin="0,0,6,0" VerticalAlignment="Top"
+                                                 ToolTip="Font size (px)"/>
+                                        <Button Grid.Column="4" Tag="{Binding}" Click="PickRightColor_Click"
+                                                Cursor="Hand" Margin="0,4,4,0" VerticalAlignment="Top" ToolTip="Pick a color">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Width="18" Height="18" CornerRadius="3"
+                                                            Background="{Binding RightBrush}"
+                                                            BorderBrush="#4a7c3a" BorderThickness="1"/>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+                                        <TextBox Grid.Column="5" Width="62" Text="{Binding RightColor, UpdateSourceTrigger=PropertyChanged}"
+                                                 Style="{StaticResource In}" VerticalAlignment="Top" ToolTip="Hex color"/>
+                                    </Grid>
+                                    <Grid Margin="44,0,0,6">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <Button Grid.Column="0" Content="&#128444; Image" Tag="{Binding}" Click="PickRightImage_Click"
+                                                Style="{StaticResource Btn}" Margin="0,0,6,0"
+                                                ToolTip="Optional image shown in the right block"/>
+                                        <TextBlock Grid.Column="1" Text="{Binding RightImageName}" Foreground="#7a9070"
+                                                   FontSize="11" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
+                                                   ToolTip="{Binding RightImage}"/>
+                                        <TextBlock Grid.Column="2" Text="width" Style="{StaticResource Lb}" Margin="8,0,4,0"/>
+                                        <TextBox Grid.Column="3" Width="48" Text="{Binding RightImageWidth, UpdateSourceTrigger=PropertyChanged}"
+                                                 Style="{StaticResource In}" Margin="0,0,6,0" ToolTip="Image width in pixels (height keeps aspect)"/>
+                                        <Button Grid.Column="4" Content="&#x2715;" Tag="{Binding}" Click="ClearRightImage_Click"
+                                                Style="{StaticResource Btn}" ToolTip="Remove image"/>
+                                    </Grid>
+
                                     <Border Background="#2e4a30" Height="1" Margin="0,2,0,8"/>
 
                                     <!-- Lines -->

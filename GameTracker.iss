@@ -7,7 +7,7 @@
 #endif
 #define MyAppPublisher "LazerGuanas"
 #define MyAppExeName "GameTracker.exe"
-#define MyPublishDir "bin\Release\net8.0-windows\win-x64\publish"
+#define MyPublishDir "bin\Release\net8.0-windows10.0.19041.0\win-x64\publish"
 
 [Setup]
 AppId={{8F2A6B33-1E5C-4B6A-9D3F-9F1C5E8A2B40}

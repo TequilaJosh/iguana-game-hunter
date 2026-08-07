@@ -188,6 +188,16 @@ namespace GameTracker
 
         private Views.HelpWindow? _helpWindow;
 
+        private Views.SettingsWindow? _settingsWindow;
+
+        private void Settings_Click(object sender, RoutedEventArgs e)
+        {
+            if (_settingsWindow != null) { _settingsWindow.Activate(); return; }
+            _settingsWindow = new Views.SettingsWindow { Owner = this };
+            _settingsWindow.Closed += (_, _) => _settingsWindow = null;
+            _settingsWindow.Show();
+        }
+
         private void Help_Click(object sender, RoutedEventArgs e)
         {
             if (_helpWindow != null) { _helpWindow.Activate(); return; }

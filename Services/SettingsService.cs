@@ -38,6 +38,8 @@ namespace GameTracker.Services
             public string? OverlayPresets { get; set; } // JSON array of saved layout presets
             public ChatFeatureSettings Features { get; set; } = new(); // counts/chatters/points/style/redeems
             public List<TextPanel> TextPanels { get; set; } = new();   // custom OBS text overlays (max 5)
+            public ThemeSettings Theme { get; set; } = new();          // app colour theme
+            public ChatTtsSettings Tts { get; set; } = new();          // read chat aloud
         }
 
         // Replace initialized collections instead of appending to them — otherwise lists
@@ -186,6 +188,24 @@ namespace GameTracker.Services
         {
             var s = LoadAll();
             s.TextPanels = panels;
+            SaveAll(s);
+        }
+
+        public static ThemeSettings LoadTheme() => LoadAll().Theme ?? new ThemeSettings();
+
+        public static void SaveTheme(ThemeSettings theme)
+        {
+            var s = LoadAll();
+            s.Theme = theme;
+            SaveAll(s);
+        }
+
+        public static ChatTtsSettings LoadTts() => LoadAll().Tts ?? new ChatTtsSettings();
+
+        public static void SaveTts(ChatTtsSettings tts)
+        {
+            var s = LoadAll();
+            s.Tts = tts;
             SaveAll(s);
         }
     }

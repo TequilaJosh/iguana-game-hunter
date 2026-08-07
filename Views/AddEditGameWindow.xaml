@@ -9,7 +9,7 @@
         WindowStartupLocation="CenterOwner"
         WindowStyle="None" ResizeMode="CanResize"
         Icon="/iguana-eye.ico"
-        Background="{StaticResource ScaleBrush}">
+        Background="{DynamicResource ScaleBrush}">
 
     <shell:WindowChrome.WindowChrome>
         <shell:WindowChrome CaptionHeight="32" ResizeBorderThickness="6"
@@ -21,28 +21,28 @@
         <converters:EmptyToVisibilityConverter x:Key="EmptyVisConverter"/>
         <converters:MarkerOffsetConverter x:Key="MarkerOffsetConverter"/>
         <Style x:Key="LabelStyle" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#7cc44a"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeAccent}"/>
             <Setter Property="FontSize" Value="11"/>
             <Setter Property="Margin" Value="0,0,0,4"/>
             <Setter Property="FontWeight" Value="Bold"/>
         </Style>
         <Style x:Key="InputStyle" TargetType="TextBox">
-            <Setter Property="Background" Value="#142016"/>
+            <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/>
             <Setter Property="Foreground" Value="#e8e0c4"/>
-            <Setter Property="BorderBrush" Value="#2e4a30"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="8,6"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="CaretBrush" Value="#7cc44a"/>
             <Style.Triggers>
                 <Trigger Property="IsFocused" Value="True">
-                    <Setter Property="BorderBrush" Value="#7cc44a"/>
+                    <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccent}"/>
                 </Trigger>
             </Style.Triggers>
         </Style>
         <Style x:Key="ActionButton" TargetType="Button">
-            <Setter Property="Background" Value="#4a7c3a"/>
-            <Setter Property="Foreground" Value="#0a1410"/>
+            <Setter Property="Background" Value="{DynamicResource ThemeAccentDeep}"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeBg}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="20,10"/>
             <Setter Property="FontSize" Value="13"/>
@@ -53,12 +53,12 @@
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}" CornerRadius="4"
                                 Padding="{TemplateBinding Padding}"
-                                BorderBrush="#7cc44a" BorderThickness="1">
+                                BorderBrush="{DynamicResource ThemeAccent}" BorderThickness="1">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#7cc44a"/>
+                                <Setter Property="Background" Value="{DynamicResource ThemeAccent}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -67,7 +67,7 @@
         </Style>
         <Style x:Key="SessionButton" TargetType="Button">
             <Setter Property="Background" Value="#3a2a10"/>
-            <Setter Property="Foreground" Value="#d4a437"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeAccent2}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="12,7"/>
             <Setter Property="FontSize" Value="12"/>
@@ -78,7 +78,7 @@
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}" CornerRadius="4"
                                 Padding="{TemplateBinding Padding}"
-                                BorderBrush="#d4a437" BorderThickness="1">
+                                BorderBrush="{DynamicResource ThemeAccent2}" BorderThickness="1">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
@@ -92,7 +92,7 @@
         </Style>
     </Window.Resources>
 
-    <Border BorderBrush="#4a7c3a" BorderThickness="1">
+    <Border BorderBrush="{DynamicResource ThemeAccentDeep}" BorderThickness="1">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="32"/>
@@ -100,8 +100,8 @@
         </Grid.RowDefinitions>
 
         <!-- Custom Title Bar -->
-        <Border Grid.Row="0" Background="#0a1410"
-                BorderBrush="#2e4a30" BorderThickness="0,0,0,1">
+        <Border Grid.Row="0" Background="{DynamicResource ThemeBg}"
+                BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,0,0,1">
             <Grid>
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
@@ -112,7 +112,7 @@
                            Margin="0,0,8,0" VerticalAlignment="Center"
                            RenderOptions.BitmapScalingMode="HighQuality"/>
                     <TextBlock x:Name="TitleBarText" Text="GAME DETAILS"
-                               Foreground="#7cc44a" FontSize="11" FontWeight="Bold"
+                               Foreground="{DynamicResource ThemeAccent}" FontSize="11" FontWeight="Bold"
                                VerticalAlignment="Center"/>
                 </StackPanel>
                 <Button Grid.Column="1" Content="&#x2715;" Click="Close_Click"
@@ -193,10 +193,10 @@
                     </Grid.ColumnDefinitions>
                     <Slider x:Name="RatingSlider" Grid.Column="0"
                             Minimum="0" Maximum="10" TickFrequency="1" IsSnapToTickEnabled="True"
-                            Foreground="#7cc44a" VerticalAlignment="Center"
+                            Foreground="{DynamicResource ThemeAccent}" VerticalAlignment="Center"
                             ValueChanged="RatingSlider_ValueChanged"/>
                     <TextBlock x:Name="RatingLabel" Grid.Column="1"
-                               Foreground="#d4a437" FontSize="16" FontWeight="Bold"
+                               Foreground="{DynamicResource ThemeAccent2}" FontSize="16" FontWeight="Bold"
                                HorizontalAlignment="Center" VerticalAlignment="Center" Text="0"/>
                 </Grid>
 
@@ -215,9 +215,9 @@
                     <TextBlock Text="PLAY SESSIONS" Style="{StaticResource LabelStyle}"
                                VerticalAlignment="Center" Margin="0"/>
                     <Border Grid.Column="1" CornerRadius="10" Padding="9,2"
-                            Background="#1e3a1e" BorderBrush="#4a7c3a" BorderThickness="1">
+                            Background="#1e3a1e" BorderBrush="{DynamicResource ThemeAccentDeep}" BorderThickness="1">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="&#9201; " Foreground="#7cc44a" FontSize="11"
+                            <TextBlock Text="&#9201; " Foreground="{DynamicResource ThemeAccent}" FontSize="11"
                                        VerticalAlignment="Center"/>
                             <TextBlock x:Name="TotalTimeText" Text="0m"
                                        Foreground="#c4e090" FontSize="11" FontWeight="Bold"
@@ -231,12 +231,12 @@
                         Click="ToggleSession_Click" Margin="0,0,0,8"
                         HorizontalAlignment="Stretch" HorizontalContentAlignment="Center"
                         BorderThickness="0" Padding="12,9" FontSize="13" FontWeight="Bold"
-                        Cursor="Hand" Foreground="#0a1410" Background="#4a7c3a">
+                        Cursor="Hand" Foreground="{DynamicResource ThemeBg}" Background="{DynamicResource ThemeAccentDeep}">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
                             <Border Background="{TemplateBinding Background}" CornerRadius="4"
                                     Padding="{TemplateBinding Padding}"
-                                    BorderBrush="#7cc44a" BorderThickness="1">
+                                    BorderBrush="{DynamicResource ThemeAccent}" BorderThickness="1">
                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <ControlTemplate.Triggers>
@@ -272,7 +272,7 @@
                             Style="{StaticResource SessionButton}" Padding="10,5"/>
                 </Grid>
 
-                <Border Background="#142016" BorderBrush="#2e4a30" BorderThickness="1"
+                <Border Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1"
                         CornerRadius="4" MinHeight="40" MaxHeight="200">
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel>
@@ -298,9 +298,9 @@
                                                                Foreground="#c4d4a8" FontSize="12"
                                                                VerticalAlignment="Center"/>
                                                     <Border Grid.Column="1" CornerRadius="8" Padding="7,1"
-                                                            Background="#243a26" Margin="6,0">
+                                                            Background="{DynamicResource ThemeSurface2}" Margin="6,0">
                                                         <TextBlock Text="{Binding DurationDisplay}"
-                                                                   Foreground="#7cc44a" FontSize="11"
+                                                                   Foreground="{DynamicResource ThemeAccent}" FontSize="11"
                                                                    FontWeight="Bold"/>
                                                     </Border>
                                                     <Button Grid.Column="2" Content="&#x2715;"
@@ -325,9 +325,9 @@
                                                 </Grid>
                                                 <Grid Grid.Row="1" Margin="0,5,0,0">
                                                     <TextBox Text="{Binding Note, UpdateSourceTrigger=PropertyChanged}"
-                                                             Background="#0f1812" Foreground="#c4d4a8"
+                                                             Background="{DynamicResource ThemeSurface}" Foreground="#c4d4a8"
                                                              BorderBrush="#1e2a20" BorderThickness="1"
-                                                             CaretBrush="#7cc44a" Padding="6,3" FontSize="11"/>
+                                                             CaretBrush="{DynamicResource ThemeAccent}" Padding="6,3" FontSize="11"/>
                                                     <TextBlock Text="What did you do? (optional note)"
                                                                Foreground="#3e5040" FontSize="11"
                                                                Margin="8,0,0,0" VerticalAlignment="Center"
@@ -346,9 +346,9 @@
                                                                     <ColumnDefinition Width="*"/>
                                                                 </Grid.ColumnDefinitions>
                                                                 <TextBlock Grid.Column="0" Text="&#128204;"
-                                                                           Foreground="#d4a437" FontSize="11"
+                                                                           Foreground="{DynamicResource ThemeAccent2}" FontSize="11"
                                                                            Margin="0,0,6,0"/>
-                                                                <TextBlock Grid.Column="1" Foreground="#7cc44a"
+                                                                <TextBlock Grid.Column="1" Foreground="{DynamicResource ThemeAccent}"
                                                                            FontFamily="Consolas" FontWeight="Bold"
                                                                            FontSize="11" Margin="0,0,8,0"
                                                                            ToolTip="Time into the stream (session)">
@@ -365,7 +365,7 @@
                                                                            VerticalAlignment="Center"
                                                                            Text="{Binding At, StringFormat='h:mm tt'}"/>
                                                                 <TextBlock Grid.Column="3" Text="{Binding TextOrClip}"
-                                                                           Foreground="#d4a437" FontSize="11"
+                                                                           Foreground="{DynamicResource ThemeAccent2}" FontSize="11"
                                                                            TextWrapping="Wrap"/>
                                                             </Grid>
                                                         </DataTemplate>
@@ -412,18 +412,18 @@
                 </Button.Template>
             </Button>
             <Button Grid.Column="2" Content="Cancel" Click="Cancel_Click"
-                    Background="#1c2a1e" Foreground="#7a9070"
+                    Background="{DynamicResource ThemeSurface2}" Foreground="#7a9070"
                     BorderThickness="0" Padding="18,10" FontSize="13" Cursor="Hand">
                 <Button.Template>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}" CornerRadius="4"
                                 Padding="{TemplateBinding Padding}"
-                                BorderBrush="#2e4a30" BorderThickness="1">
+                                BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#243a26"/>
+                                <Setter Property="Background" Value="{DynamicResource ThemeSurface2}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>

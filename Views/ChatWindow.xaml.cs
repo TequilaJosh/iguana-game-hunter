@@ -28,9 +28,14 @@ namespace GameTracker.Views
         private bool _pinned;
         private bool _collapsed;
         private bool _chatDirty;
-        private bool _ready;
 
         private readonly SoundService _sound = new();
+        private readonly TtsService _tts = new();
+        private readonly ChatterVoiceService _voices = new();
+        private ChatTtsSettings _ttsSettings = new();
+
+        /// <summary>The live chat window, if open — lets Settings push changes to it.</summary>
+        public static ChatWindow? Current { get; private set; }
 
         private const string AllChats = "All chats";
         private readonly ObservableCollection<string> _sendTargets = new() { AllChats };
@@ -59,16 +64,16 @@ namespace GameTracker.Views
             // Discover send targets from the platforms flowing through SSN.
             _ssn.MessageReceived += m => Dispatcher.Invoke(() => AddSendTarget(m.Platform));
 
+            Current = this;
+
             // Restore saved connection details (the SSN session ID is persistent).
             var saved = SettingsService.LoadChat();
             TwitchBox.Text = saved.TwitchChannel;
             SsnBox.Text = saved.SsnSession;
             RestreamBox.Text = saved.RestreamToken;
-            AutoConnectCheck.IsChecked = saved.AutoConnect;
 
-            var op = saved.Opacity is >= 0.25 and <= 1.0 ? saved.Opacity : 1.0;
-            OpacitySlider.Value = op;
-            Opacity = op;
+            // Window transparency (set in Settings) applies to this window.
+            Opacity = saved.Opacity is >= 0.25 and <= 1.0 ? saved.Opacity : 1.0;
 
             // Send-target picker: "All chats" + platforms seen via SSN. Always starts on
             // All chats so a leftover platform pick can't surprise the streamer later.
@@ -77,6 +82,9 @@ namespace GameTracker.Views
 
             _sound.SetAlerts(SettingsService.LoadSoundAlerts());
             UpdateMuteButton();
+
+            _ttsSettings = SettingsService.LoadTts();
+            _voices.SetProfiles(TtsService.BuildProfiles());
 
             // Chat features: counts, chatters list, points, style, redeems.
             _features = SettingsService.LoadChatFeatures();
@@ -94,13 +102,7 @@ namespace GameTracker.Views
             };
             _chattersTimer.Start();
 
-            // OBS overlay server: show the current port + URL + chat-line count.
-            PortBox.Text = SettingsService.LoadOverlayPort().ToString();
             _overlayLines = SettingsService.LoadOverlayChatLines();
-            ChatLinesBox.Text = _overlayLines.ToString();
-            UpdateOverlayStatus();
-
-            _ready = true;
 
             // Refresh the OBS chat.html a few times a second when there's new chat.
             _overlayTimer = new DispatcherTimer { Interval = TimeSpan.FromMilliseconds(700) };
@@ -142,6 +144,7 @@ namespace GameTracker.Views
                 _chattersSvc.OnMessage(m);
                 _chattersDirty = true;
 
+                SpeakMessage(m);
                 HandleCommands(m);
 
                 if (atBottom) MsgScroll.ScrollToEnd();
@@ -209,17 +212,10 @@ namespace GameTracker.Views
             return custom.Length > 1 && string.Equals(cmd, custom, StringComparison.OrdinalIgnoreCase);
         }
 
-        private void SoundAlerts_Click(object sender, RoutedEventArgs e)
-        {
-            var win = new SoundAlertsWindow { Owner = this };
-            if (win.ShowDialog() == true)
-                _sound.SetAlerts(SettingsService.LoadSoundAlerts());
-        }
-
         private void Mute_Click(object sender, RoutedEventArgs e)
         {
             _sound.Muted = !_sound.Muted;
-            if (_sound.Muted) _sound.StopAll();   // panic: kill anything currently playing
+            if (_sound.Muted) { _sound.StopAll(); _tts.StopAll(); }   // panic: kill alerts + TTS
             UpdateMuteButton();
         }
 
@@ -234,74 +230,54 @@ namespace GameTracker.Views
                 : "Stop sound alerts (panic): kill the current alert and mute incoming";
         }
 
-        // ---- OBS overlay server controls ----
+        // ---- live updates pushed from the Settings window ----
 
-        private string OverlayUrl => $"http://localhost:{OverlayServer.Port}/";
-
-        private void ApplyPort_Click(object sender, RoutedEventArgs e)
+        /// <summary>Re-read chat features (counts/points/style/redeems) after they're edited elsewhere.</summary>
+        public void ReloadFeatures()
         {
-            if (!int.TryParse(PortBox.Text.Trim(), out int port) || port is < 1 or > 65535)
-            {
-                OverlayStatus.Text = "Enter a port between 1 and 65535 (default 3620).";
-                OverlayStatus.Foreground = new SolidColorBrush(Color.FromRgb(0xd4, 0xa4, 0x37));
-                return;
-            }
-
-            SettingsService.SaveOverlayPort(port);
-            OverlayServer.Restart();
-            PortBox.Text = OverlayServer.Port.ToString();
-            UpdateOverlayStatus();
+            _features = SettingsService.LoadChatFeatures();
+            ApplyChatTemplate();
+            OverlayServer.SetStyle(_features.ChatStyle, _features.BoxColors);
+            UpdateChattersUi();
         }
 
-        private void CopyUrl_Click(object sender, RoutedEventArgs e)
+        /// <summary>Re-read sound-alert bindings after they're edited elsewhere.</summary>
+        public void ReloadSoundAlerts() => _sound.SetAlerts(SettingsService.LoadSoundAlerts());
+
+        /// <summary>Re-read text-to-speech settings after they're changed in Settings.</summary>
+        public void ReloadTts()
         {
-            try { Clipboard.SetText(OverlayUrl); OverlayStatus.Text = "Copied: " + OverlayUrl; }
-            catch { /* clipboard can be momentarily locked by another app */ }
+            _ttsSettings = SettingsService.LoadTts();
+            _voices.SetProfiles(TtsService.BuildProfiles());
+            if (!_ttsSettings.Enabled) _tts.StopAll();
         }
 
-        private void EditLayout_Click(object sender, RoutedEventArgs e)
+        // Read an incoming message aloud, honoring the TTS options.
+        private void SpeakMessage(ChatMessage m)
         {
-            if (!OverlayServer.IsRunning)
-            {
-                OverlayStatus.Text = "Overlay server isn't running — can't open the editor.";
-                OverlayStatus.Foreground = new SolidColorBrush(Color.FromRgb(0xd4, 0x5a, 0x37));
-                return;
-            }
-            var url = OverlayUrl + "?edit=1";
-            try
-            {
-                Process.Start(new ProcessStartInfo(url) { UseShellExecute = true });
-                OverlayStatus.Text = "Opened the layout editor in your browser. Drag/resize blocks, set fonts — it saves automatically.";
-                OverlayStatus.Foreground = new SolidColorBrush(Color.FromRgb(0x7a, 0x90, 0x70));
-            }
-            catch { OverlayStatus.Text = "Couldn't open a browser. Go to " + url + " manually."; }
+            if (!_ttsSettings.Enabled || _sound.Muted) return;   // panic mute also silences TTS
+            var text = (m.Text ?? string.Empty).Trim();
+            if (text.Length == 0) return;
+            if (_ttsSettings.SkipCommands && text.StartsWith("!", StringComparison.Ordinal)) return;
+            if (_ttsSettings.MaxChars > 0 && text.Length > _ttsSettings.MaxChars)
+                text = text[.._ttsSettings.MaxChars];
+            var spoken = _ttsSettings.ReadName && !string.IsNullOrWhiteSpace(m.User)
+                ? $"{m.User} says: {text}"
+                : text;
+
+            string voice; int pitch;
+            if (_ttsSettings.PerChatterVoices)
+                (voice, pitch) = _voices.For(m.Platform, m.User);   // same person → same voice, saved
+            else { voice = _ttsSettings.Voice; pitch = _ttsSettings.Pitch; }
+
+            _tts.Speak(spoken, voice, pitch, _ttsSettings.Rate, _ttsSettings.Volume);
         }
 
-        private void ChatLines_Changed(object sender, RoutedEventArgs e)
-        {
-            if (!_ready) return;
-            if (!int.TryParse(ChatLinesBox.Text.Trim(), out int n)) return;
-            n = Math.Clamp(n, 5, 100);
-            _overlayLines = n;
-            SettingsService.SaveOverlayChatLines(n);
-            OverlayStatus.Text = $"Chat set to {n} lines — refresh the OBS source to apply.";
-            OverlayStatus.Foreground = new SolidColorBrush(Color.FromRgb(0x7a, 0x90, 0x70));
-        }
+        /// <summary>Re-read the overlay chat-line count after it's changed in Settings.</summary>
+        public void ReloadOverlayLines() => _overlayLines = SettingsService.LoadOverlayChatLines();
 
-        private void UpdateOverlayStatus()
-        {
-            if (OverlayServer.IsRunning)
-            {
-                OverlayStatus.Text = $"Serving at {OverlayUrl} — use this as the OBS Browser source URL.";
-                OverlayStatus.Foreground = new SolidColorBrush(Color.FromRgb(0x7a, 0x90, 0x70));
-            }
-            else
-            {
-                OverlayStatus.Text = "Overlay server is not running" +
-                    (string.IsNullOrEmpty(OverlayServer.LastError) ? "." : $": {OverlayServer.LastError}. Try another port.");
-                OverlayStatus.Foreground = new SolidColorBrush(Color.FromRgb(0xd4, 0x5a, 0x37));
-            }
-        }
+        /// <summary>Apply live window transparency from the Settings slider.</summary>
+        public void ApplyChatOpacity(double value) => Opacity = Math.Clamp(value, 0.25, 1.0);
 
         private int _zebra;
         private static readonly Brush ZebraNone = Brushes.Transparent;
@@ -422,27 +398,6 @@ namespace GameTracker.Views
             }).ToArray(),
         };
 
-        private void Features_Click(object sender, RoutedEventArgs e)
-        {
-            var win = new ChatFeaturesWindow { Owner = this };
-            if (win.ShowDialog() != true) return;
-
-            _features = SettingsService.LoadChatFeatures();
-            ApplyChatTemplate();
-            OverlayServer.SetStyle(_features.ChatStyle, _features.BoxColors);
-            UpdateChattersUi();
-        }
-
-        private TextPanelsWindow? _textPanelsWindow;
-
-        private void TextPanels_Click(object sender, RoutedEventArgs e)
-        {
-            if (_textPanelsWindow != null) { _textPanelsWindow.Activate(); return; }
-            _textPanelsWindow = new TextPanelsWindow { Owner = this };
-            _textPanelsWindow.Closed += (_, _) => _textPanelsWindow = null;
-            _textPanelsWindow.Show();
-        }
-
         private void Chatters_Click(object sender, RoutedEventArgs e)
         {
             if (_chattersWindow != null) { _chattersWindow.Activate(); return; }
@@ -471,16 +426,15 @@ namespace GameTracker.Views
             return new ImageBrush(bmp) { Stretch = Stretch.UniformToFill };
         }
 
-        private void SaveChat() => SettingsService.SaveChat(new ChatSettings
+        // Persist connection fields, preserving auto-connect/opacity (now owned by Settings).
+        private void SaveChat()
         {
-            TwitchChannel = TwitchBox.Text.Trim(),
-            SsnSession = SsnBox.Text.Trim(),
-            RestreamToken = RestreamBox.Text.Trim(),
-            AutoConnect = AutoConnectCheck.IsChecked == true,
-            Opacity = OpacitySlider.Value,
-        });
-
-        private void AutoConnect_Changed(object sender, RoutedEventArgs e) => SaveChat();
+            var s = SettingsService.LoadChat();
+            s.TwitchChannel = TwitchBox.Text.Trim();
+            s.SsnSession = SsnBox.Text.Trim();
+            s.RestreamToken = RestreamBox.Text.Trim();
+            SettingsService.SaveChat(s);
+        }
 
         private void SsnGuide_Click(object sender, RoutedEventArgs e) =>
             new SsnGuideWindow { Owner = this }.ShowDialog();
@@ -560,12 +514,6 @@ namespace GameTracker.Views
             finally { SendBtn.IsEnabled = true; }
         }
 
-        private void Opacity_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
-        {
-            Opacity = e.NewValue;
-            if (_ready) SaveChat();
-        }
-
         /// <summary>Connect every source that has a saved value and isn't already connected.</summary>
         public void ConnectSaved()
         {
@@ -617,11 +565,13 @@ namespace GameTracker.Views
 
         protected override void OnClosed(EventArgs e)
         {
+            if (ReferenceEquals(Current, this)) Current = null;
             SaveChat();
             _chattersTimer?.Stop();
             PointsService.Save();
             _overlayTimer.Stop();
             OverlayService.ClearChatHtml();
+            _tts.Dispose();
             _twitch.Dispose();
             _ssn.Dispose();
             _restream.Dispose();

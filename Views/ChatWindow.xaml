@@ -10,7 +10,7 @@
         WindowStyle="None" ResizeMode="CanResize"
         AllowsTransparency="True"
         Icon="/iguana-eye.ico"
-        Background="{StaticResource ScaleBrush}">
+        Background="{DynamicResource ScaleBrush}">
 
     <shell:WindowChrome.WindowChrome>
         <shell:WindowChrome CaptionHeight="32" ResizeBorderThickness="6"
@@ -20,8 +20,8 @@
 
     <Window.Resources>
         <Style x:Key="ConnectBtn" TargetType="Button">
-            <Setter Property="Background" Value="#243a26"/>
-            <Setter Property="Foreground" Value="#7cc44a"/>
+            <Setter Property="Background" Value="{DynamicResource ThemeSurface2}"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeAccent}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="12,5"/>
             <Setter Property="FontSize" Value="12"/>
@@ -32,13 +32,13 @@
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}" CornerRadius="3"
                                 Padding="{TemplateBinding Padding}"
-                                BorderBrush="#4a7c3a" BorderThickness="1">
+                                BorderBrush="{DynamicResource ThemeAccentDeep}" BorderThickness="1">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#4a7c3a"/>
-                                <Setter Property="Foreground" Value="#0a1410"/>
+                                <Setter Property="Background" Value="{DynamicResource ThemeAccentDeep}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource ThemeBg}"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Opacity" Value="0.45"/>
@@ -49,9 +49,9 @@
             </Setter>
         </Style>
         <Style x:Key="ChanBox" TargetType="TextBox">
-            <Setter Property="Background" Value="#142016"/>
+            <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/>
             <Setter Property="Foreground" Value="#e8e0c4"/>
-            <Setter Property="BorderBrush" Value="#2e4a30"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CaretBrush" Value="#7cc44a"/>
             <Setter Property="Padding" Value="6,4"/>
@@ -60,7 +60,7 @@
         </Style>
     </Window.Resources>
 
-    <Border BorderBrush="#4a7c3a" BorderThickness="1">
+    <Border BorderBrush="{DynamicResource ThemeAccentDeep}" BorderThickness="1">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="32"/>
@@ -71,8 +71,8 @@
             </Grid.RowDefinitions>
 
             <!-- Title bar -->
-            <Border Grid.Row="0" Background="#0a1410"
-                    BorderBrush="#2e4a30" BorderThickness="0,0,0,1">
+            <Border Grid.Row="0" Background="{DynamicResource ThemeBg}"
+                    BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,0,0,1">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -81,7 +81,7 @@
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
                         <Image Source="/iguana-eye.ico" Width="16" Height="16" Margin="0,0,8,0"
                                VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
-                        <TextBlock Text="LIVE CHAT" Foreground="#7cc44a" FontSize="11"
+                        <TextBlock Text="LIVE CHAT" Foreground="{DynamicResource ThemeAccent}" FontSize="11"
                                    FontWeight="Bold" VerticalAlignment="Center"/>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal"
@@ -101,8 +101,8 @@
             </Border>
 
             <!-- Connect panel -->
-            <Border x:Name="ConnectPanel" Grid.Row="1" Background="#0f1812" Padding="10"
-                    BorderBrush="#2e4a30" BorderThickness="0,0,0,1">
+            <Border x:Name="ConnectPanel" Grid.Row="1" Background="{DynamicResource ThemeSurface}" Padding="10"
+                    BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,0,0,1">
                 <StackPanel>
                     <!-- Twitch (direct, no login) -->
                     <Grid Margin="0,0,0,9">
@@ -139,9 +139,9 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
                         </Grid.RowDefinitions>
-                        <Border Grid.Row="0" Grid.Column="0" Background="#4a7c3a" CornerRadius="3"
+                        <Border Grid.Row="0" Grid.Column="0" Background="{DynamicResource ThemeAccentDeep}" CornerRadius="3"
                                 Padding="5,3" HorizontalAlignment="Left" VerticalAlignment="Center" Margin="0,0,8,0">
-                            <TextBlock Text="SSN" Foreground="#0a1410" FontSize="11" FontWeight="Bold"/>
+                            <TextBlock Text="SSN" Foreground="{DynamicResource ThemeBg}" FontSize="11" FontWeight="Bold"/>
                         </Border>
                         <TextBox x:Name="SsnBox" Grid.Row="0" Grid.Column="1" Style="{StaticResource ChanBox}"
                                  Margin="0,0,6,0" ToolTip="Social Stream Ninja session ID (from your dock URL)"/>
@@ -153,7 +153,7 @@
                                    TextTrimming="CharacterEllipsis"/>
                     </Grid>
                     <TextBlock Margin="42,-3,0,9" FontSize="11" TextWrapping="Wrap">
-                        <Hyperlink Foreground="#7cc44a" TextDecorations="Underline" Click="SsnGuide_Click">
+                        <Hyperlink Foreground="{DynamicResource ThemeAccent}" TextDecorations="Underline" Click="SsnGuide_Click">
                             SSN not showing chat? Setup guide
                         </Hyperlink>
                     </TextBlock>
@@ -184,93 +184,25 @@
                     </Grid>
 
                     <!-- Tools -->
-                    <Border Background="#2e4a30" Height="1" Margin="0,11,0,9"/>
-                    <CheckBox x:Name="AutoConnectCheck" Content="Auto-connect when a game session starts"
-                              Foreground="#a8c488" FontSize="11" Margin="0,0,0,9" Click="AutoConnect_Changed"
-                              ToolTip="When you Start a game, automatically connect the saved sources above"/>
-                    <Grid Margin="0,0,0,9">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Text="Transparency" Foreground="#a8c488" FontSize="11"
-                                   VerticalAlignment="Center" Margin="0,0,10,0"/>
-                        <Slider x:Name="OpacitySlider" Grid.Column="1" Minimum="0.25" Maximum="1.0"
-                                Value="1.0" VerticalAlignment="Center" Foreground="#7cc44a"
-                                ValueChanged="Opacity_Changed"
-                                ToolTip="Make the chat window see-through (for overlaying on your screen)"/>
-                    </Grid>
+                    <Border Background="{DynamicResource ThemeBorder}" Height="1" Margin="0,11,0,9"/>
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" VerticalAlignment="Center" Foreground="#7a9070" FontSize="11"
-                                   TextWrapping="Wrap" Text="Viewers can type !request &lt;game&gt; to add it to Dormant."/>
-                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
-                            <Button Content="&#128101; Chatters" Click="Chatters_Click"
-                                    Style="{StaticResource ConnectBtn}" Margin="8,0,0,0"
-                                    ToolTip="Who's in the room: green = active, yellow = lurking"/>
-                            <Button Content="&#9881; Features" Click="Features_Click"
-                                    Style="{StaticResource ConnectBtn}" Margin="6,0,0,0"
-                                    ToolTip="Chatter counts, points, chat style, and point redeems"/>
-                            <Button Content="&#128266; Sound Alerts" Click="SoundAlerts_Click"
-                                    Style="{StaticResource ConnectBtn}" Margin="6,0,0,0"
-                                    ToolTip="Set up chat commands that play your own sound files"/>
-                        </StackPanel>
+                                   TextWrapping="Wrap"
+                                   Text="Viewers can type !request &lt;game&gt; to add it to Dormant. Overlay, sound alerts, points &amp; theme are in Settings (⚙)."/>
+                        <Button Grid.Column="1" Content="&#128101; Chatters" Click="Chatters_Click"
+                                Style="{StaticResource ConnectBtn}" VerticalAlignment="Center" Margin="8,0,0,0"
+                                ToolTip="Who's in the room: green = active, yellow = lurking"/>
                     </Grid>
-
-                    <!-- OBS overlay (live WebSocket panel) -->
-                    <Border Background="#2e4a30" Height="1" Margin="0,11,0,9"/>
-                    <Grid Margin="0,0,0,4">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="62"/>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="Auto"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="OBS overlay port" Foreground="#a8c488" FontSize="11"
-                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <TextBox x:Name="PortBox" Grid.Column="1" Style="{StaticResource ChanBox}"
-                                 MaxLength="5" ToolTip="Port for the live overlay server (default 3620)"/>
-                        <Button x:Name="PortApplyBtn" Grid.Column="2" Content="Apply" Click="ApplyPort_Click"
-                                Style="{StaticResource ConnectBtn}" Margin="6,0,0,0"
-                                ToolTip="Restart the overlay server on this port"/>
-                        <Button x:Name="CopyUrlBtn" Grid.Column="3" Content="Copy URL" Click="CopyUrl_Click"
-                                Style="{StaticResource ConnectBtn}" Margin="6,0,0,0"
-                                ToolTip="Copy the Browser-source URL to the clipboard"/>
-                    </Grid>
-                    <Grid Margin="0,0,0,4">
-                        <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="Auto"/>
-                            <ColumnDefinition Width="62"/>
-                            <ColumnDefinition Width="*"/>
-                        </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" Text="Chat lines" Foreground="#a8c488" FontSize="11"
-                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <TextBox x:Name="ChatLinesBox" Grid.Column="1" Style="{StaticResource ChanBox}"
-                                 MaxLength="3" LostFocus="ChatLines_Changed"
-                                 ToolTip="How many chat lines the overlay shows (5–100, default 20)"/>
-                        <TextBlock Grid.Column="2" Text="(refresh OBS source to apply)" Foreground="#506050"
-                                   FontSize="10" VerticalAlignment="Center" Margin="8,0,0,0"/>
-                    </Grid>
-                    <StackPanel Orientation="Horizontal" Margin="0,2,0,6">
-                        <Button x:Name="EditLayoutBtn" Content="&#127912; Edit overlay layout" Click="EditLayout_Click"
-                                Style="{StaticResource ConnectBtn}"
-                                ToolTip="Open the overlay in your browser to drag/resize the blocks and set fonts"/>
-                        <Button x:Name="TextPanelsBtn" Content="&#128221; Text overlays" Click="TextPanels_Click"
-                                Style="{StaticResource ConnectBtn}" Margin="6,0,0,0"
-                                ToolTip="Up to 5 custom text panels for OBS: styled header, divider, and scrolling lines"/>
-                    </StackPanel>
-                    <TextBlock x:Name="OverlayStatus" Foreground="#7a9070" FontSize="11"
-                               TextWrapping="Wrap"
-                               Text="Add an OBS Browser source with this URL (not Local file)."/>
                 </StackPanel>
             </Border>
 
             <!-- Chatter count bar -->
-            <Border x:Name="CountBar" Grid.Row="2" Background="#0f1812"
-                    BorderBrush="#2e4a30" BorderThickness="0,0,0,1" Padding="10,4"
+            <Border x:Name="CountBar" Grid.Row="2" Background="{DynamicResource ThemeSurface}"
+                    BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,0,0,1" Padding="10,4"
                     Visibility="Collapsed">
                 <TextBlock x:Name="CountText" FontSize="12" Foreground="#a8c488"/>
             </Border>
@@ -288,7 +220,7 @@
                                     </Grid.ColumnDefinitions>
                                     <Border Grid.Column="0" Width="22" Height="22" CornerRadius="11"
                                             Background="{Binding AvatarBrush}" VerticalAlignment="Top" Margin="0,0,7,0">
-                                        <TextBlock Text="{Binding Initial}" Foreground="#0a1410" FontSize="11"
+                                        <TextBlock Text="{Binding Initial}" Foreground="{DynamicResource ThemeBg}" FontSize="11"
                                                    FontWeight="Bold" HorizontalAlignment="Center"
                                                    VerticalAlignment="Center"/>
                                     </Border>
@@ -303,7 +235,7 @@
                                     <StackPanel Orientation="Horizontal" Margin="7,3,7,2">
                                         <Border Width="18" Height="18" CornerRadius="9"
                                                 Background="{Binding AvatarBrush}" Margin="0,0,6,0">
-                                            <TextBlock Text="{Binding Initial}" Foreground="#0a1410" FontSize="9"
+                                            <TextBlock Text="{Binding Initial}" Foreground="{DynamicResource ThemeBg}" FontSize="9"
                                                        FontWeight="Bold" HorizontalAlignment="Center"
                                                        VerticalAlignment="Center"/>
                                         </Border>
@@ -322,7 +254,7 @@
             </ScrollViewer>
 
             <!-- Send bar (two-way chat via Social Stream Ninja) -->
-            <Border Grid.Row="4" Background="#0f1812" BorderBrush="#2e4a30"
+            <Border Grid.Row="4" Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource ThemeBorder}"
                     BorderThickness="0,1,0,0" Padding="8,6">
                 <Grid>
                     <Grid.ColumnDefinitions>

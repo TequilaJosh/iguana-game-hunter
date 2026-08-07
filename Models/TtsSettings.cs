@@ -1,0 +1,16 @@
+namespace GameTracker.Models
+{
+    /// <summary>Text-to-speech options for reading incoming chat aloud.</summary>
+    public class ChatTtsSettings
+    {
+        public bool Enabled { get; set; } = false;
+        public bool PerChatterVoices { get; set; } = true;   // each chatter gets their own saved voice
+        public string Voice { get; set; } = string.Empty;    // single-voice mode: base voice name
+        public int Pitch { get; set; } = 0;                  // single-voice mode: pitch step (-2..2)
+        public int Rate { get; set; } = 0;                   // -10 (slow) .. 10 (fast)
+        public int Volume { get; set; } = 100;               // 0..100
+        public bool ReadName { get; set; } = true;           // "Name says: ..." vs message only
+        public bool SkipCommands { get; set; } = true;       // don't read messages starting with "!"
+        public int MaxChars { get; set; } = 200;             // truncate long messages
+    }
+}

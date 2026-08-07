@@ -8,7 +8,7 @@
         WindowStartupLocation="CenterOwner"
         WindowStyle="None" ResizeMode="CanResize"
         Icon="/iguana-eye.ico"
-        Background="{StaticResource ScaleBrush}">
+        Background="{DynamicResource ScaleBrush}">
 
     <shell:WindowChrome.WindowChrome>
         <shell:WindowChrome CaptionHeight="32" ResizeBorderThickness="6"
@@ -18,8 +18,8 @@
 
     <Window.Resources>
         <Style x:Key="Btn" TargetType="Button">
-            <Setter Property="Background" Value="#243a26"/>
-            <Setter Property="Foreground" Value="#7cc44a"/>
+            <Setter Property="Background" Value="{DynamicResource ThemeSurface2}"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeAccent}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="9,4"/>
             <Setter Property="FontSize" Value="12"/>
@@ -29,13 +29,13 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}" CornerRadius="3"
-                                Padding="{TemplateBinding Padding}" BorderBrush="#4a7c3a" BorderThickness="1">
+                                Padding="{TemplateBinding Padding}" BorderBrush="{DynamicResource ThemeAccentDeep}" BorderThickness="1">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#4a7c3a"/>
-                                <Setter Property="Foreground" Value="#0a1410"/>
+                                <Setter Property="Background" Value="{DynamicResource ThemeAccentDeep}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource ThemeBg}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -43,9 +43,9 @@
             </Setter>
         </Style>
         <Style x:Key="In" TargetType="TextBox">
-            <Setter Property="Background" Value="#142016"/>
+            <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/>
             <Setter Property="Foreground" Value="#e8e0c4"/>
-            <Setter Property="BorderBrush" Value="#2e4a30"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CaretBrush" Value="#7cc44a"/>
             <Setter Property="Padding" Value="5,3"/>
@@ -60,7 +60,7 @@
         </Style>
     </Window.Resources>
 
-    <Border BorderBrush="#4a7c3a" BorderThickness="1">
+    <Border BorderBrush="{DynamicResource ThemeAccentDeep}" BorderThickness="1">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="32"/>
@@ -69,7 +69,7 @@
             </Grid.RowDefinitions>
 
             <!-- Title bar -->
-            <Border Grid.Row="0" Background="#0a1410" BorderBrush="#2e4a30" BorderThickness="0,0,0,1">
+            <Border Grid.Row="0" Background="{DynamicResource ThemeBg}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,0,0,1">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -78,7 +78,7 @@
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
                         <Image Source="/iguana-eye.ico" Width="16" Height="16" Margin="0,0,8,0"
                                VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
-                        <TextBlock Text="TEXT OVERLAYS" Foreground="#7cc44a" FontSize="11"
+                        <TextBlock Text="TEXT OVERLAYS" Foreground="{DynamicResource ThemeAccent}" FontSize="11"
                                    FontWeight="Bold" VerticalAlignment="Center"/>
                     </StackPanel>
                     <Button Grid.Column="1" Content="&#x2715;" Click="Close_Click"
@@ -103,7 +103,7 @@
                 <ItemsControl x:Name="PanelList">
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Background="#0f1812" BorderBrush="#2e4a30" BorderThickness="1"
+                            <Border Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1"
                                     CornerRadius="6" Padding="10" Margin="0,0,0,10">
                                 <StackPanel>
                                     <!-- Panel title row: URL + copy + remove -->
@@ -114,7 +114,7 @@
                                             <ColumnDefinition Width="Auto"/>
                                             <ColumnDefinition Width="Auto"/>
                                         </Grid.ColumnDefinitions>
-                                        <TextBlock Grid.Column="0" Text="{Binding Title}" Foreground="#d4a437"
+                                        <TextBlock Grid.Column="0" Text="{Binding Title}" Foreground="{DynamicResource ThemeAccent2}"
                                                    FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
                                         <TextBlock Grid.Column="1" Text="{Binding Url}" Foreground="#7a9070"
                                                    FontSize="11" VerticalAlignment="Center" Margin="10,0,0,0"
@@ -148,7 +148,7 @@
                                                 <ControlTemplate TargetType="Button">
                                                     <Border Width="18" Height="18" CornerRadius="3"
                                                             Background="{Binding HeaderBrush}"
-                                                            BorderBrush="#4a7c3a" BorderThickness="1"/>
+                                                            BorderBrush="{DynamicResource ThemeAccentDeep}" BorderThickness="1"/>
                                                 </ControlTemplate>
                                             </Button.Template>
                                         </Button>
@@ -166,7 +166,7 @@
                                         <TextBlock Grid.Column="0" Text="Background" Style="{StaticResource Lb}"/>
                                         <Slider Grid.Column="1" Minimum="0" Maximum="100" SmallChange="5"
                                                 Value="{Binding Opacity}" VerticalAlignment="Center"
-                                                Foreground="#7cc44a" ToolTip="Background opacity (100 = solid)"/>
+                                                Foreground="{DynamicResource ThemeAccent}" ToolTip="Background opacity (100 = solid)"/>
                                         <TextBlock Grid.Column="2" Text="{Binding OpacityLabel}" Foreground="#a8c488"
                                                    FontSize="11" VerticalAlignment="Center" Width="38"
                                                    TextAlignment="Right"/>
@@ -198,7 +198,7 @@
                                                 <ControlTemplate TargetType="Button">
                                                     <Border Width="18" Height="18" CornerRadius="3"
                                                             Background="{Binding LeftBrush}"
-                                                            BorderBrush="#4a7c3a" BorderThickness="1"/>
+                                                            BorderBrush="{DynamicResource ThemeAccentDeep}" BorderThickness="1"/>
                                                 </ControlTemplate>
                                             </Button.Template>
                                         </Button>
@@ -236,7 +236,7 @@
                                                   FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"
                                                   ToolTip="Scroll the block (up if Vertical, sideways if Horizontal)"/>
                                         <Slider Width="90" Minimum="20" Maximum="300" Value="{Binding LeftSpeed}"
-                                                VerticalAlignment="Center" Foreground="#7cc44a"
+                                                VerticalAlignment="Center" Foreground="{DynamicResource ThemeAccent}"
                                                 IsEnabled="{Binding LeftScroll}" ToolTip="Scroll speed (pixels per second)"/>
                                     </StackPanel>
                                     <Grid Margin="0,0,0,6">
@@ -264,7 +264,7 @@
                                                 <ControlTemplate TargetType="Button">
                                                     <Border Width="18" Height="18" CornerRadius="3"
                                                             Background="{Binding RightBrush}"
-                                                            BorderBrush="#4a7c3a" BorderThickness="1"/>
+                                                            BorderBrush="{DynamicResource ThemeAccentDeep}" BorderThickness="1"/>
                                                 </ControlTemplate>
                                             </Button.Template>
                                         </Button>
@@ -302,11 +302,11 @@
                                                   FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"
                                                   ToolTip="Scroll the block (up if Vertical, sideways if Horizontal)"/>
                                         <Slider Width="90" Minimum="20" Maximum="300" Value="{Binding RightSpeed}"
-                                                VerticalAlignment="Center" Foreground="#7cc44a"
+                                                VerticalAlignment="Center" Foreground="{DynamicResource ThemeAccent}"
                                                 IsEnabled="{Binding RightScroll}" ToolTip="Scroll speed (pixels per second)"/>
                                     </StackPanel>
 
-                                    <Border Background="#2e4a30" Height="1" Margin="0,2,0,8"/>
+                                    <Border Background="{DynamicResource ThemeBorder}" Height="1" Margin="0,2,0,8"/>
 
                                     <!-- Lines -->
                                     <ItemsControl ItemsSource="{Binding Lines}">
@@ -336,7 +336,7 @@
                                                             <ControlTemplate TargetType="Button">
                                                                 <Border Width="18" Height="18" CornerRadius="3"
                                                                         Background="{Binding ColorBrush}"
-                                                                        BorderBrush="#4a7c3a" BorderThickness="1"/>
+                                                                        BorderBrush="{DynamicResource ThemeAccentDeep}" BorderThickness="1"/>
                                                             </ControlTemplate>
                                                         </Button.Template>
                                                     </Button>
@@ -347,7 +347,7 @@
                                                               Margin="0,0,4,0" ToolTip="Marquee-scroll this line"/>
                                                     <Slider Grid.Column="6" Width="70" Minimum="20" Maximum="300"
                                                             Value="{Binding Speed}" VerticalAlignment="Center"
-                                                            Foreground="#7cc44a" Margin="0,0,6,0"
+                                                            Foreground="{DynamicResource ThemeAccent}" Margin="0,0,6,0"
                                                             IsEnabled="{Binding Scroll}" ToolTip="Scroll speed (pixels per second)"/>
                                                     <Button Grid.Column="7" Content="&#x2715;" Tag="{Binding}" Click="RemoveLine_Click"
                                                             Style="{StaticResource Btn}" ToolTip="Remove line"/>

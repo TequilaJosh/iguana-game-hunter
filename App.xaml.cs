@@ -49,6 +49,9 @@ namespace GameTracker
 
             base.OnStartup(e);
 
+            // Apply the saved colour theme before any window is shown.
+            try { Services.ThemeService.Initialize(); } catch { /* fall back to XAML defaults */ }
+
             var win = new MainWindow();
             MainWindow = win;
             win.Show();

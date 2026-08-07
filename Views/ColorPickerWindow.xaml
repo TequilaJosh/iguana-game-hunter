@@ -8,7 +8,7 @@
         WindowStyle="None" ResizeMode="NoResize"
         ShowInTaskbar="False"
         Icon="/iguana-eye.ico"
-        Background="{StaticResource ScaleBrush}">
+        Background="{DynamicResource ScaleBrush}">
 
     <shell:WindowChrome.WindowChrome>
         <shell:WindowChrome CaptionHeight="32" ResizeBorderThickness="0"
@@ -18,8 +18,8 @@
 
     <Window.Resources>
         <Style x:Key="Btn" TargetType="Button">
-            <Setter Property="Background" Value="#243a26"/>
-            <Setter Property="Foreground" Value="#7cc44a"/>
+            <Setter Property="Background" Value="{DynamicResource ThemeSurface2}"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeAccent}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="14,5"/>
             <Setter Property="FontSize" Value="12"/>
@@ -29,13 +29,13 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}" CornerRadius="3"
-                                Padding="{TemplateBinding Padding}" BorderBrush="#4a7c3a" BorderThickness="1">
+                                Padding="{TemplateBinding Padding}" BorderBrush="{DynamicResource ThemeAccentDeep}" BorderThickness="1">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#4a7c3a"/>
-                                <Setter Property="Foreground" Value="#0a1410"/>
+                                <Setter Property="Background" Value="{DynamicResource ThemeAccentDeep}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource ThemeBg}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -43,7 +43,7 @@
             </Setter>
         </Style>
         <Style x:Key="Chan" TargetType="Slider">
-            <Setter Property="Foreground" Value="#7cc44a"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeAccent}"/>
             <Setter Property="Minimum" Value="0"/>
             <Setter Property="Maximum" Value="255"/>
             <Setter Property="SmallChange" Value="1"/>
@@ -68,7 +68,7 @@
         </Style>
     </Window.Resources>
 
-    <Border BorderBrush="#4a7c3a" BorderThickness="1">
+    <Border BorderBrush="{DynamicResource ThemeAccentDeep}" BorderThickness="1">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="32"/>
@@ -76,7 +76,7 @@
             </Grid.RowDefinitions>
 
             <!-- Title bar -->
-            <Border Grid.Row="0" Background="#0a1410" BorderBrush="#2e4a30" BorderThickness="0,0,0,1">
+            <Border Grid.Row="0" Background="{DynamicResource ThemeBg}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,0,0,1">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -85,7 +85,7 @@
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
                         <Image Source="/iguana-eye.ico" Width="16" Height="16" Margin="0,0,8,0"
                                VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
-                        <TextBlock Text="PICK A COLOR" Foreground="#7cc44a" FontSize="11"
+                        <TextBlock Text="PICK A COLOR" Foreground="{DynamicResource ThemeAccent}" FontSize="11"
                                    FontWeight="Bold" VerticalAlignment="Center"/>
                     </StackPanel>
                     <Button Grid.Column="1" Content="&#x2715;" Click="Cancel_Click"
@@ -102,10 +102,10 @@
                         <ColumnDefinition Width="*"/>
                     </Grid.ColumnDefinitions>
                     <Border x:Name="Preview" Width="56" Height="40" CornerRadius="6"
-                            BorderBrush="#2e4a30" BorderThickness="1" Margin="0,0,10,0"/>
+                            BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" Margin="0,0,10,0"/>
                     <TextBox x:Name="HexBox" Grid.Column="1" FontFamily="Consolas" FontSize="15"
-                             Background="#142016" Foreground="#e8e0c4" BorderBrush="#2e4a30"
-                             BorderThickness="1" CaretBrush="#7cc44a" Padding="8,7"
+                             Background="{DynamicResource ThemeSurface}" Foreground="#e8e0c4" BorderBrush="{DynamicResource ThemeBorder}"
+                             BorderThickness="1" CaretBrush="{DynamicResource ThemeAccent}" Padding="8,7"
                              VerticalContentAlignment="Center" TextChanged="Hex_Changed"/>
                 </Grid>
 
@@ -142,7 +142,7 @@
                 </Grid>
 
                 <!-- Palette -->
-                <TextBlock Text="PALETTE" Foreground="#7cc44a" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
+                <TextBlock Text="PALETTE" Foreground="{DynamicResource ThemeAccent}" FontSize="10" FontWeight="Bold" Margin="0,0,0,5"/>
                 <ItemsControl x:Name="Palette">
                     <ItemsControl.ItemsPanel>
                         <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
@@ -154,7 +154,7 @@
                                 <Button.Template>
                                     <ControlTemplate TargetType="Button">
                                         <Border Width="22" Height="22" CornerRadius="4"
-                                                BorderBrush="#2e4a30" BorderThickness="1">
+                                                BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
                                             <Border.Background>
                                                 <SolidColorBrush Color="{Binding}"/>
                                             </Border.Background>
@@ -170,7 +170,7 @@
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,12,0,0">
                     <Button Content="Cancel" Click="Cancel_Click" Style="{StaticResource Btn}" Margin="0,0,7,0"/>
                     <Button Content="OK" Click="Ok_Click" Style="{StaticResource Btn}"
-                            Background="#4a7c3a" Foreground="#0a1410"/>
+                            Background="{DynamicResource ThemeAccentDeep}" Foreground="{DynamicResource ThemeBg}"/>
                 </StackPanel>
             </StackPanel>
         </Grid>

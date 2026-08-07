@@ -6,8 +6,8 @@
         WindowStartupLocation="CenterScreen"
         WindowStyle="None" ResizeMode="NoResize"
         Topmost="True" ShowInTaskbar="False"
-        Background="{StaticResource ScaleBrush}">
-    <Border BorderBrush="#4a7c3a" BorderThickness="2">
+        Background="{DynamicResource ScaleBrush}">
+    <Border BorderBrush="{DynamicResource ThemeAccentDeep}" BorderThickness="2">
         <StackPanel Margin="22,20">
             <StackPanel Orientation="Horizontal" Margin="0,0,0,12">
                 <Image Source="/iguana-eye.ico" Width="24" Height="24" Margin="0,0,10,0"
@@ -18,8 +18,8 @@
             </StackPanel>
 
             <ProgressBar x:Name="Bar" Height="10" Minimum="0" Maximum="100"
-                         Background="#142016" Foreground="#7cc44a"
-                         BorderBrush="#2e4a30" BorderThickness="1"/>
+                         Background="{DynamicResource ThemeSurface}" Foreground="{DynamicResource ThemeAccent}"
+                         BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1"/>
 
             <TextBlock x:Name="StatusText" Text="Starting…"
                        Foreground="#c4d4a8" FontSize="12" Margin="0,8,0,0"/>

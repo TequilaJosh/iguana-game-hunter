@@ -8,7 +8,7 @@
         WindowStartupLocation="CenterOwner"
         WindowStyle="None" ResizeMode="CanResize"
         Icon="/iguana-eye.ico"
-        Background="{StaticResource ScaleBrush}">
+        Background="{DynamicResource ScaleBrush}">
 
     <shell:WindowChrome.WindowChrome>
         <shell:WindowChrome CaptionHeight="32" ResizeBorderThickness="6"
@@ -18,7 +18,7 @@
 
     <Window.Resources>
         <Style x:Key="WheelBtn" TargetType="Button">
-            <Setter Property="Background" Value="#1c2a1e"/>
+            <Setter Property="Background" Value="{DynamicResource ThemeSurface2}"/>
             <Setter Property="Foreground" Value="#c4d4a8"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="10,6"/>
@@ -29,12 +29,12 @@
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}" CornerRadius="4"
                                 Padding="{TemplateBinding Padding}"
-                                BorderBrush="#2e4a30" BorderThickness="1">
+                                BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#243a26"/>
+                                <Setter Property="Background" Value="{DynamicResource ThemeSurface2}"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Opacity" Value="0.45"/>
@@ -46,7 +46,7 @@
         </Style>
     </Window.Resources>
 
-    <Border BorderBrush="#4a7c3a" BorderThickness="1">
+    <Border BorderBrush="{DynamicResource ThemeAccentDeep}" BorderThickness="1">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="32"/>
@@ -57,8 +57,8 @@
             </Grid.RowDefinitions>
 
             <!-- Title bar -->
-            <Border Grid.Row="0" Background="#0a1410"
-                    BorderBrush="#2e4a30" BorderThickness="0,0,0,1">
+            <Border Grid.Row="0" Background="{DynamicResource ThemeBg}"
+                    BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,0,0,1">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -67,7 +67,7 @@
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
                         <Image Source="/iguana-eye.ico" Width="16" Height="16" Margin="0,0,8,0"
                                VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
-                        <TextBlock x:Name="TitleBarText" Text="WHEEL" Foreground="#7cc44a"
+                        <TextBlock x:Name="TitleBarText" Text="WHEEL" Foreground="{DynamicResource ThemeAccent}"
                                    FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal"
@@ -99,7 +99,7 @@
                     </Canvas>
                     <!-- Fixed pointer at top -->
                     <Path x:Name="Pointer" Data="M -14,0 L 14,0 L 0,22 Z"
-                          Fill="#d4a437" Stroke="#0a1410" StrokeThickness="1.5"
+                          Fill="{DynamicResource ThemeAccent2}" Stroke="{DynamicResource ThemeBg}" StrokeThickness="1.5"
                           HorizontalAlignment="Center" VerticalAlignment="Top"
                           Margin="0,2,0,0"/>
                     <TextBlock x:Name="EmptyHint" Text="Add some items →"
@@ -110,7 +110,7 @@
 
                 <!-- Game picker (backlog wheel customize) -->
                 <Border x:Name="CustomizePanel" Grid.Column="1" Width="260" Margin="14,0,0,0"
-                        Background="#0f1812" BorderBrush="#2e4a30" BorderThickness="1"
+                        Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1"
                         CornerRadius="6" Visibility="Collapsed">
                     <Grid Margin="10">
                         <Grid.RowDefinitions>
@@ -119,13 +119,13 @@
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="*"/>
                         </Grid.RowDefinitions>
-                        <TextBlock Grid.Row="0" Text="ADD GAMES" Foreground="#7cc44a"
+                        <TextBlock Grid.Row="0" Text="ADD GAMES" Foreground="{DynamicResource ThemeAccent}"
                                    FontSize="11" FontWeight="Bold" Margin="0,0,0,2"/>
                         <TextBlock Grid.Row="1" Text="Click to add/remove, or drag onto the wheel."
                                    Foreground="#7a9070" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8"/>
                         <ComboBox x:Name="FilterCombo" Grid.Row="2" Margin="0,0,0,8"
                                   SelectionChanged="FilterCombo_SelectionChanged"/>
-                        <Border Grid.Row="3" Background="#0a1410" BorderBrush="#2e4a30"
+                        <Border Grid.Row="3" Background="{DynamicResource ThemeBg}" BorderBrush="{DynamicResource ThemeBorder}"
                                 BorderThickness="1" CornerRadius="4">
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
                                 <ItemsControl x:Name="GameList">
@@ -148,7 +148,7 @@
                                                                     <ColumnDefinition Width="Auto"/>
                                                                 </Grid.ColumnDefinitions>
                                                                 <TextBlock Grid.Column="0" Text="{Binding Mark}"
-                                                                           Foreground="#7cc44a" FontWeight="Bold"
+                                                                           Foreground="{DynamicResource ThemeAccent}" FontWeight="Bold"
                                                                            FontSize="12"/>
                                                                 <TextBlock Grid.Column="1" Text="{Binding Title}"
                                                                            Foreground="#c4d4a8" FontSize="12"
@@ -160,7 +160,7 @@
                                                         </Border>
                                                         <ControlTemplate.Triggers>
                                                             <Trigger Property="IsMouseOver" Value="True">
-                                                                <Setter TargetName="rb" Property="Background" Value="#1c2a1e"/>
+                                                                <Setter TargetName="rb" Property="Background" Value="{DynamicResource ThemeSurface2}"/>
                                                             </Trigger>
                                                         </ControlTemplate.Triggers>
                                                     </ControlTemplate>
@@ -176,7 +176,7 @@
 
                 <!-- Items editor + rolled challenges (custom wheel only) -->
                 <Border x:Name="EditorPanel" Grid.Column="1" Width="250" Margin="14,0,0,0"
-                        Background="#0f1812" BorderBrush="#2e4a30" BorderThickness="1"
+                        Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1"
                         CornerRadius="6" Visibility="Collapsed">
                     <Grid Margin="10">
                         <Grid.RowDefinitions>
@@ -192,15 +192,15 @@
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock x:Name="ItemsHeader" Text="WHEEL ITEMS" Foreground="#7cc44a"
+                            <TextBlock x:Name="ItemsHeader" Text="WHEEL ITEMS" Foreground="{DynamicResource ThemeAccent}"
                                        FontSize="11" FontWeight="Bold" VerticalAlignment="Center"
                                        TextTrimming="CharacterEllipsis"/>
                             <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center"
                                         Margin="6,0,6,0">
                                 <TextBlock Text="Max" Foreground="#7a9070" FontSize="11"
                                            VerticalAlignment="Center" Margin="0,0,3,0"/>
-                                <TextBox x:Name="MaxBox" Width="32" Background="#142016" Foreground="#e8e0c4"
-                                         BorderBrush="#2e4a30" BorderThickness="1" CaretBrush="#7cc44a"
+                                <TextBox x:Name="MaxBox" Width="32" Background="{DynamicResource ThemeSurface}" Foreground="#e8e0c4"
+                                         BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" CaretBrush="{DynamicResource ThemeAccent}"
                                          Padding="2,2" FontSize="11" TextAlignment="Center" MaxLength="3"
                                          LostFocus="MaxItems_Changed" KeyDown="MaxBox_KeyDown"
                                          ToolTip="Max items shown on the wheel at once — the rest rotate in as you land on them"/>
@@ -215,8 +215,8 @@
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
                             <TextBox x:Name="AddItemBox" KeyDown="AddItemBox_KeyDown"
-                                     Background="#142016" Foreground="#e8e0c4" BorderBrush="#2e4a30"
-                                     BorderThickness="1" CaretBrush="#7cc44a" Padding="6,5" FontSize="12"
+                                     Background="{DynamicResource ThemeSurface}" Foreground="#e8e0c4" BorderBrush="{DynamicResource ThemeBorder}"
+                                     BorderThickness="1" CaretBrush="{DynamicResource ThemeAccent}" Padding="6,5" FontSize="12"
                                      VerticalContentAlignment="Center"/>
                             <Button Grid.Column="1" Content="+" Click="AddItem_Click"
                                     Style="{StaticResource WheelBtn}" Margin="6,0,0,0"
@@ -262,12 +262,12 @@
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
-                            <TextBlock Text="ROLLED" Foreground="#d4a437" FontSize="11"
+                            <TextBlock Text="ROLLED" Foreground="{DynamicResource ThemeAccent2}" FontSize="11"
                                        FontWeight="Bold" VerticalAlignment="Center"/>
                             <Button Grid.Column="1" Content="Clear" Click="ClearResults_Click"
                                     Style="{StaticResource WheelBtn}" Padding="8,2" FontSize="11"/>
                         </Grid>
-                        <Border Grid.Row="4" Background="#0a1410" BorderBrush="#2e4a30"
+                        <Border Grid.Row="4" Background="{DynamicResource ThemeBg}" BorderBrush="{DynamicResource ThemeBorder}"
                                 BorderThickness="1" CornerRadius="4">
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
                                 <StackPanel>
@@ -283,7 +283,7 @@
                                                         <ColumnDefinition Width="Auto"/>
                                                     </Grid.ColumnDefinitions>
                                                     <TextBlock Grid.Column="0" Text="{Binding Num}"
-                                                               Foreground="#7cc44a" FontWeight="Bold"
+                                                               Foreground="{DynamicResource ThemeAccent}" FontWeight="Bold"
                                                                FontSize="12" Margin="0,0,6,0"/>
                                                     <TextBlock Grid.Column="1" Text="{Binding Text}"
                                                                Foreground="#e8e0c4" FontSize="12"
@@ -326,18 +326,18 @@
             <Button x:Name="CustomizeButton" Grid.Row="3" Content="&#9881; Customize Wheel"
                     Click="Customize_Click" Visibility="Collapsed"
                     Margin="16,0,16,8" HorizontalContentAlignment="Center"
-                    Foreground="#c4d4a8" Background="#1c2a1e" BorderThickness="0"
+                    Foreground="#c4d4a8" Background="{DynamicResource ThemeSurface2}" BorderThickness="0"
                     Padding="10,8" FontSize="13" Cursor="Hand">
                 <Button.Template>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}" CornerRadius="4"
                                 Padding="{TemplateBinding Padding}"
-                                BorderBrush="#2e4a30" BorderThickness="1">
+                                BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#243a26"/>
+                                <Setter Property="Background" Value="{DynamicResource ThemeSurface2}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -352,18 +352,18 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <Button x:Name="SpinButton" Grid.Column="0" Content="&#127922; Spin" Click="Spin_Click"
-                        Foreground="#0a1410" Background="#4a7c3a" BorderThickness="0"
+                        Foreground="{DynamicResource ThemeBg}" Background="{DynamicResource ThemeAccentDeep}" BorderThickness="0"
                         Padding="12,11" FontSize="15" FontWeight="Bold" Cursor="Hand">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
                             <Border Background="{TemplateBinding Background}" CornerRadius="4"
                                     Padding="{TemplateBinding Padding}"
-                                    BorderBrush="#7cc44a" BorderThickness="1">
+                                    BorderBrush="{DynamicResource ThemeAccent}" BorderThickness="1">
                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#7cc44a"/>
+                                    <Setter Property="Background" Value="{DynamicResource ThemeAccent}"/>
                                 </Trigger>
                                 <Trigger Property="IsEnabled" Value="False">
                                     <Setter Property="Opacity" Value="0.5"/>
@@ -374,13 +374,13 @@
                 </Button>
                 <Button x:Name="ChooseButton" Grid.Column="2" Content="Choose" Click="Choose_Click"
                         IsEnabled="False" Visibility="Collapsed"
-                        Foreground="#d4a437" Background="#3a2a10" BorderThickness="0"
+                        Foreground="{DynamicResource ThemeAccent2}" Background="#3a2a10" BorderThickness="0"
                         Padding="14,11" FontSize="15" FontWeight="Bold" Cursor="Hand">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
                             <Border Background="{TemplateBinding Background}" CornerRadius="4"
                                     Padding="{TemplateBinding Padding}"
-                                    BorderBrush="#d4a437" BorderThickness="1">
+                                    BorderBrush="{DynamicResource ThemeAccent2}" BorderThickness="1">
                                 <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             </Border>
                             <ControlTemplate.Triggers>

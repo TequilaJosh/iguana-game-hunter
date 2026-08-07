@@ -8,7 +8,7 @@
         WindowStartupLocation="CenterOwner"
         WindowStyle="None" ResizeMode="CanResize"
         Icon="/iguana-eye.ico"
-        Background="{StaticResource ScaleBrush}">
+        Background="{DynamicResource ScaleBrush}">
 
     <shell:WindowChrome.WindowChrome>
         <shell:WindowChrome CaptionHeight="32" ResizeBorderThickness="6"
@@ -18,15 +18,15 @@
 
     <Window.Resources>
         <Style x:Key="Key" TargetType="Border">
-            <Setter Property="Background" Value="#142016"/>
-            <Setter Property="BorderBrush" Value="#4a7c3a"/>
+            <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentDeep}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CornerRadius" Value="4"/>
             <Setter Property="Padding" Value="8,3"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
         <Style x:Key="KeyText" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#7cc44a"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeAccent}"/>
             <Setter Property="FontFamily" Value="Consolas"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="FontSize" Value="12"/>
@@ -38,13 +38,13 @@
             <Setter Property="TextWrapping" Value="Wrap"/>
         </Style>
         <Style x:Key="Section" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#7cc44a"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeAccent}"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="Margin" Value="0,16,0,8"/>
         </Style>
         <Style x:Key="ChangeBtn" TargetType="Button">
-            <Setter Property="Background" Value="#1c2a1e"/>
+            <Setter Property="Background" Value="{DynamicResource ThemeSurface2}"/>
             <Setter Property="Foreground" Value="#c4d4a8"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="10,3"/>
@@ -56,12 +56,12 @@
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}" CornerRadius="3"
                                 Padding="{TemplateBinding Padding}"
-                                BorderBrush="#2e4a30" BorderThickness="1">
+                                BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#243a26"/>
+                                <Setter Property="Background" Value="{DynamicResource ThemeSurface2}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -70,7 +70,7 @@
         </Style>
     </Window.Resources>
 
-    <Border BorderBrush="#4a7c3a" BorderThickness="1">
+    <Border BorderBrush="{DynamicResource ThemeAccentDeep}" BorderThickness="1">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="32"/>
@@ -78,8 +78,8 @@
             </Grid.RowDefinitions>
 
             <!-- Title bar -->
-            <Border Grid.Row="0" Background="#0a1410"
-                    BorderBrush="#2e4a30" BorderThickness="0,0,0,1">
+            <Border Grid.Row="0" Background="{DynamicResource ThemeBg}"
+                    BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,0,0,1">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -88,7 +88,7 @@
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="10,0,0,0">
                         <Image Source="/iguana-eye.ico" Width="16" Height="16" Margin="0,0,8,0"
                                VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
-                        <TextBlock Text="HELP &amp; SHORTCUTS" Foreground="#7cc44a"
+                        <TextBlock Text="HELP &amp; SHORTCUTS" Foreground="{DynamicResource ThemeAccent}"
                                    FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
                     </StackPanel>
                     <Button Grid.Column="1" Content="&#x2715;" Click="Close_Click"
@@ -154,7 +154,7 @@
                         <Button Grid.Row="2" Grid.Column="2" Content="Change" Click="ChangeNote_Click"
                                 Style="{StaticResource ChangeBtn}" Margin="8,4"/>
                     </Grid>
-                    <TextBlock x:Name="StatusText" Foreground="#d4a437" FontSize="12"
+                    <TextBlock x:Name="StatusText" Foreground="{DynamicResource ThemeAccent2}" FontSize="12"
                                Margin="0,8,0,0" TextWrapping="Wrap"/>
 
                     <TextBlock Text="TIPS" Style="{StaticResource Section}"/>

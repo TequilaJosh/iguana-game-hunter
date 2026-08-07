@@ -6,14 +6,14 @@
         WindowStartupLocation="CenterScreen"
         WindowStyle="None" ResizeMode="NoResize"
         Topmost="True" ShowInTaskbar="False"
-        Background="{StaticResource ScaleBrush}">
-    <Border BorderBrush="#d4a437" BorderThickness="2">
+        Background="{DynamicResource ScaleBrush}">
+    <Border BorderBrush="{DynamicResource ThemeAccent2}" BorderThickness="2">
         <StackPanel Margin="16">
-            <TextBlock Text="&#128204; QUICK CLIP NOTE" Foreground="#d4a437"
+            <TextBlock Text="&#128204; QUICK CLIP NOTE" Foreground="{DynamicResource ThemeAccent2}"
                        FontSize="12" FontWeight="Bold" Margin="0,0,0,8"/>
             <TextBox x:Name="NoteInput" KeyDown="NoteInput_KeyDown"
-                     Background="#142016" Foreground="#e8e0c4" BorderBrush="#2e4a30"
-                     BorderThickness="1" CaretBrush="#7cc44a" Padding="8,7" FontSize="14"
+                     Background="{DynamicResource ThemeSurface}" Foreground="#e8e0c4" BorderBrush="{DynamicResource ThemeBorder}"
+                     BorderThickness="1" CaretBrush="{DynamicResource ThemeAccent}" Padding="8,7" FontSize="14"
                      VerticalContentAlignment="Center"/>
             <TextBlock Text="Enter to save · Esc to cancel" Foreground="#506050"
                        FontSize="11" Margin="2,6,0,0"/>

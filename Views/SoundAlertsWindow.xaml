@@ -8,7 +8,7 @@
         WindowStartupLocation="CenterOwner"
         WindowStyle="None" ResizeMode="CanResize"
         Icon="/iguana-eye.ico"
-        Background="{StaticResource ScaleBrush}">
+        Background="{DynamicResource ScaleBrush}">
 
     <shell:WindowChrome.WindowChrome>
         <shell:WindowChrome CaptionHeight="32" ResizeBorderThickness="6"
@@ -18,8 +18,8 @@
 
     <Window.Resources>
         <Style x:Key="SmallBtn" TargetType="Button">
-            <Setter Property="Background" Value="#243a26"/>
-            <Setter Property="Foreground" Value="#7cc44a"/>
+            <Setter Property="Background" Value="{DynamicResource ThemeSurface2}"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeAccent}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="10,5"/>
             <Setter Property="Margin" Value="0,0,6,0"/>
@@ -30,13 +30,13 @@
                 <Setter.Value>
                     <ControlTemplate TargetType="Button">
                         <Border Background="{TemplateBinding Background}" CornerRadius="3"
-                                Padding="{TemplateBinding Padding}" BorderBrush="#4a7c3a" BorderThickness="1">
+                                Padding="{TemplateBinding Padding}" BorderBrush="{DynamicResource ThemeAccentDeep}" BorderThickness="1">
                             <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#4a7c3a"/>
-                                <Setter Property="Foreground" Value="#0a1410"/>
+                                <Setter Property="Background" Value="{DynamicResource ThemeAccentDeep}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource ThemeBg}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -44,15 +44,15 @@
             </Setter>
         </Style>
         <Style x:Key="ActionBtn" TargetType="Button" BasedOn="{StaticResource SmallBtn}">
-            <Setter Property="Background" Value="#4a7c3a"/>
-            <Setter Property="Foreground" Value="#0a1410"/>
+            <Setter Property="Background" Value="{DynamicResource ThemeAccentDeep}"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeBg}"/>
             <Setter Property="Padding" Value="18,5"/>
             <Setter Property="Margin" Value="0"/>
         </Style>
         <Style x:Key="InputBox" TargetType="TextBox">
-            <Setter Property="Background" Value="#142016"/>
+            <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/>
             <Setter Property="Foreground" Value="#e8e0c4"/>
-            <Setter Property="BorderBrush" Value="#2e4a30"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CaretBrush" Value="#7cc44a"/>
             <Setter Property="Padding" Value="6,4"/>
@@ -61,7 +61,7 @@
         </Style>
     </Window.Resources>
 
-    <Border BorderBrush="#4a7c3a" BorderThickness="1">
+    <Border BorderBrush="{DynamicResource ThemeAccentDeep}" BorderThickness="1">
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="32"/>
@@ -73,7 +73,7 @@
             </Grid.RowDefinitions>
 
             <!-- Title bar -->
-            <Border Grid.Row="0" Background="#0a1410" BorderBrush="#2e4a30" BorderThickness="0,0,0,1">
+            <Border Grid.Row="0" Background="{DynamicResource ThemeBg}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,0,0,1">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -82,7 +82,7 @@
                     <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
                         <Image Source="/iguana-eye.ico" Width="16" Height="16" Margin="0,0,8,0"
                                VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
-                        <TextBlock Text="SOUND ALERTS" Foreground="#7cc44a" FontSize="11"
+                        <TextBlock Text="SOUND ALERTS" Foreground="{DynamicResource ThemeAccent}" FontSize="11"
                                    FontWeight="Bold" VerticalAlignment="Center"/>
                     </StackPanel>
                     <Button Grid.Column="1" Content="&#x2715;" Click="Cancel_Click"
@@ -102,9 +102,9 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Text="COMMAND" Foreground="#7cc44a" FontSize="10"
+                <TextBlock Grid.Column="0" Text="COMMAND" Foreground="{DynamicResource ThemeAccent}" FontSize="10"
                            FontWeight="Bold" Margin="2,0,6,0"/>
-                <TextBlock Grid.Column="1" Text="SOUND FILE" Foreground="#7cc44a" FontSize="10"
+                <TextBlock Grid.Column="1" Text="SOUND FILE" Foreground="{DynamicResource ThemeAccent}" FontSize="10"
                            FontWeight="Bold" Margin="2,0,6,0"/>
             </Grid>
 
@@ -134,7 +134,7 @@
                                                VerticalAlignment="Center" Margin="0,0,3,0"/>
                                     <Slider Width="66" Minimum="0" Maximum="1" SmallChange="0.05" LargeChange="0.1"
                                             Value="{Binding Volume, Mode=TwoWay}" VerticalAlignment="Center"
-                                            Foreground="#7cc44a" ToolTip="Alert volume (saved per alert)"/>
+                                            Foreground="{DynamicResource ThemeAccent}" ToolTip="Alert volume (saved per alert)"/>
                                 </StackPanel>
                                 <Button Grid.Column="3" Content="Browse" Tag="{Binding}" Click="Browse_Click"
                                         Style="{StaticResource SmallBtn}"/>

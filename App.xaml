@@ -17,6 +17,17 @@
         <SolidColorBrush x:Key="MossTextFade" Color="#506050"/>
         <SolidColorBrush x:Key="VenomRed"     Color="#9a3a2a"/>
 
+        <!-- Themeable brushes — overridden at runtime by ThemeService.
+             UI references these via DynamicResource so a theme swap recolours live. -->
+        <SolidColorBrush x:Key="ThemeAccent"     Color="#7cc44a"/>
+        <SolidColorBrush x:Key="ThemeAccentDeep" Color="#4a7c3a"/>
+        <SolidColorBrush x:Key="ThemeAccent2"    Color="#d4a437"/>
+        <!-- Background surface family (derived from the theme's background color) -->
+        <SolidColorBrush x:Key="ThemeBg"         Color="#0a1410"/>
+        <SolidColorBrush x:Key="ThemeSurface"    Color="#142016"/>
+        <SolidColorBrush x:Key="ThemeSurface2"   Color="#243a26"/>
+        <SolidColorBrush x:Key="ThemeBorder"     Color="#2e4a30"/>
+
         <!-- Snake-scale tile pattern: staggered fish-scale arcs -->
         <DrawingBrush x:Key="ScaleBrush" TileMode="Tile"
                       Viewport="0,0,28,28" ViewportUnits="Absolute" Stretch="None">
@@ -73,8 +84,8 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#1c2a1e"/>
-                                <Setter Property="Foreground" Value="#7cc44a"/>
+                                <Setter Property="Background" Value="{DynamicResource ThemeSurface2}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource ThemeAccent}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -106,13 +117,13 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type Thumb}">
-                        <Border x:Name="thumb" CornerRadius="4" Background="#2e4a30" Margin="2"/>
+                        <Border x:Name="thumb" CornerRadius="4" Background="{DynamicResource ThemeBorder}" Margin="2"/>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="thumb" Property="Background" Value="#4a7c3a"/>
+                                <Setter TargetName="thumb" Property="Background" Value="{DynamicResource ThemeAccentDeep}"/>
                             </Trigger>
                             <Trigger Property="IsDragging" Value="True">
-                                <Setter TargetName="thumb" Property="Background" Value="#7cc44a"/>
+                                <Setter TargetName="thumb" Property="Background" Value="{DynamicResource ThemeAccent}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -205,10 +216,10 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsHighlighted" Value="True">
-                                <Setter TargetName="b" Property="Background" Value="#243a26"/>
+                                <Setter TargetName="b" Property="Background" Value="{DynamicResource ThemeSurface2}"/>
                             </Trigger>
                             <Trigger Property="IsSelected" Value="True">
-                                <Setter TargetName="b" Property="Background" Value="#2e4a30"/>
+                                <Setter TargetName="b" Property="Background" Value="{DynamicResource ThemeBorder}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -217,7 +228,7 @@
         </Style>
 
         <ControlTemplate x:Key="GuanaComboToggle" TargetType="{x:Type ToggleButton}">
-            <Border x:Name="bd" Background="#142016" BorderBrush="#2e4a30"
+            <Border x:Name="bd" Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource ThemeBorder}"
                     BorderThickness="1" CornerRadius="3">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -225,16 +236,16 @@
                         <ColumnDefinition Width="20"/>
                     </Grid.ColumnDefinitions>
                     <Path x:Name="arrow" Grid.Column="1" HorizontalAlignment="Center"
-                          VerticalAlignment="Center" Data="M0,0 L8,0 L4,5 Z" Fill="#7cc44a"/>
+                          VerticalAlignment="Center" Data="M0,0 L8,0 L4,5 Z" Fill="{DynamicResource ThemeAccent}"/>
                 </Grid>
             </Border>
             <ControlTemplate.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
-                    <Setter TargetName="bd" Property="BorderBrush" Value="#4a7c3a"/>
+                    <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource ThemeAccentDeep}"/>
                     <Setter TargetName="arrow" Property="Fill" Value="#a8e060"/>
                 </Trigger>
                 <Trigger Property="IsChecked" Value="True">
-                    <Setter TargetName="bd" Property="BorderBrush" Value="#7cc44a"/>
+                    <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource ThemeAccent}"/>
                 </Trigger>
             </ControlTemplate.Triggers>
         </ControlTemplate>
@@ -253,7 +264,7 @@
                 <TextBox x:Name="PART_EditableTextBox"
                          HorizontalAlignment="Stretch" VerticalAlignment="Center" Margin="6,1,24,1"
                          Focusable="True" Background="Transparent" Foreground="{TemplateBinding Foreground}"
-                         CaretBrush="#7cc44a" BorderThickness="0" Visibility="Hidden"
+                         CaretBrush="{DynamicResource ThemeAccent}" BorderThickness="0" Visibility="Hidden"
                          IsReadOnly="{TemplateBinding IsReadOnly}">
                     <TextBox.Template>
                         <ControlTemplate TargetType="{x:Type TextBox}">
@@ -263,7 +274,7 @@
                 </TextBox>
                 <Popup x:Name="Popup" Placement="Bottom" Focusable="False" AllowsTransparency="True"
                        IsOpen="{TemplateBinding IsDropDownOpen}" PopupAnimation="Slide">
-                    <Border x:Name="DropDownBorder" Background="#142016" BorderBrush="#4a7c3a"
+                    <Border x:Name="DropDownBorder" Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource ThemeAccentDeep}"
                             BorderThickness="1" CornerRadius="3" Margin="0,2,0,0"
                             MinWidth="{Binding ActualWidth, RelativeSource={RelativeSource TemplatedParent}}"
                             MaxHeight="{TemplateBinding MaxDropDownHeight}">
@@ -284,8 +295,8 @@
 
         <Style TargetType="{x:Type ComboBox}">
             <Setter Property="Foreground" Value="#e8e0c4"/>
-            <Setter Property="Background" Value="#142016"/>
-            <Setter Property="BorderBrush" Value="#2e4a30"/>
+            <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorder}"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="Height" Value="32"/>
             <Setter Property="SnapsToDevicePixels" Value="True"/>
@@ -294,9 +305,9 @@
 
         <!-- ============ Themed context menus ============ -->
         <Style TargetType="{x:Type ContextMenu}">
-            <Setter Property="Background" Value="#142016"/>
+            <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/>
             <Setter Property="Foreground" Value="#e8e0c4"/>
-            <Setter Property="BorderBrush" Value="#4a7c3a"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentDeep}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Template">
                 <Setter.Value>
@@ -328,7 +339,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsHighlighted" Value="True">
-                                <Setter TargetName="bd" Property="Background" Value="#2e4a30"/>
+                                <Setter TargetName="bd" Property="Background" Value="{DynamicResource ThemeBorder}"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
                                 <Setter Property="Foreground" Value="#506050"/>
@@ -343,7 +354,7 @@
             <Setter Property="Template">
                 <Setter.Value>
                     <ControlTemplate TargetType="{x:Type Separator}">
-                        <Border Height="1" Background="#2e4a30" Margin="8,4"/>
+                        <Border Height="1" Background="{DynamicResource ThemeBorder}" Margin="8,4"/>
                     </ControlTemplate>
                 </Setter.Value>
             </Setter>

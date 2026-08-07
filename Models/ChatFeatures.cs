@@ -10,6 +10,7 @@ namespace GameTracker.Models
         public int Cost { get; set; } = 100;
         public string SoundPath { get; set; } = string.Empty; // custom: optional sound (played in-app)
         public string ImagePath { get; set; } = string.Empty; // custom: optional image (shown on overlay)
+        public string VideoPath { get; set; } = string.Empty; // optional video played on the overlay
         public double Volume { get; set; } = 1.0;
     }
 

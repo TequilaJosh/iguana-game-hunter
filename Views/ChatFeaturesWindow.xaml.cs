@@ -44,7 +44,7 @@ namespace GameTracker.Views
                 _redeems.Add(new RedeemItem
                 {
                     Command = r.Command, Effect = r.Effect, Cost = r.Cost,
-                    SoundPath = r.SoundPath, ImagePath = r.ImagePath, Volume = r.Volume,
+                    SoundPath = r.SoundPath, ImagePath = r.ImagePath, VideoPath = r.VideoPath, Volume = r.Volume,
                 });
             RedeemList.ItemsSource = _redeems;
         }
@@ -103,11 +103,31 @@ namespace GameTracker.Views
             if (dlg.ShowDialog(this) == true) r.ImagePath = dlg.FileName;
         }
 
+        private void PickVideo_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is not FrameworkElement fe || fe.Tag is not RedeemItem r) return;
+            var dlg = new OpenFileDialog
+            {
+                Title = "Choose a video",
+                Filter = "Video files|*.mp4;*.m4v;*.webm;*.ogv;*.mov;*.mkv;*.avi|All files (*.*)|*.*",
+            };
+            if (dlg.ShowDialog(this) == true)
+            {
+                r.VideoPath = dlg.FileName;
+                if (string.IsNullOrWhiteSpace(r.Effect) || r.Effect == "confetti") r.Effect = "video";
+            }
+        }
+
+        private void ClearVideo_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement fe && fe.Tag is RedeemItem r) r.VideoPath = string.Empty;
+        }
+
         private void TestRedeem_Click(object sender, RoutedEventArgs e)
         {
             if (sender is not FrameworkElement fe || fe.Tag is not RedeemItem r) return;
 
-            // Persist the current redeem list quietly so /fx/<index> can serve the image.
+            // Persist the current redeem list quietly so /fx and /fxvideo can serve the files.
             var saved = SettingsService.LoadChatFeatures();
             saved.Redeems = BuildRedeems();
             SettingsService.SaveChatFeatures(saved);
@@ -117,12 +137,13 @@ namespace GameTracker.Views
 
             if (OverlayServer.IsRunning)
             {
-                // Index into the just-saved (filtered) list so /fx/<i> resolves correctly.
                 int idx = saved.Redeems.FindIndex(x =>
-                    x.Command == r.Command.Trim() && x.ImagePath == r.ImagePath);
+                    x.Command == r.Command.Trim() && x.VideoPath == r.VideoPath && x.ImagePath == r.ImagePath);
                 OverlayServer.TriggerEffect(r.Effect,
                     r.Effect == "custom" && idx >= 0 && !string.IsNullOrWhiteSpace(r.ImagePath)
                         ? "/fx/" + idx : null);
+                if (idx >= 0 && !string.IsNullOrWhiteSpace(r.VideoPath))
+                    OverlayServer.PlayVideo("/fxvideo/" + idx, (int)(Math.Clamp(r.Volume, 0, 1) * 100));
                 StatusText.Text = "Fired " + r.Effect + " on the overlay.";
             }
             else StatusText.Text = "Overlay server isn't running — sound only.";
@@ -137,7 +158,7 @@ namespace GameTracker.Views
                         Command = r.Command.Trim(),
                         Effect = string.IsNullOrWhiteSpace(r.Effect) ? "confetti" : r.Effect,
                         Cost = Math.Max(0, r.Cost),
-                        SoundPath = r.SoundPath, ImagePath = r.ImagePath,
+                        SoundPath = r.SoundPath, ImagePath = r.ImagePath, VideoPath = r.VideoPath,
                         Volume = Math.Clamp(r.Volume, 0, 1),
                     }).ToList();
 
@@ -198,7 +219,7 @@ namespace GameTracker.Views
 
         public class RedeemItem : INotifyPropertyChanged
         {
-            private string _command = string.Empty, _effect = "confetti", _sound = string.Empty, _image = string.Empty;
+            private string _command = string.Empty, _effect = "confetti", _sound = string.Empty, _image = string.Empty, _video = string.Empty;
             private int _cost = 100;
             private double _volume = 1.0;
 
@@ -216,8 +237,14 @@ namespace GameTracker.Views
                 get => _image;
                 set { _image = value; Raise(nameof(ImagePath)); Raise(nameof(ImageName)); }
             }
+            public string VideoPath
+            {
+                get => _video;
+                set { _video = value; Raise(nameof(VideoPath)); Raise(nameof(VideoName)); }
+            }
             public string SoundName => string.IsNullOrWhiteSpace(_sound) ? "(none)" : Path.GetFileName(_sound);
             public string ImageName => string.IsNullOrWhiteSpace(_image) ? "(none)" : Path.GetFileName(_image);
+            public string VideoName => string.IsNullOrWhiteSpace(_video) ? "(none)" : Path.GetFileName(_video);
 
             public event PropertyChangedEventHandler? PropertyChanged;
             private void Raise(string n) => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(n));

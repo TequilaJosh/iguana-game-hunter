@@ -313,6 +313,12 @@
     opacity: 0; transition: opacity 0.3s ease, transform 0.3s ease;
   }
   #fximg.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  #fxvideo {
+    position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    max-width: 70vw; max-height: 70vh; z-index: 7600; pointer-events: none;
+    display: none; border-radius: 10px;
+  }
+  #fxvideo.show { display: block; }
   @keyframes shake {
     0%, 100% { transform: translate(-50%, -50%) scale(var(--sscale)) translate(0, 0); }
     10% { transform: translate(-50%, -50%) scale(var(--sscale)) translate(-9px, 5px); }
@@ -390,6 +396,7 @@
 
   <div id="toast"></div>
   <img id="fximg" alt=""/>
+  <video id="fxvideo" playsinline></video>
 
   <div id="editbar">
     <h4>OVERLAY EDITOR</h4>
@@ -718,6 +725,9 @@
         break;
       case "effect":
         runEffect(data);
+        break;
+      case "video":
+        playVideo(data.url, data.volume);
         break;
       case "chat":
         if (Array.isArray(data.messages)) {
@@ -1097,6 +1107,24 @@
     img.classList.add("show");
     if (fxImgTimer) clearTimeout(fxImgTimer);
     fxImgTimer = setTimeout(function () { img.classList.remove("show"); }, durMs || 4000);
+  }
+
+  let fxVidEl = null;
+  function playVideo(url, volume) {
+    if (!url) return;
+    if (!fxVidEl) fxVidEl = document.getElementById("fxvideo");
+    if (!fxVidEl) return;
+    try {
+      fxVidEl.volume = Math.max(0, Math.min(1, (typeof volume === "number" ? volume : 100) / 100));
+      fxVidEl.src = url;
+      fxVidEl.classList.add("show");
+      fxVidEl.onended = function () { fxVidEl.classList.remove("show"); fxVidEl.removeAttribute("src"); };
+      fxVidEl.onerror = function () { fxVidEl.classList.remove("show"); };
+      var p = fxVidEl.play();
+      if (p && p.catch) p.catch(function () { /* autoplay guard; muted retry */
+        fxVidEl.muted = true; fxVidEl.play().catch(function () {});
+      });
+    } catch (e) { logErr("video failed: " + (e && e.message)); }
   }
 
   function runEffect(d) {

@@ -14,7 +14,7 @@ namespace GameTracker.Services
         public sealed class Stored
         {
             public string Voice { get; set; } = string.Empty;
-            public int Pitch { get; set; }
+            public string Effect { get; set; } = "normal";
         }
 
         private static readonly string File_ = Path.Combine(
@@ -43,18 +43,18 @@ namespace GameTracker.Services
         }
 
         /// <summary>The saved voice for this chatter, assigning a random one on first sight.</summary>
-        public (string voice, int pitch) For(string platform, string user)
+        public (string voice, string effect) For(string platform, string user)
         {
-            if (_profiles.Count == 0) return (string.Empty, 0);
+            if (_profiles.Count == 0) return (string.Empty, "normal");
             var key = PointsService.Key(platform, user);
             lock (_gate)
             {
                 var map = Load();
-                if (map.TryGetValue(key, out var s)) return (s.Voice, s.Pitch);
+                if (map.TryGetValue(key, out var s)) return (s.Voice, s.Effect ?? "normal");
                 var pick = _profiles[_rng.Next(_profiles.Count)];
-                map[key] = new Stored { Voice = pick.Voice, Pitch = pick.Pitch };
+                map[key] = new Stored { Voice = pick.Voice, Effect = pick.Effect };
                 Save();
-                return (pick.Voice, pick.Pitch);
+                return (pick.Voice, pick.Effect);
             }
         }
 

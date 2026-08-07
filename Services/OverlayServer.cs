@@ -200,6 +200,10 @@ namespace GameTracker.Services
                 {
                     await ServePanelImage(stream, route, ct);
                 }
+                else if (method == "GET" && route.StartsWith("/fxvideo/", StringComparison.Ordinal))
+                {
+                    await ServeVideo(stream, route, headers, ct);
+                }
                 else
                 {
                     await WriteSimple(stream, "404 Not Found", "text/plain", "Not found", ct);
@@ -315,6 +319,81 @@ namespace GameTracker.Services
             }
             catch { }
             await ServeImageFile(stream, path, ct);
+        }
+
+        // Serve a redeem video (/fxvideo/<index>) with HTTP range support so <video> in OBS
+        // can seek/stream it. Only files the streamer picked in the redeems editor are reachable.
+        private static async Task ServeVideo(NetworkStream stream, string route,
+            Dictionary<string, string> headers, CancellationToken ct)
+        {
+            string? path = null;
+            try
+            {
+                var idStr = route.Substring("/fxvideo/".Length).Split('?')[0];
+                if (int.TryParse(idStr, out int idx))
+                {
+                    var redeems = SettingsService.LoadChatFeatures().Redeems;
+                    if (idx >= 0 && idx < redeems.Count) path = redeems[idx].VideoPath;
+                }
+            }
+            catch { }
+
+            if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+            {
+                await WriteSimple(stream, "404 Not Found", "text/plain", "Not found", ct);
+                return;
+            }
+
+            var mime = Path.GetExtension(path).ToLowerInvariant() switch
+            {
+                ".mp4" or ".m4v" => "video/mp4",
+                ".webm" => "video/webm",
+                ".ogv" or ".ogg" => "video/ogg",
+                ".mov" => "video/quicktime",
+                ".mkv" => "video/x-matroska",
+                ".avi" => "video/x-msvideo",
+                _ => "application/octet-stream",
+            };
+
+            try
+            {
+                long len = new FileInfo(path).Length;
+                long start = 0, end = len - 1;
+                bool partial = false;
+                if (headers.TryGetValue("range", out var range) &&
+                    range.StartsWith("bytes=", StringComparison.OrdinalIgnoreCase))
+                {
+                    var spec = range.Substring(6).Split('-');
+                    if (long.TryParse(spec[0], out var s)) { start = s; partial = true; }
+                    if (spec.Length > 1 && long.TryParse(spec[1], out var e2) && e2 >= start) end = e2;
+                }
+                if (start < 0 || start >= len) { start = 0; end = len - 1; partial = false; }
+                long count = end - start + 1;
+
+                var head =
+                    (partial ? "HTTP/1.1 206 Partial Content\r\n" : "HTTP/1.1 200 OK\r\n") +
+                    "Content-Type: " + mime + "\r\n" +
+                    "Accept-Ranges: bytes\r\n" +
+                    (partial ? $"Content-Range: bytes {start}-{end}/{len}\r\n" : "") +
+                    "Content-Length: " + count + "\r\n" +
+                    "Cache-Control: no-store\r\nConnection: close\r\n\r\n";
+                await stream.WriteAsync(Encoding.ASCII.GetBytes(head), ct);
+
+                using var fs = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.Read);
+                fs.Seek(start, SeekOrigin.Begin);
+                var buffer = new byte[64 * 1024];
+                long remaining = count;
+                while (remaining > 0)
+                {
+                    int toRead = (int)Math.Min(buffer.Length, remaining);
+                    int r = await fs.ReadAsync(buffer.AsMemory(0, toRead), ct);
+                    if (r <= 0) break;
+                    await stream.WriteAsync(buffer.AsMemory(0, r), ct);
+                    remaining -= r;
+                }
+                await stream.FlushAsync(ct);
+            }
+            catch { /* client aborted / seek */ }
         }
 
         private static async Task ServeImageFile(NetworkStream stream, string? path, CancellationToken ct)
@@ -739,6 +818,13 @@ namespace GameTracker.Services
         {
             if (!_running) return;
             Broadcast(new { type = "effect", effect, image = imageUrl ?? string.Empty, duration = durationMs });
+        }
+
+        /// <summary>Play a video clip on the overlay (served from /fxvideo/&lt;index&gt;).</summary>
+        public static void PlayVideo(string url, int volumePercent = 100)
+        {
+            if (!_running || string.IsNullOrEmpty(url)) return;
+            Broadcast(new { type = "video", url, volume = Math.Clamp(volumePercent, 0, 100) });
         }
 
         private static object ToWire(ChatMessage m)

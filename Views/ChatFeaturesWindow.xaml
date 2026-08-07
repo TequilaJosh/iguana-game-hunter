@@ -213,6 +213,7 @@
                                                 <ComboBoxItem Tag="fireworks" Content="Fireworks"/>
                                                 <ComboBoxItem Tag="shake" Content="Screen shake"/>
                                                 <ComboBoxItem Tag="custom" Content="Custom"/>
+                                                <ComboBoxItem Tag="video" Content="Video"/>
                                             </ComboBox>
                                             <TextBlock Grid.Column="2" Text="cost" Style="{StaticResource Lbl}"/>
                                             <TextBox Grid.Column="3" Text="{Binding Cost, UpdateSourceTrigger=PropertyChanged}"
@@ -249,6 +250,21 @@
                                             <TextBlock Grid.Column="3" Text="{Binding ImageName}" Foreground="#a8c488"
                                                        FontSize="11" VerticalAlignment="Center"
                                                        TextTrimming="CharacterEllipsis" ToolTip="{Binding ImagePath}"/>
+                                        </Grid>
+                                        <Grid Margin="0,5,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <Button Grid.Column="0" Content="&#127909; Video" Tag="{Binding}" Click="PickVideo_Click"
+                                                    Style="{StaticResource Btn}" Margin="0,0,5,0"
+                                                    ToolTip="Optional video to play on the overlay (mp4 / webm best). Set effect to Video."/>
+                                            <TextBlock Grid.Column="1" Text="{Binding VideoName}" Foreground="#a8c488"
+                                                       FontSize="11" VerticalAlignment="Center" Margin="0,0,10,0"
+                                                       TextTrimming="CharacterEllipsis" ToolTip="{Binding VideoPath}"/>
+                                            <Button Grid.Column="2" Content="&#x2715; video" Tag="{Binding}" Click="ClearVideo_Click"
+                                                    Style="{StaticResource Btn}" ToolTip="Remove the video"/>
                                         </Grid>
                                     </StackPanel>
                                 </Border>

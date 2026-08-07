@@ -1,23 +1,25 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Security;
-using System.Speech.Synthesis;
+using NAudio.Wave;
+using NAudio.Wave.SampleProviders;
+using Windows.Media.SpeechSynthesis;
 
 namespace GameTracker.Services
 {
-    /// <summary>A selectable voice = a base engine voice plus a pitch shift.</summary>
+    /// <summary>A "funny voice" = a base engine voice + an effect (pitch/rate + audio DSP).</summary>
     public sealed class VoiceProfile
     {
-        public string Label { get; set; } = string.Empty;   // e.g. "David (deep)"
-        public string Voice { get; set; } = string.Empty;   // installed engine voice name
-        public int Pitch { get; set; }                       // -2..2 (x-low .. x-high)
+        public string Label { get; set; } = string.Empty;   // e.g. "David (robot)"
+        public string Voice { get; set; } = string.Empty;   // OneCore voice display name
+        public string Effect { get; set; } = "normal";      // effect key
     }
 
     /// <summary>
-    /// Offline text-to-speech via the Windows speech engine. Since Windows exposes only a
-    /// couple of base voices, we expand them into many by pitch-shifting (SSML). Utterances
-    /// play one at a time (correct voice/pitch each), and flood messages are dropped.
+    /// Text-to-speech via the Windows OneCore engine, with offline "funny voice" effects
+    /// (chipmunk/deep/robot/ghost/alien/demon) layered on with NAudio. Utterances play one
+    /// at a time; on floods, extra messages are dropped.
     /// </summary>
     public sealed class TtsService : IDisposable
     {
@@ -25,63 +27,88 @@ namespace GameTracker.Services
         private readonly Queue<Item> _q = new();
         private readonly object _gate = new();
         private bool _speaking;
+        private WaveOutEvent? _out;
+        private WaveFileReader? _reader;
+        private Stream? _stream;
 
         public int MaxBacklog { get; set; } = 5;
 
-        private readonly record struct Item(string Text, string Voice, int Pitch, int Rate, int Volume);
+        private readonly record struct Item(string Text, string Voice, string Effect, int Rate, int Volume);
 
-        public TtsService()
+        // The effect palette. Pitch/Rate feed the engine; Dsp is applied to the audio.
+        public sealed record Effect(string Key, string Label, double Pitch, double Rate, string Dsp);
+
+        public static readonly Effect[] Effects =
         {
-            try { _synth.SetOutputToDefaultAudioDevice(); } catch { /* no audio device */ }
-            _synth.SpeakCompleted += (_, _) => { lock (_gate) { _speaking = false; } Pump(); };
-        }
+            new("normal",   "",         1.00, 1.00, "none"),
+            new("deep",     "deep",     0.80, 0.95, "none"),
+            new("high",     "high",     1.30, 1.05, "none"),
+            new("chipmunk", "chipmunk", 1.75, 1.35, "none"),
+            new("robot",    "robot",    1.00, 1.00, "robot"),
+            new("ghost",    "ghost",    0.90, 0.95, "echo"),
+            new("alien",    "alien",    1.15, 1.00, "tremolo"),
+            new("demon",    "demon",    0.50, 0.85, "echo"),
+        };
+
+        private static Effect Find(string? key) =>
+            Effects.FirstOrDefault(e => e.Key == key) ?? Effects[0];
+
+        // Voices to hide from the picker (odd/unwanted OneCore entries).
+        private static readonly string[] Blocked = { "Jakub", "Helle" };
 
         public static List<string> InstalledVoices()
         {
             try
             {
-                using var s = new SpeechSynthesizer();
-                return s.GetInstalledVoices().Where(v => v.Enabled)
-                        .Select(v => v.VoiceInfo.Name).ToList();
+                return SpeechSynthesizer.AllVoices
+                    .Select(v => v.DisplayName)
+                    .Where(name => !Blocked.Any(b => name.Contains(b, StringComparison.OrdinalIgnoreCase)))
+                    .ToList();
             }
             catch { return new List<string>(); }
         }
-
-        // A palette of voices: each installed voice at five pitch steps.
-        private static readonly (int val, string tag)[] Steps =
-        {
-            (-2, "very deep"), (-1, "deep"), (0, ""), (1, "bright"), (2, "high"),
-        };
 
         public static List<VoiceProfile> BuildProfiles()
         {
             var list = new List<VoiceProfile>();
             foreach (var v in InstalledVoices())
             {
-                var shortName = v.Replace("Microsoft ", "").Replace(" Desktop", "").Trim();
-                foreach (var (val, tag) in Steps)
+                var shortName = v.Replace("Microsoft ", "").Trim();
+                foreach (var e in Effects)
                     list.Add(new VoiceProfile
                     {
                         Voice = v,
-                        Pitch = val,
-                        Label = tag.Length == 0 ? shortName : $"{shortName} ({tag})",
+                        Effect = e.Key,
+                        Label = e.Label.Length == 0 ? shortName : $"{shortName} ({e.Label})",
                     });
             }
             return list;
         }
 
-        public void Speak(string text, string? voice, int pitch, int rate, int volume)
+        /// <summary>The user's custom voices first, then the full built-in palette.</summary>
+        public static List<VoiceProfile> AllProfiles(IEnumerable<Models.CustomVoice>? custom)
+        {
+            var list = new List<VoiceProfile>();
+            if (custom != null)
+                foreach (var c in custom)
+                    if (!string.IsNullOrWhiteSpace(c.Name) && !string.IsNullOrWhiteSpace(c.Voice))
+                        list.Add(new VoiceProfile { Label = "★ " + c.Name, Voice = c.Voice, Effect = c.Effect });
+            list.AddRange(BuildProfiles());
+            return list;
+        }
+
+        public void Speak(string text, string? voice, string? effect, int rate, int volume)
         {
             if (string.IsNullOrWhiteSpace(text)) return;
             lock (_gate)
             {
-                if (_q.Count >= MaxBacklog) return;   // drop when flooded
-                _q.Enqueue(new Item(text, voice ?? string.Empty, pitch, rate, volume));
+                if (_q.Count >= MaxBacklog) return;
+                _q.Enqueue(new Item(text, voice ?? string.Empty, effect ?? "normal", rate, volume));
             }
             Pump();
         }
 
-        private void Pump()
+        private async void Pump()
         {
             Item it;
             lock (_gate)
@@ -92,43 +119,65 @@ namespace GameTracker.Services
             }
             try
             {
-                if (!string.IsNullOrEmpty(it.Voice)) { try { _synth.SelectVoice(it.Voice); } catch { } }
-                _synth.Rate = Math.Clamp(it.Rate, -10, 10);
-                _synth.Volume = Math.Clamp(it.Volume, 0, 100);
+                var fx = Find(it.Effect);
+                if (!string.IsNullOrEmpty(it.Voice))
+                {
+                    var v = SpeechSynthesizer.AllVoices.FirstOrDefault(x => x.DisplayName == it.Voice);
+                    if (v != null) _synth.Voice = v;
+                }
+                _synth.Options.AudioPitch = Math.Clamp(fx.Pitch, 0.0, 2.0);
+                _synth.Options.SpeakingRate = Math.Clamp(fx.Rate * (1.0 + it.Rate * 0.05), 0.5, 6.0);
+                _synth.Options.AudioVolume = Math.Clamp(it.Volume, 0, 100) / 100.0;
 
-                var pitch = PitchName(it.Pitch);
-                if (pitch != null) _synth.SpeakSsmlAsync(Ssml(it.Text, pitch));
-                else _synth.SpeakAsync(it.Text);
+                var synthStream = await _synth.SynthesizeTextToStreamAsync(it.Text);
+                _stream = synthStream.AsStreamForRead();
+                _reader = new WaveFileReader(_stream);
+
+                ISampleProvider sp = _reader.ToSampleProvider();
+                sp = fx.Dsp switch
+                {
+                    "robot" => new RingModProvider(sp),
+                    "echo" => new EchoProvider(sp),
+                    "tremolo" => new TremoloProvider(sp),
+                    _ => sp,
+                };
+
+                _out = new WaveOutEvent();
+                _out.PlaybackStopped += (_, _) =>
+                {
+                    CleanupPlayback();
+                    lock (_gate) { _speaking = false; }
+                    Pump();
+                };
+                _out.Init(sp);
+                _out.Play();
             }
-            catch { lock (_gate) { _speaking = false; } }
+            catch
+            {
+                CleanupPlayback();
+                lock (_gate) { _speaking = false; }
+            }
         }
 
-        private static string? PitchName(int p) => p switch
+        private void CleanupPlayback()
         {
-            <= -2 => "x-low",
-            -1 => "low",
-            1 => "high",
-            >= 2 => "x-high",
-            _ => null,   // 0 = normal, no SSML needed
-        };
-
-        private static string Ssml(string text, string pitch)
-        {
-            var esc = SecurityElement.Escape(text) ?? text;
-            return "<speak version=\"1.0\" xmlns=\"http://www.w3.org/2001/10/synthesis\" xml:lang=\"en-US\">" +
-                   $"<prosody pitch=\"{pitch}\">{esc}</prosody></speak>";
+            try { _out?.Dispose(); } catch { }
+            try { _reader?.Dispose(); } catch { }
+            try { _stream?.Dispose(); } catch { }
+            _out = null; _reader = null; _stream = null;
         }
 
         public void StopAll()
         {
             lock (_gate) { _q.Clear(); }
-            try { _synth.SpeakAsyncCancelAll(); } catch { }
+            try { _out?.Stop(); } catch { }
             lock (_gate) { _speaking = false; }
         }
 
         public void Dispose()
         {
-            try { _synth.SpeakAsyncCancelAll(); } catch { }
+            StopAll();
+            CleanupPlayback();
             try { _synth.Dispose(); } catch { }
         }
     }

@@ -84,7 +84,7 @@ namespace GameTracker.Views
             UpdateMuteButton();
 
             _ttsSettings = SettingsService.LoadTts();
-            _voices.SetProfiles(TtsService.BuildProfiles());
+            _voices.SetProfiles(TtsService.AllProfiles(_ttsSettings.Custom));
 
             // Chat features: counts, chatters list, points, style, redeems.
             _features = SettingsService.LoadChatFeatures();
@@ -193,6 +193,8 @@ namespace GameTracker.Views
                         _sound.Play(r.SoundPath, r.Volume);
                     OverlayServer.TriggerEffect(r.Effect,
                         r.Effect == "custom" && !string.IsNullOrWhiteSpace(r.ImagePath) ? "/fx/" + idx : null);
+                    if (!string.IsNullOrWhiteSpace(r.VideoPath))
+                        OverlayServer.PlayVideo("/fxvideo/" + idx, (int)(Math.Clamp(r.Volume, 0, 1) * 100));
                     OverlayServer.Toast($"{m.User} redeemed {r.Command.TrimStart('!')}!", confetti: false);
                     SendChatReply($"@{m.User} redeemed {r.Command.TrimStart('!')}!", m.Platform);
                 }
@@ -248,7 +250,7 @@ namespace GameTracker.Views
         public void ReloadTts()
         {
             _ttsSettings = SettingsService.LoadTts();
-            _voices.SetProfiles(TtsService.BuildProfiles());
+            _voices.SetProfiles(TtsService.AllProfiles(_ttsSettings.Custom));
             if (!_ttsSettings.Enabled) _tts.StopAll();
         }
 
@@ -265,12 +267,12 @@ namespace GameTracker.Views
                 ? $"{m.User} says: {text}"
                 : text;
 
-            string voice; int pitch;
+            string voice, effect;
             if (_ttsSettings.PerChatterVoices)
-                (voice, pitch) = _voices.For(m.Platform, m.User);   // same person → same voice, saved
-            else { voice = _ttsSettings.Voice; pitch = _ttsSettings.Pitch; }
+                (voice, effect) = _voices.For(m.Platform, m.User);   // same person → same voice, saved
+            else { voice = _ttsSettings.Voice; effect = _ttsSettings.Effect; }
 
-            _tts.Speak(spoken, voice, pitch, _ttsSettings.Rate, _ttsSettings.Volume);
+            _tts.Speak(spoken, voice, effect, _ttsSettings.Rate, _ttsSettings.Volume);
         }
 
         /// <summary>Re-read the overlay chat-line count after it's changed in Settings.</summary>

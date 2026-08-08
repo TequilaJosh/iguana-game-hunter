@@ -180,6 +180,13 @@ namespace GameTracker.Views
                 "Settings → Chat → Voice Lab lets you build your own voices: pick a base voice + a funny effect (chipmunk, deep, robot, ghost, alien, demon), " +
                 "type a phrase, Test it, name it, and Save. Saved voices appear in the voice list and the per-chatter pool.");
 
+            Section("Voice Morph (morph YOUR voice)",
+                "Settings → Chat → Voice Morph runs your mic through live effects (pitch shift, robot, whisper, echo, and more). " +
+                "Build a morph (pitch + effect + timer), Try it live, and Save it. Attach a saved morph to a point redeem so viewers can " +
+                "change your voice — the overlay shows the morph's name with a countdown, and your voice reverts automatically at zero. " +
+                "To get the morphed mic into your stream: add an OBS 'Application Audio Capture' source pointed at Game Tracker and mute " +
+                "your raw mic source (or route the app's output to a virtual cable like VB-CABLE and use that as your OBS mic).");
+
             Section("Appearance (themes)",
                 "Settings → Appearance re-colors the whole app. Pick a preset (Reptile, Amber, Ocean, Royal, Crimson, Mono) or set custom colors " +
                 "for accent, deep accent, amber, background, and tiles. Changes apply instantly and are saved.");
@@ -354,6 +361,9 @@ namespace GameTracker.Views
                 selected != null && p.Voice == selected.Voice && p.Effect == selected.Effect)
                 ?? _profiles.FirstOrDefault();
         }
+
+        private void VoiceMorph_Click(object sender, RoutedEventArgs e) =>
+            new VoiceMorphWindow { Owner = this }.ShowDialog();
 
         private void TtsTest_Click(object sender, RoutedEventArgs e)
         {

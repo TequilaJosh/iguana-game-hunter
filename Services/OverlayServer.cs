@@ -591,7 +591,7 @@ namespace GameTracker.Services
             {
                 type = "snapshot", state = _state, chat = _chat,
                 layout = _layout, presets = _presets, style = _style, chatters = _chatters,
-                panels = _panels,
+                panels = _panels, morph = MorphSnapshot(),
             };
             await SendText(client, JsonConvert.SerializeObject(snapshot), ct);
 
@@ -825,6 +825,26 @@ namespace GameTracker.Services
         {
             if (!_running || string.IsNullOrEmpty(url)) return;
             Broadcast(new { type = "video", url, volume = Math.Clamp(volumePercent, 0, 100) });
+        }
+
+        // Active streamer voice-morph (for the overlay countdown pill).
+        private static string? _morphName;
+        private static DateTime _morphEnd;
+
+        /// <summary>Show/clear the voice-morph countdown on the overlay (name + seconds; null clears).</summary>
+        public static void SetMorph(string? name, int seconds)
+        {
+            _morphName = string.IsNullOrWhiteSpace(name) ? null : name;
+            _morphEnd = DateTime.UtcNow.AddSeconds(seconds);
+            if (!_running) return;
+            Broadcast(new { type = "morph", name = _morphName, seconds = _morphName == null ? 0 : seconds });
+        }
+
+        private static object? MorphSnapshot()
+        {
+            if (_morphName == null) return null;
+            var remaining = (int)(_morphEnd - DateTime.UtcNow).TotalSeconds;
+            return remaining > 0 ? new { name = _morphName, seconds = remaining } : null;
         }
 
         private static object ToWire(ChatMessage m)

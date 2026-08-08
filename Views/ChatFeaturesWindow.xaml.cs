@@ -44,7 +44,8 @@ namespace GameTracker.Views
                 _redeems.Add(new RedeemItem
                 {
                     Command = r.Command, Effect = r.Effect, Cost = r.Cost,
-                    SoundPath = r.SoundPath, ImagePath = r.ImagePath, VideoPath = r.VideoPath, Volume = r.Volume,
+                    SoundPath = r.SoundPath, ImagePath = r.ImagePath, VideoPath = r.VideoPath,
+                    MorphPreset = r.MorphPreset, Volume = r.Volume,
                 });
             RedeemList.ItemsSource = _redeems;
         }
@@ -144,6 +145,8 @@ namespace GameTracker.Views
                         ? "/fx/" + idx : null);
                 if (idx >= 0 && !string.IsNullOrWhiteSpace(r.VideoPath))
                     OverlayServer.PlayVideo("/fxvideo/" + idx, (int)(Math.Clamp(r.Volume, 0, 1) * 100));
+                if (!string.IsNullOrWhiteSpace(r.MorphPreset))
+                    VoiceMorphService.ActivateByName(r.MorphPreset);
                 StatusText.Text = "Fired " + r.Effect + " on the overlay.";
             }
             else StatusText.Text = "Overlay server isn't running — sound only.";
@@ -159,6 +162,7 @@ namespace GameTracker.Views
                         Effect = string.IsNullOrWhiteSpace(r.Effect) ? "confetti" : r.Effect,
                         Cost = Math.Max(0, r.Cost),
                         SoundPath = r.SoundPath, ImagePath = r.ImagePath, VideoPath = r.VideoPath,
+                        MorphPreset = r.MorphPreset,
                         Volume = Math.Clamp(r.Volume, 0, 1),
                     }).ToList();
 
@@ -220,8 +224,29 @@ namespace GameTracker.Views
         public class RedeemItem : INotifyPropertyChanged
         {
             private string _command = string.Empty, _effect = "confetti", _sound = string.Empty, _image = string.Empty, _video = string.Empty;
+            private string _morph = "";
             private int _cost = 100;
             private double _volume = 1.0;
+
+            /// <summary>"(none)" + the streamer's saved morph names, for the per-redeem picker.</summary>
+            public System.Collections.Generic.List<string> MorphChoices { get; } = BuildMorphChoices();
+
+            private static System.Collections.Generic.List<string> BuildMorphChoices()
+            {
+                var list = new System.Collections.Generic.List<string> { "" };
+                try
+                {
+                    foreach (var p in SettingsService.LoadMorph().Presets) list.Add(p.Name);
+                }
+                catch { }
+                return list;
+            }
+
+            public string MorphPreset
+            {
+                get => _morph;
+                set { _morph = value ?? ""; Raise(nameof(MorphPreset)); }
+            }
 
             public string Command { get => _command; set { _command = value; Raise(nameof(Command)); } }
             public string Effect { get => _effect; set { _effect = value; Raise(nameof(Effect)); } }

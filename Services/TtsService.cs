@@ -48,6 +48,12 @@ namespace GameTracker.Services
             new("ghost",    "ghost",    0.90, 0.95, "echo"),
             new("alien",    "alien",    1.15, 1.00, "tremolo"),
             new("demon",    "demon",    0.50, 0.85, "echo"),
+            // NWaves-powered extras (shared with the streamer voice-morph engine)
+            new("whisper",  "whisper",  1.00, 0.95, "nw:whisper"),
+            new("gremlin",  "gremlin",  1.45, 1.10, "nw:distortion"),
+            new("underwater","underwater",0.95, 0.95, "nw:autowah"),
+            new("wobbly",   "wobbly",   1.00, 1.00, "nw:flanger"),
+            new("haunted",  "haunted",  0.75, 0.90, "nw:vibrato"),
         };
 
         private static Effect Find(string? key) =>
@@ -134,11 +140,18 @@ namespace GameTracker.Services
                 _reader = new WaveFileReader(_stream);
 
                 ISampleProvider sp = _reader.ToSampleProvider();
+                int sr = sp.WaveFormat.SampleRate;
                 sp = fx.Dsp switch
                 {
                     "robot" => new RingModProvider(sp),
                     "echo" => new EchoProvider(sp),
                     "tremolo" => new TremoloProvider(sp),
+                    "nw:whisper" => new NWavesProvider(sp, new NWaves.Effects.WhisperEffect(hopSize: 128, fftSize: 512)),
+                    "nw:distortion" => new NWavesProvider(sp,
+                        new NWaves.Effects.DistortionEffect(NWaves.Effects.DistortionMode.SoftClipping, 18)),
+                    "nw:autowah" => new NWavesProvider(sp, new NWaves.Effects.AutowahEffect(sr)),
+                    "nw:flanger" => new NWavesProvider(sp, new NWaves.Effects.FlangerEffect(sr)),
+                    "nw:vibrato" => new NWavesProvider(sp, new NWaves.Effects.VibratoEffect(sr)),
                     _ => sp,
                 };
 

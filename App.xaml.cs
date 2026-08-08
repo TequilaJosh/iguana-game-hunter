@@ -52,6 +52,9 @@ namespace GameTracker
             // Apply the saved colour theme before any window is shown.
             try { Services.ThemeService.Initialize(); } catch { /* fall back to XAML defaults */ }
 
+            // Start the live mic morph chain if the streamer has it enabled.
+            try { Services.VoiceMorphService.Start(); } catch { /* engine is optional */ }
+
             var win = new MainWindow();
             MainWindow = win;
             win.Show();
@@ -77,6 +80,7 @@ namespace GameTracker
         {
             // Free the overlay port and release the single-instance guard so the next
             // launch starts clean.
+            try { Services.VoiceMorphService.Stop(); } catch { }
             try { Services.OverlayServer.Stop(); } catch { }
             try { _showRegistration?.Unregister(null); } catch { }
             try { _showEvent?.Dispose(); } catch { }

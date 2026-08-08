@@ -319,6 +319,17 @@
     display: none; border-radius: 10px;
   }
   #fxvideo.show { display: block; }
+
+  /* Streamer voice-morph countdown pill */
+  #morphpill {
+    position: fixed; left: 50%; bottom: 6%; transform: translateX(-50%);
+    z-index: 7900; pointer-events: none; display: none;
+    background: rgba(10, 20, 16, 0.94); border: 2px solid #d4a437; border-radius: 999px;
+    color: #e8e0c4; font-weight: 700; font-size: 26px; padding: 10px 26px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
+  }
+  #morphpill.show { display: block; }
+  #morphpill .mt { color: #d4a437; font-variant-numeric: tabular-nums; margin-left: 10px; }
   @keyframes shake {
     0%, 100% { transform: translate(-50%, -50%) scale(var(--sscale)) translate(0, 0); }
     10% { transform: translate(-50%, -50%) scale(var(--sscale)) translate(-9px, 5px); }
@@ -397,6 +408,7 @@
   <div id="toast"></div>
   <img id="fximg" alt=""/>
   <video id="fxvideo" playsinline></video>
+  <div id="morphpill">🎙 <span class="mn"></span><span class="mt"></span></div>
 
   <div id="editbar">
     <h4>OVERLAY EDITOR</h4>
@@ -702,6 +714,7 @@
         if (Array.isArray(data.presets)) { presets = data.presets; if (EDIT) renderPresets(); }
         if (data.style) applyStyle(data.style);
         if (data.chatters) renderChatters(data.chatters);
+        if (data.morph) showMorph(data.morph.name, data.morph.seconds);
         if (data.state) renderState(data.state);
         if (Array.isArray(data.chat)) {
           for (let i = 0; i < data.chat.length; i++) appendMessage(data.chat[i]);
@@ -728,6 +741,9 @@
         break;
       case "video":
         playVideo(data.url, data.volume);
+        break;
+      case "morph":
+        showMorph(data.name, data.seconds);
         break;
       case "chat":
         if (Array.isArray(data.messages)) {
@@ -1125,6 +1141,34 @@
         fxVidEl.muted = true; fxVidEl.play().catch(function () {});
       });
     } catch (e) { logErr("video failed: " + (e && e.message)); }
+  }
+
+  // ---- streamer voice-morph countdown pill ----
+  let morphTimer = null;
+  function showMorph(name, seconds) {
+    const pill = document.getElementById("morphpill");
+    if (!pill) return;
+    if (morphTimer) { clearInterval(morphTimer); morphTimer = null; }
+    if (!name || seconds <= 0) { pill.classList.remove("show"); return; }
+    const mn = pill.querySelector(".mn");
+    const mt = pill.querySelector(".mt");
+    mn.textContent = name;
+    let left = Math.max(0, seconds | 0);
+    const fmt = function (s) {
+      const m = Math.floor(s / 60), r = s % 60;
+      return m + ":" + (r < 10 ? "0" : "") + r;
+    };
+    mt.textContent = fmt(left);
+    pill.classList.add("show");
+    morphTimer = setInterval(function () {
+      left--;
+      if (left <= 0) {
+        clearInterval(morphTimer); morphTimer = null;
+        pill.classList.remove("show");
+      } else {
+        mt.textContent = fmt(left);
+      }
+    }, 1000);
   }
 
   function runEffect(d) {

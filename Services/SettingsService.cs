@@ -40,6 +40,7 @@ namespace GameTracker.Services
             public List<TextPanel> TextPanels { get; set; } = new();   // custom OBS text overlays (max 5)
             public ThemeSettings Theme { get; set; } = new();          // app colour theme
             public ChatTtsSettings Tts { get; set; } = new();          // read chat aloud
+            public MorphSettings Morph { get; set; } = new();          // live mic voice morph
         }
 
         // Replace initialized collections instead of appending to them — otherwise lists
@@ -197,6 +198,15 @@ namespace GameTracker.Services
         {
             var s = LoadAll();
             s.Theme = theme;
+            SaveAll(s);
+        }
+
+        public static MorphSettings LoadMorph() => LoadAll().Morph ?? new MorphSettings();
+
+        public static void SaveMorph(MorphSettings morph)
+        {
+            var s = LoadAll();
+            s.Morph = morph;
             SaveAll(s);
         }
 

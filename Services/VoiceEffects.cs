@@ -3,6 +3,29 @@ using NAudio.Wave;
 
 namespace GameTracker.Services
 {
+    // Runs any NWaves streaming effect over an NAudio sample stream.
+    internal sealed class NWavesProvider : ISampleProvider
+    {
+        private readonly ISampleProvider _src;
+        private readonly NWaves.Filters.Base.IOnlineFilter _fx;
+
+        public NWavesProvider(ISampleProvider src, NWaves.Filters.Base.IOnlineFilter fx)
+        {
+            _src = src;
+            _fx = fx;
+        }
+
+        public WaveFormat WaveFormat => _src.WaveFormat;
+
+        public int Read(float[] buffer, int offset, int count)
+        {
+            int n = _src.Read(buffer, offset, count);
+            for (int i = 0; i < n; i++)
+                buffer[offset + i] = Math.Clamp(_fx.Process(buffer[offset + i]), -1f, 1f);
+            return n;
+        }
+    }
+
     // Ring modulation — multiplies the signal by a low sine, giving a robotic/metallic tone.
     internal sealed class RingModProvider : ISampleProvider
     {

@@ -195,6 +195,8 @@ namespace GameTracker.Views
                         r.Effect == "custom" && !string.IsNullOrWhiteSpace(r.ImagePath) ? "/fx/" + idx : null);
                     if (!string.IsNullOrWhiteSpace(r.VideoPath))
                         OverlayServer.PlayVideo("/fxvideo/" + idx, (int)(Math.Clamp(r.Volume, 0, 1) * 100));
+                    if (!string.IsNullOrWhiteSpace(r.MorphPreset))
+                        VoiceMorphService.ActivateByName(r.MorphPreset);   // overlay shows the countdown
                     OverlayServer.Toast($"{m.User} redeemed {r.Command.TrimStart('!')}!", confetti: false);
                     SendChatReply($"@{m.User} redeemed {r.Command.TrimStart('!')}!", m.Platform);
                 }

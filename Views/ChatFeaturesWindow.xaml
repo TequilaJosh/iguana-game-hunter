@@ -266,6 +266,13 @@
                                             <Button Grid.Column="2" Content="&#x2715; video" Tag="{Binding}" Click="ClearVideo_Click"
                                                     Style="{StaticResource Btn}" ToolTip="Remove the video"/>
                                         </Grid>
+                                        <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                            <TextBlock Text="&#127897; Voice morph" Foreground="#a8c488" FontSize="11"
+                                                       VerticalAlignment="Center" Margin="0,0,6,0"
+                                                       ToolTip="Morph the streamer's voice when redeemed (build morphs in Settings → Chat → Voice Morph)"/>
+                                            <ComboBox Width="150" ItemsSource="{Binding MorphChoices}"
+                                                      SelectedItem="{Binding MorphPreset}"/>
+                                        </StackPanel>
                                     </StackPanel>
                                 </Border>
                             </DataTemplate>

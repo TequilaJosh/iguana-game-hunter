@@ -233,9 +233,14 @@
                                 <Button Grid.Column="2" Content="&#9654; Test" Click="TtsTest_Click"
                                         Style="{StaticResource Btn}" Margin="8,0,0,0"/>
                             </Grid>
-                            <Button Content="&#127908; Voice Lab — make your own voices" Click="VoiceLab_Click"
-                                    Style="{StaticResource Btn}" HorizontalAlignment="Left" Margin="0,0,0,8"
-                                    ToolTip="Build, test and save custom voices (base voice + funny effect)"/>
+                            <StackPanel Margin="0,0,0,8" HorizontalAlignment="Left">
+                                <Button Content="&#127908; Voice Lab — make your own voices" Click="VoiceLab_Click"
+                                        Style="{StaticResource Btn}" Margin="0,0,0,6" HorizontalAlignment="Left"
+                                        ToolTip="Build, test and save custom voices (base voice + funny effect)"/>
+                                <Button Content="&#127897; Voice Morph — morph YOUR voice" Click="VoiceMorph_Click"
+                                        Style="{StaticResource Btn}" HorizontalAlignment="Left"
+                                        ToolTip="Run your mic through live effects; viewers can trigger them with point redeems"/>
+                            </StackPanel>
                             <Grid Margin="0,0,0,6">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="120"/>

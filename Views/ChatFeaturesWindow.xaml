@@ -141,6 +141,9 @@
                         <TextBox x:Name="PointsIntervalBox" Style="{StaticResource Num}"/>
                         <TextBlock Text="min give" Style="{StaticResource Lbl}" Margin="6,0,6,0"/>
                         <TextBox x:Name="PointsAmountBox" Style="{StaticResource Num}"/>
+                        <TextBlock Text="balance cmd" Style="{StaticResource Lbl}" Margin="12,0,4,0"/>
+                        <TextBox x:Name="BalanceCmdBox" Style="{StaticResource Txt}" Width="110"
+                                 ToolTip="The command viewers use to check their balance. Change it (e.g. !gh) if another bot like StreamElements also answers !points with its own numbers."/>
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
                         <TextBlock Text="First-chatter bonus" Style="{StaticResource Lbl}"/>

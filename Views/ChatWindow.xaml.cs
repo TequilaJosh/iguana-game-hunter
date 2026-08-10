@@ -37,6 +37,18 @@ namespace GameTracker.Views
         /// <summary>The live chat window, if open — lets Settings push changes to it.</summary>
         public static ChatWindow? Current { get; private set; }
 
+        private bool _docsMode;
+
+        /// <summary>Docs capture: placeholder values instead of personal ones, and never
+        /// persist anything on close (the placeholders must not overwrite real settings).</summary>
+        public void SanitizeForDocs()
+        {
+            _docsMode = true;
+            TwitchBox.Text = "yourchannel";
+            SsnBox.Text = "your-session-id";
+            RestreamBox.Text = string.Empty;
+        }
+
         private const string AllChats = "All chats";
         private readonly ObservableCollection<string> _sendTargets = new() { AllChats };
 
@@ -174,6 +186,13 @@ namespace GameTracker.Views
                 return;
             }
 
+            // "!ghhelp [topic]" -> command/redeem/points help, replied to the asker's chat.
+            if (string.Equals(cmd, "!ghhelp", StringComparison.OrdinalIgnoreCase))
+            {
+                HandleHelp(m, parts.Length == 2 ? parts[1].Trim() : string.Empty);
+                return;
+            }
+
             // "!vote N" -> poll vote (one per person; revoting switches).
             if (string.Equals(cmd, "!vote", StringComparison.OrdinalIgnoreCase))
             {
@@ -250,9 +269,64 @@ namespace GameTracker.Views
             }
         }
 
+        // The viewer-facing help menu (!ghhelp). Replies in the asker's chat when SSN can
+        // send; otherwise falls back to an overlay toast so the answer still shows somewhere.
+        private void HandleHelp(ChatMessage m, string topic)
+        {
+            var balanceCmd = string.IsNullOrWhiteSpace(_features.BalanceCommand)
+                ? "!points" : _features.BalanceCommand.Trim();
+            var pointsName = _features.PointsName;
+            string text;
+
+            switch (topic.ToLowerInvariant())
+            {
+                case "commands":
+                case "command":
+                    text = $"Commands: {balanceCmd} = your {pointsName} · !request <game> = suggest a game · " +
+                           "!vote <#> = vote in the poll · !ghhelp redeems = spendable rewards";
+                    break;
+
+                case "redeems":
+                case "redeem":
+                case "pointredeems":
+                case "rewards":
+                    var redeems = _features.Redeems
+                        .Where(r => !string.IsNullOrWhiteSpace(r.Command) && r.Command.Trim() != "!")
+                        .Take(8)
+                        .Select(r => r.Cost > 0 ? $"{r.Command.Trim()} ({r.Cost})" : r.Command.Trim())
+                        .ToList();
+                    int more = Math.Max(0, _features.Redeems.Count(r => !string.IsNullOrWhiteSpace(r.Command)) - 8);
+                    text = redeems.Count == 0
+                        ? "No point redeems are set up yet."
+                        : $"Spend {pointsName} on: " + string.Join(" · ", redeems) +
+                          (more > 0 ? $" (+{more} more)" : "");
+                    break;
+
+                case "points":
+                case "point":
+                    text = $"Chat to earn {_features.PointsPerInterval} {pointsName} every " +
+                           $"{_features.PointsIntervalMinutes} min while active. " +
+                           (_features.FirstChatterBonus > 0 ? $"First chatter of the stream: +{_features.FirstChatterBonus}. " : "") +
+                           (_features.StreakBonusPerDay > 0 ? "Daily streaks pay a growing bonus. " : "") +
+                           $"Check yours with {balanceCmd}.";
+                    break;
+
+                default:
+                    text = "Help topics: !ghhelp commands · !ghhelp redeems · !ghhelp points";
+                    break;
+            }
+
+            if (_features.ReplyInChat && _ssn.IsConnected)
+                SendChatReply($"@{m.User} {text}", m.Platform);
+            else
+                OverlayServer.Toast(text);
+        }
+
         private bool IsBalanceCommand(string cmd)
         {
-            if (string.Equals(cmd, "!points", StringComparison.OrdinalIgnoreCase)) return true;
+            var configured = string.IsNullOrWhiteSpace(_features.BalanceCommand)
+                ? "!points" : _features.BalanceCommand.Trim();
+            if (string.Equals(cmd, configured, StringComparison.OrdinalIgnoreCase)) return true;
             var custom = "!" + new string(_features.PointsName.Where(char.IsLetterOrDigit).ToArray());
             return custom.Length > 1 && string.Equals(cmd, custom, StringComparison.OrdinalIgnoreCase);
         }
@@ -516,6 +590,7 @@ namespace GameTracker.Views
         // Persist connection fields, preserving auto-connect/opacity (now owned by Settings).
         private void SaveChat()
         {
+            if (_docsMode) return;   // docs screenshots must never overwrite real settings
             var s = SettingsService.LoadChat();
             s.TwitchChannel = TwitchBox.Text.Trim();
             s.SsnSession = SsnBox.Text.Trim();

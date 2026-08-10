@@ -72,13 +72,18 @@ namespace GameTracker.Views
 
         private void Nav_Click(object sender, RoutedEventArgs e)
         {
-            NavAppearance.Tag = NavChat.Tag = NavOverlay.Tag = NavHelp.Tag = NavBackup.Tag = null;
+            NavAppearance.Tag = NavChat.Tag = NavOverlay.Tag = NavHelp.Tag = NavBackup.Tag = NavHotkeys.Tag = null;
             PanelAppearance.Visibility = PanelChat.Visibility = PanelOverlay.Visibility =
-                PanelHelp.Visibility = PanelBackup.Visibility = Visibility.Collapsed;
+                PanelHelp.Visibility = PanelBackup.Visibility = PanelHotkeys.Visibility = Visibility.Collapsed;
 
             if (sender == NavChat) { NavChat.Tag = "active"; PanelChat.Visibility = Visibility.Visible; }
             else if (sender == NavOverlay) { NavOverlay.Tag = "active"; PanelOverlay.Visibility = Visibility.Visible; }
             else if (sender == NavBackup) { NavBackup.Tag = "active"; PanelBackup.Visibility = Visibility.Visible; }
+            else if (sender == NavHotkeys)
+            {
+                NavHotkeys.Tag = "active"; PanelHotkeys.Visibility = Visibility.Visible;
+                BuildHotkeys();
+            }
             else if (sender == NavHelp)
             {
                 NavHelp.Tag = "active"; PanelHelp.Visibility = Visibility.Visible;
@@ -96,21 +101,94 @@ namespace GameTracker.Views
             if (_helpBuilt) return;
             _helpBuilt = true;
 
-            void Section(string title, string body)
+            // Collapsible sections: a clickable "▸ title" header revealing its steps.
+            var sections = new List<(TextBlock header, StackPanel panel, string title)>();
+            StackPanel? current = null;
+
+            void SetOpen((TextBlock header, StackPanel panel, string title) s, bool open)
             {
-                HelpContent.Children.Add(new TextBlock
+                s.panel.Visibility = open ? Visibility.Visible : Visibility.Collapsed;
+                s.header.Text = (open ? "▾  " : "▸  ") + s.title;
+            }
+
+            void Section(string title)
+            {
+                var header = new TextBlock
                 {
-                    Text = title,
+                    Text = "▸  " + title,
                     Foreground = (System.Windows.Media.Brush)FindResource("ThemeAccent"),
-                    FontSize = 13, FontWeight = FontWeights.Bold, Margin = new Thickness(0, 14, 0, 4),
+                    FontSize = 14, FontWeight = FontWeights.Bold, Margin = new Thickness(0, 10, 0, 3),
                     TextWrapping = TextWrapping.Wrap,
-                });
-                HelpContent.Children.Add(new TextBlock
+                    Cursor = System.Windows.Input.Cursors.Hand,
+                };
+                var panel = new StackPanel
                 {
-                    Text = body,
+                    Visibility = Visibility.Collapsed,
+                    Margin = new Thickness(6, 0, 0, 6),
+                };
+                var entry = (header, panel, title);
+                sections.Add(entry);
+                header.MouseLeftButtonUp += (_, _) =>
+                    SetOpen(entry, panel.Visibility != Visibility.Visible);
+                HelpContent.Children.Add(header);
+                HelpContent.Children.Add(panel);
+                current = panel;
+            }
+
+            void Add(UIElement el)
+            {
+                if (current != null) current.Children.Add(el);
+                else HelpContent.Children.Add(el);
+            }
+            void Body(string text)
+            {
+                Add(new TextBlock
+                {
+                    Text = text,
                     Foreground = Brush("#c4d4a8"), FontSize = 12, TextWrapping = TextWrapping.Wrap,
-                    LineHeight = 17,
+                    LineHeight = 17, Margin = new Thickness(0, 0, 0, 4),
                 });
+            }
+            void Step(int n, string text)
+            {
+                var tb = new TextBlock
+                {
+                    TextWrapping = TextWrapping.Wrap, FontSize = 12, LineHeight = 17,
+                    Margin = new Thickness(8, 1, 0, 1),
+                };
+                tb.Inlines.Add(new System.Windows.Documents.Run($"{n}.  ")
+                {
+                    Foreground = (System.Windows.Media.Brush)FindResource("ThemeAccent"),
+                    FontWeight = FontWeights.Bold,
+                });
+                tb.Inlines.Add(new System.Windows.Documents.Run(text) { Foreground = Brush("#e8e0c4") });
+                Add(tb);
+            }
+            void Img(string file)
+            {
+                try
+                {
+                    var img = new System.Windows.Controls.Image
+                    {
+                        Source = new System.Windows.Media.Imaging.BitmapImage(
+                            new Uri($"pack://application:,,,/Docs/Screens/{file}")),
+                        MaxWidth = 420,
+                        HorizontalAlignment = HorizontalAlignment.Left,
+                        Stretch = System.Windows.Media.Stretch.Uniform,
+                    };
+                    System.Windows.Media.RenderOptions.SetBitmapScalingMode(
+                        img, System.Windows.Media.BitmapScalingMode.HighQuality);
+                    Add(new Border
+                    {
+                        Child = img,
+                        BorderBrush = (System.Windows.Media.Brush)FindResource("ThemeBorder"),
+                        BorderThickness = new Thickness(1),
+                        CornerRadius = new CornerRadius(4),
+                        Margin = new Thickness(8, 6, 0, 6),
+                        HorizontalAlignment = HorizontalAlignment.Left,
+                    });
+                }
+                catch { /* screenshot missing — text still stands alone */ }
             }
 
             HelpContent.Children.Add(new TextBlock
@@ -121,123 +199,165 @@ namespace GameTracker.Views
             });
             HelpContent.Children.Add(new TextBlock
             {
-                Text = "A quick guide to every part of the app. Hover most controls for a tooltip too.",
+                Text = "Click a section to expand it. Hover most controls for a tooltip too.",
                 Foreground = Brush("#7a9070"), FontSize = 11, TextWrapping = TextWrapping.Wrap,
             });
 
-            Section("The board (Dormant / Hunting / Devoured)",
-                "Your games live in three columns: Dormant (backlog, not started), Hunting (actively playing), and Devoured (finished). " +
-                "Drag a card between columns, or right-click a card for options. Click a card to open its details, rating, and notes.");
+            var btnRow = new StackPanel
+            {
+                Orientation = Orientation.Horizontal, Margin = new Thickness(0, 8, 0, 4),
+            };
+            Button MiniBtn(string label)
+            {
+                var b = new Button { Content = label, Style = (Style)FindResource("Btn"),
+                                     Margin = new Thickness(0, 0, 7, 0), Padding = new Thickness(9, 3, 9, 3) };
+                btnRow.Children.Add(b);
+                return b;
+            }
+            MiniBtn("Expand all").Click += (_, _) => { foreach (var s in sections) SetOpen(s, true); };
+            MiniBtn("Collapse all").Click += (_, _) => { foreach (var s in sections) SetOpen(s, false); };
+            HelpContent.Children.Add(btnRow);
 
-            Section("Adding games",
-                "Use + Add Game (top right) to add a title, platform, who suggested it, and a suggestion type. " +
-                "Viewers can also add games from chat with \"!request <game>\" — those land in Dormant automatically.");
+            Section("The board (Dormant / Hunting / Devoured)");
+            Body("Your games live in three columns, and a game's whole life happens by moving across them:");
+            Step(1, "DORMANT is the backlog — games you own or plan to play but haven't started.");
+            Step(2, "HUNTING is what you're actively playing. Press ▶ Start on a card to begin a timed session; the card moves here automatically.");
+            Step(3, "DEVOURED is finished games. Drag a card there (or right-click → Move to DEVOURED) and give it a ★ rating from the card.");
+            Step(4, "Drag cards between columns any time, right-click a card for the full menu, and click a card to open its details, notes, and rating.");
 
-            Section("Sessions & timer",
-                "Press Start on a Hunting game to begin a play session; the timer tracks your playtime and shows on the overlay. " +
-                "Press Stop to end it. Total time is remembered per game.");
+            Section("Adding games");
+            Step(1, "Click + Add Game (top-right) and fill in the title — platform, who suggested it, and a suggestion type are optional but searchable later.");
+            Step(2, "Viewers can add games for you: anyone typing !request <game> in chat adds it straight to Dormant (duplicates are ignored), with a confirmation toast on the overlay.");
 
-            Section("The challenge wheel",
-                "Right-click a game → Wheel to spin for random challenges. Set how many items the wheel holds, add your own entries, " +
-                "and spin — landed challenges appear on the overlay in real time. Rolled challenges show even before a session starts.");
+            Section("Sessions & the stream timer");
+            Step(1, "Press ▶ Start on a Hunting game. The session timer starts and shows in the Now Playing block on your OBS overlay.");
+            Step(2, "Press ■ Stop when you're done — playtime is added to the game's total. Your total hours show on each card.");
+            Step(3, "Starting a session also auto-connects your saved chats (toggle in Settings → Chat) and counts the game in your Stream Stats.");
 
-            Section("Recap",
-                "The Recap button builds a shareable summary of your progress — games played, beaten, and time spent.");
+            Section("The challenge wheel");
+            Step(1, "Right-click a game → 🎡 Wheel (or use the Spin button in the top bar).");
+            Step(2, "Add your own challenge entries, set how many the wheel holds at once (\"max on wheel\"), and hit Randomize to shuffle from your full pool.");
+            Step(3, "Spin! Landed challenges are removed from rotation, replaced by unused ones, and appear on the overlay's Challenges block in real time — even before a session starts.");
 
-            Section("Chat — connecting",
-                "Open Chat (top bar). Connect any of: Twitch (just your channel name, no login), Social Stream Ninja (one session ID pulls in " +
-                "every platform), or Restream (an access token). The SSN session ID is saved between streams. " +
-                "\"Auto-connect\" (Settings → Chat) reconnects your saved sources whenever you start a game.");
+            Section("Chat — connecting");
+            Img("chat.png");
+            Step(1, "Open Chat from the top bar. Three sources can run at once — use any or all.");
+            Step(2, "TW (Twitch): type just your channel name and Connect. No login needed — it reads chat anonymously.");
+            Step(3, "SSN (Social Stream Ninja): one session ID brings in every platform SSN supports (YouTube, TikTok, Kick and more). See the next section for the one-time setup.");
+            Step(4, "RS (Restream): paste an access token from a Restream app if you use their service.");
+            Step(5, "\"Auto-connect when a game session starts\" (Settings → Chat) reconnects your saved sources every time you press Start — set it and forget it.");
 
-            Section("Chat — Social Stream Ninja setup",
-                "SSN brings all platforms through one connection. In SSN's Global settings → Mechanics, turn ON \"Enable remote API control\" " +
-                "and \"Send chat messages to API server\", then paste your session ID (the part after session= in the dock URL). " +
-                "The \"SSN not showing chat? Setup guide\" link in the chat window walks through it.");
+            Section("Chat — Social Stream Ninja setup (one-time)");
+            Img("ssnguide.png");
+            Step(1, "In SSN's Global settings → Mechanics, turn ON \"Enable remote API control of extension\".");
+            Step(2, "Turn ON \"Send chat messages to API server\" — this is the key switch; without it no chat arrives.");
+            Step(3, "Copy the session ID from your dock URL (the part after session=) into the SSN box and Connect.");
+            Step(4, "Stuck? The \"SSN not showing chat? Setup guide\" link under the SSN box walks through this with more detail.");
 
-            Section("Chat — two-way & replies",
-                "The send bar at the bottom of the chat window posts a message out through SSN to your chats; pick a target (all chats or one platform). " +
-                "Bot replies for !request / !points / redeems reply only in the chat the viewer used, so other platforms aren't spammed.");
+            Section("Chat — sending & auto-replies");
+            Step(1, "Type in the bar at the bottom of the chat window and press Enter — your message goes out through SSN to your chats (needs SSN connected).");
+            Step(2, "The dropdown next to Send picks the destination: All chats, or one platform. It always resets to All chats on open.");
+            Step(3, "The app auto-replies with @mentions for !request confirmations, balance checks, and redeems — only in the chat the viewer used, so other platforms aren't spammed. Toggle in Settings → Chat → Features.");
+            Step(4, "Viewers can type !ghhelp any time for a self-serve menu: !ghhelp commands, !ghhelp redeems, !ghhelp points.");
 
-            Section("Chatters list & points",
-                "The Chatters button shows who's active now: green = active, yellow = lurking (idle past your set time), then removed. " +
-                "In Settings → Chat → Features you can award points to everyone on the list on an interval; viewers check their balance with !points. " +
-                "Set the points name, interval, and amount there.");
+            Section("Chatters, points & perks");
+            Img("chatters.png");
+            Step(1, "The 👥 Chatters button shows who's in the room: green dot = chatted recently, yellow = lurking. Idle timers are set in Features.");
+            Step(2, "Points are ON by default: everyone on the chatters list earns 25 points every 5 minutes (rename them, change amounts, or turn off in Features → Points).");
+            Step(3, "The first person to chat each stream gets a bonus with a confetti toast, and chatting on back-to-back stream days builds a growing streak bonus.");
+            Step(4, "Viewers check their balance with your balance command (default !points — change it in Features if another bot like StreamElements also answers that, e.g. to !gh).");
 
-            Section("Features — counts & chat style",
-                "Settings → Chat → Features also controls: the chatter count header (total or per-source, on overlay or not), and the chat look " +
-                "(classic log or colored boxes with your own palette of up to 10 colors).");
+            Section("Features — counts, chat style & redeems");
+            Img("features.png");
+            Step(1, "Settings → Chat → ⚙ Features is the control room for chat: the chatter-count header (total or per platform, on the overlay or not), points, perks, replies, and redeems.");
+            Step(2, "Chat style: classic log, or colored boxes — pick up to 10 rotating colors (click a swatch for the color picker).");
+            Step(3, "Point redeems: map a !command to Confetti, Fireworks, Screen shake, a Custom image, a Video, or one of your saved voice morphs. Set the point cost (0 = free), and use ▶ to test any of them instantly.");
 
-            Section("Sound alerts",
-                "Settings → Chat → Sound Alerts maps chat commands to your own sound files (mp3/wav/ogg and more), each with its own volume and a Test button. " +
-                "The 🔇 panic button in the chat window instantly stops and mutes all alerts (and TTS).");
+            Section("Sound alerts");
+            Img("soundalerts.png");
+            Step(1, "Settings → Chat → 🔊 Sound Alerts maps chat commands to your own sound files (mp3, wav, ogg, flac and more).");
+            Step(2, "Every alert has its own volume slider and ▶ Test button.");
+            Step(3, "If chat spams sounds, hit the 🔇 button in the chat window's title bar — it kills the current sound and mutes everything (including TTS) until you click it again.");
 
-            Section("Point redeems & stream effects",
-                "In Features → Point redeems, map a command (e.g. !confetti) to an on-stream effect: Confetti, Fireworks, Screen shake, a Custom image, " +
-                "or a Video. Set a point cost; viewers spend points to trigger it. Each has a Test button and a volume slider. Videos play on the overlay (mp4/webm work best).");
+            Section("Text to speech (TTS)");
+            Img("settings-chat.png");
+            Step(1, "Settings → Chat → Text to Speech. Turn on \"Read incoming chat messages aloud\".");
+            Step(2, "\"Give each chatter their own random voice\" assigns every viewer a voice from the palette — saved per person, so they sound the same every stream. Or untick it and pick one voice for everybody.");
+            Step(3, "Set speed and volume, whether to say names, and whether to skip ! commands.");
+            Step(4, "Ignore rules: users listed in \"Ignore users\" (StreamElements by default) are never read; \"Ignore keywords\" mutes any message containing them; and point-redeem announcements (\"user redeemed …\") are skipped by default.");
+            Step(5, "Add more Windows voices any time (Windows Settings → Time & language → Speech) — they appear here automatically.");
 
-            Section("Effects overlay (video/image redeem area)",
-                "Settings → Overlay → Copy effects overlay URL gives you a fully transparent page just for redeem playback. Add it as its own OBS " +
-                "Browser source and size/position it wherever you want videos and images to appear. While it's connected, video and image redeems play " +
-                "there instead of on the main overlay — so redeems can't cover your chat or timer. Without it, they fall back to the main overlay.");
+            Section("Voice Lab — make chatter voices");
+            Img("voicelab.png");
+            Step(1, "Settings → Chat → 🎤 Voice Lab. Pick a base voice and a funny effect (chipmunk, robot, ghost, demon, whisper, gremlin, underwater and more).");
+            Step(2, "Type any phrase and ▶ Test to hear it.");
+            Step(3, "Name it and Save — it joins the voice list and the random per-chatter pool, marked with a ★.");
 
-            Section("Text to speech (TTS)",
-                "Settings → Chat → Text to Speech reads incoming chat aloud using offline Windows voices. Choose a voice, speed, and volume, " +
-                "and whether to say the sender's name or skip ! commands. Turn on \"Give each chatter their own random voice\" so everyone gets a " +
-                "consistent voice saved across streams. Busy chats auto-skip extras so speech never lags.");
+            Section("Voice Morph — morph YOUR voice");
+            Img("voicemorph.png");
+            Step(1, "Settings → Chat → 🎙 Voice Morph. Pick your mic as Input and choose an Output (headphones to preview; 🔇 None to not hear yourself).");
+            Step(2, "Build a morph: pitch slider (±12 semitones) + an effect, then \"Try it live\" and talk. Name it, set how long it lasts, and Save.");
+            Step(3, "To get the morphed voice on stream: in OBS add an Application Audio Capture source pointed at Game Tracker and mute your raw mic — or set Output to a virtual cable (VB-CABLE) and use the cable as your OBS mic.");
+            Step(4, "Attach saved morphs to point redeems in Features — viewers spend points to change YOUR voice. The overlay shows the morph name with a countdown, and your voice reverts automatically at zero.");
 
-            Section("Voice Lab (custom voices)",
-                "Settings → Chat → Voice Lab lets you build your own voices: pick a base voice + a funny effect (chipmunk, deep, robot, ghost, alien, demon), " +
-                "type a phrase, Test it, name it, and Save. Saved voices appear in the voice list and the per-chatter pool.");
+            Section("Appearance — themes");
+            Img("settings-appearance.png");
+            Step(1, "Settings → Appearance. Click a preset (Reptile, Amber, Ocean, Royal, Crimson, Mono) — the entire app re-colors instantly.");
+            Step(2, "Or build your own: click any custom color swatch to open the picker (accent, deep accent, second accent, background, background lines).");
+            Step(3, "\"Reset to default\" brings back the classic Reptile look.");
 
-            Section("Voice Morph (morph YOUR voice)",
-                "Settings → Chat → Voice Morph runs your mic through live effects (pitch shift, robot, whisper, echo, and more). " +
-                "Build a morph (pitch + effect + timer), Try it live, and Save it. Attach a saved morph to a point redeem so viewers can " +
-                "change your voice — the overlay shows the morph's name with a countdown, and your voice reverts automatically at zero. " +
-                "To get the morphed mic into your stream: add an OBS 'Application Audio Capture' source pointed at Game Tracker and mute " +
-                "your raw mic source (or route the app's output to a virtual cable like VB-CABLE and use that as your OBS mic).");
+            Section("OBS overlay — setup");
+            Img("settings-overlay.png");
+            Step(1, "Settings → Overlay → Copy URL. In OBS add a Browser source, paste the URL, and set its size to 1280×720.");
+            Step(2, "Click \"Edit overlay layout\" to open the editor in your browser: drag blocks, resize with the corner handle, set per-block fonts (every font on your PC, plus MR. Saturn), text color, and background opacity.");
+            Step(3, "Use the Elements checkboxes to choose which blocks exist: Now Playing, Challenges, Live Chat, Chatters, Goals, Poll.");
+            Step(4, "Save up to 10 layout presets, or Reset to default. Everything saves automatically and updates OBS live.");
 
-            Section("Appearance (themes)",
-                "Settings → Appearance re-colors the whole app. Pick a preset (Reptile, Amber, Ocean, Royal, Crimson, Mono) or set custom colors " +
-                "for accent, deep accent, amber, background, and tiles. Changes apply instantly and are saved.");
+            Section("Effects overlay — where redeems play");
+            Step(1, "Settings → Overlay → \"Copy effects overlay URL\" (the /effects page). Add it to OBS as its own Browser source.");
+            Step(2, "It's fully transparent — size and place it wherever you want redeem videos and images to appear (e.g. the top half of the screen).");
+            Step(3, "While it's connected, video/image redeems play there instead of on the main overlay, so they never cover your chat or timer. Without it, they fall back to the main overlay.");
 
-            Section("OBS overlay",
-                "Settings → Overlay serves a live browser overlay for OBS. Copy the URL into an OBS Browser source (set it to 1280×720). " +
-                "Set the port and how many chat lines show. \"Edit overlay layout\" opens the browser editor where you drag/resize blocks, set fonts, " +
-                "toggle which elements appear, adjust per-element background opacity, and save presets.");
+            Section("Text overlays — custom panels");
+            Img("textpanels.png");
+            Step(1, "Settings → Overlay → 📝 Text overlays. Add up to 5 panels — each gets its own URL (Copy URL) to add as an OBS Browser source.");
+            Step(2, "Each panel has a styled header, a divider, and up to 10 lines — every line with its own font, size, color, optional image, and optional marquee scrolling with a speed slider.");
+            Step(3, "Add bordered Left/Right side blocks with text and images — vertical (credits-style scroll) or horizontal (ticker scroll).");
+            Step(4, "Set each panel's background opacity from solid to glass. Everything updates in OBS live as you type.");
 
-            Section("Text overlays",
-                "Settings → Overlay → Text overlays creates up to 5 custom OBS text panels, each with a styled header, divider, and lines " +
-                "(font, size, color, scrolling). Add bordered left/right side blocks with text or images, horizontal or vertical, with their own scroll. " +
-                "Each panel has its own URL to add as a Browser source, and updates live as you type.");
+            Section("Polls (!vote)");
+            Img("poll.png");
+            Step(1, "Chat window → 🗳 Poll. Type a question and 2–6 options, then ▶ Start poll.");
+            Step(2, "Viewers vote with !vote 1, !vote 2 … one vote each; revoting switches their vote.");
+            Step(3, "Results show as live bars in the overlay's Poll block (enable it in the layout editor).");
+            Step(4, "■ End voting closes the poll, highlights the winner in gold, and announces it with a toast. ✕ Clear removes it from the overlay.");
 
-            Section("Polls (!vote)",
-                "Chat window → 🗳 Poll: type a question and 2–6 options, Start, and viewers vote with !vote 1, !vote 2, … " +
-                "One vote per person (revoting switches). Results show live in the overlay's Poll block (enable it in the layout editor); " +
-                "End voting highlights the winner with a toast.");
+            Section("Goals (progress bars)");
+            Img("goals.png");
+            Step(1, "Settings → Overlay → 🎯 Goals. Add up to 8 goals: name, current, target, and a bar color.");
+            Step(2, "Enable the Goals block in the layout editor to show them on stream.");
+            Step(3, "Keep the window open during the stream and tap +1 (or type a number) as things happen — OBS updates instantly.");
 
-            Section("Goals (progress bars)",
-                "Settings → Overlay → 🎯 Goals: create up to 8 goals (name, current, target, bar color). They render as progress bars in the " +
-                "overlay's Goals block. Keep the window open mid-stream and tap +1 as things happen — bars update in OBS instantly.");
+            Section("Stream stats & recap");
+            Img("stats.png");
+            Step(1, "Chat window → 📊 Stats: uptime, messages, unique chatters, top 5 chatters, games played, redeems, requests, and points handed out — live.");
+            Step(2, "\"Copy recap\" puts a ready-to-paste summary on your clipboard for Discord or socials at the end of stream.");
 
-            Section("Stream stats & recap",
-                "Chat window → 📊 Stats: this stream's messages, unique chatters, top 5 chatters, games played, redeems, requests, and points " +
-                "handed out. 'Copy recap' puts a Discord-ready summary on your clipboard.");
+            Section("Hotkeys");
+            Step(1, "Settings → Hotkeys: click any box, press a key combo, done. All hotkeys work globally, even mid-game.");
+            Step(2, "Give every redeem its own hotkey — pressing it fires the redeem instantly and free (sound, effect, video, and voice morph included). Or click \"Apply defaults\" to map Ctrl+Shift+1–9 to your first nine.");
+            Step(3, "The panic key (default Ctrl+Shift+0) stops effects and ends the active voice morph.");
+            Step(4, "Session hotkeys live here too: start/stop the session, clip a moment, and quick note.");
 
-            Section("First-chatter & streak perks",
-                "With points enabled (Features → Points), the very first person to chat each stream earns a bonus (with a confetti toast), and " +
-                "chatting on consecutive stream days builds a streak that multiplies a daily bonus. Both amounts are set in Features; set 0 to disable.");
+            Section("Backup & restore");
+            Img("settings-backup.png");
+            Step(1, "Settings → Backup → \"Export backup…\" writes one zip containing everything: games, settings, theme, overlays, points, custom voices, morphs, and streaks.");
+            Step(2, "\"Import backup…\" restores a zip — your current data is saved to a safety backup first, then the app restarts with the imported data.");
+            Step(3, "Great for reinstalls or moving to a new PC.");
 
-            Section("Hotkeys (fire effects yourself)",
-                "Ctrl+Shift+1 … Ctrl+Shift+9 fire your first nine point redeems instantly (no cost) — sounds, effects, videos, and voice morphs. " +
-                "Ctrl+Shift+0 stops effects and ends the active morph. Your Start/Stop, Clip, and Note hotkeys are configurable in Help (?).");
-
-            Section("Backup & restore",
-                "Settings → Backup: Export writes one zip with everything (games, settings, themes, points, voices, streaks). Import restores a " +
-                "backup — your current data is saved to a safety backup first, then the app restarts. Perfect for reinstalls or a second PC.");
-
-            Section("Updates",
-                "The app checks for updates on launch and updates itself silently; your open windows reopen afterward. " +
-                "The ↻ button (top bar) checks manually.");
+            Section("Updates");
+            Step(1, "The app checks for updates at launch and installs them silently — windows you had open reopen afterward, and your data is untouched.");
+            Step(2, "The ↻ button in the top bar checks manually any time.");
         }
 
         // ---- theme ----
@@ -422,7 +542,11 @@ namespace GameTracker.Views
         private void Features_Click(object sender, RoutedEventArgs e)
         {
             var win = new ChatFeaturesWindow { Owner = this };
-            if (win.ShowDialog() == true) ChatWindow.Current?.ReloadFeatures();
+            if (win.ShowDialog() == true)
+            {
+                ChatWindow.Current?.ReloadFeatures();
+                Main?.RefreshHotkeys();   // redeem list (and its hotkeys) may have changed
+            }
         }
 
         private void SoundAlerts_Click(object sender, RoutedEventArgs e)
@@ -511,6 +635,179 @@ namespace GameTracker.Views
                 : "Overlay server is not running" +
                   (string.IsNullOrEmpty(OverlayServer.LastError) ? "." : $": {OverlayServer.LastError}. Try another port.");
 
+        // ---- hotkeys ----
+
+        private Action<HotkeyBinding>? _hotkeyCapture;
+        private Button? _hotkeyCaptureBtn;
+        private string _hotkeyCaptureOldLabel = string.Empty;
+
+        private static MainWindow? Main => Application.Current.MainWindow as MainWindow;
+
+        private void BuildHotkeys()
+        {
+            EndHotkeyCapture(cancel: true);
+            HotkeysContent.Children.Clear();
+
+            void Head(string t) => HotkeysContent.Children.Add(new TextBlock
+            {
+                Text = t, Foreground = (System.Windows.Media.Brush)FindResource("ThemeAccent"),
+                FontSize = 13, FontWeight = FontWeights.Bold, Margin = new Thickness(0, 12, 0, 6),
+            });
+            void Note(string t) => HotkeysContent.Children.Add(new TextBlock
+            {
+                Text = t, Foreground = Brush("#7a9070"), FontSize = 11,
+                TextWrapping = TextWrapping.Wrap, Margin = new Thickness(0, 0, 0, 6),
+            });
+
+            Button KeyBtn(HotkeyBinding? current, Action<HotkeyBinding> apply)
+            {
+                var b = new Button
+                {
+                    Content = current?.Display ?? "click to set…",
+                    Style = (Style)FindResource("Btn"),
+                    MinWidth = 150,
+                    Padding = new Thickness(9, 3, 9, 3),
+                };
+                b.Click += (_, _) => StartHotkeyCapture(b, apply);
+                return b;
+            }
+
+            Grid Row(string label, HotkeyBinding? current, Action<HotkeyBinding> apply, Action? clear)
+            {
+                var g = new Grid { Margin = new Thickness(0, 0, 0, 5) };
+                g.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+                g.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+                g.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+                var lb = new TextBlock
+                {
+                    Text = label, Foreground = Brush("#e8e0c4"), FontSize = 12,
+                    VerticalAlignment = VerticalAlignment.Center, TextTrimming = TextTrimming.CharacterEllipsis,
+                };
+                g.Children.Add(lb);
+                var kb = KeyBtn(current, apply);
+                Grid.SetColumn(kb, 1);
+                g.Children.Add(kb);
+                if (clear != null)
+                {
+                    var cb = new Button
+                    {
+                        Content = "✕", Style = (Style)FindResource("Btn"),
+                        Margin = new Thickness(5, 0, 0, 0), Padding = new Thickness(7, 3, 7, 3),
+                        ToolTip = "Remove this hotkey",
+                    };
+                    cb.Click += (_, _) => clear();
+                    Grid.SetColumn(cb, 2);
+                    g.Children.Add(cb);
+                }
+                return g;
+            }
+
+            Note("Click a box, then press the key combo you want. Esc cancels. Hotkeys work globally, even while you're in-game.");
+
+            Head("SESSION");
+            var cfg = SettingsService.LoadHotkeys();
+            HotkeysContent.Children.Add(Row("Start / stop session", cfg.Toggle,
+                b => { var c = SettingsService.LoadHotkeys(); c.Toggle = b; SettingsService.SaveHotkeys(c); Main?.RefreshHotkeys(); BuildHotkeys(); }, null));
+            HotkeysContent.Children.Add(Row("Clip a moment", cfg.Clip,
+                b => { var c = SettingsService.LoadHotkeys(); c.Clip = b; SettingsService.SaveHotkeys(c); Main?.RefreshHotkeys(); BuildHotkeys(); }, null));
+            HotkeysContent.Children.Add(Row("Quick note", cfg.Note,
+                b => { var c = SettingsService.LoadHotkeys(); c.Note = b; SettingsService.SaveHotkeys(c); Main?.RefreshHotkeys(); BuildHotkeys(); }, null));
+
+            Head("EFFECTS");
+            HotkeysContent.Children.Add(Row("Panic: stop effects + end morph", cfg.FxStop,
+                b => { var c = SettingsService.LoadHotkeys(); c.FxStop = b; SettingsService.SaveHotkeys(c); Main?.RefreshHotkeys(); BuildHotkeys(); }, null));
+
+            Head("REDEEMS (fire free, no point cost)");
+            var features = SettingsService.LoadChatFeatures();
+            if (features.Redeems.Count == 0)
+                Note("No redeems yet — create some in Settings → Chat → Features first.");
+            for (int i = 0; i < features.Redeems.Count && i < 24; i++)
+            {
+                int idx = i;
+                var r = features.Redeems[i];
+                var label = string.IsNullOrWhiteSpace(r.Command) ? $"(redeem {i + 1})" : r.Command;
+                HotkeysContent.Children.Add(Row(label, r.Hotkey,
+                    b =>
+                    {
+                        var f = SettingsService.LoadChatFeatures();
+                        if (idx < f.Redeems.Count) f.Redeems[idx].Hotkey = b;
+                        SettingsService.SaveChatFeatures(f);
+                        Main?.RefreshHotkeys();
+                        BuildHotkeys();
+                    },
+                    () =>
+                    {
+                        var f = SettingsService.LoadChatFeatures();
+                        if (idx < f.Redeems.Count) f.Redeems[idx].Hotkey = null;
+                        SettingsService.SaveChatFeatures(f);
+                        Main?.RefreshHotkeys();
+                        BuildHotkeys();
+                    }));
+            }
+
+            if (features.Redeems.Count > 0)
+            {
+                var defBtn = new Button
+                {
+                    Content = "Apply defaults: Ctrl+Shift+1…9 to the first nine",
+                    Style = (Style)FindResource("Btn"),
+                    HorizontalAlignment = HorizontalAlignment.Left,
+                    Margin = new Thickness(0, 6, 0, 0),
+                };
+                defBtn.Click += (_, _) =>
+                {
+                    var f = SettingsService.LoadChatFeatures();
+                    for (int i = 0; i < f.Redeems.Count && i < 9; i++)
+                        f.Redeems[i].Hotkey = new HotkeyBinding(
+                            System.Windows.Input.ModifierKeys.Control | System.Windows.Input.ModifierKeys.Shift,
+                            System.Windows.Input.Key.D1 + i);
+                    SettingsService.SaveChatFeatures(f);
+                    Main?.RefreshHotkeys();
+                    BuildHotkeys();
+                };
+                HotkeysContent.Children.Add(defBtn);
+            }
+        }
+
+        private void StartHotkeyCapture(Button b, Action<HotkeyBinding> apply)
+        {
+            EndHotkeyCapture(cancel: true);
+            Main?.PauseHotkeys();          // release globals so the combo reaches us
+            _hotkeyCapture = apply;
+            _hotkeyCaptureBtn = b;
+            _hotkeyCaptureOldLabel = b.Content as string ?? "";
+            b.Content = "press keys… (Esc cancels)";
+            PreviewKeyDown += HotkeyCapture_KeyDown;
+        }
+
+        private void EndHotkeyCapture(bool cancel)
+        {
+            PreviewKeyDown -= HotkeyCapture_KeyDown;
+            if (cancel && _hotkeyCaptureBtn != null)
+                _hotkeyCaptureBtn.Content = _hotkeyCaptureOldLabel;
+            _hotkeyCapture = null;
+            _hotkeyCaptureBtn = null;
+            Main?.RefreshHotkeys();        // re-register whatever is saved
+        }
+
+        private void HotkeyCapture_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (_hotkeyCapture == null) return;
+            var key = e.Key == System.Windows.Input.Key.System ? e.SystemKey : e.Key;
+            if (key is System.Windows.Input.Key.LeftCtrl or System.Windows.Input.Key.RightCtrl
+                    or System.Windows.Input.Key.LeftShift or System.Windows.Input.Key.RightShift
+                    or System.Windows.Input.Key.LeftAlt or System.Windows.Input.Key.RightAlt
+                    or System.Windows.Input.Key.LWin or System.Windows.Input.Key.RWin) return;
+            e.Handled = true;
+
+            if (key == System.Windows.Input.Key.Escape) { EndHotkeyCapture(cancel: true); return; }
+
+            var apply = _hotkeyCapture;
+            _hotkeyCapture = null;
+            PreviewKeyDown -= HotkeyCapture_KeyDown;
+            apply(new HotkeyBinding(System.Windows.Input.Keyboard.Modifiers, key));
+        }
+
         // ---- backup / restore ----
 
         private void ExportBackup_Click(object sender, RoutedEventArgs e)
@@ -562,6 +859,15 @@ namespace GameTracker.Views
             }
             catch (Exception ex) { BackupStatus.Text = "Import failed: " + ex.Message; }
         }
+
+        /// <summary>Docs capture: switch to a nav panel without a click event.</summary>
+        public void ShowPanelForDocs(string panel) =>
+            Nav_Click(panel switch
+            {
+                "chat" => NavChat, "overlay" => NavOverlay,
+                "backup" => NavBackup, "help" => NavHelp, "hotkeys" => NavHotkeys,
+                _ => NavAppearance,
+            }, new RoutedEventArgs());
 
         private void Close_Click(object sender, RoutedEventArgs e) => Close();
 

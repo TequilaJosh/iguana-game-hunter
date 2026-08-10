@@ -66,10 +66,10 @@ namespace GameTracker
 
         private const int WM_HOTKEY = 0x0312;
         private const int HK_TOGGLE = 1, HK_CLIP = 2, HK_NOTE = 3;
-        // Redeem slots: Ctrl+Shift+1..9 fire the first nine redeems (free), Ctrl+Shift+0 = panic.
-        private const int HK_REDEEM_BASE = 10;   // ids 10..18 -> redeem index 0..8
-        private const int HK_FX_STOP = 19;
-        private const uint MOD_CTRL_SHIFT = 0x0002 | 0x0004;   // MOD_CONTROL | MOD_SHIFT
+        // Per-redeem hotkeys (configured in Settings → Hotkeys): ids map to redeem index.
+        private const int HK_REDEEM_BASE = 10;
+        private const int MAX_REDEEM_HK = 24;
+        private const int HK_FX_STOP = 40;
         private IntPtr _hwnd;
         private HotkeyConfig _hotkeys = new();
 
@@ -95,11 +95,27 @@ namespace GameTracker
             RegisterHotKey(_hwnd, HK_TOGGLE, _hotkeys.Toggle.Win32Modifiers, _hotkeys.Toggle.VirtualKey);
             RegisterHotKey(_hwnd, HK_CLIP, _hotkeys.Clip.Win32Modifiers, _hotkeys.Clip.VirtualKey);
             RegisterHotKey(_hwnd, HK_NOTE, _hotkeys.Note.Win32Modifiers, _hotkeys.Note.VirtualKey);
-            // Ctrl+Shift+1..9 -> redeem slots ('1' = 0x31), Ctrl+Shift+0 -> stop effects/morph.
-            for (int i = 0; i < 9; i++)
-                RegisterHotKey(_hwnd, HK_REDEEM_BASE + i, MOD_CTRL_SHIFT, (uint)(0x31 + i));
-            RegisterHotKey(_hwnd, HK_FX_STOP, MOD_CTRL_SHIFT, 0x30);
+            RegisterHotKey(_hwnd, HK_FX_STOP, _hotkeys.FxStop.Win32Modifiers, _hotkeys.FxStop.VirtualKey);
+
+            // Per-redeem hotkeys, as configured in Settings → Hotkeys.
+            var redeems = Services.SettingsService.LoadChatFeatures().Redeems;
+            for (int i = 0; i < redeems.Count && i < MAX_REDEEM_HK; i++)
+            {
+                var hk = redeems[i].Hotkey;
+                if (hk != null && hk.VirtualKey != 0)
+                    RegisterHotKey(_hwnd, HK_REDEEM_BASE + i, hk.Win32Modifiers, hk.VirtualKey);
+            }
         }
+
+        /// <summary>Re-read hotkey config + redeem hotkeys and re-register (Settings uses this).</summary>
+        public void RefreshHotkeys()
+        {
+            _hotkeys = Services.SettingsService.LoadHotkeys();
+            RegisterHotkeys();
+        }
+
+        /// <summary>Temporarily release all global hotkeys (so a capture box can read combos).</summary>
+        public void PauseHotkeys() => UnregisterHotkeys();
 
         private void UnregisterHotkeys()
         {
@@ -107,7 +123,7 @@ namespace GameTracker
             UnregisterHotKey(_hwnd, HK_TOGGLE);
             UnregisterHotKey(_hwnd, HK_CLIP);
             UnregisterHotKey(_hwnd, HK_NOTE);
-            for (int i = 0; i < 9; i++) UnregisterHotKey(_hwnd, HK_REDEEM_BASE + i);
+            for (int i = 0; i < MAX_REDEEM_HK; i++) UnregisterHotKey(_hwnd, HK_REDEEM_BASE + i);
             UnregisterHotKey(_hwnd, HK_FX_STOP);
         }
 
@@ -123,7 +139,7 @@ namespace GameTracker
                     case HK_NOTE: HotkeyNote(); handled = true; break;
                     case HK_FX_STOP: HotkeyStopEffects(); handled = true; break;
                     default:
-                        if (id >= HK_REDEEM_BASE && id < HK_REDEEM_BASE + 9)
+                        if (id >= HK_REDEEM_BASE && id < HK_REDEEM_BASE + MAX_REDEEM_HK)
                         {
                             HotkeyRedeem(id - HK_REDEEM_BASE);
                             handled = true;
@@ -601,6 +617,12 @@ namespace GameTracker
             StatusText.Text =
                 $"Ended session for \"{game.Title}\"  -  played {PlaySession.FormatSpan(session.Duration)} " +
                 $"(total {game.TotalPlayTimeDisplay})";
+
+            // Wrap-up: show the stream's numbers (once no session is left running).
+            if (CurrentlyStreaming() == null)
+            {
+                try { new Views.StreamStatsWindow { Owner = this }.Show(); } catch { }
+            }
         }
 
         private void Spin_Click(object sender, RoutedEventArgs e)

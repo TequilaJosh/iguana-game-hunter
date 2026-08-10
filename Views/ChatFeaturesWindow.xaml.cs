@@ -36,6 +36,7 @@ namespace GameTracker.Views
             PointsAmountBox.Text = f.PointsPerInterval.ToString();
             FirstBonusBox.Text = f.FirstChatterBonus.ToString();
             StreakBonusBox.Text = f.StreakBonusPerDay.ToString();
+            BalanceCmdBox.Text = string.IsNullOrWhiteSpace(f.BalanceCommand) ? "!points" : f.BalanceCommand;
             StyleLogRb.IsChecked = f.ChatStyle != "boxes";
             StyleBoxRb.IsChecked = f.ChatStyle == "boxes";
 
@@ -47,7 +48,7 @@ namespace GameTracker.Views
                 {
                     Command = r.Command, Effect = r.Effect, Cost = r.Cost,
                     SoundPath = r.SoundPath, ImagePath = r.ImagePath, VideoPath = r.VideoPath,
-                    MorphPreset = r.MorphPreset, Volume = r.Volume,
+                    MorphPreset = r.MorphPreset, Volume = r.Volume, Hotkey = r.Hotkey,
                 });
             RedeemList.ItemsSource = _redeems;
         }
@@ -166,6 +167,7 @@ namespace GameTracker.Views
                         SoundPath = r.SoundPath, ImagePath = r.ImagePath, VideoPath = r.VideoPath,
                         MorphPreset = r.MorphPreset,
                         Volume = Math.Clamp(r.Volume, 0, 1),
+                        Hotkey = r.Hotkey,
                     }).ToList();
 
         private void Save_Click(object sender, RoutedEventArgs e)
@@ -185,6 +187,7 @@ namespace GameTracker.Views
                 PointsPerInterval = ParseInt(PointsAmountBox.Text, 10, 1, 1000000),
                 FirstChatterBonus = ParseInt(FirstBonusBox.Text, 50, 0, 1000000),
                 StreakBonusPerDay = ParseInt(StreakBonusBox.Text, 10, 0, 1000000),
+                BalanceCommand = NormalizeCommand(BalanceCmdBox.Text),
                 ChatStyle = StyleBoxRb.IsChecked == true ? "boxes" : "log",
                 BoxColors = _colors.Select(c => c.Hex.Trim())
                                    .Where(IsHex).Take(10).ToList(),
@@ -197,6 +200,14 @@ namespace GameTracker.Views
         }
 
         private void Cancel_Click(object sender, RoutedEventArgs e) => DialogResult = false;
+
+        private static string NormalizeCommand(string s)
+        {
+            s = (s ?? string.Empty).Trim();
+            if (s.Length == 0) return "!points";
+            if (!s.StartsWith('!')) s = "!" + s;
+            return s.Split(' ')[0];   // single word
+        }
 
         private static int ParseInt(string s, int fallback, int min, int max) =>
             int.TryParse((s ?? "").Trim(), out int v) ? Math.Clamp(v, min, max) : fallback;
@@ -251,6 +262,9 @@ namespace GameTracker.Views
                 get => _morph;
                 set { _morph = value ?? ""; Raise(nameof(MorphPreset)); }
             }
+
+            /// <summary>Carried through the editor so Settings → Hotkeys assignments survive a save.</summary>
+            public HotkeyBinding? Hotkey { get; set; }
 
             public string Command { get => _command; set { _command = value; Raise(nameof(Command)); } }
             public string Effect { get => _effect; set { _effect = value; Raise(nameof(Effect)); } }

@@ -192,7 +192,7 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Grid.Column="0" VerticalAlignment="Center" Foreground="#7a9070" FontSize="11"
                                    TextWrapping="Wrap"
-                                   Text="Viewers can type !request &lt;game&gt; to add it to Dormant. Overlay, sound alerts, points &amp; theme are in Settings (⚙)."/>
+                                   Text="Viewers: !request &lt;game&gt; adds to Dormant, !ghhelp shows all commands. Overlay, sound alerts, points &amp; theme are in Settings (⚙)."/>
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                             <Button Content="&#128101; Chatters" Click="Chatters_Click"
                                     Style="{StaticResource ConnectBtn}" Margin="8,0,0,0"

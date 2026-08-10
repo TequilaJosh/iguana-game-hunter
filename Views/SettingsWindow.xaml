@@ -138,6 +138,7 @@
                                 Style="{StaticResource NavBtn}" Click="Nav_Click"/>
                         <Button x:Name="NavChat" Content="Chat" Style="{StaticResource NavBtn}" Click="Nav_Click"/>
                         <Button x:Name="NavOverlay" Content="Overlay" Style="{StaticResource NavBtn}" Click="Nav_Click"/>
+                        <Button x:Name="NavHotkeys" Content="Hotkeys" Style="{StaticResource NavBtn}" Click="Nav_Click"/>
                         <Button x:Name="NavBackup" Content="Backup" Style="{StaticResource NavBtn}" Click="Nav_Click"/>
                         <Button x:Name="NavHelp" Content="How to" Style="{StaticResource NavBtn}" Click="Nav_Click"/>
                     </StackPanel>
@@ -348,6 +349,12 @@
                             <TextBlock x:Name="OverlayStatus" Foreground="#7a9070" FontSize="11" Margin="0,10,0,0"
                                        TextWrapping="Wrap"/>
                         </StackPanel>
+                    </ScrollViewer>
+
+                    <!-- ===== Hotkeys ===== -->
+                    <ScrollViewer x:Name="PanelHotkeys" VerticalScrollBarVisibility="Auto" Padding="18,14,18,16"
+                                  Visibility="Collapsed">
+                        <StackPanel x:Name="HotkeysContent"/>
                     </ScrollViewer>
 
                     <!-- ===== Backup ===== -->

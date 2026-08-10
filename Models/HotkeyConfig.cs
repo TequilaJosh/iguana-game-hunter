@@ -45,7 +45,10 @@ namespace GameTracker.Models
                 if (Modifiers.HasFlag(ModifierKeys.Alt)) parts.Add("Alt");
                 if (Modifiers.HasFlag(ModifierKeys.Shift)) parts.Add("Shift");
                 if (Modifiers.HasFlag(ModifierKeys.Windows)) parts.Add("Win");
-                parts.Add(Key.ToString());
+                // Friendlier names for digit keys ("D0".."D9" -> "0".."9").
+                var name = Key.ToString();
+                if (name.Length == 2 && name[0] == 'D' && char.IsDigit(name[1])) name = name[1..];
+                parts.Add(name);
                 return string.Join(" + ", parts);
             }
         }
@@ -56,5 +59,6 @@ namespace GameTracker.Models
         public HotkeyBinding Toggle { get; set; } = new(ModifierKeys.Control | ModifierKeys.Alt, Key.S);
         public HotkeyBinding Clip { get; set; } = new(ModifierKeys.Control | ModifierKeys.Alt, Key.C);
         public HotkeyBinding Note { get; set; } = new(ModifierKeys.Control | ModifierKeys.Alt, Key.N);
+        public HotkeyBinding FxStop { get; set; } = new(ModifierKeys.Control | ModifierKeys.Shift, Key.D0);
     }
 }

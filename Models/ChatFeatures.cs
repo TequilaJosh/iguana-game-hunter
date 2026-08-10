@@ -11,6 +11,7 @@ namespace GameTracker.Models
         public string SoundPath { get; set; } = string.Empty; // custom: optional sound (played in-app)
         public string ImagePath { get; set; } = string.Empty; // custom: optional image (shown on overlay)
         public string VideoPath { get; set; } = string.Empty; // optional video played on the overlay
+        public HotkeyBinding? Hotkey { get; set; }            // optional global hotkey (fires free)
         public string MorphPreset { get; set; } = string.Empty; // optional streamer voice-morph to activate
         public double Volume { get; set; } = 1.0;
     }
@@ -34,6 +35,7 @@ namespace GameTracker.Models
         // Points (on by default: 25 points every 5 minutes)
         public bool PointsEnabled { get; set; } = true;
         public string PointsName { get; set; } = "Points";
+        public string BalanceCommand { get; set; } = "!points"; // change if it collides with another bot
         public int PointsIntervalMinutes { get; set; } = 5;
         public int PointsPerInterval { get; set; } = 25;
 

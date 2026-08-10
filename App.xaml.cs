@@ -53,6 +53,19 @@ namespace GameTracker
             try { Services.SettingsService.RunMigrations(); } catch { /* keep whatever's saved */ }
             try { Services.ThemeService.Initialize(); } catch { /* fall back to XAML defaults */ }
 
+            // Hidden docs mode: render window screenshots for the How-to guide, then exit.
+            var docsDir = Services.DocsCapture.OutDirFromArgs(e.Args);
+            if (docsDir != null)
+            {
+                ShutdownMode = ShutdownMode.OnExplicitShutdown;
+                Dispatcher.InvokeAsync(async () =>
+                {
+                    try { await Services.DocsCapture.RunAsync(docsDir); } catch { }
+                    Shutdown();
+                });
+                return;
+            }
+
             // Start the live mic morph chain if the streamer has it enabled.
             try { Services.VoiceMorphService.Start(); } catch { /* engine is optional */ }
 

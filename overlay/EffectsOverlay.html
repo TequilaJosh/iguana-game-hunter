@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Effects Overlay</title>
+<style>
+  /* Fully transparent stage — this page only shows media when a redeem fires. */
+  html, body { margin: 0; padding: 0; background: transparent; overflow: hidden; }
+
+  #fxvideo, #fximg {
+    position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    max-width: 100vw; max-height: 100vh;
+    display: none; pointer-events: none;
+  }
+  #fxvideo.show, #fximg.show { display: block; }
+</style>
+</head>
+<body>
+  <video id="fxvideo" playsinline></video>
+  <img id="fximg" alt=""/>
+
+<script>
+"use strict";
+(function () {
+  var ws = null, retryMs = 1000;
+
+  function wsUrl() {
+    var p = location.protocol;
+    if (p === "http:" || p === "https:") {
+      return (p === "https:" ? "wss:" : "ws:") + "//" + location.host + "/ws";
+    }
+    return "ws://localhost:3620/ws";
+  }
+
+  function connect() {
+    try { ws = new WebSocket(wsUrl()); } catch (e) { schedule(); return; }
+    ws.onopen = function () {
+      retryMs = 1000;
+      // Identify as the effects overlay so the app routes video/image redeems here.
+      try { ws.send(JSON.stringify({ type: "hello", client: "effects" })); } catch (e) {}
+    };
+    ws.onmessage = function (ev) {
+      try {
+        var d = JSON.parse(ev.data);
+        if (d.type === "video") playVideo(d.url, d.volume);
+        else if (d.type === "effect" && d.effect === "custom" && d.image) showImage(d.image, d.duration);
+      } catch (e) { /* ignore bad frames */ }
+    };
+    ws.onclose = function () { schedule(); };
+    ws.onerror = function () { /* onclose follows */ };
+  }
+  function schedule() {
+    setTimeout(connect, retryMs);
+    retryMs = Math.min(15000, retryMs * 2);
+  }
+
+  var vid = document.getElementById("fxvideo");
+  function playVideo(url, volume) {
+    if (!url) return;
+    try {
+      vid.volume = Math.max(0, Math.min(1, (typeof volume === "number" ? volume : 100) / 100));
+      vid.src = url;
+      vid.classList.add("show");
+      vid.onended = function () { vid.classList.remove("show"); vid.removeAttribute("src"); };
+      vid.onerror = function () { vid.classList.remove("show"); };
+      var p = vid.play();
+      if (p && p.catch) p.catch(function () {
+        vid.muted = true;                      // autoplay guard: retry muted
+        vid.play().catch(function () {});
+      });
+    } catch (e) {}
+  }
+
+  var img = document.getElementById("fximg");
+  var imgTimer = null;
+  function showImage(url, durMs) {
+    img.src = url;
+    img.classList.add("show");
+    if (imgTimer) clearTimeout(imgTimer);
+    imgTimer = setTimeout(function () { img.classList.remove("show"); }, durMs || 4000);
+  }
+
+  connect();
+})();
+</script>
+</body>
+</html>

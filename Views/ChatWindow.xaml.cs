@@ -42,6 +42,7 @@ namespace GameTracker.Views
 
         private ChatFeatureSettings _features = new();
         private readonly ChattersService _chattersSvc = new();
+        private readonly StreakService _streaks = new();
         private DispatcherTimer? _chattersTimer;
         private ChattersWindow? _chattersWindow;
         private bool _chattersDirty;
@@ -94,6 +95,7 @@ namespace GameTracker.Views
             _chattersTimer.Tick += (_, _) =>
             {
                 var (changed, awards) = _chattersSvc.Tick(3, _features);
+                if (awards > 0) StreamStatsService.CountPoints(awards * _features.PointsPerInterval);
                 if (changed || awards > 0 || _chattersDirty)
                 {
                     _chattersDirty = false;
@@ -144,6 +146,8 @@ namespace GameTracker.Views
                 _chattersSvc.OnMessage(m);
                 _chattersDirty = true;
 
+                StreamStatsService.CountMessage(m.Platform, m.User);
+                AwardPerks(m);
                 SpeakMessage(m);
                 HandleCommands(m);
 
@@ -167,6 +171,14 @@ namespace GameTracker.Views
             {
                 var game = parts[1].Trim();
                 if (game.Length > 0) OnGameRequested?.Invoke(game, m.User, m.Platform ?? string.Empty);
+                return;
+            }
+
+            // "!vote N" -> poll vote (one per person; revoting switches).
+            if (string.Equals(cmd, "!vote", StringComparison.OrdinalIgnoreCase))
+            {
+                if (parts.Length == 2 && int.TryParse(parts[1].Trim(), out int opt))
+                    PollService.Vote(m.Platform, m.User, opt);
                 return;
             }
 
@@ -197,6 +209,9 @@ namespace GameTracker.Views
                         OverlayServer.PlayVideo("/fxvideo/" + idx, (int)(Math.Clamp(r.Volume, 0, 1) * 100));
                     if (!string.IsNullOrWhiteSpace(r.MorphPreset))
                         VoiceMorphService.ActivateByName(r.MorphPreset);   // overlay shows the countdown
+                    StreamStatsService.CountRedeem();
+                    if (!string.IsNullOrWhiteSpace(r.VideoPath)) StreamStatsService.CountVideo();
+                    if (!string.IsNullOrWhiteSpace(r.MorphPreset)) StreamStatsService.CountMorph();
                     OverlayServer.Toast($"{m.User} redeemed {r.Command.TrimStart('!')}!", confetti: false);
                     SendChatReply($"@{m.User} redeemed {r.Command.TrimStart('!')}!", m.Platform);
                 }
@@ -206,6 +221,32 @@ namespace GameTracker.Views
                     OverlayServer.Toast($"{m.User} needs {missing} more {_features.PointsName} for {r.Command}");
                     SendChatReply($"@{m.User} you need {missing} more {_features.PointsName} for {r.Command}", m.Platform);
                 }
+            }
+        }
+
+        // First-chatter and daily-streak bonuses (need points enabled to mean anything).
+        private void AwardPerks(ChatMessage m)
+        {
+            if (!_features.PointsEnabled || string.IsNullOrWhiteSpace(m.User)) return;
+            var (firstChatter, newDay, streak) = _streaks.OnMessage(m.Platform, m.User);
+
+            if (firstChatter && _features.FirstChatterBonus > 0)
+            {
+                PointsService.Add(m.Platform, m.User, _features.FirstChatterBonus);
+                PointsService.Save();
+                StreamStatsService.CountPoints(_features.FirstChatterBonus);
+                OverlayServer.Toast($"🥇 {m.User} is first in chat! +{_features.FirstChatterBonus} {_features.PointsName}", confetti: true);
+            }
+
+            if (newDay && _features.StreakBonusPerDay > 0)
+            {
+                // Bonus grows with the streak (capped so decade-long streaks stay sane).
+                int bonus = _features.StreakBonusPerDay * Math.Min(streak, 10);
+                PointsService.Add(m.Platform, m.User, bonus);
+                PointsService.Save();
+                StreamStatsService.CountPoints(bonus);
+                if (streak >= 3)   // only celebrate real streaks to avoid toast spam
+                    OverlayServer.Toast($"🔥 {m.User} is on a {streak}-day streak! +{bonus} {_features.PointsName}");
             }
         }
 
@@ -256,6 +297,18 @@ namespace GameTracker.Views
             if (!_ttsSettings.Enabled) _tts.StopAll();
         }
 
+        // "<user> redeemed <reward> [cost]" — Twitch channel-point announcements relayed as
+        // chat text. Only matches the announcement shape (first word = the sender's own name,
+        // or an @mention bot reply) so normal sentences like "I redeemed my coupon" still read.
+        private static bool IsRedeemAnnouncement(string text, string? user)
+        {
+            var parts = text.Split(' ', 3, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length < 3 ||
+                !parts[1].Equals("redeemed", StringComparison.OrdinalIgnoreCase)) return false;
+            if (parts[0].StartsWith('@')) return true;                      // "@viewer redeemed …" (bot echo)
+            return parts[0].Equals(user?.Trim(), StringComparison.OrdinalIgnoreCase);
+        }
+
         // Read an incoming message aloud, honoring the TTS options.
         private void SpeakMessage(ChatMessage m)
         {
@@ -263,6 +316,16 @@ namespace GameTracker.Views
             var text = (m.Text ?? string.Empty).Trim();
             if (text.Length == 0) return;
             if (_ttsSettings.SkipCommands && text.StartsWith("!", StringComparison.Ordinal)) return;
+
+            // Ignore rules: muted users, muted keywords, and point-redeem announcements.
+            if (_ttsSettings.IgnoreUsers.Any(u =>
+                    string.Equals(u?.Trim(), m.User?.Trim(), StringComparison.OrdinalIgnoreCase)))
+                return;
+            if (_ttsSettings.IgnoreKeywords.Any(k =>
+                    !string.IsNullOrWhiteSpace(k) &&
+                    text.Contains(k.Trim(), StringComparison.OrdinalIgnoreCase)))
+                return;
+            if (_ttsSettings.SkipRedeemMessages && IsRedeemAnnouncement(text, m.User)) return;
             if (_ttsSettings.MaxChars > 0 && text.Length > _ttsSettings.MaxChars)
                 text = text[.._ttsSettings.MaxChars];
             var spoken = _ttsSettings.ReadName && !string.IsNullOrWhiteSpace(m.User)
@@ -401,6 +464,26 @@ namespace GameTracker.Views
                 symbolColor = OverlayService.ChatColorHex(c.Platform),
             }).ToArray(),
         };
+
+        private PollWindow? _pollWindow;
+
+        private void Poll_Click(object sender, RoutedEventArgs e)
+        {
+            if (_pollWindow != null) { _pollWindow.Activate(); return; }
+            _pollWindow = new PollWindow { Owner = this };
+            _pollWindow.Closed += (_, _) => _pollWindow = null;
+            _pollWindow.Show();
+        }
+
+        private StreamStatsWindow? _statsWindow;
+
+        private void Stats_Click(object sender, RoutedEventArgs e)
+        {
+            if (_statsWindow != null) { _statsWindow.Activate(); return; }
+            _statsWindow = new StreamStatsWindow { Owner = this };
+            _statsWindow.Closed += (_, _) => _statsWindow = null;
+            _statsWindow.Show();
+        }
 
         private void Chatters_Click(object sender, RoutedEventArgs e)
         {

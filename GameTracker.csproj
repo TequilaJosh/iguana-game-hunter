@@ -8,9 +8,9 @@
     <RootNamespace>GameTracker</RootNamespace>
     <Nullable>enable</Nullable>
     <ApplicationIcon>iguana-eye.ico</ApplicationIcon>
-    <Version>1.0.31</Version>
-    <AssemblyVersion>1.0.31.0</AssemblyVersion>
-    <FileVersion>1.0.31.0</FileVersion>
+    <Version>1.0.32</Version>
+    <AssemblyVersion>1.0.32.0</AssemblyVersion>
+    <FileVersion>1.0.32.0</FileVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4022.49" />
@@ -32,6 +32,8 @@
     <EmbeddedResource Include="overlay\LiveOverlay.html" />
     <!-- Custom text-panel overlays, served at /panel/1..5. -->
     <EmbeddedResource Include="overlay\PanelOverlay.html" />
+    <!-- Transparent effects overlay (video/image redeems), served at /effects. -->
+    <EmbeddedResource Include="overlay\EffectsOverlay.html" />
     <!-- Bundled bonus font, served at /font/saturn.ttf as "MR. Saturn". -->
     <EmbeddedResource Include="overlay\fonts\SaturnBoingNew.ttf" />
   </ItemGroup>

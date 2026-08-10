@@ -23,5 +23,10 @@ namespace GameTracker.Models
         public bool SkipCommands { get; set; } = true;       // don't read messages starting with "!"
         public int MaxChars { get; set; } = 200;             // truncate long messages
         public List<CustomVoice> Custom { get; set; } = new(); // user-made voice presets
+
+        // Ignore rules: these messages are never read aloud.
+        public List<string> IgnoreUsers { get; set; } = new() { "StreamElements" };
+        public List<string> IgnoreKeywords { get; set; } = new();
+        public bool SkipRedeemMessages { get; set; } = true; // "<user> redeemed <reward>" announcements
     }
 }

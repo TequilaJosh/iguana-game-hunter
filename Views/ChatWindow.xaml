@@ -193,9 +193,17 @@
                         <TextBlock Grid.Column="0" VerticalAlignment="Center" Foreground="#7a9070" FontSize="11"
                                    TextWrapping="Wrap"
                                    Text="Viewers can type !request &lt;game&gt; to add it to Dormant. Overlay, sound alerts, points &amp; theme are in Settings (⚙)."/>
-                        <Button Grid.Column="1" Content="&#128101; Chatters" Click="Chatters_Click"
-                                Style="{StaticResource ConnectBtn}" VerticalAlignment="Center" Margin="8,0,0,0"
-                                ToolTip="Who's in the room: green = active, yellow = lurking"/>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                            <Button Content="&#128101; Chatters" Click="Chatters_Click"
+                                    Style="{StaticResource ConnectBtn}" Margin="8,0,0,0"
+                                    ToolTip="Who's in the room: green = active, yellow = lurking"/>
+                            <Button Content="&#128202; Stats" Click="Stats_Click"
+                                    Style="{StaticResource ConnectBtn}" Margin="6,0,0,0"
+                                    ToolTip="This stream's numbers: messages, top chatters, redeems — with a copyable recap"/>
+                            <Button Content="&#128499; Poll" Click="Poll_Click"
+                                    Style="{StaticResource ConnectBtn}" Margin="6,0,0,0"
+                                    ToolTip="Run a chat poll — viewers vote with !vote 1/2/3, results live on the overlay"/>
+                        </StackPanel>
                     </Grid>
                 </StackPanel>
             </Border>

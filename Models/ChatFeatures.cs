@@ -31,11 +31,15 @@ namespace GameTracker.Models
         // Reply in chat (via Social Stream Ninja) with @mentions for requests/points/redeems.
         public bool ReplyInChat { get; set; } = true;
 
-        // Points
-        public bool PointsEnabled { get; set; } = false;
+        // Points (on by default: 25 points every 5 minutes)
+        public bool PointsEnabled { get; set; } = true;
         public string PointsName { get; set; } = "Points";
         public int PointsIntervalMinutes { get; set; } = 5;
-        public int PointsPerInterval { get; set; } = 10;
+        public int PointsPerInterval { get; set; } = 25;
+
+        // Perks: first chatter of the stream + daily visit streaks (0 = off).
+        public int FirstChatterBonus { get; set; } = 50;
+        public int StreakBonusPerDay { get; set; } = 10;
 
         // Chat style
         public string ChatStyle { get; set; } = "log";      // log | boxes

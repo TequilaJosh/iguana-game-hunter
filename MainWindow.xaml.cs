@@ -66,6 +66,10 @@ namespace GameTracker
 
         private const int WM_HOTKEY = 0x0312;
         private const int HK_TOGGLE = 1, HK_CLIP = 2, HK_NOTE = 3;
+        // Redeem slots: Ctrl+Shift+1..9 fire the first nine redeems (free), Ctrl+Shift+0 = panic.
+        private const int HK_REDEEM_BASE = 10;   // ids 10..18 -> redeem index 0..8
+        private const int HK_FX_STOP = 19;
+        private const uint MOD_CTRL_SHIFT = 0x0002 | 0x0004;   // MOD_CONTROL | MOD_SHIFT
         private IntPtr _hwnd;
         private HotkeyConfig _hotkeys = new();
 
@@ -91,6 +95,10 @@ namespace GameTracker
             RegisterHotKey(_hwnd, HK_TOGGLE, _hotkeys.Toggle.Win32Modifiers, _hotkeys.Toggle.VirtualKey);
             RegisterHotKey(_hwnd, HK_CLIP, _hotkeys.Clip.Win32Modifiers, _hotkeys.Clip.VirtualKey);
             RegisterHotKey(_hwnd, HK_NOTE, _hotkeys.Note.Win32Modifiers, _hotkeys.Note.VirtualKey);
+            // Ctrl+Shift+1..9 -> redeem slots ('1' = 0x31), Ctrl+Shift+0 -> stop effects/morph.
+            for (int i = 0; i < 9; i++)
+                RegisterHotKey(_hwnd, HK_REDEEM_BASE + i, MOD_CTRL_SHIFT, (uint)(0x31 + i));
+            RegisterHotKey(_hwnd, HK_FX_STOP, MOD_CTRL_SHIFT, 0x30);
         }
 
         private void UnregisterHotkeys()
@@ -99,17 +107,28 @@ namespace GameTracker
             UnregisterHotKey(_hwnd, HK_TOGGLE);
             UnregisterHotKey(_hwnd, HK_CLIP);
             UnregisterHotKey(_hwnd, HK_NOTE);
+            for (int i = 0; i < 9; i++) UnregisterHotKey(_hwnd, HK_REDEEM_BASE + i);
+            UnregisterHotKey(_hwnd, HK_FX_STOP);
         }
 
         private IntPtr WndHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
             if (msg == WM_HOTKEY)
             {
-                switch (wParam.ToInt32())
+                int id = wParam.ToInt32();
+                switch (id)
                 {
                     case HK_TOGGLE: HotkeyToggle(); handled = true; break;
                     case HK_CLIP: HotkeyClip(); handled = true; break;
                     case HK_NOTE: HotkeyNote(); handled = true; break;
+                    case HK_FX_STOP: HotkeyStopEffects(); handled = true; break;
+                    default:
+                        if (id >= HK_REDEEM_BASE && id < HK_REDEEM_BASE + 9)
+                        {
+                            HotkeyRedeem(id - HK_REDEEM_BASE);
+                            handled = true;
+                        }
+                        break;
                 }
             }
             return IntPtr.Zero;
@@ -134,6 +153,38 @@ namespace GameTracker
                          .OrderByDescending(g => g.LastPlayed)
                          .FirstOrDefault()
                    ?? _games.FirstOrDefault(g => g.Status == GameStatus.InProgress);
+        }
+
+        // Ctrl+Shift+N: the streamer fires redeem slot N themselves (no point cost).
+        private readonly Services.SoundService _hotkeySound = new();
+
+        private void HotkeyRedeem(int index)
+        {
+            var redeems = Services.SettingsService.LoadChatFeatures().Redeems;
+            if (index < 0 || index >= redeems.Count)
+            {
+                StatusText.Text = $"Hotkey: no redeem in slot {index + 1}.";
+                return;
+            }
+            var r = redeems[index];
+            if (!string.IsNullOrWhiteSpace(r.SoundPath))
+                _hotkeySound.Play(r.SoundPath, r.Volume);
+            Services.OverlayServer.TriggerEffect(r.Effect,
+                r.Effect == "custom" && !string.IsNullOrWhiteSpace(r.ImagePath) ? "/fx/" + index : null);
+            if (!string.IsNullOrWhiteSpace(r.VideoPath))
+                Services.OverlayServer.PlayVideo("/fxvideo/" + index, (int)(Math.Clamp(r.Volume, 0, 1) * 100));
+            if (!string.IsNullOrWhiteSpace(r.MorphPreset))
+                Services.VoiceMorphService.ActivateByName(r.MorphPreset);
+            Services.StreamStatsService.CountRedeem();
+            StatusText.Text = $"Hotkey: fired {r.Command} (slot {index + 1}).";
+        }
+
+        // Ctrl+Shift+0: end the active morph and stop hotkey sounds.
+        private void HotkeyStopEffects()
+        {
+            Services.VoiceMorphService.ClearMorph();
+            _hotkeySound.StopAll();
+            StatusText.Text = "Hotkey: effects stopped, morph ended.";
         }
 
         private void HotkeyToggle()
@@ -532,6 +583,7 @@ namespace GameTracker
             Save();
             RefreshView();
             Services.OverlayService.Update(CurrentlyStreaming());
+            Services.StreamStatsService.CountGame(game.Title);
             EnsureChatAutoConnect();
             StatusText.Text = moved
                 ? $"Started session for \"{game.Title}\"  -  now HUNTING"
@@ -731,6 +783,7 @@ namespace GameTracker
             Save();
             RefreshView();
             StatusText.Text = $"Added “{title}” to Dormant (requested by {requester}).";
+            Services.StreamStatsService.CountRequest();
             Services.OverlayServer.Toast($"✔ {title} added — requested by {requester}!", confetti: true);
             _chatWindow?.SendChatReply($"@{requester} ✔ {title} was added to the request list!", platform);
         }

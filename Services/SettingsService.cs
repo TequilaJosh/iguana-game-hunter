@@ -40,6 +40,8 @@ namespace GameTracker.Services
             public List<TextPanel> TextPanels { get; set; } = new();   // custom OBS text overlays (max 5)
             public ThemeSettings Theme { get; set; } = new();          // app colour theme
             public ChatTtsSettings Tts { get; set; } = new();          // read chat aloud
+            public List<StreamGoal> Goals { get; set; } = new();       // overlay goal bars
+            public int MigrationRev { get; set; }                      // one-time defaults migrations applied
             public MorphSettings Morph { get; set; } = new();          // live mic voice morph
         }
 
@@ -167,6 +169,24 @@ namespace GameTracker.Services
             SaveAll(s);
         }
 
+        /// <summary>One-time default migrations for users updating from older versions.</summary>
+        public static void RunMigrations()
+        {
+            var s = LoadAll();
+            if (s.MigrationRev >= 1) return;
+
+            // Rev 1: points became on-by-default at 25 per 5 min. Flip users still on the
+            // old shipped default (off @ 10) — anyone who customized keeps their numbers.
+            s.Features ??= new ChatFeatureSettings();
+            if (!s.Features.PointsEnabled)
+            {
+                s.Features.PointsEnabled = true;
+                if (s.Features.PointsPerInterval == 10) s.Features.PointsPerInterval = 25;
+            }
+            s.MigrationRev = 1;
+            SaveAll(s);
+        }
+
         public static ChatFeatureSettings LoadChatFeatures()
         {
             var f = LoadAll().Features ?? new ChatFeatureSettings();
@@ -207,6 +227,15 @@ namespace GameTracker.Services
         {
             var s = LoadAll();
             s.Morph = morph;
+            SaveAll(s);
+        }
+
+        public static List<StreamGoal> LoadGoals() => LoadAll().Goals ?? new List<StreamGoal>();
+
+        public static void SaveGoals(List<StreamGoal> goals)
+        {
+            var s = LoadAll();
+            s.Goals = goals;
             SaveAll(s);
         }
 

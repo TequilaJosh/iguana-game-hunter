@@ -142,6 +142,14 @@
                         <TextBlock Text="min give" Style="{StaticResource Lbl}" Margin="6,0,6,0"/>
                         <TextBox x:Name="PointsAmountBox" Style="{StaticResource Num}"/>
                     </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                        <TextBlock Text="First-chatter bonus" Style="{StaticResource Lbl}"/>
+                        <TextBox x:Name="FirstBonusBox" Style="{StaticResource Num}" Margin="4,0,14,0"
+                                 ToolTip="Points for the very first person to chat each stream (0 = off)"/>
+                        <TextBlock Text="Streak bonus/day" Style="{StaticResource Lbl}"/>
+                        <TextBox x:Name="StreakBonusBox" Style="{StaticResource Num}" Margin="4,0,0,0"
+                                 ToolTip="Daily bonus × streak length for chatting on consecutive stream days (0 = off)"/>
+                    </StackPanel>
                     <TextBlock Foreground="#7a9070" FontSize="11" Margin="0,4,0,0" TextWrapping="Wrap"
                                Text="Viewers check their balance with !points (or !&lt;points name&gt;). Balance shows as a big toast on the overlay."/>
 

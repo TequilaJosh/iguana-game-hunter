@@ -49,7 +49,8 @@ namespace GameTracker
 
             base.OnStartup(e);
 
-            // Apply the saved colour theme before any window is shown.
+            // One-time settings migrations, then the saved colour theme.
+            try { Services.SettingsService.RunMigrations(); } catch { /* keep whatever's saved */ }
             try { Services.ThemeService.Initialize(); } catch { /* fall back to XAML defaults */ }
 
             // Start the live mic morph chain if the streamer has it enabled.

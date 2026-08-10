@@ -52,6 +52,7 @@ namespace GameTracker.Services
         {
             public WebSocket Socket = null!;
             public readonly SemaphoreSlim SendLock = new(1, 1);
+            public volatile bool IsEffects;   // set by a {"type":"hello","client":"effects"} message
         }
 
         private static readonly object Gate = new();
@@ -68,12 +69,20 @@ namespace GameTracker.Services
         private static object? _style;    // chat style: { mode, colors[] }
         private static object? _chatters; // counts + chatters list state
         private static object? _panels;   // custom text-panel overlays (wire form)
+        private static object? _goals;    // goal bars (wire form)
+        private static object? _poll;     // active poll (wire form; null = none)
         private static string? _panelHtml; // PanelOverlay.html template (index injected per request)
 
         // The overlay HTML (loaded once, from the embedded resource or disk).
         private static string _html = string.Empty;
 
         public static int ActiveClients { get { lock (Gate) return Clients.Count; } }
+
+        /// <summary>True while a dedicated effects-overlay page is connected.</summary>
+        public static bool HasEffectsClient
+        {
+            get { lock (Gate) return Clients.Any(c => c.IsEffects); }
+        }
 
         // -----------------------------------------------------------------
         //  Lifecycle
@@ -91,6 +100,7 @@ namespace GameTracker.Services
                 var f = SettingsService.LoadChatFeatures();
                 _style = new { mode = f.ChatStyle, colors = f.BoxColors.ToArray() };
                 _panels = PanelsToWire(SettingsService.LoadTextPanels());
+                _goals = GoalsToWire(SettingsService.LoadGoals());
                 _cts = new CancellationTokenSource();
                 _listener = new TcpListener(IPAddress.Loopback, Port);
                 _listener.Start();
@@ -203,6 +213,10 @@ namespace GameTracker.Services
                 else if (method == "GET" && route.StartsWith("/fxvideo/", StringComparison.Ordinal))
                 {
                     await ServeVideo(stream, route, headers, ct);
+                }
+                else if (method == "GET" && (route == "/effects" || route == "/effects/"))
+                {
+                    await ServeEmbeddedHtml(stream, "EffectsOverlay.html", ct);
                 }
                 else
                 {
@@ -511,6 +525,41 @@ namespace GameTracker.Services
             await WriteSimple(stream, "200 OK", "text/html", html, ct);
         }
 
+        // Small cache of embedded HTML pages served as-is (e.g. the effects overlay).
+        private static readonly Dictionary<string, string> _embeddedHtml = new();
+
+        private static async Task ServeEmbeddedHtml(NetworkStream stream, string resourceName, CancellationToken ct)
+        {
+            string? html;
+            lock (Gate) _embeddedHtml.TryGetValue(resourceName, out html);
+            if (html == null)
+            {
+                try
+                {
+                    var asm = Assembly.GetExecutingAssembly();
+                    var name = asm.GetManifestResourceNames()
+                        .FirstOrDefault(n => n.EndsWith(resourceName, StringComparison.OrdinalIgnoreCase));
+                    if (name != null)
+                    {
+                        using var s = asm.GetManifestResourceStream(name);
+                        if (s != null)
+                        {
+                            using var r = new StreamReader(s, Encoding.UTF8);
+                            html = await r.ReadToEndAsync(ct);
+                            lock (Gate) _embeddedHtml[resourceName] = html;
+                        }
+                    }
+                }
+                catch { }
+            }
+            if (html == null)
+            {
+                await WriteSimple(stream, "404 Not Found", "text/plain", resourceName + " missing", ct);
+                return;
+            }
+            await WriteSimple(stream, "200 OK", "text/html", html, ct);
+        }
+
         private static string? _fontsJson; // enumerated once; installed fonts rarely change mid-run
 
         // The fonts installed on this PC, for the overlay editor's font picker. The OBS
@@ -591,7 +640,7 @@ namespace GameTracker.Services
             {
                 type = "snapshot", state = _state, chat = _chat,
                 layout = _layout, presets = _presets, style = _style, chatters = _chatters,
-                panels = _panels, morph = MorphSnapshot(),
+                panels = _panels, morph = MorphSnapshot(), goals = _goals, poll = _poll,
             };
             await SendText(client, JsonConvert.SerializeObject(snapshot), ct);
 
@@ -644,6 +693,14 @@ namespace GameTracker.Services
                 if (msg.Contains("\"ping\""))
                 {
                     _ = SendText(client, "{\"type\":\"pong\"}", ct);
+                    return;
+                }
+
+                // A client identifying itself (the effects overlay says hello so video/image
+                // redeems can be routed to it instead of the main overlay).
+                if (msg.Contains("\"hello\""))
+                {
+                    if (msg.Contains("\"effects\"")) client.IsEffects = true;
                     return;
                 }
 
@@ -797,6 +854,35 @@ namespace GameTracker.Services
             catch { return "0"; }
         }
 
+        private static object GoalsToWire(IEnumerable<StreamGoal>? goals) =>
+            (goals ?? Enumerable.Empty<StreamGoal>())
+                .Where(g => g.Show && !string.IsNullOrWhiteSpace(g.Name))
+                .Take(8)
+                .Select(g => new
+                {
+                    name = g.Name,
+                    current = g.Current,
+                    target = Math.Max(1, g.Target),
+                    color = string.IsNullOrWhiteSpace(g.Color) ? "#7cc44a" : g.Color,
+                }).ToArray();
+
+        /// <summary>Push the current poll (or null to clear it) to all clients.</summary>
+        public static void PushPoll(object? poll)
+        {
+            if (!_running) return;
+            lock (Gate) _poll = poll;
+            Broadcast(new { type = "poll", poll });
+        }
+
+        /// <summary>Push the streamer's goal bars to all clients (live as they're edited).</summary>
+        public static void PushGoals(IEnumerable<StreamGoal> goals)
+        {
+            if (!_running) return;
+            var wire = GoalsToWire(goals);
+            lock (Gate) _goals = wire;
+            Broadcast(new { type = "goals", goals = wire });
+        }
+
         /// <summary>Push the streamer's text panels to all clients (live while typing).</summary>
         public static void PushTextPanels(IEnumerable<TextPanel> panels)
         {
@@ -813,18 +899,22 @@ namespace GameTracker.Services
             Broadcast(new { type = "toast", text = text ?? string.Empty, confetti });
         }
 
-        /// <summary>Fire a visual effect on the overlay (confetti / fireworks / shake / custom image).</summary>
+        /// <summary>Fire a visual effect on the overlay (confetti / fireworks / shake / custom image).
+        /// Custom images route to the dedicated effects overlay when one is connected.</summary>
         public static void TriggerEffect(string effect, string? imageUrl = null, int durationMs = 4000)
         {
             if (!_running) return;
-            Broadcast(new { type = "effect", effect, image = imageUrl ?? string.Empty, duration = durationMs });
+            var target = effect == "custom" && HasEffectsClient ? "effects" : "main";
+            Broadcast(new { type = "effect", effect, image = imageUrl ?? string.Empty, duration = durationMs, target });
         }
 
-        /// <summary>Play a video clip on the overlay (served from /fxvideo/&lt;index&gt;).</summary>
+        /// <summary>Play a video clip (served from /fxvideo/&lt;index&gt;). Routes to the dedicated
+        /// effects overlay when one is connected, else plays on the main overlay.</summary>
         public static void PlayVideo(string url, int volumePercent = 100)
         {
             if (!_running || string.IsNullOrEmpty(url)) return;
-            Broadcast(new { type = "video", url, volume = Math.Clamp(volumePercent, 0, 100) });
+            var target = HasEffectsClient ? "effects" : "main";
+            Broadcast(new { type = "video", url, volume = Math.Clamp(volumePercent, 0, 100), target });
         }
 
         // Active streamer voice-morph (for the overlay countdown pill).

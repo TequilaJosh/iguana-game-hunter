@@ -34,6 +34,8 @@ namespace GameTracker.Views
             PointsNameBox.Text = f.PointsName;
             PointsIntervalBox.Text = f.PointsIntervalMinutes.ToString();
             PointsAmountBox.Text = f.PointsPerInterval.ToString();
+            FirstBonusBox.Text = f.FirstChatterBonus.ToString();
+            StreakBonusBox.Text = f.StreakBonusPerDay.ToString();
             StyleLogRb.IsChecked = f.ChatStyle != "boxes";
             StyleBoxRb.IsChecked = f.ChatStyle == "boxes";
 
@@ -181,6 +183,8 @@ namespace GameTracker.Views
                 PointsName = string.IsNullOrWhiteSpace(PointsNameBox.Text) ? "Points" : PointsNameBox.Text.Trim(),
                 PointsIntervalMinutes = ParseInt(PointsIntervalBox.Text, 5, 1, 720),
                 PointsPerInterval = ParseInt(PointsAmountBox.Text, 10, 1, 1000000),
+                FirstChatterBonus = ParseInt(FirstBonusBox.Text, 50, 0, 1000000),
+                StreakBonusPerDay = ParseInt(StreakBonusBox.Text, 10, 0, 1000000),
                 ChatStyle = StyleBoxRb.IsChecked == true ? "boxes" : "log",
                 BoxColors = _colors.Select(c => c.Hex.Trim())
                                    .Where(IsHex).Take(10).ToList(),

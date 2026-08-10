@@ -55,6 +55,9 @@ namespace GameTracker.Views
             TtsVolume.Value = tts.Volume;
             TtsReadName.IsChecked = tts.ReadName;
             TtsSkipCommands.IsChecked = tts.SkipCommands;
+            TtsSkipRedeems.IsChecked = tts.SkipRedeemMessages;
+            TtsIgnoreUsers.Text = string.Join(", ", tts.IgnoreUsers);
+            TtsIgnoreKeywords.Text = string.Join(", ", tts.IgnoreKeywords);
             UpdateVoicePickerState();
 
             // Overlay
@@ -69,12 +72,13 @@ namespace GameTracker.Views
 
         private void Nav_Click(object sender, RoutedEventArgs e)
         {
-            NavAppearance.Tag = NavChat.Tag = NavOverlay.Tag = NavHelp.Tag = null;
-            PanelAppearance.Visibility = PanelChat.Visibility =
-                PanelOverlay.Visibility = PanelHelp.Visibility = Visibility.Collapsed;
+            NavAppearance.Tag = NavChat.Tag = NavOverlay.Tag = NavHelp.Tag = NavBackup.Tag = null;
+            PanelAppearance.Visibility = PanelChat.Visibility = PanelOverlay.Visibility =
+                PanelHelp.Visibility = PanelBackup.Visibility = Visibility.Collapsed;
 
             if (sender == NavChat) { NavChat.Tag = "active"; PanelChat.Visibility = Visibility.Visible; }
             else if (sender == NavOverlay) { NavOverlay.Tag = "active"; PanelOverlay.Visibility = Visibility.Visible; }
+            else if (sender == NavBackup) { NavBackup.Tag = "active"; PanelBackup.Visibility = Visibility.Visible; }
             else if (sender == NavHelp)
             {
                 NavHelp.Tag = "active"; PanelHelp.Visibility = Visibility.Visible;
@@ -171,6 +175,11 @@ namespace GameTracker.Views
                 "In Features → Point redeems, map a command (e.g. !confetti) to an on-stream effect: Confetti, Fireworks, Screen shake, a Custom image, " +
                 "or a Video. Set a point cost; viewers spend points to trigger it. Each has a Test button and a volume slider. Videos play on the overlay (mp4/webm work best).");
 
+            Section("Effects overlay (video/image redeem area)",
+                "Settings → Overlay → Copy effects overlay URL gives you a fully transparent page just for redeem playback. Add it as its own OBS " +
+                "Browser source and size/position it wherever you want videos and images to appear. While it's connected, video and image redeems play " +
+                "there instead of on the main overlay — so redeems can't cover your chat or timer. Without it, they fall back to the main overlay.");
+
             Section("Text to speech (TTS)",
                 "Settings → Chat → Text to Speech reads incoming chat aloud using offline Windows voices. Choose a voice, speed, and volume, " +
                 "and whether to say the sender's name or skip ! commands. Turn on \"Give each chatter their own random voice\" so everyone gets a " +
@@ -200,6 +209,31 @@ namespace GameTracker.Views
                 "Settings → Overlay → Text overlays creates up to 5 custom OBS text panels, each with a styled header, divider, and lines " +
                 "(font, size, color, scrolling). Add bordered left/right side blocks with text or images, horizontal or vertical, with their own scroll. " +
                 "Each panel has its own URL to add as a Browser source, and updates live as you type.");
+
+            Section("Polls (!vote)",
+                "Chat window → 🗳 Poll: type a question and 2–6 options, Start, and viewers vote with !vote 1, !vote 2, … " +
+                "One vote per person (revoting switches). Results show live in the overlay's Poll block (enable it in the layout editor); " +
+                "End voting highlights the winner with a toast.");
+
+            Section("Goals (progress bars)",
+                "Settings → Overlay → 🎯 Goals: create up to 8 goals (name, current, target, bar color). They render as progress bars in the " +
+                "overlay's Goals block. Keep the window open mid-stream and tap +1 as things happen — bars update in OBS instantly.");
+
+            Section("Stream stats & recap",
+                "Chat window → 📊 Stats: this stream's messages, unique chatters, top 5 chatters, games played, redeems, requests, and points " +
+                "handed out. 'Copy recap' puts a Discord-ready summary on your clipboard.");
+
+            Section("First-chatter & streak perks",
+                "With points enabled (Features → Points), the very first person to chat each stream earns a bonus (with a confetti toast), and " +
+                "chatting on consecutive stream days builds a streak that multiplies a daily bonus. Both amounts are set in Features; set 0 to disable.");
+
+            Section("Hotkeys (fire effects yourself)",
+                "Ctrl+Shift+1 … Ctrl+Shift+9 fire your first nine point redeems instantly (no cost) — sounds, effects, videos, and voice morphs. " +
+                "Ctrl+Shift+0 stops effects and ends the active morph. Your Start/Stop, Clip, and Note hotkeys are configurable in Help (?).");
+
+            Section("Backup & restore",
+                "Settings → Backup: Export writes one zip with everything (games, settings, themes, points, voices, streaks). Import restores a " +
+                "backup — your current data is saved to a safety backup first, then the app restarts. Perfect for reinstalls or a second PC.");
 
             Section("Updates",
                 "The app checks for updates on launch and updates itself silently; your open windows reopen afterward. " +
@@ -311,19 +345,30 @@ namespace GameTracker.Views
 
         private ChatTtsSettings ReadTtsUi()
         {
+            // Mutate the stored settings so fields this page doesn't own (e.g. the Voice
+            // Lab's custom voices) survive every save.
+            var t = SettingsService.LoadTts();
             var profile = TtsVoice.SelectedItem as VoiceProfile;
-            return new ChatTtsSettings
-            {
-                Enabled = TtsEnabled.IsChecked == true,
-                PerChatterVoices = TtsPerChatter.IsChecked == true,
-                Voice = profile?.Voice ?? string.Empty,
-                Effect = profile?.Effect ?? "normal",
-                Rate = (int)TtsRate.Value,
-                Volume = (int)TtsVolume.Value,
-                ReadName = TtsReadName.IsChecked == true,
-                SkipCommands = TtsSkipCommands.IsChecked == true,
-            };
+            t.Enabled = TtsEnabled.IsChecked == true;
+            t.PerChatterVoices = TtsPerChatter.IsChecked == true;
+            t.Voice = profile?.Voice ?? string.Empty;
+            t.Effect = profile?.Effect ?? "normal";
+            t.Rate = (int)TtsRate.Value;
+            t.Volume = (int)TtsVolume.Value;
+            t.ReadName = TtsReadName.IsChecked == true;
+            t.SkipCommands = TtsSkipCommands.IsChecked == true;
+            t.SkipRedeemMessages = TtsSkipRedeems.IsChecked == true;
+            t.IgnoreUsers = SplitList(TtsIgnoreUsers.Text);
+            t.IgnoreKeywords = SplitList(TtsIgnoreKeywords.Text);
+            return t;
         }
+
+        private static List<string> SplitList(string text) =>
+            (text ?? string.Empty)
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Where(s => s.Length > 0)
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .ToList();
 
         private void UpdateVoicePickerState()
         {
@@ -409,6 +454,13 @@ namespace GameTracker.Views
             catch { /* clipboard can be momentarily locked */ }
         }
 
+        private void CopyEffectsUrl_Click(object sender, RoutedEventArgs e)
+        {
+            var url = OverlayUrl + "effects";
+            try { Clipboard.SetText(url); OverlayStatus.Text = "Copied: " + url + " — add as a transparent OBS Browser source."; }
+            catch { /* clipboard can be momentarily locked */ }
+        }
+
         private void ChatLines_Changed(object sender, RoutedEventArgs e)
         {
             if (!_ready || !int.TryParse(ChatLinesBox.Text.Trim(), out int n)) return;
@@ -443,11 +495,73 @@ namespace GameTracker.Views
             _textPanelsWindow.Show();
         }
 
+        private GoalsWindow? _goalsWindow;
+
+        private void Goals_Click(object sender, RoutedEventArgs e)
+        {
+            if (_goalsWindow != null) { _goalsWindow.Activate(); return; }
+            _goalsWindow = new GoalsWindow { Owner = this };
+            _goalsWindow.Closed += (_, _) => _goalsWindow = null;
+            _goalsWindow.Show();
+        }
+
         private void UpdateOverlayStatus() =>
             OverlayStatus.Text = OverlayServer.IsRunning
                 ? $"Serving at {OverlayUrl} — use this as the OBS Browser source URL."
                 : "Overlay server is not running" +
                   (string.IsNullOrEmpty(OverlayServer.LastError) ? "." : $": {OverlayServer.LastError}. Try another port.");
+
+        // ---- backup / restore ----
+
+        private void ExportBackup_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new Microsoft.Win32.SaveFileDialog
+            {
+                Title = "Export backup",
+                Filter = "Game Hunter backup (*.zip)|*.zip",
+                FileName = $"GameHunter-backup-{DateTime.Now:yyyy-MM-dd}.zip",
+            };
+            if (dlg.ShowDialog(this) != true) return;
+            try
+            {
+                BackupService.Export(dlg.FileName);
+                BackupStatus.Text = "Backup saved: " + dlg.FileName;
+            }
+            catch (Exception ex) { BackupStatus.Text = "Export failed: " + ex.Message; }
+        }
+
+        private void ImportBackup_Click(object sender, RoutedEventArgs e)
+        {
+            var dlg = new Microsoft.Win32.OpenFileDialog
+            {
+                Title = "Import backup",
+                Filter = "Game Hunter backup (*.zip)|*.zip",
+            };
+            if (dlg.ShowDialog(this) != true) return;
+            if (!BackupService.LooksValid(dlg.FileName))
+            {
+                BackupStatus.Text = "That file doesn't look like a Game Hunter backup.";
+                return;
+            }
+            if (MessageBox.Show(this,
+                "Restore this backup? Your current data is saved to a safety backup first, then the app restarts.",
+                "Import backup", MessageBoxButton.YesNo, MessageBoxImage.Warning) != MessageBoxResult.Yes) return;
+
+            try
+            {
+                var safety = BackupService.Import(dlg.FileName);
+                BackupStatus.Text = "Restored. Safety backup: " + safety + " — restarting…";
+                // Relaunch after a short delay so the single-instance mutex is free by the
+                // time the new process starts.
+                var exe = Environment.ProcessPath;
+                if (exe != null)
+                    System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(
+                        "cmd.exe", $"/c timeout /t 2 /nobreak >nul & start \"\" \"{exe}\"")
+                    { CreateNoWindow = true, UseShellExecute = false });
+                Application.Current.Shutdown();
+            }
+            catch (Exception ex) { BackupStatus.Text = "Import failed: " + ex.Message; }
+        }
 
         private void Close_Click(object sender, RoutedEventArgs e) => Close();
 

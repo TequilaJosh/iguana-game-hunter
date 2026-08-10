@@ -28,5 +28,6 @@ namespace GameTracker.Models
         public List<string> IgnoreUsers { get; set; } = new() { "StreamElements" };
         public List<string> IgnoreKeywords { get; set; } = new();
         public bool SkipRedeemMessages { get; set; } = true; // "<user> redeemed <reward>" announcements
+        public bool SkipLinks { get; set; } = true;          // strip URLs from spoken text (skip pure-link messages)
     }
 }

@@ -56,6 +56,7 @@ namespace GameTracker.Views
             TtsReadName.IsChecked = tts.ReadName;
             TtsSkipCommands.IsChecked = tts.SkipCommands;
             TtsSkipRedeems.IsChecked = tts.SkipRedeemMessages;
+            TtsSkipLinks.IsChecked = tts.SkipLinks;
             TtsIgnoreUsers.Text = string.Join(", ", tts.IgnoreUsers);
             TtsIgnoreKeywords.Text = string.Join(", ", tts.IgnoreKeywords);
             UpdateVoicePickerState();
@@ -478,6 +479,7 @@ namespace GameTracker.Views
             t.ReadName = TtsReadName.IsChecked == true;
             t.SkipCommands = TtsSkipCommands.IsChecked == true;
             t.SkipRedeemMessages = TtsSkipRedeems.IsChecked == true;
+            t.SkipLinks = TtsSkipLinks.IsChecked == true;
             t.IgnoreUsers = SplitList(TtsIgnoreUsers.Text);
             t.IgnoreKeywords = SplitList(TtsIgnoreKeywords.Text);
             return t;

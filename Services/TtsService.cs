@@ -36,7 +36,12 @@ namespace GameTracker.Services
         private readonly record struct Item(string Text, string Voice, string Effect, int Rate, int Volume);
 
         // The effect palette. Pitch/Rate feed the engine; Dsp is applied to the audio.
-        public sealed record Effect(string Key, string Label, double Pitch, double Rate, string Dsp);
+        // Pool = included in the shipped defaults (voice picker + per-chatter random pool).
+        // Echo-based effects stay defined — saved custom voices and existing per-chatter
+        // assignments keep working, and the Voice Lab still offers them deliberately —
+        // but they're no longer handed out by default.
+        public sealed record Effect(string Key, string Label, double Pitch, double Rate, string Dsp,
+                                    bool Pool = true);
 
         public static readonly Effect[] Effects =
         {
@@ -45,9 +50,9 @@ namespace GameTracker.Services
             new("high",     "high",     1.30, 1.05, "none"),
             new("chipmunk", "chipmunk", 1.75, 1.35, "none"),
             new("robot",    "robot",    1.00, 1.00, "robot"),
-            new("ghost",    "ghost",    0.90, 0.95, "echo"),
+            new("ghost",    "ghost",    0.90, 0.95, "echo", Pool: false),
             new("alien",    "alien",    1.15, 1.00, "tremolo"),
-            new("demon",    "demon",    0.50, 0.85, "echo"),
+            new("demon",    "demon",    0.50, 0.85, "echo", Pool: false),
             // NWaves-powered extras (shared with the streamer voice-morph engine)
             new("whisper",  "whisper",  1.00, 0.95, "nw:whisper"),
             new("gremlin",  "gremlin",  1.45, 1.10, "nw:distortion"),
@@ -80,7 +85,7 @@ namespace GameTracker.Services
             foreach (var v in InstalledVoices())
             {
                 var shortName = v.Replace("Microsoft ", "").Trim();
-                foreach (var e in Effects)
+                foreach (var e in Effects.Where(x => x.Pool))
                     list.Add(new VoiceProfile
                     {
                         Voice = v,

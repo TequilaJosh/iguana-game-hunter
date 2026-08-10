@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Net.Http;
 using System.Net.WebSockets;
 using System.Text;
 using System.Threading;
@@ -25,10 +26,12 @@ namespace GameTracker.Services.Chat
         private string _session = string.Empty;
         private volatile bool _want;
 
-        // Outgoing messages go over their own socket on the session's default channel
-        // (the receive socket is pinned to channel 4, which is inbound chat only).
+        // Outgoing messages primarily use SSN's stateless HTTP endpoint (routes to the
+        // extension no matter how channels are wired). A WebSocket on the extension's
+        // command channel (3) is kept as a fallback if HTTP transport is unavailable.
         private ClientWebSocket? _sendWs;
         private readonly SemaphoreSlim _sendLock = new(1, 1);
+        private static readonly HttpClient _http = new() { Timeout = TimeSpan.FromSeconds(8) };
 
         public async Task ConnectAsync(string input)
         {
@@ -152,24 +155,53 @@ namespace GameTracker.Services.Chat
             message = (message ?? string.Empty).Trim();
             if (message.Length == 0 || string.IsNullOrEmpty(_session)) return false;
 
+            // "null" is SSN's placeholder for "all platforms".
+            var tgt = string.IsNullOrWhiteSpace(target) || target == "*"
+                ? "null" : target.Trim().ToLowerInvariant();
+
+            // Primary: the documented stateless HTTP endpoint
+            //   https://io.socialstream.ninja/SESSION/sendEncodedChat/TARGET/URLENCODED
+            // The relay hands this straight to the extension, so it doesn't depend on
+            // which WebSocket channel the extension happens to be listening on. The
+            // response body reports delivery: "failed" means the relay had no listener
+            // (extension not running) — report that honestly rather than a false success.
+            try
+            {
+                var url = $"https://io.socialstream.ninja/{Uri.EscapeDataString(_session)}" +
+                          $"/sendEncodedChat/{tgt}/{Uri.EscapeDataString(message)}";
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(8));
+                var resp = await _http.GetAsync(url, cts.Token);
+                if (resp.IsSuccessStatusCode)
+                {
+                    var body = (await resp.Content.ReadAsStringAsync()).Trim();
+                    return !(body.StartsWith("failed", StringComparison.OrdinalIgnoreCase)
+                          || body.StartsWith("error", StringComparison.OrdinalIgnoreCase));
+                }
+                // Non-2xx: fall through to the WebSocket path.
+            }
+            catch { /* HTTP transport unavailable — fall through to the WebSocket path. */ }
+
+            // Fallback: WebSocket command on channel 3 (where the extension picks up
+            // commands). The old code joined the default channel, which the extension
+            // does not read sendChat from — that's why sends silently did nothing.
             await _sendLock.WaitAsync();
             try
             {
-                // (Re)open the send socket if needed.
                 if (_sendWs is not { State: WebSocketState.Open })
                 {
                     try { _sendWs?.Dispose(); } catch { }
                     _sendWs = new ClientWebSocket();
                     using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(6));
+                    // /join/SESSION/IN/OUT — send OUT on channel 3.
                     await _sendWs.ConnectAsync(
-                        new Uri($"wss://io.socialstream.ninja/join/{_session}"), cts.Token);
+                        new Uri($"wss://io.socialstream.ninja/join/{_session}/1/3"), cts.Token);
                 }
 
-                var payload = string.IsNullOrWhiteSpace(target) || target == "*"
+                var payload = tgt == "null"
                     ? Newtonsoft.Json.JsonConvert.SerializeObject(
                           new { action = "sendChat", value = message })
                     : Newtonsoft.Json.JsonConvert.SerializeObject(
-                          new { action = "sendChat", value = message, target });
+                          new { action = "sendChat", value = message, target = tgt });
                 using var sendCts = new CancellationTokenSource(TimeSpan.FromSeconds(6));
                 await _sendWs.SendAsync(Encoding.UTF8.GetBytes(payload),
                     WebSocketMessageType.Text, true, sendCts.Token);

@@ -371,6 +371,26 @@ namespace GameTracker.Views
             if (!_ttsSettings.Enabled) _tts.StopAll();
         }
 
+        // Known chat/service bots (streamscharts.com/tools/bots) — never read aloud.
+        // Built-in and intentionally not surfaced in the UI; the streamer's own
+        // "Ignore users" list layers on top of this.
+        private static readonly HashSet<string> KnownBots = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "streamelements", "nightbot", "silent_kev1n", "alex_north_play", "vibing_offline",
+            "mmatcha_enjoyer", "kinda_lost_tbh", "casual_tryhard_tapp", "toasst_cruncher",
+            "sleepy_slava", "f0x_in_the_city", "vova_chillzone", "cyberdmitry", "mistylunac_",
+            "sery_bot", "wizebot", "tangiabot", "kofistreambot", "moobot", "botrixoficial",
+            "own3d", "raiim", "creatisbot", "fossabot", "streamlabs", "swiftyspiffy",
+            "frostytools",
+        };
+
+        // URLs in chat: http(s)/www links plus bare domains like "twitch.tv/name". Stripped
+        // from spoken text so TTS never reads out "h t t p s colon slash slash…".
+        private static readonly System.Text.RegularExpressions.Regex LinkPattern = new(
+            @"(?:https?://|www\.)\S+|\b[\w-]+(?:\.[\w-]+)*\.(?:com|net|org|io|gg|tv|co|me|dev|app|xyz|stream|live|link)\b(?:/\S*)?",
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase |
+            System.Text.RegularExpressions.RegexOptions.Compiled);
+
         // "<user> redeemed <reward> [cost]" — Twitch channel-point announcements relayed as
         // chat text. Only matches the announcement shape (first word = the sender's own name,
         // or an @mention bot reply) so normal sentences like "I redeemed my coupon" still read.
@@ -391,7 +411,8 @@ namespace GameTracker.Views
             if (text.Length == 0) return;
             if (_ttsSettings.SkipCommands && text.StartsWith("!", StringComparison.Ordinal)) return;
 
-            // Ignore rules: muted users, muted keywords, and point-redeem announcements.
+            // Ignore rules: known bots, muted users, muted keywords, redeem announcements.
+            if (KnownBots.Contains((m.User ?? string.Empty).Trim())) return;
             if (_ttsSettings.IgnoreUsers.Any(u =>
                     string.Equals(u?.Trim(), m.User?.Trim(), StringComparison.OrdinalIgnoreCase)))
                 return;
@@ -400,6 +421,14 @@ namespace GameTracker.Views
                     text.Contains(k.Trim(), StringComparison.OrdinalIgnoreCase)))
                 return;
             if (_ttsSettings.SkipRedeemMessages && IsRedeemAnnouncement(text, m.User)) return;
+
+            // Links: read the message without them; if nothing but links, say nothing.
+            if (_ttsSettings.SkipLinks && LinkPattern.IsMatch(text))
+            {
+                text = LinkPattern.Replace(text, " ").Trim();
+                text = System.Text.RegularExpressions.Regex.Replace(text, @"\s{2,}", " ");
+                if (text.Length == 0) return;
+            }
             if (_ttsSettings.MaxChars > 0 && text.Length > _ttsSettings.MaxChars)
                 text = text[.._ttsSettings.MaxChars];
             var spoken = _ttsSettings.ReadName && !string.IsNullOrWhiteSpace(m.User)
@@ -408,7 +437,7 @@ namespace GameTracker.Views
 
             string voice, effect;
             if (_ttsSettings.PerChatterVoices)
-                (voice, effect) = _voices.For(m.Platform, m.User);   // same person → same voice, saved
+                (voice, effect) = _voices.For(m.Platform, m.User ?? "");   // same person → same voice, saved
             else { voice = _ttsSettings.Voice; effect = _ttsSettings.Effect; }
 
             _tts.Speak(spoken, voice, effect, _ttsSettings.Rate, _ttsSettings.Volume);

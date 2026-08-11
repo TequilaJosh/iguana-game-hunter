@@ -85,12 +85,14 @@
 
                     <TextBlock Style="{StaticResource Step}">
                         <Run Foreground="{DynamicResource ThemeAccent}" FontWeight="Bold">1.</Run>
-                        Open Social Stream Ninja and go into its <Run FontWeight="Bold">Global settings</Run>
-                        (the gear / settings in the dock or extension).
+                        Open Social Stream Ninja — the <Run FontWeight="Bold">browser extension</Run> or the
+                        <Run FontWeight="Bold">desktop app</Run>, either works — and go into its
+                        <Run FontWeight="Bold">Global settings and tools</Run> (the 🛠 options screen).
                     </TextBlock>
                     <TextBlock Style="{StaticResource Step}">
                         <Run Foreground="{DynamicResource ThemeAccent}" FontWeight="Bold">2.</Run>
-                        Open the <Run FontWeight="Bold">Mechanics</Run> section.
+                        Open the <Run FontWeight="Bold">Experimental Features</Run> section (near the top).
+                        The two switches below live here — <Run FontStyle="Italic">not</Run> under Mechanics.
                     </TextBlock>
                     <TextBlock Style="{StaticResource Step}">
                         <Run Foreground="{DynamicResource ThemeAccent}" FontWeight="Bold">3.</Run>

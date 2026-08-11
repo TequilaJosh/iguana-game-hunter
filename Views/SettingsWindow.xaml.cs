@@ -249,11 +249,17 @@ namespace GameTracker.Views
             Step(5, "\"Auto-connect when a game session starts\" (Settings → Chat) reconnects your saved sources every time you press Start — set it and forget it.");
 
             Section("Chat — Social Stream Ninja setup (one-time)");
-            Img("ssnguide.png");
-            Step(1, "In SSN's Global settings → Mechanics, turn ON \"Enable remote API control of extension\".");
-            Step(2, "Turn ON \"Send chat messages to API server\" — this is the key switch; without it no chat arrives.");
-            Step(3, "Copy the session ID from your dock URL (the part after session=) into the SSN box and Connect.");
-            Step(4, "Stuck? The \"SSN not showing chat? Setup guide\" link under the SSN box walks through this with more detail.");
+            Body("Social Stream Ninja (SSN) merges chat from every platform — YouTube, TikTok, Kick and more — into one feed. It runs as a browser extension OR the SSN desktop app; either one works, you just need to open its settings screen once.");
+            Step(1, "In SSN, open \"Global settings and tools\" (the 🛠 options screen).");
+            Img("ssn-settings.png");
+            Step(2, "Open \"Experimental Features\" near the top. The two switches you need live HERE — not under Mechanics.");
+            Step(3, "Turn ON \"Enable remote API control of extension\" — this lets Game Tracker send commands, including your send-to-all chat messages.");
+            Step(4, "Turn ON \"Send chat messages to API server (for external listeners)\" — the key switch that pipes chat into the app; without it, no chat arrives.");
+            Img("ssn-api.png");
+            Step(5, "Copy the session ID from your SSN dock URL (the part after session=) into the SSN box in Game Tracker and Connect.");
+            Body("The other SSN screens (Mechanics, etc.) don't affect the connection — you can leave them at their defaults.");
+            Img("ssn-mechanics.png");
+            Step(6, "Stuck? The \"SSN not showing chat? Setup guide\" link under the SSN box walks through this with more detail.");
 
             Section("Chat — sending & auto-replies");
             Step(1, "Type in the bar at the bottom of the chat window and press Enter — your message goes out through SSN to your chats (needs SSN connected).");

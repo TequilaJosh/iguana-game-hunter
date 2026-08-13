@@ -8,9 +8,9 @@
     <RootNamespace>GameTracker</RootNamespace>
     <Nullable>enable</Nullable>
     <ApplicationIcon>iguana-eye.ico</ApplicationIcon>
-    <Version>1.0.35</Version>
-    <AssemblyVersion>1.0.35.0</AssemblyVersion>
-    <FileVersion>1.0.35.0</FileVersion>
+    <Version>1.0.36</Version>
+    <AssemblyVersion>1.0.36.0</AssemblyVersion>
+    <FileVersion>1.0.36.0</FileVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.Web.WebView2" Version="1.0.4022.49" />
@@ -38,5 +38,7 @@
     <Resource Include="Docs\Screens\*.png" />
     <!-- Bundled bonus font, served at /font/saturn.ttf as "MR. Saturn". -->
     <EmbeddedResource Include="overlay\fonts\SaturnBoingNew.ttf" />
+    <!-- Chicken "bawk" used to censor bad words in TTS. -->
+    <EmbeddedResource Include="Assets\chicken.wav" />
   </ItemGroup>
 </Project>

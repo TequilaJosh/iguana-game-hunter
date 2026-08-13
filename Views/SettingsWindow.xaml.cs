@@ -57,8 +57,10 @@ namespace GameTracker.Views
             TtsSkipCommands.IsChecked = tts.SkipCommands;
             TtsSkipRedeems.IsChecked = tts.SkipRedeemMessages;
             TtsSkipLinks.IsChecked = tts.SkipLinks;
+            TtsBleepBadWords.IsChecked = tts.BleepBadWords;
             TtsIgnoreUsers.Text = string.Join(", ", tts.IgnoreUsers);
             TtsIgnoreKeywords.Text = string.Join(", ", tts.IgnoreKeywords);
+            TtsBadWords.Text = string.Join(", ", tts.BadWords);
             UpdateVoicePickerState();
 
             // Overlay
@@ -486,17 +488,40 @@ namespace GameTracker.Views
             t.SkipCommands = TtsSkipCommands.IsChecked == true;
             t.SkipRedeemMessages = TtsSkipRedeems.IsChecked == true;
             t.SkipLinks = TtsSkipLinks.IsChecked == true;
+            t.BleepBadWords = TtsBleepBadWords.IsChecked == true;
             t.IgnoreUsers = SplitList(TtsIgnoreUsers.Text);
             t.IgnoreKeywords = SplitList(TtsIgnoreKeywords.Text);
+            t.BadWords = SplitList(TtsBadWords.Text);
             return t;
         }
 
         private static List<string> SplitList(string text) =>
             (text ?? string.Empty)
-                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .Split(new[] { ',', '\n', '\r' }, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
                 .Where(s => s.Length > 0)
                 .Distinct(StringComparer.OrdinalIgnoreCase)
                 .ToList();
+
+        private void ResetBadWords_Click(object sender, RoutedEventArgs e)
+        {
+            TtsBadWords.Text = string.Join(", ", GameTracker.Models.BadWordDefaults.Words);
+            SaveTts();   // persist immediately so a reset sticks even without leaving the field
+        }
+
+        private void BadWordTest_Click(object sender, RoutedEventArgs e)
+        {
+            // Play a sample containing a censored word through the current voice so the
+            // streamer hears the chicken bawk. Uses the words currently in the box.
+            var words = SplitList(TtsBadWords.Text);
+            _ttsTest.BleepBadWords = TtsBleepBadWords.IsChecked == true;
+            _ttsTest.SetBadWords(words);
+
+            var sample = words.FirstOrDefault(w => w.Length >= 3) ?? "shit";
+            var profile = TtsVoice.SelectedItem as VoiceProfile;
+            _ttsTest.StopAll();
+            _ttsTest.Speak($"Bad word filter test. That was some real {sample}, right there.",
+                profile?.Voice, profile?.Effect ?? "normal", (int)TtsRate.Value, (int)TtsVolume.Value);
+        }
 
         private void UpdateVoicePickerState()
         {

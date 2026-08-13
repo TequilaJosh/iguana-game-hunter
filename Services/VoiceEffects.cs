@@ -121,4 +121,79 @@ namespace GameTracker.Services
             return n;
         }
     }
+
+    // Plays a cached mono float buffer once (used for the bundled chicken "bawk" clip).
+    internal sealed class ClipSampleProvider : ISampleProvider
+    {
+        private readonly float[] _data;
+        private readonly WaveFormat _fmt;
+        private int _pos;
+
+        public ClipSampleProvider(float[] data, int sampleRate)
+        {
+            _data = data;
+            _fmt = WaveFormat.CreateIeeeFloatWaveFormat(sampleRate, 1);
+        }
+
+        public WaveFormat WaveFormat => _fmt;
+
+        public int Read(float[] buffer, int offset, int count)
+        {
+            int n = Math.Min(count, _data.Length - _pos);
+            if (n <= 0) return 0;
+            Array.Copy(_data, _pos, buffer, offset, n);
+            _pos += n;
+            return n;
+        }
+    }
+
+    // Procedural cartoon chicken "bawk" — fallback censor if the bundled clip won't load. Generates a
+    // buzzy, warbling squawk with a rise-then-fall pitch contour and a two-bump envelope,
+    // so no audio file needs to be shipped. Finite length; returns 0 once done.
+    internal sealed class ChickenSquawkProvider : ISampleProvider
+    {
+        private readonly WaveFormat _fmt;
+        private readonly int _channels;
+        private readonly double _sr;
+        private readonly long _total;    // total frames
+        private readonly double _baseHz;
+        private long _pos;
+        private double _phase;
+
+        public ChickenSquawkProvider(int sampleRate, int channels, double seconds, int variation)
+        {
+            _fmt = WaveFormat.CreateIeeeFloatWaveFormat(sampleRate, Math.Max(1, channels));
+            _channels = Math.Max(1, channels);
+            _sr = sampleRate;
+            _total = Math.Max(1, (long)(seconds * sampleRate));
+            _baseHz = 600 + (variation % 6) * 30;   // slight per-word variety
+        }
+
+        public WaveFormat WaveFormat => _fmt;
+
+        public int Read(float[] buffer, int offset, int count)
+        {
+            int frames = count / _channels;
+            int written = 0;
+            for (int f = 0; f < frames && _pos < _total; f++, _pos++)
+            {
+                double t = (double)_pos / _total;                 // 0..1 across the squawk
+                double contour = t < 0.15 ? 0.7 + 2.0 * t          // quick rise …
+                                          : 1.0 - 0.5 * (t - 0.15) / 0.85;  // … then fall
+                double warble = 1.0 + 0.18 * Math.Sin(2 * Math.PI * 32 * t);
+                _phase += _baseHz * contour * warble / _sr;
+                double saw = 2.0 * (_phase - Math.Floor(_phase + 0.5));       // rich harmonics
+                double sq = Math.Sign(Math.Sin(2 * Math.PI * _phase));        // nasal edge
+                double tone = 0.75 * saw + 0.25 * sq;
+
+                double atk = Math.Min(1.0, t / 0.02);              // 20 ms attack
+                double rel = Math.Min(1.0, (1.0 - t) / 0.15);      // release near the end
+                double bump = 0.6 + 0.4 * Math.Sin(2 * Math.PI * 1.3 * t);    // "b'GAWK" two-bump
+                float s = (float)(0.28 * tone * atk * rel * bump);
+
+                for (int c = 0; c < _channels; c++) buffer[offset + written++] = s;
+            }
+            return written;
+        }
+    }
 }

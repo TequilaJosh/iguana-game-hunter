@@ -299,6 +299,22 @@
                                          LostFocus="Tts_Changed"
                                          ToolTip="Comma-separated words or phrases — any message containing one is skipped"/>
                             </Grid>
+                            <CheckBox x:Name="TtsBleepBadWords" Content="Censor bad words with a chicken 🐔 bawk"
+                                      Foreground="#a8c488" FontSize="12" Margin="0,4,0,4"
+                                      Checked="Tts_Changed" Unchecked="Tts_Changed"
+                                      ToolTip="Profanity is replaced with a chicken squawk in the spoken audio. Edit the word list below."/>
+                            <TextBlock Text="Censored words — edit freely (comma- or line-separated). Whole words only, not case-sensitive."
+                                       Foreground="#7a9070" FontSize="11" Margin="0,0,0,3" TextWrapping="Wrap"/>
+                            <TextBox x:Name="TtsBadWords" Style="{StaticResource In}"
+                                     AcceptsReturn="True" TextWrapping="Wrap" Height="110"
+                                     VerticalScrollBarVisibility="Auto" LostFocus="Tts_Changed"
+                                     ToolTip="These words are replaced with a chicken bawk when read aloud."/>
+                            <StackPanel Orientation="Horizontal" Margin="0,6,0,4">
+                                <Button Content="&#128266; Test bawk" Click="BadWordTest_Click" Style="{StaticResource Btn}"
+                                        Margin="0,0,8,0" ToolTip="Read a sample line that contains a censored word"/>
+                                <Button Content="Reset to defaults" Click="ResetBadWords_Click" Style="{StaticResource Btn}"
+                                        ToolTip="Restore the built-in starter word list"/>
+                            </StackPanel>
                             <TextBlock Foreground="#7a9070" FontSize="11" Margin="0,4,0,0" TextWrapping="Wrap"
                                        Text="Reads all connected chats. On busy streams, extra messages are skipped so it can't fall behind. The chat window's 🔇 panic button also stops speech."/>
 

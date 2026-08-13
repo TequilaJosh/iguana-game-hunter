@@ -98,6 +98,7 @@ namespace GameTracker.Views
 
             _ttsSettings = SettingsService.LoadTts();
             _voices.SetProfiles(TtsService.AllProfiles(_ttsSettings.Custom));
+            ApplyBadWordFilter();
 
             // Chat features: counts, chatters list, points, style, redeems.
             _features = SettingsService.LoadChatFeatures();
@@ -368,7 +369,15 @@ namespace GameTracker.Views
         {
             _ttsSettings = SettingsService.LoadTts();
             _voices.SetProfiles(TtsService.AllProfiles(_ttsSettings.Custom));
+            ApplyBadWordFilter();
             if (!_ttsSettings.Enabled) _tts.StopAll();
+        }
+
+        // Push the bad-word (chicken-bawk) filter config into the TTS engine.
+        private void ApplyBadWordFilter()
+        {
+            _tts.BleepBadWords = _ttsSettings.BleepBadWords;
+            _tts.SetBadWords(_ttsSettings.BadWords);
         }
 
         // Known chat/service bots (streamscharts.com/tools/bots) — never read aloud.

@@ -239,7 +239,18 @@ namespace GameTracker.Services
             SaveAll(s);
         }
 
-        public static ChatTtsSettings LoadTts() => LoadAll().Tts ?? new ChatTtsSettings();
+        public static ChatTtsSettings LoadTts()
+        {
+            var t = LoadAll().Tts ?? new ChatTtsSettings();
+            // Seed the editable bad-word list with the defaults the first time only,
+            // so a streamer who deliberately clears it doesn't get it re-filled.
+            if (!t.BadWordsInit)
+            {
+                t.BadWords = new List<string>(BadWordDefaults.Words);
+                t.BadWordsInit = true;
+            }
+            return t;
+        }
 
         public static void SaveTts(ChatTtsSettings tts)
         {

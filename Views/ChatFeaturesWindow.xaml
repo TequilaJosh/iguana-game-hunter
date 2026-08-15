@@ -132,6 +132,29 @@
                     <TextBlock Foreground="#7a9070" FontSize="11" Margin="0,2,0,0" TextWrapping="Wrap"
                                Text="Posts from your account through Social Stream Ninja, so SSN must be connected. Overlay toasts always show either way."/>
 
+                    <TextBlock Text="DISCORD" Style="{StaticResource SecHdr}"/>
+                    <CheckBox x:Name="PostClipsCb" Style="{StaticResource Chk}"
+                              Content="Post clips to Discord (the !clip command and any Twitch clip links in chat)"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                        <TextBlock Text="Webhook URL" Style="{StaticResource Lbl}"/>
+                        <TextBox x:Name="DiscordWebhookBox" Style="{StaticResource Txt}" Width="320" Margin="4,0,0,0"
+                                 ToolTip="In Discord: Channel → Edit → Integrations → Webhooks → New Webhook → Copy Webhook URL. That webhook decides which channel clips post to."/>
+                    </StackPanel>
+                    <TextBlock Foreground="#7a9070" FontSize="11" Margin="0,2,0,0" TextWrapping="Wrap"
+                               Text="Create a webhook on the Discord channel you want (Channel settings → Integrations → Webhooks), paste its URL here. Viewers typing !clip — or dropping a Twitch clip link — get posted there automatically."/>
+                    <TextBlock Foreground="#7a9070" FontSize="11" Margin="0,8,0,2" TextWrapping="Wrap"
+                               Text="Using the LazerGuanas bot instead of a webhook? Fill these in and clips go to the bot (which can do more — welcome messages, moderation, commands). Leave blank to use the webhook above."/>
+                    <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                        <TextBlock Text="Bot ingest URL" Style="{StaticResource Lbl}"/>
+                        <TextBox x:Name="BotIngestUrlBox" Style="{StaticResource Txt}" Width="300" Margin="4,0,0,0"
+                                 ToolTip="Your bot's clip endpoint, e.g. https://your-host/clip"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                        <TextBlock Text="Ingest token" Style="{StaticResource Lbl}"/>
+                        <TextBox x:Name="BotIngestTokenBox" Style="{StaticResource Txt}" Width="300" Margin="4,0,0,0"
+                                 ToolTip="Must match the INGEST_TOKEN in the bot's .env"/>
+                    </StackPanel>
+
                     <TextBlock Text="POINTS" Style="{StaticResource SecHdr}"/>
                     <CheckBox x:Name="PointsCb" Content="Give points to everyone on the chatters list" Style="{StaticResource Chk}"/>
                     <StackPanel Orientation="Horizontal" Margin="0,4,0,0">

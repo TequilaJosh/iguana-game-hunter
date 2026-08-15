@@ -732,6 +732,7 @@ namespace GameTracker
             {
                 _chatWindow = new Views.ChatWindow { Owner = this };
                 _chatWindow.OnGameRequested = HandleGameRequest;
+                _chatWindow.OnClip = HandleChatClip;
                 _chatWindow.Closed += (_, _) => _chatWindow = null;
                 _chatWindow.Show();
             }
@@ -782,6 +783,21 @@ namespace GameTracker
         }
 
         // A viewer typed "!request <game>". Add it to Dormant if we don't already have it.
+        // A viewer ran "!clip" — drop a marker on the active session so it shows in the recap.
+        private void HandleChatClip(string user, string note)
+        {
+            Dispatcher.Invoke(() =>
+            {
+                var game = CurrentlyStreaming();
+                if (game?.ActiveSession == null) return;
+                var who = string.IsNullOrWhiteSpace(user) ? "chat" : user;
+                var text = string.IsNullOrWhiteSpace(note) ? $"clip by {who}" : $"{note} (by {who})";
+                game.ActiveSession.Markers.Add(new SessionMarker { At = DateTime.Now, Text = text });
+                Save();
+                RefreshView();
+            });
+        }
+
         private void HandleGameRequest(string title, string requester, string platform)
         {
             title = (title ?? string.Empty).Trim();

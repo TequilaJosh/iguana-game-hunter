@@ -14,7 +14,7 @@ namespace GameTracker.Services
         private static readonly Dictionary<string, int> MessagesByUser = new();   // display name -> count
         private static readonly Dictionary<string, int> MessagesByPlatform = new();
         private static readonly HashSet<string> GamesPlayed = new();
-        private static int _redeems, _requests, _pointsGiven, _challenges, _morphs, _videos;
+        private static int _redeems, _requests, _pointsGiven, _challenges, _morphs, _videos, _clips;
         public static DateTime StartedAt { get; } = DateTime.Now;
 
         public static void CountMessage(string platform, string user)
@@ -34,6 +34,7 @@ namespace GameTracker.Services
         public static void CountChallenges(int rolled) { lock (Gate) _challenges += rolled; }
         public static void CountMorph() { lock (Gate) _morphs++; }
         public static void CountVideo() { lock (Gate) _videos++; }
+        public static void CountClip() { lock (Gate) _clips++; }
         public static void CountGame(string title)
         {
             if (string.IsNullOrWhiteSpace(title)) return;
@@ -45,7 +46,7 @@ namespace GameTracker.Services
             List<(string user, int count)> TopChatters,
             List<(string platform, int count)> ByPlatform,
             List<string> Games, int Redeems, int Requests, int PointsGiven, int Challenges,
-            int Morphs, int Videos);
+            int Morphs, int Videos, int Clips);
 
         public static Snapshot Get()
         {
@@ -60,7 +61,7 @@ namespace GameTracker.Services
                     MessagesByPlatform.OrderByDescending(kv => kv.Value)
                                       .Select(kv => (kv.Key, kv.Value)).ToList(),
                     GamesPlayed.ToList(),
-                    _redeems, _requests, _pointsGiven, _challenges, _morphs, _videos);
+                    _redeems, _requests, _pointsGiven, _challenges, _morphs, _videos, _clips);
             }
         }
 
@@ -82,6 +83,7 @@ namespace GameTracker.Services
             if (s.Challenges > 0) lines.Add($"🎡 Challenges rolled: {s.Challenges}");
             if (s.Redeems > 0) lines.Add($"🎁 Redeems fired: {s.Redeems}" + (s.Morphs > 0 ? $" ({s.Morphs} voice morphs)" : ""));
             if (s.Requests > 0) lines.Add($"📥 Game requests: {s.Requests}");
+            if (s.Clips > 0) lines.Add($"🎬 Clips: {s.Clips}");
             if (s.PointsGiven > 0) lines.Add($"🪙 Points handed out: {s.PointsGiven}");
             return string.Join(Environment.NewLine, lines);
         }

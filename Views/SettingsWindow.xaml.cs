@@ -17,7 +17,15 @@ namespace GameTracker.Views
         private bool _ready;
         private TextPanelsWindow? _textPanelsWindow;
         private readonly TtsService _ttsTest = new();
+        private const string DefaultOutputLabel = "Default (system output)";
         private List<VoiceProfile> _profiles = new();
+
+        // The chosen TTS output device ("" = system default).
+        private string SelectedTtsOutput()
+        {
+            var s = TtsOutput.SelectedItem as string;
+            return string.IsNullOrEmpty(s) || s == DefaultOutputLabel ? string.Empty : s;
+        }
         private readonly List<(string label, Func<ThemeSettings, string> get, Action<ThemeSettings, string> set)> _slots;
 
         public SettingsWindow()
@@ -49,6 +57,11 @@ namespace GameTracker.Views
             var match = _profiles.FirstOrDefault(p => p.Voice == tts.Voice && p.Effect == tts.Effect)
                         ?? _profiles.FirstOrDefault();
             TtsVoice.SelectedItem = match;
+            TtsOutput.Items.Clear();
+            TtsOutput.Items.Add(DefaultOutputLabel);
+            foreach (var d in TtsService.OutputDevices()) TtsOutput.Items.Add(d);
+            TtsOutput.SelectedItem = !string.IsNullOrEmpty(tts.OutputDevice) && TtsOutput.Items.Contains(tts.OutputDevice)
+                ? tts.OutputDevice : DefaultOutputLabel;
             TtsEnabled.IsChecked = tts.Enabled;
             TtsPerChatter.IsChecked = tts.PerChatterVoices;
             TtsRate.Value = tts.Rate;
@@ -479,6 +492,7 @@ namespace GameTracker.Views
             var t = SettingsService.LoadTts();
             var profile = TtsVoice.SelectedItem as VoiceProfile;
             t.Enabled = TtsEnabled.IsChecked == true;
+            t.OutputDevice = SelectedTtsOutput();
             t.PerChatterVoices = TtsPerChatter.IsChecked == true;
             t.Voice = profile?.Voice ?? string.Empty;
             t.Effect = profile?.Effect ?? "normal";
@@ -515,6 +529,7 @@ namespace GameTracker.Views
             var words = SplitList(TtsBadWords.Text);
             _ttsTest.BleepBadWords = TtsBleepBadWords.IsChecked == true;
             _ttsTest.SetBadWords(words);
+            _ttsTest.OutputDevice = SelectedTtsOutput();
 
             var sample = words.FirstOrDefault(w => w.Length >= 3) ?? "shit";
             var profile = TtsVoice.SelectedItem as VoiceProfile;
@@ -567,6 +582,7 @@ namespace GameTracker.Views
         {
             // Test the currently-selected single voice (random-per-chatter picks live in chat).
             var profile = TtsVoice.SelectedItem as VoiceProfile;
+            _ttsTest.OutputDevice = SelectedTtsOutput();
             _ttsTest.StopAll();
             _ttsTest.Speak("This is a text to speech test. Your chat will sound like this.",
                 profile?.Voice, profile?.Effect ?? "normal", (int)TtsRate.Value, (int)TtsVolume.Value);

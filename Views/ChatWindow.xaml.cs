@@ -63,6 +63,16 @@ namespace GameTracker.Views
         /// <summary>Raised when a viewer runs "!request &lt;game&gt;" — (game title, requester, platform).</summary>
         public Action<string, string, string>? OnGameRequested;
 
+        /// <summary>Raised when a clip happens in chat (!clip or a clip link) — (user, note/url).</summary>
+        public Action<string, string>? OnClip;
+
+        // Twitch clip links dropped in chat (clips.twitch.tv/… or twitch.tv/<ch>/clip/<id>),
+        // with or without the https:// prefix.
+        private static readonly System.Text.RegularExpressions.Regex ClipLinkRx = new(
+            @"(?:https?://)?(?:clips\.twitch\.tv/[\w-]+|(?:www\.)?twitch\.tv/[\w-]+/clip/[\w-]+)",
+            System.Text.RegularExpressions.RegexOptions.Compiled |
+            System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
         private static readonly Brush DefaultUser = Frozen("#a8c488");
 
         public ChatWindow()
@@ -175,9 +185,33 @@ namespace GameTracker.Views
             // Sound alerts: play if the first word matches a configured command.
             _sound.CheckAndPlay(text);
 
+            // Auto-repost any Twitch clip link dropped in chat to the Discord channel.
+            if (_features.PostClips)
+            {
+                var link = ClipLinkRx.Match(text);
+                if (link.Success)
+                {
+                    var url = link.Value.StartsWith("http", StringComparison.OrdinalIgnoreCase)
+                        ? link.Value : "https://" + link.Value;
+                    PostClip(m.User ?? string.Empty, url, null, "clip");
+                }
+            }
+
             var parts = text.TrimStart().Split(new[] { ' ' }, 2);
             var cmd = parts.Length > 0 ? parts[0].Trim() : string.Empty;
             if (cmd.Length == 0) return;
+
+            // "!clip [note]" -> mark a highlight and post it to Discord.
+            if (string.Equals(cmd, "!clip", StringComparison.OrdinalIgnoreCase))
+            {
+                var note = parts.Length == 2 ? parts[1].Trim() : string.Empty;
+                OnClip?.Invoke(m.User ?? string.Empty, note);   // adds a session marker for the recap
+                if (_features.PostClips)
+                    PostClip(m.User ?? string.Empty, null, string.IsNullOrEmpty(note) ? null : note, "highlight");
+                StreamStatsService.CountClip();
+                OverlayServer.Toast($"🎬 {m.User} clipped it!", confetti: false);
+                return;
+            }
 
             // "!request <game>" -> hand off to the board (deduped there).
             if (parts.Length == 2 && string.Equals(cmd, "!request", StringComparison.OrdinalIgnoreCase))
@@ -373,11 +407,12 @@ namespace GameTracker.Views
             if (!_ttsSettings.Enabled) _tts.StopAll();
         }
 
-        // Push the bad-word (chicken-bawk) filter config into the TTS engine.
+        // Push runtime TTS config (bad-word filter + output device) into the engine.
         private void ApplyBadWordFilter()
         {
             _tts.BleepBadWords = _ttsSettings.BleepBadWords;
             _tts.SetBadWords(_ttsSettings.BadWords);
+            _tts.OutputDevice = _ttsSettings.OutputDevice ?? string.Empty;
         }
 
         // Known chat/service bots (streamscharts.com/tools/bots) — never read aloud.
@@ -650,6 +685,27 @@ namespace GameTracker.Views
         {
             if (!_features.ReplyInChat || !_ssn.IsConnected || string.IsNullOrWhiteSpace(text)) return;
             _ = _ssn.SendChatAsync(text, ReplyTarget(platform));
+        }
+
+        // Post a clip to Discord (fire-and-forget). Prefers the companion bot's ingest
+        // endpoint when configured; otherwise falls back to a plain channel webhook.
+        private void PostClip(string user, string? url, string? note, string type)
+        {
+            if (!string.IsNullOrWhiteSpace(_features.BotIngestUrl) &&
+                !string.IsNullOrWhiteSpace(_features.BotIngestToken))
+            {
+                _ = DiscordService.PostClipToBotAsync(_features.BotIngestUrl, _features.BotIngestToken,
+                    new { user, url, note, type });
+                return;
+            }
+            if (DiscordService.LooksLikeWebhook(_features.DiscordWebhook))
+            {
+                var tail = string.IsNullOrEmpty(note) ? "" : $" — {note}";
+                var body = url != null
+                    ? $"🎬 **{user}** shared a clip{tail}:\n{url}"
+                    : $"🎬 **{user}** clipped this moment{(string.IsNullOrEmpty(note) ? "" : $": {note}")} — {DateTime.Now:h:mm tt}";
+                _ = DiscordService.PostAsync(_features.DiscordWebhook, body);
+            }
         }
 
         // Map a message's platform to an SSN send target. Unknown/aggregate sources

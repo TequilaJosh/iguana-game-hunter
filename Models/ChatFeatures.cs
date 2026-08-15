@@ -52,5 +52,13 @@ namespace GameTracker.Models
 
         // Point redeems
         public List<EffectRedeem> Redeems { get; set; } = new();
+
+        // Discord: post clips (the !clip command and any Twitch clip links dropped in
+        // chat) to a channel. If a bot ingest URL + token are set, clips go to the
+        // companion bot; otherwise they fall back to a plain webhook.
+        public string DiscordWebhook { get; set; } = "";
+        public bool PostClips { get; set; } = true;
+        public string BotIngestUrl { get; set; } = "";     // e.g. https://your-host/clip
+        public string BotIngestToken { get; set; } = "";   // matches the bot's INGEST_TOKEN
     }
 }

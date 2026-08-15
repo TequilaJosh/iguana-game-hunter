@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using NAudio.CoreAudioApi;
 using NAudio.Wave;
 using NAudio.Wave.SampleProviders;
 using Windows.Media.SpeechSynthesis;
@@ -30,10 +31,56 @@ namespace GameTracker.Services
         private readonly Queue<Item> _q = new();
         private readonly object _gate = new();
         private bool _speaking;
-        private WaveOutEvent? _out;
+        private IWavePlayer? _out;
         private readonly List<IDisposable> _parts = new();   // readers/streams for the current utterance
 
         public int MaxBacklog { get; set; } = 5;
+
+        // Playback target: "" = system default. Set to a virtual-audio-cable device to feed
+        // TTS into a Discord call (Discord's mic = that cable). Resolved device is cached.
+        public string OutputDevice { get; set; } = "";
+        private MMDevice? _outDev;
+        private string _outDevName = "\0";   // sentinel so the first resolve always runs
+
+        public static List<string> OutputDevices()
+        {
+            try
+            {
+                using var e = new MMDeviceEnumerator();
+                return e.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active)
+                        .Select(d => d.FriendlyName).ToList();
+            }
+            catch { return new List<string>(); }
+        }
+
+        // Pick the output player: WASAPI to a named device (resampled to the device's mix
+        // format by NAudio in shared mode), or the default WaveOut when none is chosen.
+        private IWavePlayer BuildOutput()
+        {
+            var name = OutputDevice ?? string.Empty;
+            if (name != _outDevName)
+            {
+                try { _outDev?.Dispose(); } catch { }
+                _outDev = null;
+                _outDevName = name;
+                if (name.Length > 0)
+                {
+                    try
+                    {
+                        var e = new MMDeviceEnumerator();
+                        _outDev = e.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active)
+                                   .FirstOrDefault(d => d.FriendlyName == name);
+                    }
+                    catch { _outDev = null; }
+                }
+            }
+            if (_outDev != null)
+            {
+                try { return new WasapiOut(_outDev, AudioClientShareMode.Shared, true, 120); }
+                catch { /* device busy/unsupported — fall back */ }
+            }
+            return new WaveOutEvent();
+        }
 
         // ── Bad-word filter ─────────────────────────────────────────────────
         // When on, listed words are replaced with a chicken "bawk" in the spoken
@@ -297,7 +344,7 @@ namespace GameTracker.Services
                     _ => sp,
                 };
 
-                _out = new WaveOutEvent();
+                _out = BuildOutput();
                 _out.PlaybackStopped += (_, _) =>
                 {
                     CleanupPlayback();
@@ -333,6 +380,7 @@ namespace GameTracker.Services
         {
             StopAll();
             CleanupPlayback();
+            try { _outDev?.Dispose(); } catch { }
             try { _synth.Dispose(); } catch { }
         }
     }

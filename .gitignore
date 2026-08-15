@@ -14,3 +14,8 @@ import_games.py
 
 # Generated preview (not used by the app)
 iguana-eye-preview.png
+
+# Discord bot (Node.js) — dependencies and secrets
+discord-bot/node_modules/
+discord-bot/.env
+discord-bot/*.log

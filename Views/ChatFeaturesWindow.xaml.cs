@@ -28,6 +28,10 @@ namespace GameTracker.Views
             CountOverlayCb.IsChecked = f.CountOnOverlay;
             ChattersOverlayCb.IsChecked = f.ShowChattersOnOverlay;
             ReplyCb.IsChecked = f.ReplyInChat;
+            PostClipsCb.IsChecked = f.PostClips;
+            DiscordWebhookBox.Text = f.DiscordWebhook;
+            BotIngestUrlBox.Text = f.BotIngestUrl;
+            BotIngestTokenBox.Text = f.BotIngestToken;
             LurkBox.Text = f.LurkMinutes.ToString();
             RemoveBox.Text = f.RemoveMinutes.ToString();
             PointsCb.IsChecked = f.PointsEnabled;
@@ -179,6 +183,10 @@ namespace GameTracker.Views
                 CountOnOverlay = CountOverlayCb.IsChecked == true,
                 ShowChattersOnOverlay = ChattersOverlayCb.IsChecked == true,
                 ReplyInChat = ReplyCb.IsChecked == true,
+                PostClips = PostClipsCb.IsChecked == true,
+                DiscordWebhook = (DiscordWebhookBox.Text ?? string.Empty).Trim(),
+                BotIngestUrl = (BotIngestUrlBox.Text ?? string.Empty).Trim(),
+                BotIngestToken = (BotIngestTokenBox.Text ?? string.Empty).Trim(),
                 LurkMinutes = ParseInt(LurkBox.Text, 5, 1, 720),
                 RemoveMinutes = ParseInt(RemoveBox.Text, 15, 1, 1440),
                 PointsEnabled = PointsCb.IsChecked == true,

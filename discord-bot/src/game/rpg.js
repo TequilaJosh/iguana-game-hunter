@@ -78,7 +78,9 @@ async function cmdHelp(msg) {
       'In combat: `!attack` · `!skill <name>` · `!use` (potion) · `!flee`\n\n' +
       '**Gear & town**\n' +
       '`!inv` — bag & gold · `!equip <#>` — wear gear\n' +
-      '`!rest` — recover HP/MP · `!leaderboard` — top heroes'
+      '`!rest` — recover HP/MP · `!leaderboard` — top heroes\n\n' +
+      '**Playing from stream chat**\n' +
+      '`!play <your Discord @username>` then `!confirm <code>` — link your chat account to your Discord hero so your progress follows you everywhere.'
     );
   return msg.reply({ embeds: [e] });
 }
@@ -318,7 +320,7 @@ function cmdLeaderboard(msg) {
 
 // ── dispatch ──────────────────────────────────────────────────────────────────
 const COMMANDS = {
-  rpg: cmdHelp, tavern: cmdHelp, tt: cmdHelp, tthelp: cmdHelp,
+  rpg: cmdHelp, tavern: cmdHelp, tt: cmdHelp, tthelp: cmdHelp, help: cmdHelp, commands: cmdHelp,
   classes: cmdClasses, races: cmdRaces,
   create: cmdCreate, char: cmdChar, sheet: cmdChar, me: cmdChar,
   skills: cmdSkills, zones: cmdZones,

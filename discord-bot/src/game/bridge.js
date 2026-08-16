@@ -2,6 +2,9 @@ import { runForChat } from './rpg.js';
 import { getLinkedDiscordId, createPendingCode, confirmCode, findDiscordMember } from './links.js';
 import { log } from '../logger.js';
 
+// Informational commands a chatter can use before linking an account.
+const PUBLIC_COMMANDS = new Set(['help', 'rpg', 'tavern', 'tt', 'tthelp', 'commands', 'classes', 'races', 'zones']);
+
 // Commands that manage the account link (usable before a link exists).
 async function handleLink(client, guildId, platform, user, args) {
   const name = args.join(' ').trim();
@@ -46,11 +49,13 @@ export async function handleGameMessage(client, guildId, platform, user, text) {
     if (cmd === 'play' || cmd === 'link') return await handleLink(client, guildId, platform, user, args);
     if (cmd === 'confirm') return handleConfirm(platform, user, args);
 
+    // Info commands work before linking; everything else needs a linked hero.
     const discordId = getLinkedDiscordId(platform, user);
-    if (!discordId) {
+    if (!discordId && !PUBLIC_COMMANDS.has(cmd)) {
       return 'Link your account first: type !play <your Discord @username> and I\'ll DM you a code.';
     }
-    const reply = await runForChat({ discordId, username: user, content: '!' + body });
+    const runId = discordId || `unlinked:${platform}:${user}`;
+    const reply = await runForChat({ discordId: runId, username: user, content: '!' + body });
     return reply || null;
   } catch (e) {
     log.error('handleGameMessage failed:', e);

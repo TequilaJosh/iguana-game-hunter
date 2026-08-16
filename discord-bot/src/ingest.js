@@ -3,6 +3,7 @@ import { config } from './config.js';
 import { findGuildByToken, getGuild } from './guildStore.js';
 import { postClip } from './features/clips.js';
 import { handleGameMessage } from './game/bridge.js';
+import { forceRaid } from './game/raids.js';
 import { log } from './logger.js';
 
 /**
@@ -68,6 +69,18 @@ export function startIngestServer(client) {
       return 'Something went wrong.';
     });
     res.json({ ok: true, reply });
+  });
+
+  // Trigger a raid announcement on demand (optional lobbyMinutes).
+  app.post('/raidnow', async (req, res) => {
+    const header = req.get('authorization') || '';
+    const token = header.replace(/^Bearer\s+/i, '') || req.get('x-ingest-token') || '';
+    const guildId = findGuildByToken(token);
+    if (!guildId) return res.status(401).json({ ok: false, error: 'unknown ingest token' });
+    const m = Number(req.body?.lobbyMinutes);
+    const r = await forceRaid(guildId, client, Number.isFinite(m) && m > 0 ? m * 60000 : undefined)
+      .catch((e) => ({ error: e.message }));
+    res.json(r.error ? { ok: false, error: r.error } : { ok: true, boss: r.raid.boss.name, zone: r.zone.name });
   });
 
   app.listen(config.port, () => log.info(`Ingest server listening on :${config.port}`));

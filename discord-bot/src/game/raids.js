@@ -188,6 +188,31 @@ function raidSummary(raid, defeated, results) {
   return `${head}\n${lines.join('\n')}`;
 }
 
+function humanLobby(ms) {
+  return ms >= 3600000 ? `${Math.round(ms / 3600000)} hour${ms >= 7200000 ? 's' : ''}` : `${Math.max(1, Math.round(ms / 60000))} minutes`;
+}
+
+async function announceRaid(raid, channel, zone, lobbyMs) {
+  await renderRaid(raid).catch(() => {});
+  channel.send(`🐉 **A RAID is coming!** A **${raid.boss.name}** (T${zone.tier} · ${zone.name}) will attack in **${humanLobby(lobbyMs)}**. Type **\`!raid join\`** to sign up — everyone who fights shares the loot!`).catch(() => {});
+  log.info(`Announced raid in ${raid.guildId}: ${raid.boss.name} (T${zone.tier}), lobby ${humanLobby(lobbyMs)}`);
+}
+
+// Force-announce a raid right now (used by /raidnow). Random difficulty; short lobby by default.
+export async function forceRaid(guildId, client, lobbyMs = 5 * 60 * 1000) {
+  if (raids.has(guildId)) return { error: 'A raid is already active.' };
+  const chanId = getGuild(guildId).clipChannelId;
+  if (!chanId) return { error: 'No clips channel set (run /setup clips) to announce the raid in.' };
+  const channel = await client.channels.fetch(chanId).catch(() => null);
+  if (!channel || !channel.isTextBased()) return { error: 'Clips channel not found or not text.' };
+  const zone = ZONE_LIST[Math.floor(Math.random() * ZONE_LIST.length)];
+  const r = spawnRaid(guildId, zone, channel, lobbyMs);
+  if (r.error) return r;
+  nextSpawn.set(guildId, Date.now() + rand(SPAWN_MIN, SPAWN_MAX)); // push back the next auto one
+  await announceRaid(r.raid, channel, zone, lobbyMs);
+  return { raid: r.raid, zone };
+}
+
 // ── auto-announce scheduler (a raid every 1–3h, with a 1h sign-up lobby) ──────
 export function startRaidScheduler(client) {
   const check = async () => {
@@ -202,11 +227,7 @@ export function startRaidScheduler(client) {
       if (!channel || !channel.isTextBased()) continue;
       const zone = ZONE_LIST[Math.floor(Math.random() * ZONE_LIST.length)]; // random difficulty
       const r = spawnRaid(gid, zone, channel, LOBBY_MS);
-      if (!r.error) {
-        await renderRaid(r.raid).catch(() => {});
-        channel.send(`🐉 **A RAID is coming!** A **${r.raid.boss.name}** (T${zone.tier} · ${zone.name}) will attack in **1 hour**. Type **\`!raid join\`** to sign up — everyone who fights shares the loot!`).catch(() => {});
-        log.info(`Announced raid in ${gid}: ${r.raid.boss.name} (T${zone.tier})`);
-      }
+      if (!r.error) await announceRaid(r.raid, channel, zone, LOBBY_MS);
     }
   };
   setInterval(() => check().catch(() => {}), SCHED_MS);

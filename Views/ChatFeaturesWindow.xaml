@@ -152,8 +152,11 @@
                     <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
                         <TextBlock Text="Ingest token" Style="{StaticResource Lbl}"/>
                         <TextBox x:Name="BotIngestTokenBox" Style="{StaticResource Txt}" Width="300" Margin="4,0,0,0"
-                                 ToolTip="Must match the INGEST_TOKEN in the bot's .env"/>
+                                 ToolTip="From /setup ingest in your Discord server"/>
                     </StackPanel>
+                    <Button x:Name="TestBotBtn" Content="&#128268; Test bot connection" Click="TestBot_Click"
+                            Style="{StaticResource Btn}" Margin="0,6,0,0" HorizontalAlignment="Left"
+                            ToolTip="Checks the bot is reachable and your token/clips channel are set, then posts a short test message to the channel"/>
 
                     <TextBlock Text="POINTS" Style="{StaticResource SecHdr}"/>
                     <CheckBox x:Name="PointsCb" Content="Give points to everyone on the chatters list" Style="{StaticResource Chk}"/>

@@ -207,6 +207,37 @@ namespace GameTracker.Views
             DialogResult = true;
         }
 
+        private async void TestBot_Click(object sender, RoutedEventArgs e)
+        {
+            var url = (BotIngestUrlBox.Text ?? string.Empty).Trim();
+            var token = (BotIngestTokenBox.Text ?? string.Empty).Trim();
+            if (url.Length == 0 || token.Length == 0)
+            {
+                StatusText.Text = "Enter the bot ingest URL and token first (from /setup ingest).";
+                return;
+            }
+
+            TestBotBtn.IsEnabled = false;
+            StatusText.Text = "Testing bot connection…";
+            try
+            {
+                var result = await DiscordService.VerifyBotAsync(url, token);
+                StatusText.Text = result switch
+                {
+                    DiscordService.BotTest.Ok =>
+                        "✅ Bot is working — a test message was posted to your clips channel. Check Discord!",
+                    DiscordService.BotTest.NoClipChannel =>
+                        "⚠️ Bot & token OK, but no clips channel set. Run /setup clips in Discord.",
+                    DiscordService.BotTest.BadToken =>
+                        "❌ Reached the bot, but the token is wrong. Re-copy it from /setup ingest.",
+                    DiscordService.BotTest.Unreachable =>
+                        "❌ Can't reach the bot. Is it running, and is the URL correct?",
+                    _ => "Enter the bot ingest URL and token first (from /setup ingest).",
+                };
+            }
+            finally { TestBotBtn.IsEnabled = true; }
+        }
+
         private void Cancel_Click(object sender, RoutedEventArgs e) => DialogResult = false;
 
         private static string NormalizeCommand(string s)

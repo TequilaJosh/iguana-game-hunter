@@ -4,3 +4,5 @@ node_modules/
 npm-debug.log*
 # Per-server config incl. ingest tokens — never commit
 data/
+# Local machine-specific auto-start launcher
+start-hidden.vbs

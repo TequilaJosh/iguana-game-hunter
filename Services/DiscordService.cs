@@ -43,6 +43,40 @@ namespace GameTracker.Services
             catch { return false; }
         }
 
+        public enum BotTest { NotConfigured, Unreachable, BadToken, NoClipChannel, Ok }
+
+        /// <summary>
+        /// Check the companion bot without posting anything: is it reachable, is the token
+        /// valid, and does the server have a clips channel set. Powers the "Test bot" button.
+        /// </summary>
+        public static async Task<BotTest> VerifyBotAsync(string? ingestUrl, string? token)
+        {
+            ingestUrl = (ingestUrl ?? string.Empty).Trim();
+            token = (token ?? string.Empty).Trim();
+            if (ingestUrl.Length == 0 || token.Length == 0) return BotTest.NotConfigured;
+            if (!ingestUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase)) return BotTest.NotConfigured;
+
+            try
+            {
+                var verifyUrl = new Uri(new Uri(ingestUrl), "/verify");   // /clip -> /verify on the same host
+                using var req = new HttpRequestMessage(HttpMethod.Post, verifyUrl)
+                {
+                    Content = new StringContent("{}", Encoding.UTF8, "application/json"),
+                };
+                req.Headers.TryAddWithoutValidation("Authorization", "Bearer " + token);
+                var resp = await _http.SendAsync(req);
+                if ((int)resp.StatusCode == 401) return BotTest.BadToken;
+                if (!resp.IsSuccessStatusCode) return BotTest.Unreachable;
+
+                var body = await resp.Content.ReadAsStringAsync();
+                bool hasChannel = false;
+                try { hasChannel = Newtonsoft.Json.Linq.JObject.Parse(body).Value<bool?>("clipChannel") ?? false; }
+                catch { /* treat unparseable as no channel */ }
+                return hasChannel ? BotTest.Ok : BotTest.NoClipChannel;
+            }
+            catch { return BotTest.Unreachable; }
+        }
+
         /// <summary>Fire-and-forget post; returns false if the URL is unusable or the send fails.</summary>
         public static async Task<bool> PostAsync(string? webhookUrl, string content)
         {

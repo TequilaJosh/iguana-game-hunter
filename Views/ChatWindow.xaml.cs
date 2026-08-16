@@ -201,6 +201,15 @@ namespace GameTracker.Views
             var cmd = parts.Length > 0 ? parts[0].Trim() : string.Empty;
             if (cmd.Length == 0) return;
 
+            // Tavern Tales: forward RPG commands to the Discord bot and relay its reply.
+            if (_features.RpgEnabled && IsGameCommand(cmd) &&
+                !string.IsNullOrWhiteSpace(_features.BotIngestUrl) &&
+                !string.IsNullOrWhiteSpace(_features.BotIngestToken))
+            {
+                _ = ForwardGameCommand(m, text.TrimStart());
+                return;
+            }
+
             // "!clip [note]" -> mark a highlight and post it to Discord.
             if (string.Equals(cmd, "!clip", StringComparison.OrdinalIgnoreCase))
             {
@@ -685,6 +694,28 @@ namespace GameTracker.Views
         {
             if (!_features.ReplyInChat || !_ssn.IsConnected || string.IsNullOrWhiteSpace(text)) return;
             _ = _ssn.SendChatAsync(text, ReplyTarget(platform));
+        }
+
+        // Tavern Tales command words that get forwarded to the bot's /game bridge.
+        private static readonly HashSet<string> GameCommands = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "!play", "!link", "!confirm", "!create", "!char", "!sheet", "!me", "!skills",
+            "!zones", "!classes", "!races", "!adventure", "!explore", "!hunt",
+            "!attack", "!skill", "!cast", "!use", "!potion", "!flee", "!run",
+            "!status", "!inv", "!inventory", "!bag", "!equip", "!rest",
+            "!leaderboard", "!rpg", "!tavern", "!deletechar", "!help", "!commands",
+        };
+
+        private static bool IsGameCommand(string cmd) => GameCommands.Contains(cmd.Trim());
+
+        // Send a chat game command to the bot and relay its one-line reply to the chatter.
+        private async System.Threading.Tasks.Task ForwardGameCommand(ChatMessage m, string text)
+        {
+            var reply = await DiscordService.PlayGameAsync(
+                _features.BotIngestUrl, _features.BotIngestToken,
+                string.IsNullOrWhiteSpace(m.Platform) ? "chat" : m.Platform, m.User ?? string.Empty, text);
+            if (!string.IsNullOrWhiteSpace(reply))
+                SendChatReply($"@{m.User} {reply}", m.Platform);
         }
 
         // Post a clip to Discord (fire-and-forget). Prefers the companion bot's ingest

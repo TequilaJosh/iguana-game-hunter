@@ -43,6 +43,34 @@ namespace GameTracker.Services
             catch { return false; }
         }
 
+        /// <summary>
+        /// Forward a chat "!" game command to the bot's /game bridge and return its reply
+        /// text (or null on failure). Used for the cross-platform Tavern Tales play.
+        /// </summary>
+        public static async Task<string?> PlayGameAsync(string? ingestUrl, string? token, string platform, string user, string text)
+        {
+            ingestUrl = (ingestUrl ?? string.Empty).Trim();
+            token = (token ?? string.Empty).Trim();
+            if (ingestUrl.Length == 0 || token.Length == 0) return null;
+            if (!ingestUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase)) return null;
+
+            try
+            {
+                var gameUrl = new Uri(new Uri(ingestUrl), "/game");
+                var json = Newtonsoft.Json.JsonConvert.SerializeObject(new { platform, user, text });
+                using var req = new HttpRequestMessage(HttpMethod.Post, gameUrl)
+                {
+                    Content = new StringContent(json, Encoding.UTF8, "application/json"),
+                };
+                req.Headers.TryAddWithoutValidation("Authorization", "Bearer " + token);
+                var resp = await _http.SendAsync(req);
+                if (!resp.IsSuccessStatusCode) return null;
+                var body = await resp.Content.ReadAsStringAsync();
+                return Newtonsoft.Json.Linq.JObject.Parse(body).Value<string?>("reply");
+            }
+            catch { return null; }
+        }
+
         public enum BotTest { NotConfigured, Unreachable, BadToken, NoClipChannel, Ok }
 
         /// <summary>

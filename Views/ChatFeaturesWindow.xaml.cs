@@ -32,6 +32,7 @@ namespace GameTracker.Views
             DiscordWebhookBox.Text = f.DiscordWebhook;
             BotIngestUrlBox.Text = f.BotIngestUrl;
             BotIngestTokenBox.Text = f.BotIngestToken;
+            RpgEnabledCb.IsChecked = f.RpgEnabled;
             LurkBox.Text = f.LurkMinutes.ToString();
             RemoveBox.Text = f.RemoveMinutes.ToString();
             PointsCb.IsChecked = f.PointsEnabled;
@@ -187,6 +188,7 @@ namespace GameTracker.Views
                 DiscordWebhook = (DiscordWebhookBox.Text ?? string.Empty).Trim(),
                 BotIngestUrl = (BotIngestUrlBox.Text ?? string.Empty).Trim(),
                 BotIngestToken = (BotIngestTokenBox.Text ?? string.Empty).Trim(),
+                RpgEnabled = RpgEnabledCb.IsChecked == true,
                 LurkMinutes = ParseInt(LurkBox.Text, 5, 1, 720),
                 RemoveMinutes = ParseInt(RemoveBox.Text, 15, 1, 1440),
                 PointsEnabled = PointsCb.IsChecked == true,

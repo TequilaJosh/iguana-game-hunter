@@ -157,6 +157,10 @@
                     <Button x:Name="TestBotBtn" Content="&#128268; Test bot connection" Click="TestBot_Click"
                             Style="{StaticResource Btn}" Margin="0,6,0,0" HorizontalAlignment="Left"
                             ToolTip="Checks the bot is reachable and your token/clips channel are set, then posts a short test message to the channel"/>
+                    <CheckBox x:Name="RpgEnabledCb" Style="{StaticResource Chk}" Margin="0,10,0,0"
+                              Content="Let chatters play Tavern Tales (the bot's RPG) from chat"/>
+                    <TextBlock Foreground="#7a9070" FontSize="11" Margin="0,2,0,0" TextWrapping="Wrap"
+                               Text="Forwards ! game commands (!create, !adventure, !attack…) to the bot. First time, a viewer links with !play &lt;their Discord @username&gt; and !confirm &lt;code&gt; so their chat and Discord share one character."/>
 
                     <TextBlock Text="POINTS" Style="{StaticResource SecHdr}"/>
                     <CheckBox x:Name="PointsCb" Content="Give points to everyone on the chatters list" Style="{StaticResource Chk}"/>

@@ -60,5 +60,8 @@ namespace GameTracker.Models
         public bool PostClips { get; set; } = true;
         public string BotIngestUrl { get; set; } = "";     // e.g. https://your-host/clip
         public string BotIngestToken { get; set; } = "";   // matches the bot's INGEST_TOKEN
+
+        // Tavern Tales: let chatters play the Discord bot's RPG from chat (via the bot).
+        public bool RpgEnabled { get; set; } = false;
     }
 }

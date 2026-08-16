@@ -664,7 +664,7 @@ namespace GameTracker.Views
 
         private void CopyTickerUrl_Click(object sender, RoutedEventArgs e)
         {
-            var url = OverlayUrl + "ticker";
+            var url = OverlayUrl + "ticker?kinds=sub,follow,gift";
             try { Clipboard.SetText(url); OverlayStatus.Text = "Copied: " + url + " — add as its own OBS Browser source (a thin banner)."; }
             catch { /* clipboard can be momentarily locked */ }
         }

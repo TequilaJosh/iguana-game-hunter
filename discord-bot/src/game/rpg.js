@@ -14,10 +14,12 @@ import {
 } from './fights.js';
 import { getRaid, joinRaid, raidAction, startRaid, raidEmbed } from './raids.js';
 import { gather, getWorker, workerXpToNext } from './gather.js';
-import { PROFESSIONS, getProf, profXpToNext } from './professions.js';
+import { PROFESSIONS, getProf, profXpToNext, merchantSale, merchantBuyPrice, merchantDiscountPct } from './professions.js';
 import { craft, listRecipes, recipeName, inputsLine } from './recipes.js';
 import { hasMats, countMat } from './invutil.js';
 import { enchantList, enchantCap, nextCost, doEnchant, REAGENT_NAME } from './enchant.js';
+import { boxPrice, getBoxes, openBox } from './lootbox.js';
+import { ensureQuest, questProgress, questClaim } from './quests.js';
 import { getGuild } from '../guildStore.js';
 
 const PREFIX = '!';
@@ -52,7 +54,7 @@ function sheetEmbed(char) {
     .filter(Boolean).join('\n') || 'Nothing equipped';
   return new EmbedBuilder()
     .setColor(0x7cc44a)
-    .setTitle(`${char.name} — Lvl ${char.level} ${race.name} ${cls.name}`)
+    .setTitle(`${char.ascension ? `⭐${char.ascension} ` : ''}${char.name} — Lvl ${char.level} ${race.name} ${cls.name}`)
     .setDescription(cls.blurb)
     .addFields(
       { name: 'HP', value: `${char.hp ?? pd.maxhp}/${pd.maxhp}`, inline: true },
@@ -104,9 +106,14 @@ async function cmdHelp(msg) {
       '**Gathering & crafting**\n' +
       '`tt chop` `tt mine` `tt fish` `tt forage` `tt dig` `tt scavenge` — gather materials + Worker XP (3-min cooldown each)\n' +
       '`tt recipes` · `tt craft <#>` · `tt brew <#>` · `tt enchant <#>` — make & upgrade gear\n\n' +
+      '**Professions & extras**\n' +
+      '`tt quest` — your daily quest · `tt quest claim` — collect the reward\n' +
+      '`tt lootbox` — buy & open mystery boxes\n' +
+      '`tt ascend` — prestige at lvl 30+ for permanent bonuses\n' +
+      'Trading levels your 💰 Merchant (better prices); every profession shows on `tt char`.\n\n' +
       '**Gear & town**\n' +
       '`tt inv` — bag & gold · `tt equip <#>` — wear gear\n' +
-      '`tt shop` — buy gear/potions · `tt buy <name>` · `tt sell <#>`\n' +
+      '`tt shop` — buy gear/potions · `tt buy <#>` · `tt sell <#>`\n' +
       '`tt rest` — recover HP/MP · `tt leaderboard` — top heroes\n\n' +
       '**Playing from stream chat**\n' +
       '`tt play <your Discord @username>` then `tt confirm <code>` — link your chat account to your Discord hero so your progress follows you everywhere.'
@@ -336,7 +343,7 @@ async function autoTick(uid) {
 async function settleAuto(uid, fight, res, resume) {
   const a = autos.get(uid); if (!a) return;
   const char = a.char;
-  if (res.win) { stopAuto(uid); const reward = resolveWin(fight, char); endFight(uid); savePlayer(uid, char); await a.message.edit({ content: '', embeds: [victoryEmbed(fight, reward, char)] }).catch(() => {}); return; }
+  if (res.win) { stopAuto(uid); const reward = resolveWin(fight, char); questProgress(char, 'win', 1); endFight(uid); savePlayer(uid, char); await a.message.edit({ content: '', embeds: [victoryEmbed(fight, reward, char)] }).catch(() => {}); return; }
   if (res.lose) { stopAuto(uid); const { lost } = resolveLoss(char); endFight(uid); savePlayer(uid, char); await a.message.edit({ content: '', embeds: [defeatEmbed(fight, lost)] }).catch(() => {}); return; }
   if (res.fled) { stopAuto(uid); char.hp = fight.php; char.mp = fight.pmp; endFight(uid); savePlayer(uid, char); await a.message.edit({ content: '🏃 You fled the fight.', embeds: [] }).catch(() => {}); return; }
   const foot = resume ? '' : '\n⏸️ Paused — type `tt attack` to resume auto-attacking.';
@@ -364,7 +371,7 @@ async function afterTurn(msg, char, res) {
   if (res.error) return msg.reply(`⚠️ ${res.error}`);
   if (fight) fight.log.push(...res.log);
   if (res.fled) { char.hp = fight.php; char.mp = fight.pmp; endFight(msg.author.id); savePlayer(msg.author.id, char); return msg.reply('🏃 ' + res.log.join('\n')); }
-  if (res.win) { const reward = resolveWin(fight, char); endFight(msg.author.id); savePlayer(msg.author.id, char); return msg.reply({ embeds: [victoryEmbed(fight, reward, char)] }); }
+  if (res.win) { const reward = resolveWin(fight, char); questProgress(char, 'win', 1); endFight(msg.author.id); savePlayer(msg.author.id, char); return msg.reply({ embeds: [victoryEmbed(fight, reward, char)] }); }
   if (res.lose) { const { lost } = resolveLoss(char); endFight(msg.author.id); savePlayer(msg.author.id, char); return msg.reply({ embeds: [defeatEmbed(fight, lost)] }); }
   return msg.reply({ embeds: [fightEmbed(fight)] });
 }
@@ -437,9 +444,10 @@ function cmdShop(msg) {
   const eq = char.equipped || {};
   const lines = shop.map((s, n) => {
     const base = ITEMS[s.id];
+    const price = merchantBuyPrice(char, s.price);
     if (!GEAR_SLOTS.includes(base.slot)) {
       const heal = base.effect === 'heal_pct' ? ` · heals ${base.magnitude}% HP` : '';
-      return `\`${n + 1}\` ${s.name} — **${s.price}** 🪙${heal}`;
+      return `\`${n + 1}\` ${s.name} — **${price}** 🪙${heal}`;
     }
     const parts = [];
     if (base.power) parts.push(`PWR ${base.power}`);
@@ -448,10 +456,12 @@ function cmdShop(msg) {
     for (const [k, v] of Object.entries(base.stat_bonus || {})) parts.push(`${k.toUpperCase()}+${v}`);
     const d = gearScore(base) - (eq[base.slot] ? gearScore(eq[base.slot]) : 0);
     const cmp = d > 0 ? `▲ +${d}` : d < 0 ? `▼ ${d}` : '= same';
-    return `\`${n + 1}\` ${s.name} — **${s.price}** 🪙 · ${parts.join(' ')} · vs equipped ${cmp}`;
+    return `\`${n + 1}\` ${s.name} — **${price}** 🪙 · ${parts.join(' ')} · vs equipped ${cmp}`;
   });
+  const disc = merchantDiscountPct(char);
+  const footer = disc > 0 ? `\n_💰 Merchant Lv ${getProf(char, 'merchant').level}: −${disc}% prices, +sell value._` : '';
   return msg.reply(`🏪 **Shop** (you have ${char.gold || 0} 🪙)\n` + lines.join('\n') +
-    '\n\nBuy with `tt buy <name>` · sell gear with `tt sell <#>` (from `tt inv`).');
+    '\n\nBuy with `tt buy <#>` · sell gear with `tt sell <#>` (from `tt inv`).' + footer);
 }
 
 function cmdBuy(msg, args) {
@@ -476,7 +486,8 @@ function cmdBuy(msg, args) {
   const isGear = GEAR_SLOTS.includes(base.slot);
   if (isGear) qty = 1; // gear auto-equips — no point buying stacks
   qty = Math.max(1, Math.min(qty, 99));
-  const total = pick.price * qty;
+  const unit = merchantBuyPrice(char, pick.price);   // Merchant discount
+  const total = unit * qty;
   if ((char.gold || 0) < total) return msg.reply(`Not enough gold — ${qty}× ${pick.name} costs ${total} 🪙, you have ${char.gold || 0}.`);
   char.gold -= total;
 
@@ -487,13 +498,13 @@ function cmdBuy(msg, args) {
     if (old && gearScore(old) > gearScore(bought)) {
       addItem(char, bought); // keep the better equipped item; stash the purchase
       savePlayer(msg.author.id, char);
-      return msg.reply(`🛒 Bought **${bought.name}** for ${pick.price} 🪙, but your equipped **${old.name}** is better — kept it on. New one's in your bag. (${char.gold} left)`);
+      return msg.reply(`🛒 Bought **${bought.name}** for ${unit} 🪙, but your equipped **${old.name}** is better — kept it on. New one's in your bag. (${char.gold} left)`);
     }
     char.equipped[base.slot] = bought;
     let tail = ' Auto-equipped.';
-    if (old) { const sold = sellValue(old); char.gold += sold; tail = ` Auto-equipped and sold your old **${old.name}** for ${sold} 🪙.`; }
+    if (old) { const sold = merchantSale(char, sellValue(old)).gold; char.gold += sold; tail = ` Auto-equipped and sold your old **${old.name}** for ${sold} 🪙.`; }
     savePlayer(msg.author.id, char);
-    return msg.reply(`🛒 Bought **${bought.name}** for ${pick.price} 🪙.${tail} (${char.gold} left)`);
+    return msg.reply(`🛒 Bought **${bought.name}** for ${unit} 🪙.${tail} (${char.gold} left)`);
   }
 
   for (let i = 0; i < qty; i++) {
@@ -513,23 +524,25 @@ function cmdSell(msg, args) {
   if (['allgear', 'gear', 'equipment', 'equip', 'weapons'].includes(arg)) {
     const g = inv.filter((i) => GEAR_SLOTS.includes(i.slot));
     if (!g.length) return msg.reply('No gear in your bag to sell (equipped items are safe).');
-    const total = g.reduce((s, it) => s + sellValue(it), 0);
+    const base = g.reduce((s, it) => s + sellValue(it), 0);
+    const { gold, leveled } = merchantSale(char, base);
     char.inventory = inv.filter((i) => !GEAR_SLOTS.includes(i.slot));
-    char.gold = (char.gold || 0) + total;
+    char.gold = (char.gold || 0) + gold;
     savePlayer(msg.author.id, char);
-    return msg.reply(`💰 Sold ${g.length} piece(s) of gear for **${total}** 🪙. (${char.gold} total)`);
+    return msg.reply(`💰 Sold ${g.length} piece(s) of gear for **${gold}** 🪙.${leveled ? ' 💰 **Merchant level up!**' : ''} (${char.gold} total)`);
   }
 
   // Sell all materials/junk at once.
   if (['junk', 'all', 'mats', 'materials', 'trash'].includes(arg)) {
     const junk = inv.filter((i) => i.slot === 'material');
     if (!junk.length) return msg.reply('No materials to sell.');
-    const total = junk.reduce((s, m) => s + (m.value || 1) * (m.qty || 1), 0);
+    const base = junk.reduce((s, m) => s + (m.value || 1) * (m.qty || 1), 0);
     const count = junk.reduce((s, m) => s + (m.qty || 1), 0);
+    const { gold, leveled } = merchantSale(char, base);
     char.inventory = inv.filter((i) => i.slot !== 'material');
-    char.gold = (char.gold || 0) + total;
+    char.gold = (char.gold || 0) + gold;
     savePlayer(msg.author.id, char);
-    return msg.reply(`💰 Sold ${count} material(s) for **${total}** 🪙. (${char.gold} total)`);
+    return msg.reply(`💰 Sold ${count} material(s) for **${gold}** 🪙.${leveled ? ' 💰 **Merchant level up!**' : ''} (${char.gold} total)`);
   }
 
   // Sell a gear item by its !inv number.
@@ -537,22 +550,23 @@ function cmdSell(msg, args) {
   const idx = parseInt(args[0], 10) - 1;
   if (Number.isInteger(idx) && idx >= 0 && gear[idx]) {
     const item = gear[idx];
-    const price = sellValue(item);
-    char.gold = (char.gold || 0) + price;
+    const { gold, leveled } = merchantSale(char, sellValue(item));
+    char.gold = (char.gold || 0) + gold;
     char.inventory = inv.filter((i) => i !== item);
     savePlayer(msg.author.id, char);
-    return msg.reply(`💰 Sold **${item.name}** for ${price} 🪙. (${char.gold} total)`);
+    return msg.reply(`💰 Sold **${item.name}** for ${gold} 🪙.${leveled ? ' 💰 **Merchant level up!**' : ''} (${char.gold} total)`);
   }
 
   // Sell by name (materials, spare potions, or gear) — whole stack.
   if (arg) {
     const item = inv.find((i) => i.name.toLowerCase() === arg) || inv.find((i) => i.name.toLowerCase().includes(arg));
     if (item) {
-      const price = item.slot === 'material' ? (item.value || 1) * (item.qty || 1) : sellValue(item) * (item.qty || 1);
-      char.gold = (char.gold || 0) + price;
+      const base = item.slot === 'material' ? (item.value || 1) * (item.qty || 1) : sellValue(item) * (item.qty || 1);
+      const { gold, leveled } = merchantSale(char, base);
+      char.gold = (char.gold || 0) + gold;
       char.inventory = inv.filter((i) => i !== item);
       savePlayer(msg.author.id, char);
-      return msg.reply(`💰 Sold **${item.name}**${item.qty > 1 ? ` x${item.qty}` : ''} for ${price} 🪙. (${char.gold} total)`);
+      return msg.reply(`💰 Sold **${item.name}**${item.qty > 1 ? ` x${item.qty}` : ''} for ${gold} 🪙.${leveled ? ' 💰 **Merchant level up!**' : ''} (${char.gold} total)`);
     }
   }
 
@@ -626,6 +640,7 @@ function cmdGather(msg, args, command) {
     return msg.reply(`⏳ **${command}** is resting — ${Math.floor(s / 60)}m ${s % 60}s left.`);
   }
   if (res.status === 'nothing') return msg.reply(`There's nothing to ${command} around here.`);
+  questProgress(char, 'gather', res.qty);
   savePlayer(msg.author.id, char);
   const e = GATHER_EMOJI[command] || '⛏️';
   let out = `${e} You ${command} and gather **${res.qty}× ${res.material}**! +${res.xp} Worker XP (Worker Lv ${res.workerLevel}).`;
@@ -669,6 +684,7 @@ function cmdMake(msg, args, prof, verb) {
     }
     return msg.reply(`Not enough materials for **${recipeName(recipe)}** — need ${inputsLine(char, recipe)}. Go gather more!`);
   }
+  questProgress(char, 'craft', 1);
   savePlayer(msg.author.id, char);
 
   const meta = PROFESSIONS[prof];
@@ -735,6 +751,122 @@ function cmdEnchant(msg, args) {
   return msg.reply(out);
 }
 
+// ── lootboxes (Lootboxer) ────────────────────────────────────────────────────
+function rewardText(r) {
+  if (r.type === 'gold') return `${r.gold} 🪙`;
+  if (r.type === 'gear') return `${RARITY_EMOJI[r.rarity] || '•'} ${r.name}`;
+  if (r.type === 'mat') return `${r.qty}× ${r.name}`;
+  return r.name;
+}
+
+function cmdLootbox(msg, args) {
+  const char = getPlayer(msg.author.id);
+  if (!char) return msg.reply('No hero yet — `tt create` first.');
+  const sub = (args[0] || '').toLowerCase();
+  const price = boxPrice(char);
+  const boxes = getBoxes(char);
+
+  if (sub === 'buy') {
+    let n = parseInt(args[1], 10);
+    if (!Number.isInteger(n) || n < 1) n = 1;
+    n = Math.min(n, 50);
+    const total = price * n;
+    if ((char.gold || 0) < total) return msg.reply(`Not enough gold — ${n} box(es) cost ${total} 🪙 (you have ${char.gold || 0}).`);
+    char.gold -= total;
+    char.boxes = boxes + n;
+    savePlayer(msg.author.id, char);
+    return msg.reply(`🎁 Bought **${n}** mystery box(es) for ${total} 🪙. Open with \`tt lootbox open\`. (${char.gold} left)`);
+  }
+
+  if (sub === 'open' || /^\d+$/.test(sub)) {
+    if (boxes < 1) return msg.reply(`No boxes to open. Buy one for ${price} 🪙 with \`tt lootbox buy\`.`);
+    let n = /^\d+$/.test(sub) ? parseInt(sub, 10) : parseInt(args[1], 10);
+    if (!Number.isInteger(n) || n < 1) n = 1;
+    n = Math.min(n, boxes, 10);
+    const results = [];
+    let levels = 0, profLevel = 0;
+    for (let i = 0; i < n; i++) {
+      char.boxes -= 1;
+      const o = openBox(char);
+      levels += o.levelsGained; profLevel = o.profLevel;
+      results.push(rewardText(o.reward));
+      questProgress(char, 'box', 1);
+    }
+    savePlayer(msg.author.id, char);
+    let out = `🎁 Opened **${n}** box(es): ${results.join(' · ')} — Lootboxer Lv ${profLevel}.`;
+    if (levels) out += ' 🎉 **Lootboxer level up!**';
+    if (char.boxes > 0) out += ` (${char.boxes} left)`;
+    return msg.reply(out);
+  }
+
+  return msg.reply(
+    `🎁 **Mystery Boxes** — you hold **${boxes}**.\n` +
+    `Buy for **${price}** 🪙 each: \`tt lootbox buy [n]\`\n` +
+    `Open: \`tt lootbox open [n]\`\n` +
+    `Boxes drop gold, gear, materials or potions. Lootboxer Lv ${getProf(char, 'lootboxer').level} improves the odds.`
+  );
+}
+
+// ── daily quests ─────────────────────────────────────────────────────────────
+function cmdQuest(msg, args) {
+  const char = getPlayer(msg.author.id);
+  if (!char) return msg.reply('No hero yet — `tt create` first.');
+  const q = ensureQuest(char);
+
+  if ((args[0] || '').toLowerCase() === 'claim') {
+    const r = questClaim(char);
+    if (!r.ok) {
+      if (r.reason === 'claimed') return msg.reply("✅ You've already claimed today's quest — a new one arrives tomorrow.");
+      return msg.reply(`Not done yet — **${q.desc}**: ${q.progress}/${q.target}.`);
+    }
+    savePlayer(msg.author.id, char);
+    let out = `🎉 Quest complete! **+${r.q.gold} 🪙 · +${r.q.xp} XP**.`;
+    if (r.levels.length) out += ` 🆙 You reached level **${char.level}**!`;
+    return msg.reply(out);
+  }
+
+  savePlayer(msg.author.id, char); // persist a freshly-rolled quest
+  const done = q.progress >= q.target;
+  const status = q.claimed ? '✅ claimed' : done ? '✨ **ready!** — `tt quest claim`' : `${q.progress}/${q.target}`;
+  return msg.reply(
+    `📜 **Daily Quest** — ${q.desc}\n` +
+    `Progress: ${status}\n` +
+    `Reward: ${q.gold} 🪙 + ${q.xp} XP${q.claimed || done ? '' : ' · matching actions count automatically'}`
+  );
+}
+
+// ── ascension (prestige) ─────────────────────────────────────────────────────
+const ASCEND_LEVEL = 30;
+const allZonesCleared = (char) => ZONE_LIST.every((z) => char.cleared && char.cleared[z.id]);
+
+function cmdAscend(msg, args) {
+  const char = getPlayer(msg.author.id);
+  if (!char) return msg.reply('No hero yet — `tt create` first.');
+  const asc = char.ascension || 0;
+  const eligible = char.level >= ASCEND_LEVEL || allZonesCleared(char);
+  if (!eligible) {
+    return msg.reply(`⭐ **Ascension** unlocks at level ${ASCEND_LEVEL} (or after clearing every zone). You're level ${char.level} — keep adventuring!`);
+  }
+  if ((args[0] || '').toLowerCase() !== 'confirm') {
+    return msg.reply(
+      `⭐ **Ascend?** Reset to level 1 and climb again — but keep your gold, gear, professions and boxes, and gain **+5% XP and +2% to all stats, permanently** (you'd become Ascension ${asc + 1}).\n` +
+      'Confirm with `tt ascend confirm`.'
+    );
+  }
+  char.ascension = asc + 1;
+  char.level = 1;
+  char.xp = 0;
+  char.cleared = {};
+  endFight(msg.author.id);
+  const pd = derive(char);
+  char.hp = pd.maxhp; char.mp = pd.maxmp;
+  char.stamina = MAX_STAMINA; char.stamTs = Date.now();
+  savePlayer(msg.author.id, char);
+  return msg.reply(
+    `🌟 **${char.name} ascends!** Now **Ascension ${char.ascension}** — +${5 * char.ascension}% XP and +${2 * char.ascension}% stats, forever. A new journey begins at level 1.`
+  );
+}
+
 function cmdLeaderboard(msg) {
   const all = Object.values(allPlayers()).filter(Boolean);
   if (!all.length) return msg.reply('No heroes yet. Be the first with `tt create`!');
@@ -755,6 +887,9 @@ const COMMANDS = {
   fish: (m, a) => cmdGather(m, a, 'fish'), forage: (m, a) => cmdGather(m, a, 'forage'),
   dig: (m, a) => cmdGather(m, a, 'dig'), scavenge: (m, a) => cmdGather(m, a, 'scavenge'),
   recipes: cmdRecipes, craft: cmdCraft, brew: cmdBrew, enchant: cmdEnchant,
+  lootbox: cmdLootbox, box: cmdLootbox, boxes: cmdLootbox,
+  quest: cmdQuest, quests: cmdQuest, daily: cmdQuest,
+  ascend: cmdAscend, ascension: cmdAscend, prestige: cmdAscend,
   attack: cmdAttack, a: cmdAttack,
   skill: cmdSkill, cast: cmdSkill,
   use: cmdUse, potion: cmdUse,

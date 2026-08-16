@@ -29,6 +29,9 @@ export function derive(char) {
       else if (k === 'crit') critBonus += v;
     }
   }
+  // Ascension: each prestige permanently boosts every stat by 2%.
+  const asc = char.ascension || 0;
+  if (asc) for (const k of STAT_KEYS) st[k] = Math.round(st[k] * (1 + 0.02 * asc));
   def += Math.round(st.vit * 0.8);
   res += Math.round(st.spr * 0.8);
   const maxhp = Math.round((60 + st.vit * 6.5 + char.level * 5) * (r.traits?.hp_mod ?? 1));
@@ -41,7 +44,8 @@ export const xpToNext = (lv) => Math.round(30 * Math.pow(lv, 1.6));
 
 export function grantXp(char, amount) {
   const xpMod = RACES[char.race].traits?.xp_mod ?? 1;
-  char.xp = (char.xp || 0) + Math.round(amount * xpMod);
+  const ascMod = 1 + 0.05 * (char.ascension || 0);   // +5% XP per ascension
+  char.xp = (char.xp || 0) + Math.round(amount * xpMod * ascMod);
   const levelsGained = [];
   while (char.xp >= xpToNext(char.level)) {
     char.xp -= xpToNext(char.level);
@@ -124,7 +128,7 @@ export function makeGear(baseId, rarity) {
     const val = a.values[Math.min(vi, a.values.length - 1)];
     inst.stat_bonus[a.stat] = (inst.stat_bonus[a.stat] || 0) + val;
     if (usePrefix && !prefix) prefix = a.name + ' ';
-    else if (!usePrefix && !suffix) suffix = ' of ' + a.name;
+    else if (!usePrefix && !suffix) suffix = ' ' + a.name; // suffix affix names already include "of ..."
   }
   inst.name = (prefix + base.name + suffix).trim();
   return inst;

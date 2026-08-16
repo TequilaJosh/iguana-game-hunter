@@ -33,3 +33,20 @@ export function addProfXp(char, key, amount) {
   }
   return gained;
 }
+
+// ── Merchant economy ─────────────────────────────────────────────────────────
+// Selling pays more and buying costs less as the Merchant profession grows.
+export const merchantSellMult = (char) => 1 + Math.min(0.50, 0.02 * (getProf(char, 'merchant').level - 1));
+export const merchantBuyMult = (char) => 1 - Math.min(0.30, 0.015 * (getProf(char, 'merchant').level - 1));
+export const merchantDiscountPct = (char) => Math.round((1 - merchantBuyMult(char)) * 100);
+
+// Apply the Merchant sell bonus to a base payout and award Merchant XP.
+// Returns { gold, leveled }.
+export function merchantSale(char, baseGold) {
+  const gold = Math.max(1, Math.round(baseGold * merchantSellMult(char)));
+  const leveled = addProfXp(char, 'merchant', Math.max(1, Math.round(baseGold * 0.35))) > 0;
+  return { gold, leveled };
+}
+
+// The discounted unit price a hero actually pays in the shop.
+export const merchantBuyPrice = (char, base) => Math.max(1, Math.round(base * merchantBuyMult(char)));

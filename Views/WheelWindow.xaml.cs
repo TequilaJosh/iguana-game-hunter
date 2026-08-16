@@ -108,6 +108,7 @@ namespace GameTracker.Views
                 MaxBox.Text = _maxWheel.ToString();
                 RefreshItemsList();
                 RefreshResultsList();
+                RefreshPresetCombo();
             }
 
             if (!string.IsNullOrEmpty(chooseButtonText))
@@ -578,6 +579,63 @@ namespace GameTracker.Views
             public string Num { get; set; } = string.Empty;
             public string Text { get; set; } = string.Empty;
             public int Index { get; set; }
+        }
+
+        // ----- saved wheel lists (reusable named presets) -----
+
+        private void RefreshPresetCombo()
+        {
+            var current = PresetCombo.Text;
+            var names = Services.SettingsService.LoadWheelPresets()
+                .Select(p => p.Name)
+                .OrderBy(n => n, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            PresetCombo.ItemsSource = names;
+            PresetCombo.Text = current;   // ItemsSource assignment clears the editable text
+        }
+
+        private void LoadPreset_Click(object sender, RoutedEventArgs e)
+        {
+            var name = (PresetCombo.Text ?? string.Empty).Trim();
+            if (name.Length == 0) return;
+            var preset = Services.SettingsService.LoadWheelPresets()
+                .FirstOrDefault(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            if (preset == null) { ResultText.Text = $"No saved list named “{name}”"; return; }
+
+            _pool.Clear();
+            _pool.AddRange(preset.Items);
+            PoolChanged();   // rebuild rotation + wheel, and persist to this game's list
+            ResultText.Text = $"Loaded “{preset.Name}” ({preset.Items.Count} items)";
+        }
+
+        private void SavePreset_Click(object sender, RoutedEventArgs e)
+        {
+            var name = (PresetCombo.Text ?? string.Empty).Trim();
+            if (name.Length == 0) { ResultText.Text = "Type a name to save this list"; return; }
+
+            var presets = Services.SettingsService.LoadWheelPresets();
+            var existing = presets.FirstOrDefault(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            if (existing != null) existing.Items = new List<string>(_pool);
+            else presets.Add(new Models.WheelPreset { Name = name, Items = new List<string>(_pool) });
+
+            Services.SettingsService.SaveWheelPresets(presets);
+            RefreshPresetCombo();
+            PresetCombo.Text = name;
+            ResultText.Text = $"Saved “{name}” ({_pool.Count} items)";
+        }
+
+        private void DeletePreset_Click(object sender, RoutedEventArgs e)
+        {
+            var name = (PresetCombo.Text ?? string.Empty).Trim();
+            if (name.Length == 0) return;
+            var presets = Services.SettingsService.LoadWheelPresets();
+            if (presets.RemoveAll(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase)) > 0)
+            {
+                Services.SettingsService.SaveWheelPresets(presets);
+                RefreshPresetCombo();
+                PresetCombo.Text = string.Empty;
+                ResultText.Text = $"Deleted “{name}”";
+            }
         }
 
         private void Pin_Click(object sender, RoutedEventArgs e)

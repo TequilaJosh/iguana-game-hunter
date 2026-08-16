@@ -43,6 +43,7 @@ namespace GameTracker.Services
             public List<StreamGoal> Goals { get; set; } = new();       // overlay goal bars
             public int MigrationRev { get; set; }                      // one-time defaults migrations applied
             public MorphSettings Morph { get; set; } = new();          // live mic voice morph
+            public List<WheelPreset> WheelPresets { get; set; } = new(); // reusable named wheel lists
         }
 
         // Replace initialized collections instead of appending to them — otherwise lists
@@ -109,6 +110,15 @@ namespace GameTracker.Services
         {
             var s = LoadAll();
             s.SeedsApplied = keys;
+            SaveAll(s);
+        }
+
+        public static List<WheelPreset> LoadWheelPresets() => LoadAll().WheelPresets ?? new List<WheelPreset>();
+
+        public static void SaveWheelPresets(List<WheelPreset> presets)
+        {
+            var s = LoadAll();
+            s.WheelPresets = presets ?? new List<WheelPreset>();
             SaveAll(s);
         }
 

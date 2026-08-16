@@ -90,18 +90,23 @@
                 <!-- Wheel area -->
                 <Grid x:Name="WheelArea" Grid.Column="0" ClipToBounds="False"
                       AllowDrop="True" DragOver="WheelArea_DragOver" Drop="WheelArea_Drop">
-                    <Canvas x:Name="WheelCanvas" Width="360" Height="360"
-                            HorizontalAlignment="Center" VerticalAlignment="Center"
-                            RenderTransformOrigin="0.5,0.5">
-                        <Canvas.RenderTransform>
-                            <RotateTransform x:Name="WheelRotate" Angle="0"/>
-                        </Canvas.RenderTransform>
-                    </Canvas>
-                    <!-- Fixed pointer at top -->
-                    <Path x:Name="Pointer" Data="M -14,0 L 14,0 L 0,22 Z"
-                          Fill="{DynamicResource ThemeAccent2}" Stroke="{DynamicResource ThemeBg}" StrokeThickness="1.5"
-                          HorizontalAlignment="Center" VerticalAlignment="Top"
-                          Margin="0,2,0,0"/>
+                    <!-- The wheel + pointer scale to fill the window, so it stays readable
+                         when the window is enlarged for an OBS capture. -->
+                    <Viewbox Stretch="Uniform" StretchDirection="Both" Margin="4">
+                        <Grid Width="360" Height="372">
+                            <Canvas x:Name="WheelCanvas" Width="360" Height="360"
+                                    HorizontalAlignment="Center" VerticalAlignment="Bottom"
+                                    RenderTransformOrigin="0.5,0.5">
+                                <Canvas.RenderTransform>
+                                    <RotateTransform x:Name="WheelRotate" Angle="0"/>
+                                </Canvas.RenderTransform>
+                            </Canvas>
+                            <!-- Fixed pointer glued to the wheel's top -->
+                            <Path x:Name="Pointer" Data="M -14,0 L 14,0 L 0,22 Z"
+                                  Fill="{DynamicResource ThemeAccent2}" Stroke="{DynamicResource ThemeBg}" StrokeThickness="1.5"
+                                  HorizontalAlignment="Center" VerticalAlignment="Top"/>
+                        </Grid>
+                    </Viewbox>
                     <TextBlock x:Name="EmptyHint" Text="Add some items →"
                                Foreground="#7a9070" FontSize="14"
                                HorizontalAlignment="Center" VerticalAlignment="Center"
@@ -178,7 +183,23 @@
                 <Border x:Name="EditorPanel" Grid.Column="1" Width="250" Margin="14,0,0,0"
                         Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1"
                         CornerRadius="6" Visibility="Collapsed">
-                    <Grid Margin="10">
+                    <DockPanel Margin="10">
+                        <!-- Saved lists: reusable named wheel lists (Bizhawk Shuffler, RPG Night…) -->
+                        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+                            <TextBlock Text="SAVED LISTS" Foreground="{DynamicResource ThemeAccent}"
+                                       FontSize="11" FontWeight="Bold" Margin="0,0,0,3"/>
+                            <ComboBox x:Name="PresetCombo" IsEditable="True" Margin="0,0,0,4"
+                                      ToolTip="Type a name and Save to store the current list; pick a saved list and Load to swap it in."/>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="Load" Click="LoadPreset_Click" Style="{StaticResource WheelBtn}"
+                                        Padding="8,2" FontSize="11" Margin="0,0,4,0"/>
+                                <Button Content="Save" Click="SavePreset_Click" Style="{StaticResource WheelBtn}"
+                                        Padding="8,2" FontSize="11" Margin="0,0,4,0"/>
+                                <Button Content="Delete" Click="DeletePreset_Click" Style="{StaticResource WheelBtn}"
+                                        Padding="8,2" FontSize="11"/>
+                            </StackPanel>
+                        </StackPanel>
+                    <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
@@ -314,6 +335,7 @@
                             </ScrollViewer>
                         </Border>
                     </Grid>
+                    </DockPanel>
                 </Border>
             </Grid>
 

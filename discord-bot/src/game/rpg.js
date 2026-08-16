@@ -20,12 +20,64 @@ import { hasMats, countMat } from './invutil.js';
 import { enchantList, enchantCap, nextCost, doEnchant, REAGENT_NAME } from './enchant.js';
 import { boxPrice, getBoxes, openBox } from './lootbox.js';
 import { ensureQuest, questProgress, questClaim } from './quests.js';
+import { guideUrl } from '../features/guide.js';
 import { getGuild } from '../guildStore.js';
 
 const PREFIX = '!';
 const GEAR_SLOTS = ['weapon', 'head', 'body', 'shield', 'feet', 'accessory'];
 const RARITY_EMOJI = { common: '⚪', uncommon: '🟢', rare: '🔵', epic: '🟣', legendary: '🟡' };
 const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1);
+
+// ── item descriptions (stats + special effects) ───────────────────────────────
+function statBonusStr(sb) {
+  return Object.entries(sb || {})
+    .map(([k, v]) => (k === 'crit' ? `CRIT+${v}%` : `${k.toUpperCase()}+${v}`))
+    .join(' ');
+}
+
+// Human-readable effect for a consumable.
+function effectDesc(it) {
+  const m = it.magnitude || 0;
+  const e = it.effect || '';
+  if (e === 'heal_pct') return `heals ${m}% HP`;
+  if (e === 'heal_full') return 'fully restores HP';
+  if (e === 'mp_pct') return `restores ${m}% MP`;
+  if (e.startsWith('cure:')) return `cures ${e.slice(5)}`;
+  if (e === 'revive') return `revives a fallen ally at ${m}% HP`;
+  if (e === 'flee_guaranteed') return 'guarantees escape from a fight';
+  if (e.startsWith('damage:')) return `deals ${m} ${e.slice(7)} damage to the enemy`;
+  if (e === 'stamina') return `restores ${m} ⚡ stamina`;
+  return 'consumable';
+}
+
+// One-line stat/effect summary for an item (gear, consumable or material).
+function itemStats(it) {
+  if (GEAR_SLOTS.includes(it.slot)) {
+    const p = [];
+    if (it.power) p.push(`PWR ${it.power}`);
+    if (it.defense) p.push(`DEF ${it.defense}`);
+    if (it.resist) p.push(`RES ${it.resist}`);
+    const sb = statBonusStr(it.stat_bonus);
+    if (sb) p.push(sb);
+    if (it.enchant) p.push(`✨+${it.enchant}`);
+    return p.join(' · ') || 'no bonuses';
+  }
+  if (it.slot === 'consumable') return effectDesc(it);
+  if (it.slot === 'material') return `crafting material${it.value ? ` · ~${it.value} 🪙 each` : ''}`;
+  return '';
+}
+
+// Rich multi-line description (for `tt inspect`).
+function itemDetail(it) {
+  const rarity = it.rarity ? `${RARITY_EMOJI[it.rarity] || ''} ${cap(it.rarity)} ` : '';
+  const kind = GEAR_SLOTS.includes(it.slot)
+    ? `${rarity}${it.weapon_type ? cap(it.weapon_type) + ' ' : ''}${it.slot}${it.scales ? ` · scales with ${it.scales.toUpperCase()}` : ''}`
+    : it.slot;
+  const lines = [`**${it.name}**`, `_${kind}_`, itemStats(it)];
+  if (GEAR_SLOTS.includes(it.slot)) lines.push(`Sells for ${sellValue(it)} 🪙`);
+  else if (it.slot === 'material') lines.push(`Sells for ${it.value || 1} 🪙 each`);
+  return lines.filter(Boolean).join('\n');
+}
 
 function bar(cur, max, width = 12) {
   const p = clamp(max > 0 ? cur / max : 0, 0, 1);
@@ -50,7 +102,9 @@ function sheetEmbed(char) {
   const stam = char.stamina ?? MAX_STAMINA;
   const stats = STAT_KEYS.map((k) => `${k.toUpperCase()} ${pd.st[k]}`).join(' · ');
   const gear = GEAR_SLOTS
-    .map((s) => char.equipped?.[s] ? `${RARITY_EMOJI[char.equipped[s].rarity] || ''} ${char.equipped[s].name}` : null)
+    .map((s) => char.equipped?.[s]
+      ? `${RARITY_EMOJI[char.equipped[s].rarity] || ''} **${char.equipped[s].name}** — ${itemStats(char.equipped[s])}`
+      : null)
     .filter(Boolean).join('\n') || 'Nothing equipped';
   return new EmbedBuilder()
     .setColor(0x7cc44a)
@@ -112,13 +166,21 @@ async function cmdHelp(msg) {
       '`tt ascend` — prestige at lvl 30+ for permanent bonuses\n' +
       'Trading levels your 💰 Merchant (better prices); every profession shows on `tt char`.\n\n' +
       '**Gear & town**\n' +
-      '`tt inv` — bag & gold · `tt equip <#>` — wear gear\n' +
+      '`tt inv` — bag & gold · `tt inspect <#>` — item stats & effects · `tt equip <#>` — wear gear\n' +
       '`tt shop` — buy gear/potions · `tt buy <#>` · `tt sell <#>`\n' +
       '`tt rest` — recover HP/MP · `tt leaderboard` — top heroes\n\n' +
       '**Playing from stream chat**\n' +
       '`tt play <your Discord @username>` then `tt confirm <code>` — link your chat account to your Discord hero so your progress follows you everywhere.'
     );
+  const url = guideUrl();
+  if (url) e.setFooter({ text: '📖 Full web guide — tt guide' }).setURL(url);
   return msg.reply({ embeds: [e] });
+}
+
+function cmdGuide(msg) {
+  const url = guideUrl();
+  if (url) return msg.reply(`📖 **Tavern Tales player guide:** ${url}\nEverything — how to play, every command, classes, professions & items.`);
+  return msg.reply('📖 Full command list: `tt help`. (A web guide link isn’t configured on this bot.)');
 }
 
 function cmdClasses(msg) {
@@ -306,7 +368,10 @@ async function cmdRaid(msg, args) {
 // ── shared win/lose rendering ────────────────────────────────────────────────
 function victoryEmbed(fight, reward, char) {
   let desc = fight.log.slice(-6).join('\n') + `\n\n**+${reward.xp} XP · +${reward.gold} 🪙**`;
-  if (reward.items.length) desc += '\n\n**Loot:**\n' + reward.items.map((i) => `${RARITY_EMOJI[i.rarity] || '•'} ${i.name}${i.qty > 1 ? ` x${i.qty}` : ''}`).join('\n');
+  if (reward.items.length) desc += '\n\n**Loot:**\n' + reward.items.map((i) => {
+    const stats = itemStats(i);
+    return `${RARITY_EMOJI[i.rarity] || '•'} ${i.name}${i.qty > 1 ? ` x${i.qty}` : ''}${stats ? ` — ${stats}` : ''}`;
+  }).join('\n');
   if (reward.levels.length) desc += `\n\n🎉 **LEVEL UP!** You’re now level **${char.level}** (fully healed).`;
   if (reward.clearedBoss) desc += reward.unlocked
     ? `\n\n🗺️ **BOSS DEFEATED!** New zone unlocked: **${reward.unlocked}**!`
@@ -430,10 +495,52 @@ function cmdInv(msg) {
   const other = inv.filter((i) => !GEAR_SLOTS.includes(i.slot));
   const junkValue = other.filter((i) => i.slot === 'material').reduce((s, m) => s + (m.value || 1) * (m.qty || 1), 0);
   let out = `🎒 **${char.name}'s bag** — ${char.gold || 0} 🪙\n`;
-  if (gear.length) out += '\n**Gear** (equip with `tt equip <#>`, sell with `tt sell <#>`)\n' + gear.map((i, n) => `\`${n + 1}\` ${RARITY_EMOJI[i.rarity] || '•'} ${i.name} — ${i.slot}`).join('\n');
-  if (other.length) out += '\n\n**Items**\n' + other.map((i) => `• ${i.name}${i.qty > 1 ? ` x${i.qty}` : ''}${i.slot === 'material' ? ` (${(i.value || 1) * (i.qty || 1)} 🪙)` : ''}`).join('\n');
+  if (gear.length) out += '\n**Gear** (equip with `tt equip <#>`, sell with `tt sell <#>`)\n' + gear.map((i, n) => `\`${n + 1}\` ${RARITY_EMOJI[i.rarity] || '•'} ${i.name} — ${i.slot} · ${itemStats(i)}`).join('\n');
+  if (other.length) out += '\n\n**Items**\n' + other.map((i) => {
+    const tail = i.slot === 'material'
+      ? ` (${(i.value || 1) * (i.qty || 1)} 🪙)`
+      : i.slot === 'consumable' ? ` — ${effectDesc(i)}` : '';
+    return `• ${i.name}${i.qty > 1 ? ` x${i.qty}` : ''}${tail}`;
+  }).join('\n');
   if (junkValue > 0) out += `\n\n_Sell all materials with \`tt sell junk\` (+${junkValue} 🪙)_`;
+  out += '\n_Inspect anything: `tt inspect <#>` (gear number from above)._';
   if (!gear.length && !other.length) out += '\n_Empty. Go adventuring!_';
+  return msg.reply(out);
+}
+
+function cmdInspect(msg, args) {
+  const char = getPlayer(msg.author.id);
+  if (!char) return msg.reply('No hero yet — `tt create` first.');
+  const inv = char.inventory || [];
+  const gear = inv.filter((i) => GEAR_SLOTS.includes(i.slot));
+
+  let item;
+  const idx = parseInt(args[0], 10) - 1;
+  if (Number.isInteger(idx) && idx >= 0 && gear[idx]) {
+    item = gear[idx];
+  } else {
+    const q = args.join(' ').toLowerCase().trim();
+    if (!q) return msg.reply('Inspect what? `tt inspect <#>` (gear number from `tt inv`) or `tt inspect <name>`.');
+    item = inv.find((i) => i.name.toLowerCase() === q)
+        || Object.values(char.equipped || {}).find((i) => i && i.name.toLowerCase() === q)
+        || inv.find((i) => i.name.toLowerCase().includes(q))
+        || Object.values(char.equipped || {}).find((i) => i && i.name.toLowerCase().includes(q));
+    if (!item) {
+      const base = Object.values(ITEMS).find((b) => b.name.toLowerCase() === q)
+                || Object.values(ITEMS).find((b) => b.name.toLowerCase().includes(q));
+      if (base) item = base;
+    }
+  }
+  if (!item) return msg.reply("Couldn't find that item. Use a gear number from `tt inv`, or the item's name.");
+
+  let out = '🔎 ' + itemDetail(item);
+  if (GEAR_SLOTS.includes(item.slot)) {
+    const eq = char.equipped?.[item.slot];
+    if (eq && eq !== item) {
+      const d = gearScore(item) - gearScore(eq);
+      out += `\n\nvs equipped **${eq.name}** (${itemStats(eq)}): ${d > 0 ? `▲ +${d} better` : d < 0 ? `▼ ${d} worse` : '= same'}`;
+    }
+  }
   return msg.reply(out);
 }
 
@@ -898,6 +1005,8 @@ const COMMANDS = {
   flee: cmdFlee, run: cmdFlee,
   status: cmdStatus, fight: cmdStatus,
   inv: cmdInv, inventory: cmdInv, bag: cmdInv,
+  inspect: cmdInspect, item: cmdInspect, examine: cmdInspect,
+  guide: cmdGuide, wiki: cmdGuide,
   shop: cmdShop, store: cmdShop, buy: cmdBuy, sell: cmdSell,
   equip: cmdEquip, rest: cmdRest,
   leaderboard: cmdLeaderboard, lb: cmdLeaderboard,

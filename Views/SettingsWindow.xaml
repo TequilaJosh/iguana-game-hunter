@@ -382,11 +382,89 @@
                                     ToolTip="Copy the /effects URL for a transparent redeem-playback Browser source"/>
 
                             <TextBlock Text="ACTIVITY TICKER" Style="{StaticResource SecHdr}"/>
-                            <TextBlock Foreground="#7a9070" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,6"
-                                       Text="A separate banner overlay that shows the latest of each event — Newest Sub, Latest Gift, Newest Follower — and swaps the name in place when a new one happens. Add it as its own OBS Browser source (a thin lower-third strip). Customize which slots show with ?kinds=sub,gift,follow on the URL."/>
+                            <TextBlock Foreground="#7a9070" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8"
+                                       Text="A separate banner overlay showing the latest of each event — it swaps the name in place when a new one happens. Configure it below, then copy the URL into its own OBS Browser source (resize the source in OBS to taste)."/>
+
+                            <!-- What to show -->
+                            <TextBlock Text="Show on ticker" Foreground="#c4d4a8" FontSize="12" FontWeight="Bold" Margin="0,0,0,4"/>
+                            <WrapPanel Margin="0,0,0,10">
+                                <CheckBox x:Name="TkSub" Content="⭐ Newest Sub" Foreground="#e8e0c4" Margin="0,0,16,4"/>
+                                <CheckBox x:Name="TkFollow" Content="➕ Newest Follower" Foreground="#e8e0c4" Margin="0,0,16,4"/>
+                                <CheckBox x:Name="TkGift" Content="🎁 Latest Gift" Foreground="#e8e0c4" Margin="0,0,16,4"/>
+                                <CheckBox x:Name="TkRaid" Content="⚔️ Latest Raid" Foreground="#e8e0c4" Margin="0,0,16,4"/>
+                                <CheckBox x:Name="TkRedeem" Content="✨ Last Redeem" Foreground="#e8e0c4" Margin="0,0,16,4"/>
+                                <CheckBox x:Name="TkClip" Content="🎬 Last Clip" Foreground="#e8e0c4" Margin="0,0,16,4"/>
+                            </WrapPanel>
+
+                            <!-- Text size -->
+                            <Grid Margin="0,0,0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120"/><ColumnDefinition Width="*"/><ColumnDefinition Width="46"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Text size" Style="{StaticResource Lbl}"/>
+                                <Slider Grid.Column="1" x:Name="TkSize" Minimum="12" Maximum="60" TickFrequency="1" IsSnapToTickEnabled="True"
+                                        Value="20" VerticalAlignment="Center" Foreground="{DynamicResource ThemeAccent}"/>
+                                <TextBlock Grid.Column="2" Foreground="#a8c488" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Right"
+                                           Text="{Binding Value, ElementName=TkSize, StringFormat={}{0:0}px}"/>
+                            </Grid>
+
+                            <!-- Scroll + speed -->
+                            <Grid Margin="0,0,0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/><ColumnDefinition Width="46"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Scroll" Style="{StaticResource Lbl}"/>
+                                <ComboBox Grid.Column="1" x:Name="TkScroll" Width="140" SelectedValuePath="Tag" VerticalAlignment="Center" Margin="0,0,12,0">
+                                    <ComboBoxItem Content="Off (static)" Tag="off"/>
+                                    <ComboBoxItem Content="Right → Left" Tag="rtl"/>
+                                    <ComboBoxItem Content="Left → Right" Tag="ltr"/>
+                                </ComboBox>
+                                <Slider Grid.Column="2" x:Name="TkSpeed" Minimum="10" Maximum="300" TickFrequency="5" IsSnapToTickEnabled="True"
+                                        Value="60" VerticalAlignment="Center" Foreground="{DynamicResource ThemeAccent}"
+                                        ToolTip="Scroll speed (pixels per second)"/>
+                                <TextBlock Grid.Column="3" Foreground="#a8c488" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Right"
+                                           Text="{Binding Value, ElementName=TkSpeed, StringFormat={}{0:0}/s}"/>
+                            </Grid>
+
+                            <!-- Position + accent + labels -->
+                            <Grid Margin="0,0,0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Position" Style="{StaticResource Lbl}"/>
+                                <ComboBox Grid.Column="1" x:Name="TkPos" Width="110" SelectedValuePath="Tag" VerticalAlignment="Center" Margin="0,0,12,0">
+                                    <ComboBoxItem Content="Bottom" Tag="bottom"/>
+                                    <ComboBoxItem Content="Top" Tag="top"/>
+                                </ComboBox>
+                                <ComboBox Grid.Column="2" x:Name="TkAccent" Width="120" SelectedValuePath="Tag" VerticalAlignment="Center" Margin="0,0,12,0"
+                                          ToolTip="Accent colour for labels &amp; dividers">
+                                    <ComboBoxItem Content="Guana Green" Tag="7cc44a"/>
+                                    <ComboBoxItem Content="Purple" Tag="9146ff"/>
+                                    <ComboBoxItem Content="Blue" Tag="4aa3c4"/>
+                                    <ComboBoxItem Content="Pink" Tag="c44a7c"/>
+                                    <ComboBoxItem Content="Gold" Tag="d4a437"/>
+                                    <ComboBoxItem Content="Red" Tag="d64f4f"/>
+                                    <ComboBoxItem Content="Cyan" Tag="49e0c8"/>
+                                    <ComboBoxItem Content="White" Tag="ffffff"/>
+                                </ComboBox>
+                                <CheckBox Grid.Column="3" x:Name="TkLabels" Content="Show labels" Foreground="#e8e0c4" VerticalAlignment="Center"/>
+                            </Grid>
+
+                            <!-- Background opacity -->
+                            <Grid Margin="0,0,0,10">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120"/><ColumnDefinition Width="*"/><ColumnDefinition Width="46"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBlock Grid.Column="0" Text="Background" Style="{StaticResource Lbl}"/>
+                                <Slider Grid.Column="1" x:Name="TkBg" Minimum="0" Maximum="100" TickFrequency="1" IsSnapToTickEnabled="True"
+                                        Value="86" VerticalAlignment="Center" Foreground="{DynamicResource ThemeAccent}"/>
+                                <TextBlock Grid.Column="2" Foreground="#a8c488" FontSize="12" VerticalAlignment="Center" HorizontalAlignment="Right"
+                                           Text="{Binding Value, ElementName=TkBg, StringFormat={}{0:0}%}"/>
+                            </Grid>
+
                             <Button Content="&#128203; Copy activity ticker URL" Click="CopyTickerUrl_Click"
                                     Style="{StaticResource Btn}" HorizontalAlignment="Left"
-                                    ToolTip="Copy the /ticker URL for a static 'latest events' banner Browser source"/>
+                                    ToolTip="Save these options and copy the /ticker URL for an OBS Browser source"/>
 
                             <TextBlock x:Name="OverlayStatus" Foreground="#7a9070" FontSize="11" Margin="0,10,0,0"
                                        TextWrapping="Wrap"/>

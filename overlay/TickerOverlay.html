@@ -17,37 +17,44 @@
     background: transparent; overflow: hidden;
     font-family: 'Segoe UI', 'Bebas Neue', Arial, sans-serif;
   }
-  /* Bottom-centered ticker bar; the OBS source can be moved/cropped freely. */
+  /* Bottom strip; the OBS source rectangle sets the overall size, the ?size param the text. */
   #wrap {
     position: absolute; left: 0; right: 0; bottom: 0;
-    display: flex; justify-content: center; padding: 10px;
+    display: flex; justify-content: center; align-items: flex-end;
+    padding: 0.5em; overflow: hidden;
   }
+  #wrap.top { bottom: auto; top: 0; align-items: flex-start; }
+  #wrap.scroll { justify-content: flex-start; padding-left: 0; padding-right: 0; }
   #bar {
-    display: flex; align-items: stretch; gap: 0;
+    display: inline-flex; align-items: stretch; gap: 0;
     background: var(--bg);
-    border: 2px solid var(--border); border-radius: 12px;
-    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.55);
-    overflow: hidden; max-width: 96vw;
+    border: 2px solid var(--border); border-radius: 0.6em;
+    box-shadow: 0 0.3em 1em rgba(0, 0, 0, 0.55);
+    overflow: hidden; max-width: 100%;
+    font-size: 20px;                 /* base size — scaled by ?size; children use em */
+    will-change: transform;
   }
+  #wrap.scroll #bar { max-width: none; flex: 0 0 auto; border-radius: 0; border-width: 2px 0; }
   .slot {
-    display: flex; align-items: center; gap: 9px;
-    padding: 10px 20px; white-space: nowrap;
-    position: relative;
+    display: flex; align-items: center; gap: 0.45em;
+    padding: 0.5em 1em; white-space: nowrap; position: relative;
   }
   .slot + .slot { border-left: 1px solid rgba(124, 196, 74, 0.28); }
-  .slot .ic { font-size: 22px; line-height: 1; }
+  .slot .ic { font-size: 1.1em; line-height: 1; }
   .slot .txt { display: flex; flex-direction: column; line-height: 1.15; }
   .slot .lab {
-    font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+    font-size: 0.55em; font-weight: 700; letter-spacing: 0.06em;
     color: var(--label); text-transform: uppercase;
   }
+  #bar.nolabels .lab { display: none; }
+  #bar.nolabels .val { font-size: 1em; }
   .slot .val {
-    font-size: 20px; font-weight: 700; color: var(--value);
-    max-width: 260px; overflow: hidden; text-overflow: ellipsis;
+    font-size: 1em; font-weight: 700; color: var(--value);
+    max-width: 13em; overflow: hidden; text-overflow: ellipsis;
   }
-  .slot .val .amt { color: var(--accent); font-size: 15px; margin-left: 6px; }
+  #wrap.scroll .val { max-width: none; }   /* full names while scrolling */
+  .slot .val .amt { color: var(--accent); font-size: 0.75em; margin-left: 0.3em; }
   .slot .val.empty { color: #6f8560; font-weight: 600; }
-  /* Flash when a slot's value changes. */
   @keyframes bump {
     0% { transform: scale(1); }
     30% { transform: scale(1.14); color: var(--accent); }
@@ -63,7 +70,6 @@
 <script>
 (function () {
   "use strict";
-  // Which slots to show and in what order — override with ?kinds=sub,gift,follow
   var DEF = {
     sub:    { icon: "⭐", label: "Newest Sub" },
     gift:   { icon: "🎁", label: "Latest Gift" },
@@ -73,13 +79,45 @@
     clip:   { icon: "🎬", label: "Last Clip" }
   };
   var params = new URLSearchParams(location.search);
-  var kinds = (params.get("kinds") || "sub,gift,follow")
+
+  var kinds = (params.get("kinds") || "sub,follow,gift")
     .split(",").map(function (k) { return k.trim().toLowerCase(); })
     .filter(function (k) { return DEF[k]; });
-  if (!kinds.length) kinds = ["sub", "gift", "follow"];
+  if (!kinds.length) kinds = ["sub", "follow", "gift"];
 
+  // ?size = base text size in px (default 20). Scales the whole bar (children use em).
+  var size = parseInt(params.get("size"), 10);
+  if (!(size >= 8 && size <= 120)) size = 20;
+
+  // ?scroll = off | rtl (right→left) | ltr (left→right).  ?speed = pixels/second.
+  var scroll = (params.get("scroll") || "off").toLowerCase();
+  if (scroll === "left" || scroll === "leftward") scroll = "rtl";
+  if (scroll === "right" || scroll === "rightward") scroll = "ltr";
+  if (scroll !== "rtl" && scroll !== "ltr") scroll = "off";
+  var speed = parseInt(params.get("speed"), 10);
+  if (!(speed >= 5 && speed <= 1000)) speed = 60;
+
+  // ?pos = bottom | top   ?bg = 0..100 (bar opacity)   ?accent = hex   ?labels = 0|1
+  var pos = (params.get("pos") || "bottom").toLowerCase();
+  var bg = parseInt(params.get("bg"), 10);
+  if (!(bg >= 0 && bg <= 100)) bg = 86;
+  var accent = params.get("accent");
+  if (accent && /^#?[0-9a-fA-F]{6}$/.test(accent)) {
+    if (accent[0] !== "#") accent = "#" + accent;
+    document.documentElement.style.setProperty("--accent", accent);
+    document.documentElement.style.setProperty("--label", accent);
+    document.documentElement.style.setProperty("--border", accent);
+  }
+  var showLabels = params.get("labels") !== "0";
+
+  var wrap = document.getElementById("wrap");
   var bar = document.getElementById("bar");
-  var slots = {};   // kind -> { el, val }
+  bar.style.fontSize = size + "px";
+  if (pos === "top") wrap.classList.add("top");
+  if (!showLabels) bar.classList.add("nolabels");
+  bar.style.background = "rgba(10, 20, 16, " + (bg / 100) + ")";
+
+  var slots = {};
   kinds.forEach(function (kind) {
     var d = DEF[kind];
     var slot = document.createElement("div");
@@ -108,11 +146,28 @@
     } else {
       s.val.textContent = name;
     }
-    if (animate) {
+    if (animate && scroll === "off") {   // the bump animation fights the marquee transform
       s.el.classList.remove("bump");
-      void s.el.offsetWidth;   // restart the animation
+      void s.el.offsetWidth;
       s.el.classList.add("bump");
     }
+  }
+
+  // ---- Marquee (optional) ----
+  if (scroll !== "off") {
+    wrap.classList.add("scroll");
+    var x = null, last = null, raf = 0;
+    function frame(t) {
+      var wrapW = wrap.offsetWidth, barW = bar.offsetWidth;
+      if (x === null) x = (scroll === "rtl") ? wrapW : -barW;
+      if (last === null) last = t;
+      var dt = Math.min(0.05, (t - last) / 1000); last = t;
+      if (scroll === "rtl") { x -= speed * dt; if (x < -barW) x = wrapW; }
+      else { x += speed * dt; if (x > wrapW) x = -barW; }
+      bar.style.transform = "translateX(" + Math.round(x) + "px)";
+      raf = requestAnimationFrame(frame);
+    }
+    raf = requestAnimationFrame(frame);
   }
 
   function onFrame(raw) {
@@ -121,7 +176,6 @@
     if (!d || typeof d.type !== "string") return;
     if (d.type === "snapshot") {
       var latest = d.activityLatest || {};
-      // Fallback: derive latest-per-kind from the recent activity list.
       if ((!latest || !Object.keys(latest).length) && Array.isArray(d.activity)) {
         latest = {};
         for (var i = 0; i < d.activity.length; i++) { var it = d.activity[i]; if (it && it.kind) latest[it.kind] = it; }
@@ -137,7 +191,7 @@
     if (location.protocol === "http:" || location.protocol === "https:") {
       return (location.protocol === "https:" ? "wss:" : "ws:") + "//" + location.host + "/ws";
     }
-    return "ws://localhost:3620/ws";   // opened via file:// during testing
+    return "ws://localhost:3620/ws";
   }
   var ws = null, retry = null;
   function schedule() { if (!retry) retry = setTimeout(function () { retry = null; connect(); }, 1500); }

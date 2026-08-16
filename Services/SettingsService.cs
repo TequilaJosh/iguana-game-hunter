@@ -43,6 +43,7 @@ namespace GameTracker.Services
             public List<StreamGoal> Goals { get; set; } = new();       // overlay goal bars
             public int MigrationRev { get; set; }                      // one-time defaults migrations applied
             public MorphSettings Morph { get; set; } = new();          // live mic voice morph
+            public TickerSettings Ticker { get; set; } = new();        // activity ticker banner overlay
             public List<WheelPreset> WheelPresets { get; set; } = new(); // reusable named challenge lists
             public List<WheelPreset> WheelGamePresets { get; set; } = new(); // named game-picker sets (by title)
         }
@@ -75,6 +76,15 @@ namespace GameTracker.Services
                 File.WriteAllText(SettingsFile, JsonConvert.SerializeObject(s, Formatting.Indented));
             }
             catch { /* best-effort */ }
+        }
+
+        public static TickerSettings LoadTicker() => LoadAll().Ticker ?? new TickerSettings();
+
+        public static void SaveTicker(TickerSettings ticker)
+        {
+            var s = LoadAll();
+            s.Ticker = ticker;
+            SaveAll(s);
         }
 
         public static HotkeyConfig LoadHotkeys() => LoadAll().Hotkeys ?? new HotkeyConfig();

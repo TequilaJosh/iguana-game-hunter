@@ -79,6 +79,7 @@ namespace GameTracker.Views
             // Overlay
             PortBox.Text = OverlayServer.Port.ToString();
             ChatLinesBox.Text = SettingsService.LoadOverlayChatLines().ToString();
+            LoadTickerControls();
             UpdateOverlayStatus();
 
             _ready = true;
@@ -662,10 +663,65 @@ namespace GameTracker.Views
             catch { /* clipboard can be momentarily locked */ }
         }
 
+        // Ticker "kind" checkboxes in display order.
+        private (System.Windows.Controls.CheckBox box, string kind)[] TickerKindBoxes() => new[]
+        {
+            (TkSub, "sub"), (TkFollow, "follow"), (TkGift, "gift"),
+            (TkRaid, "raid"), (TkRedeem, "redeem"), (TkClip, "clip"),
+        };
+
+        private void LoadTickerControls()
+        {
+            var t = SettingsService.LoadTicker();
+            foreach (var (box, kind) in TickerKindBoxes())
+                box.IsChecked = t.Kinds != null && t.Kinds.Contains(kind);
+            TkSize.Value = System.Math.Clamp(t.Size, (int)TkSize.Minimum, (int)TkSize.Maximum);
+            TkSpeed.Value = System.Math.Clamp(t.Speed, (int)TkSpeed.Minimum, (int)TkSpeed.Maximum);
+            TkBg.Value = System.Math.Clamp(t.BgOpacity, 0, 100);
+            TkScroll.SelectedValue = string.IsNullOrEmpty(t.Scroll) ? "off" : t.Scroll;
+            if (TkScroll.SelectedValue == null) TkScroll.SelectedIndex = 0;
+            TkPos.SelectedValue = t.Position == "top" ? "top" : "bottom";
+            if (TkPos.SelectedValue == null) TkPos.SelectedIndex = 0;
+            TkAccent.SelectedValue = (t.Accent ?? "#7cc44a").TrimStart('#').ToLowerInvariant();
+            if (TkAccent.SelectedValue == null) TkAccent.SelectedIndex = 0;
+            TkLabels.IsChecked = t.ShowLabels;
+        }
+
+        private TickerSettings BuildTickerSettings()
+        {
+            var kinds = new System.Collections.Generic.List<string>();
+            foreach (var (box, kind) in TickerKindBoxes())
+                if (box.IsChecked == true) kinds.Add(kind);
+            if (kinds.Count == 0) kinds.Add("sub");   // never empty
+            return new TickerSettings
+            {
+                Kinds = kinds,
+                Size = (int)TkSize.Value,
+                Speed = (int)TkSpeed.Value,
+                BgOpacity = (int)TkBg.Value,
+                Scroll = (TkScroll.SelectedValue as string) ?? "off",
+                Position = (TkPos.SelectedValue as string) ?? "bottom",
+                Accent = "#" + ((TkAccent.SelectedValue as string) ?? "7cc44a"),
+                ShowLabels = TkLabels.IsChecked == true,
+            };
+        }
+
         private void CopyTickerUrl_Click(object sender, RoutedEventArgs e)
         {
-            var url = OverlayUrl + "ticker?kinds=sub,follow,gift";
-            try { Clipboard.SetText(url); OverlayStatus.Text = "Copied: " + url + " — add as its own OBS Browser source (a thin banner)."; }
+            var t = BuildTickerSettings();
+            SettingsService.SaveTicker(t);   // remember the choices
+
+            var q = "kinds=" + string.Join(",", t.Kinds) +
+                    "&size=" + t.Size +
+                    "&pos=" + t.Position +
+                    "&bg=" + t.BgOpacity +
+                    "&accent=" + t.Accent.TrimStart('#') +
+                    "&labels=" + (t.ShowLabels ? "1" : "0");
+            if (t.Scroll == "rtl" || t.Scroll == "ltr")
+                q += "&scroll=" + t.Scroll + "&speed=" + t.Speed;
+
+            var url = OverlayUrl + "ticker?" + q;
+            try { Clipboard.SetText(url); OverlayStatus.Text = "Copied ticker URL — paste it into an OBS Browser source. Re-copy after any change."; }
             catch { /* clipboard can be momentarily locked */ }
         }
 

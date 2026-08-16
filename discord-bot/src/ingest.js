@@ -1,6 +1,6 @@
 import express from 'express';
 import { config } from './config.js';
-import { findGuildByToken } from './guildStore.js';
+import { findGuildByToken, getGuild } from './guildStore.js';
 import { postClip } from './features/clips.js';
 import { log } from './logger.js';
 
@@ -14,6 +14,16 @@ export function startIngestServer(client) {
   app.use(express.json({ limit: '16kb' }));
 
   app.get('/health', (_req, res) => res.json({ ok: true, uptime: Math.round(process.uptime()) }));
+
+  // Connection test for Game Hunter's "Test bot" button: validates the token and
+  // reports whether a clips channel is set — without posting anything to Discord.
+  app.post('/verify', (req, res) => {
+    const header = req.get('authorization') || '';
+    const token = header.replace(/^Bearer\s+/i, '') || req.get('x-ingest-token') || '';
+    const guildId = findGuildByToken(token);
+    if (!guildId) return res.status(401).json({ ok: false, error: 'unknown ingest token' });
+    res.json({ ok: true, clipChannel: !!getGuild(guildId).clipChannelId });
+  });
 
   app.post('/clip', async (req, res) => {
     const header = req.get('authorization') || '';

@@ -1,0 +1,15 @@
+[
+  { "key": "softwood_log", "name": "Softwood Log", "category": "Wood", "tier": 1 },
+  { "key": "oak_log", "name": "Oak Log", "category": "Wood", "tier": 2 },
+  { "key": "copper_ore", "name": "Copper Ore", "category": "Ore", "tier": 1 },
+  { "key": "iron_ore", "name": "Iron Ore", "category": "Ore", "tier": 2 },
+  { "key": "coal", "name": "Coal", "category": "Misc", "tier": 1 },
+  { "key": "quartz", "name": "Quartz", "category": "Gem", "tier": 1 },
+  { "key": "minnow", "name": "Minnow", "category": "Fish", "tier": 1 },
+  { "key": "greenleaf", "name": "Greenleaf", "category": "Herb", "tier": 1 },
+  { "key": "clay", "name": "Clay", "category": "Excavation", "tier": 1 },
+  { "key": "sand", "name": "Sand", "category": "Excavation", "tier": 1 },
+  { "key": "bone_shard", "name": "Bone Shard", "category": "Excavation", "tier": 1 },
+  { "key": "cloth", "name": "Cloth", "category": "Salvage", "tier": 1 },
+  { "key": "tattered_hide", "name": "Tattered Hide", "category": "Salvage", "tier": 1 }
+]

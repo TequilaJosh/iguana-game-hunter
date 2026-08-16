@@ -12,8 +12,8 @@ const LOBBY_MS = 60 * 60 * 1000;        // "starts in 1 hour" sign-up window
 const COMBAT_TICK_MS = 4000;            // auto-combat tick
 const COMBAT_CAP_MS = 30 * 60 * 1000;   // combat can't run forever
 const RAID_HP_MULT = 15;                // boss HP is a big shared pool
-const SPAWN_MIN = 60 * 60 * 1000;       // announce a raid every 1–3h at random
-const SPAWN_MAX = 3 * 60 * 60 * 1000;
+const SPAWN_MIN = 6 * 60 * 60 * 1000;   // announce a raid every 6–12h at random
+const SPAWN_MAX = 12 * 60 * 60 * 1000;
 const SCHED_MS = 5 * 60 * 1000;
 
 const raids = new Map();       // guildId -> raid

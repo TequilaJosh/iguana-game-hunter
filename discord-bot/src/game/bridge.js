@@ -42,7 +42,9 @@ function handleConfirm(platform, user, args) {
  */
 export async function handleGameMessage(client, guildId, platform, user, text) {
   try {
-    const body = String(text || '').trim().replace(/^!/, '');
+    const raw = String(text || '').trim();
+    const bare = !raw.startsWith('!');
+    const body = bare ? raw : raw.slice(1);
     const [cmdRaw, ...args] = body.split(/\s+/);
     const cmd = (cmdRaw || '').toLowerCase();
 
@@ -51,8 +53,9 @@ export async function handleGameMessage(client, guildId, platform, user, text) {
 
     // Info commands work before linking; everything else needs a linked hero.
     const discordId = getLinkedDiscordId(platform, user);
-    if (!discordId && !PUBLIC_COMMANDS.has(cmd)) {
-      return 'Link your account first: type !play <your Discord @username> and I\'ll DM you a code.';
+    if (!discordId) {
+      if (bare) return null; // stay silent on bare words (e.g. "fish") from unlinked chatters
+      if (!PUBLIC_COMMANDS.has(cmd)) return 'Link your account first: type !play <your Discord @username> and I\'ll DM you a code.';
     }
     const runId = discordId || `unlinked:${platform}:${user}`;
     const reply = await runForChat({ discordId: runId, username: user, content: '!' + body, guildId, client });

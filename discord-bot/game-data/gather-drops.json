@@ -1,0 +1,19 @@
+[
+  { "area": "hollow_green", "command": "Chop", "material": "softwood_log", "weight": 100, "minQuantity": 1, "maxQuantity": 3, "workerXp": 10 },
+  { "area": "hollow_green", "command": "Chop", "material": "oak_log", "weight": 10, "minQuantity": 1, "maxQuantity": 1, "workerXp": 15 },
+
+  { "area": "hollow_green", "command": "Mine", "material": "copper_ore", "weight": 100, "minQuantity": 1, "maxQuantity": 2, "workerXp": 10 },
+  { "area": "hollow_green", "command": "Mine", "material": "coal", "weight": 40, "minQuantity": 1, "maxQuantity": 2, "workerXp": 8 },
+  { "area": "hollow_green", "command": "Mine", "material": "quartz", "weight": 5, "minQuantity": 1, "maxQuantity": 1, "workerXp": 20 },
+
+  { "area": "hollow_green", "command": "Fish", "material": "minnow", "weight": 100, "minQuantity": 1, "maxQuantity": 2, "workerXp": 10 },
+
+  { "area": "hollow_green", "command": "Forage", "material": "greenleaf", "weight": 100, "minQuantity": 1, "maxQuantity": 3, "workerXp": 10 },
+
+  { "area": "hollow_green", "command": "Dig", "material": "clay", "weight": 80, "minQuantity": 1, "maxQuantity": 2, "workerXp": 8 },
+  { "area": "hollow_green", "command": "Dig", "material": "sand", "weight": 80, "minQuantity": 1, "maxQuantity": 2, "workerXp": 8 },
+  { "area": "hollow_green", "command": "Dig", "material": "bone_shard", "weight": 30, "minQuantity": 1, "maxQuantity": 1, "workerXp": 12 },
+
+  { "area": "hollow_green", "command": "Scavenge", "material": "cloth", "weight": 90, "minQuantity": 1, "maxQuantity": 2, "workerXp": 8 },
+  { "area": "hollow_green", "command": "Scavenge", "material": "tattered_hide", "weight": 60, "minQuantity": 1, "maxQuantity": 1, "workerXp": 10 }
+]

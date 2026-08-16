@@ -13,6 +13,7 @@ import {
   pickEncounter, addItem,
 } from './fights.js';
 import { getRaid, joinRaid, raidAction, startRaid, raidEmbed } from './raids.js';
+import { gather, getWorker, workerXpToNext } from './gather.js';
 import { getGuild } from '../guildStore.js';
 
 const PREFIX = '!';
@@ -45,6 +46,7 @@ function sheetEmbed(char) {
       { name: 'XP', value: `${char.xp || 0}/${xpToNext(char.level)}`, inline: true },
       { name: 'Gold', value: `${char.gold || 0} 🪙`, inline: true },
       { name: 'Stamina', value: `${stam}/${MAX_STAMINA} ⚡`, inline: true },
+      { name: 'Worker', value: `Lv ${getWorker(char).level} (${getWorker(char).xp}/${workerXpToNext(getWorker(char).level)})`, inline: true },
       { name: 'Power', value: `ATK ~${Math.round(pd.st[pd.scales] * 1.3 + pd.wpow * 1.4)} · DEF ${pd.def} · RES ${pd.res}`, inline: true },
       { name: 'Stats', value: stats },
       { name: 'Equipped', value: gear },
@@ -82,8 +84,10 @@ async function cmdHelp(msg) {
       '`!adventure [zone]` — find a fight (costs ⚡ stamina)\n' +
       '`!boss` — challenge your zone’s boss to unlock the next zone\n' +
       'In combat: `!attack` starts auto-battle · `!skill <name>` · `!use` · `!flee`\n\n' +
-      '**Raids** (a boss appears every 1–3h — team up!)\n' +
+      '**Raids** (a boss appears now and then — team up!)\n' +
       '`!raid join` · `!raid skill <name>` · `!raid use` · `!raid revive`\n\n' +
+      '**Gathering** (no `!` needed — just type the word)\n' +
+      '`chop` `mine` `fish` `forage` `dig` `scavenge` — gather materials + Worker XP (3-min cooldown each)\n\n' +
       '**Gear & town**\n' +
       '`!inv` — bag & gold · `!equip <#>` — wear gear\n' +
       '`!shop` — buy gear/potions · `!buy <name>` · `!sell <#>`\n' +
@@ -138,8 +142,8 @@ function cmdSkills(msg) {
   if (!char) return msg.reply('No hero yet — `!create` first.');
   const skills = skillsForClass(char.cls, char.level);
   const locked = skillsForClass(char.cls, 99).filter((s) => s.unlock_level > char.level);
-  const lines = skills.map((s) => `**${s.name}** — ${s.mp} MP · ${s.type}${s.power ? ` · pow ${s.power}` : ''}`);
-  let out = `✨ **${CLASSES[char.cls].name} skills (Lvl ${char.level})**\n` + (lines.join('\n') || '_none yet_');
+  const lines = skills.map((s, i) => `\`${i + 1}\` **${s.name}** — ${s.mp} MP · ${s.type}${s.power ? ` · pow ${s.power}` : ''}`);
+  let out = `✨ **${CLASSES[char.cls].name} skills (Lvl ${char.level})** — cast with \`skill <#>\`\n` + (lines.join('\n') || '_none yet_');
   if (locked.length) out += `\n\n🔒 Next: ${locked.slice(0, 3).map((s) => `${s.name} (Lv${s.unlock_level})`).join(', ')}`;
   return msg.reply(out);
 }
@@ -361,12 +365,13 @@ function cmdSkill(msg, args) {
   const fight = getFight(msg.author.id);
   if (!char || !fight) return msg.reply('You’re not in a fight. `!adventure` to find one.');
   const q = args.join(' ').toLowerCase().trim();
-  if (!q) return msg.reply('Which skill? `!skill <name>` — see `!skills`.');
+  if (!q) return msg.reply('Which skill? `skill <name>` or `skill 1` — see `!skills`.');
   const list = skillsForClass(char.cls, char.level);
-  const skill = list.find((s) => s.id === q || s.name.toLowerCase() === q)
-    || list.find((s) => s.name.toLowerCase().includes(q) || s.id.includes(q));
-  if (!skill) return msg.reply(`No skill "${args.join(' ')}". Yours: ${list.map((s) => s.name).join(', ') || 'none'}.`);
-  return act(msg, char, takeTurn(fight, 'skill', skill));
+  const skill = /^\d+$/.test(q)
+    ? list[parseInt(q, 10) - 1]
+    : (list.find((s) => s.id === q || s.name.toLowerCase() === q) || list.find((s) => s.name.toLowerCase().includes(q) || s.id.includes(q)));
+  if (!skill) return msg.reply(`No skill "${args.join(' ')}". Yours: ${list.map((s, i) => `${i + 1}=${s.name}`).join(', ') || 'none'}.`);
+  return act(msg, char, takeTurn(fight, 'skill', skill), false);
 }
 
 function cmdUse(msg) {
@@ -436,18 +441,32 @@ function cmdShop(msg) {
 function cmdBuy(msg, args) {
   const char = getPlayer(msg.author.id);
   if (!char) return msg.reply('No hero yet — `!create` first.');
-  const q = args.join(' ').toLowerCase().trim();
-  if (!q) return msg.reply('Buy what? `!buy <name>` — see `!shop`.');
+  if (!args.length) return msg.reply('Buy what? `!buy <#>` (from `!shop`), with an optional quantity: `!buy 2 5`.');
   const shop = shopInventory(char);
-  const pick = shop.find((s) => s.name.toLowerCase() === q || s.id === q) || shop.find((s) => s.name.toLowerCase().includes(q));
-  if (!pick) return msg.reply(`"${args.join(' ')}" isn't in the shop. See \`!shop\`.`);
-  if ((char.gold || 0) < pick.price) return msg.reply(`Not enough gold — ${pick.name} costs ${pick.price} 🪙, you have ${char.gold || 0}.`);
-  char.gold -= pick.price;
+
+  let pick, qty = 1;
+  if (/^\d+$/.test(args[0])) {                       // by number
+    pick = shop[parseInt(args[0], 10) - 1];
+    if (args[1] && /^\d+$/.test(args[1])) qty = parseInt(args[1], 10);
+  } else {                                           // by name (trailing number = qty)
+    const nameArgs = args.slice();
+    if (nameArgs.length > 1 && /^\d+$/.test(nameArgs[nameArgs.length - 1])) qty = parseInt(nameArgs.pop(), 10);
+    const q = nameArgs.join(' ').toLowerCase();
+    pick = shop.find((s) => s.name.toLowerCase() === q || s.id === q) || shop.find((s) => s.name.toLowerCase().includes(q));
+  }
+  if (!pick) return msg.reply(`Not in the shop. See \`!shop\` (buy by number, e.g. \`!buy 1\`).`);
+
+  qty = Math.max(1, Math.min(qty, 99));
+  const total = pick.price * qty;
+  if ((char.gold || 0) < total) return msg.reply(`Not enough gold — ${qty}× ${pick.name} costs ${total} 🪙, you have ${char.gold || 0}.`);
+  char.gold -= total;
   const base = ITEMS[pick.id];
-  if (GEAR_SLOTS.includes(base.slot)) addItem(char, makeGear(base.id, RARITIES[0]));
-  else addItem(char, { base: base.id, slot: base.slot, name: base.name, qty: 1, stackable: !!base.stackable, effect: base.effect, magnitude: base.magnitude, value: base.value });
+  for (let i = 0; i < qty; i++) {
+    if (GEAR_SLOTS.includes(base.slot)) addItem(char, makeGear(base.id, RARITIES[0]));
+    else addItem(char, { base: base.id, slot: base.slot, name: base.name, qty: 1, stackable: !!base.stackable, effect: base.effect, magnitude: base.magnitude, value: base.value });
+  }
   savePlayer(msg.author.id, char);
-  return msg.reply(`🛒 Bought **${pick.name}** for ${pick.price} 🪙. (${char.gold} left)${GEAR_SLOTS.includes(base.slot) ? ' Equip it with `!inv` → `!equip <#>`.' : ''}`);
+  return msg.reply(`🛒 Bought **${qty}× ${pick.name}** for ${total} 🪙. (${char.gold} left)${GEAR_SLOTS.includes(base.slot) ? ' Equip with `!inv` → `!equip <#>`.' : ''}`);
 }
 
 function cmdSell(msg, args) {
@@ -455,6 +474,17 @@ function cmdSell(msg, args) {
   if (!char) return msg.reply('No hero yet — `!create` first.');
   const inv = char.inventory || [];
   const arg = args.join(' ').toLowerCase().trim();
+
+  // Sell all gear at once.
+  if (['allgear', 'gear', 'equipment', 'equip', 'weapons'].includes(arg)) {
+    const g = inv.filter((i) => GEAR_SLOTS.includes(i.slot));
+    if (!g.length) return msg.reply('No gear in your bag to sell (equipped items are safe).');
+    const total = g.reduce((s, it) => s + sellValue(it), 0);
+    char.inventory = inv.filter((i) => !GEAR_SLOTS.includes(i.slot));
+    char.gold = (char.gold || 0) + total;
+    savePlayer(msg.author.id, char);
+    return msg.reply(`💰 Sold ${g.length} piece(s) of gear for **${total}** 🪙. (${char.gold} total)`);
+  }
 
   // Sell all materials/junk at once.
   if (['junk', 'all', 'mats', 'materials', 'trash'].includes(arg)) {
@@ -534,6 +564,26 @@ function cmdDelete(msg, args) {
   return msg.reply('🪦 Character deleted. `!create` to begin anew.');
 }
 
+// ── gathering (Worker profession) ────────────────────────────────────────────
+const GATHER_EMOJI = { chop: '🪓', mine: '⛏️', fish: '🎣', forage: '🌿', dig: '🪏', scavenge: '♻️' };
+
+function cmdGather(msg, args, command) {
+  const char = getPlayer(msg.author.id);
+  if (!char) return msg.reply('No hero yet — `!create` first.');
+  const res = gather(char, command);
+  if (res.status === 'cooldown') {
+    const s = Math.ceil(res.remaining / 1000);
+    return msg.reply(`⏳ **${command}** is resting — ${Math.floor(s / 60)}m ${s % 60}s left.`);
+  }
+  if (res.status === 'nothing') return msg.reply(`There's nothing to ${command} around here.`);
+  savePlayer(msg.author.id, char);
+  const e = GATHER_EMOJI[command] || '⛏️';
+  let out = `${e} You ${command} and gather **${res.qty}× ${res.material}**! +${res.xp} Worker XP (Worker Lv ${res.workerLevel}).`;
+  if (res.levelsGained) out += ' 🎉 **Worker level up!**';
+  out += ' Ready again in 3m — sell mats with `!sell junk`.';
+  return msg.reply(out);
+}
+
 function cmdLeaderboard(msg) {
   const all = Object.values(allPlayers()).filter(Boolean);
   if (!all.length) return msg.reply('No heroes yet. Be the first with `!create`!');
@@ -550,6 +600,9 @@ const COMMANDS = {
   skills: cmdSkills, zones: cmdZones,
   adventure: cmdAdventure, explore: cmdAdventure, hunt: cmdAdventure,
   boss: cmdBoss, raid: cmdRaid,
+  chop: (m, a) => cmdGather(m, a, 'chop'), mine: (m, a) => cmdGather(m, a, 'mine'),
+  fish: (m, a) => cmdGather(m, a, 'fish'), forage: (m, a) => cmdGather(m, a, 'forage'),
+  dig: (m, a) => cmdGather(m, a, 'dig'), scavenge: (m, a) => cmdGather(m, a, 'scavenge'),
   attack: cmdAttack, a: cmdAttack,
   skill: cmdSkill, cast: cmdSkill,
   use: cmdUse, potion: cmdUse,
@@ -562,17 +615,32 @@ const COMMANDS = {
   deletechar: cmdDelete,
 };
 
+// These commands also work WITHOUT the "!" prefix (just type the word).
+const BARE_COMMANDS = new Set([
+  'chop', 'mine', 'fish', 'forage', 'dig', 'scavenge',
+  'attack', 'a', 'skill', 'cast', 'use', 'potion', 'flee', 'run',
+]);
+
 export function isRpgCommand(content) {
-  if (!content.startsWith(PREFIX)) return false;
-  const name = content.slice(PREFIX.length).trim().split(/\s+/)[0]?.toLowerCase();
-  return !!COMMANDS[name];
+  content = (content || '').trim();
+  const bare = !content.startsWith(PREFIX);
+  const word = (bare ? content : content.slice(PREFIX.length)).trim().split(/\s+/)[0]?.toLowerCase();
+  if (!word || !COMMANDS[word]) return false;
+  return bare ? BARE_COMMANDS.has(word) : true;
 }
 
 export async function handleRpg(msg) {
-  const parts = msg.content.slice(PREFIX.length).trim().split(/\s+/);
+  const raw = (msg.content || '').trim();
+  const bare = !raw.startsWith(PREFIX);
+  const body = bare ? raw : raw.slice(PREFIX.length);
+  const parts = body.trim().split(/\s+/);
   const name = (parts.shift() || '').toLowerCase();
   const fn = COMMANDS[name];
   if (!fn) return;
+  if (bare) {
+    if (!BARE_COMMANDS.has(name)) return;   // only certain words work bare
+    if (!getPlayer(msg.author.id)) return;  // silent for non-players (avoid triggering on normal chat)
+  }
   await fn(msg, parts);
 }
 

@@ -29,9 +29,9 @@ namespace GameTracker.Views
             ChattersOverlayCb.IsChecked = f.ShowChattersOnOverlay;
             ReplyCb.IsChecked = f.ReplyInChat;
             PostClipsCb.IsChecked = f.PostClips;
-            DiscordWebhookBox.Text = f.DiscordWebhook;
+            DiscordWebhookBox.Password = f.DiscordWebhook;
             BotIngestUrlBox.Text = f.BotIngestUrl;
-            BotIngestTokenBox.Text = f.BotIngestToken;
+            BotIngestTokenBox.Password = f.BotIngestToken;
             RpgEnabledCb.IsChecked = f.RpgEnabled;
             LurkBox.Text = f.LurkMinutes.ToString();
             RemoveBox.Text = f.RemoveMinutes.ToString();
@@ -185,9 +185,9 @@ namespace GameTracker.Views
                 ShowChattersOnOverlay = ChattersOverlayCb.IsChecked == true,
                 ReplyInChat = ReplyCb.IsChecked == true,
                 PostClips = PostClipsCb.IsChecked == true,
-                DiscordWebhook = (DiscordWebhookBox.Text ?? string.Empty).Trim(),
+                DiscordWebhook = (DiscordWebhookBox.Password ?? string.Empty).Trim(),
                 BotIngestUrl = (BotIngestUrlBox.Text ?? string.Empty).Trim(),
-                BotIngestToken = (BotIngestTokenBox.Text ?? string.Empty).Trim(),
+                BotIngestToken = (BotIngestTokenBox.Password ?? string.Empty).Trim(),
                 RpgEnabled = RpgEnabledCb.IsChecked == true,
                 LurkMinutes = ParseInt(LurkBox.Text, 5, 1, 720),
                 RemoveMinutes = ParseInt(RemoveBox.Text, 15, 1, 1440),
@@ -212,7 +212,7 @@ namespace GameTracker.Views
         private async void TestBot_Click(object sender, RoutedEventArgs e)
         {
             var url = (BotIngestUrlBox.Text ?? string.Empty).Trim();
-            var token = (BotIngestTokenBox.Text ?? string.Empty).Trim();
+            var token = (BotIngestTokenBox.Password ?? string.Empty).Trim();
             if (url.Length == 0 || token.Length == 0)
             {
                 StatusText.Text = "Enter the bot ingest URL and token first (from /setup ingest).";

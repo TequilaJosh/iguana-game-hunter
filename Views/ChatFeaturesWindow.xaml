@@ -48,6 +48,17 @@
         <Style x:Key="Txt" TargetType="TextBox" BasedOn="{StaticResource Num}">
             <Setter Property="Width" Value="Auto"/>
         </Style>
+        <!-- Same look as Txt, for secrets that must not be readable on stream. -->
+        <Style x:Key="Secret" TargetType="PasswordBox">
+            <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/>
+            <Setter Property="Foreground" Value="#e8e0c4"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorder}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CaretBrush" Value="#7cc44a"/>
+            <Setter Property="Padding" Value="5,3"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
         <Style x:Key="Btn" TargetType="Button">
             <Setter Property="Background" Value="{DynamicResource ThemeSurface2}"/>
             <Setter Property="Foreground" Value="{DynamicResource ThemeAccent}"/>
@@ -137,8 +148,8 @@
                               Content="Post clips to Discord (the !clip command and any Twitch clip links in chat)"/>
                     <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
                         <TextBlock Text="Webhook URL" Style="{StaticResource Lbl}"/>
-                        <TextBox x:Name="DiscordWebhookBox" Style="{StaticResource Txt}" Width="320" Margin="4,0,0,0"
-                                 ToolTip="In Discord: Channel → Edit → Integrations → Webhooks → New Webhook → Copy Webhook URL. That webhook decides which channel clips post to."/>
+                        <PasswordBox x:Name="DiscordWebhookBox" Style="{StaticResource Secret}" Width="320" Margin="4,0,0,0"
+                                     ToolTip="In Discord: Channel → Edit → Integrations → Webhooks → New Webhook → Copy Webhook URL. That webhook decides which channel clips post to."/>
                     </StackPanel>
                     <TextBlock Foreground="#7a9070" FontSize="11" Margin="0,2,0,0" TextWrapping="Wrap"
                                Text="Create a webhook on the Discord channel you want (Channel settings → Integrations → Webhooks), paste its URL here. Viewers typing !clip — or dropping a Twitch clip link — get posted there automatically."/>
@@ -151,8 +162,8 @@
                     </StackPanel>
                     <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
                         <TextBlock Text="Ingest token" Style="{StaticResource Lbl}"/>
-                        <TextBox x:Name="BotIngestTokenBox" Style="{StaticResource Txt}" Width="300" Margin="4,0,0,0"
-                                 ToolTip="From /setup ingest in your Discord server"/>
+                        <PasswordBox x:Name="BotIngestTokenBox" Style="{StaticResource Secret}" Width="300" Margin="4,0,0,0"
+                                     ToolTip="From /setup ingest in your Discord server"/>
                     </StackPanel>
                     <Button x:Name="TestBotBtn" Content="&#128268; Test bot connection" Click="TestBot_Click"
                             Style="{StaticResource Btn}" Margin="0,6,0,0" HorizontalAlignment="Left"

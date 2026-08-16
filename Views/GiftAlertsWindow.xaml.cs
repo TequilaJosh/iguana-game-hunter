@@ -65,6 +65,44 @@ namespace GameTracker.Views
             _tester.Play(item.SoundPath, item.Volume, msg => Dispatcher.Invoke(() => TestStatus.Text = msg));
         }
 
+        // ── Test buttons: fire the real alert path with the tiers currently in the editor ──
+        private void TestGift_Click(object sender, RoutedEventArgs e)
+        {
+            int coins = int.TryParse((TestCoins.Text ?? "").Trim(), out var c) ? c : 1;
+            if (coins < 1) coins = 1;
+            var tier = _items.Where(i => i.MinCoins <= coins).OrderByDescending(i => i.MinCoins).FirstOrDefault();
+
+            if (EnabledChk.IsChecked == true && tier != null && !string.IsNullOrWhiteSpace(tier.SoundPath))
+                _tester.Play(tier.SoundPath, tier.Volume, msg => Dispatcher.Invoke(() => TestStatus.Text = msg));
+            if (tier != null && !string.IsNullOrWhiteSpace(tier.Effect))
+                OverlayServer.TriggerEffect(tier.Effect);
+
+            var text = $"TestGifter sent a Rose ({coins} 🪙)";
+            OverlayServer.PushActivity("gift", "TestGifter", text, "tiktok", coins);
+            OverlayServer.Toast(text, coins >= 100);
+            SetTestStatus($"gift {coins} → tier \"{tier?.Name ?? "none"}\"");
+        }
+
+        private void TestFollow_Click(object sender, RoutedEventArgs e)
+        {
+            OverlayServer.PushActivity("follow", "NewFan", "NewFan followed 💚", "tiktok");
+            SetTestStatus("follow");
+        }
+
+        private void TestSub_Click(object sender, RoutedEventArgs e)
+        {
+            OverlayServer.PushActivity("sub", "NewSub", "NewSub subscribed ⭐", "tiktok");
+            OverlayServer.Toast("NewSub subscribed ⭐");
+            SetTestStatus("sub");
+        }
+
+        private void SetTestStatus(string what)
+        {
+            TestStatus.Text = OverlayServer.ActiveClients > 0
+                ? $"Sent test {what} → check your overlay!"
+                : $"Sent test {what}. Open the overlay in OBS/browser to see the feed.";
+        }
+
         private void Save_Click(object sender, RoutedEventArgs e)
         {
             _features.GiftAlertsEnabled = EnabledChk.IsChecked == true;

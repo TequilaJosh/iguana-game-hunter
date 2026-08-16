@@ -22,6 +22,9 @@ const nextSpawn = new Map();   // guildId -> timestamp
 export const getRaid = (gid) => raids.get(gid) || null;
 export const hasRaid = (gid) => raids.has(gid);
 const rand = (lo, hi) => lo + Math.random() * (hi - lo);
+
+// Where to announce raids: the dedicated Tavern Tales channel, else the clips channel.
+const announceChannelId = (gid) => { const c = getGuild(gid); return c.tavernChannelId || c.clipChannelId || ''; };
 const mins = (ms) => Math.max(0, Math.round(ms / 60000));
 
 function bar(c, m, w = 16) { const p = clamp(m > 0 ? c / m : 0, 0, 1); const f = Math.round(p * w); return '`' + '█'.repeat(f) + '░'.repeat(w - f) + '`'; }
@@ -201,8 +204,8 @@ async function announceRaid(raid, channel, zone, lobbyMs) {
 // Force-announce a raid right now (used by /raidnow). Random difficulty; short lobby by default.
 export async function forceRaid(guildId, client, lobbyMs = 5 * 60 * 1000) {
   if (raids.has(guildId)) return { error: 'A raid is already active.' };
-  const chanId = getGuild(guildId).clipChannelId;
-  if (!chanId) return { error: 'No clips channel set (run /setup clips) to announce the raid in.' };
+  const chanId = announceChannelId(guildId);
+  if (!chanId) return { error: 'No raid/clips channel set. Run /setup tavern #channel first.' };
   const channel = await client.channels.fetch(chanId).catch(() => null);
   if (!channel || !channel.isTextBased()) return { error: 'Clips channel not found or not text.' };
   const zone = ZONE_LIST[Math.floor(Math.random() * ZONE_LIST.length)];
@@ -217,7 +220,7 @@ export async function forceRaid(guildId, client, lobbyMs = 5 * 60 * 1000) {
 export function startRaidScheduler(client) {
   const check = async () => {
     for (const [gid] of client.guilds.cache) {
-      const chanId = getGuild(gid).clipChannelId;
+      const chanId = announceChannelId(gid);
       if (!chanId || raids.has(gid)) continue;
       const due = nextSpawn.get(gid);
       if (due == null) { nextSpawn.set(gid, Date.now() + rand(SPAWN_MIN, SPAWN_MAX)); continue; }

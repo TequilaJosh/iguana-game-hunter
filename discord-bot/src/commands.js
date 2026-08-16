@@ -47,6 +47,11 @@ export const commands = [
         )
       )
       .addSubcommand((s) =>
+        s.setName('tavern').setDescription('Set the channel for Tavern Tales raid announcements.').addChannelOption((o) =>
+          o.setName('channel').setDescription('Raid announcement channel').addChannelTypes(ChannelType.GuildText).setRequired(true)
+        )
+      )
+      .addSubcommand((s) =>
         s.setName('ingest').setDescription('Get this server’s clip ingest token for Game Hunter.')
       )
       .addSubcommand((s) =>
@@ -77,6 +82,11 @@ export const commands = [
         setGuild(gid, { autoroleId: role.id });
         return interaction.reply({ content: `✅ New members will get <@&${role.id}>.`, ...EPHEMERAL });
       }
+      if (sub === 'tavern') {
+        const ch = interaction.options.getChannel('channel', true);
+        setGuild(gid, { tavernChannelId: ch.id });
+        return interaction.reply({ content: `✅ Tavern Tales raids will be announced in <#${ch.id}>.`, ...EPHEMERAL });
+      }
       if (sub === 'disable') {
         const f = interaction.options.getString('feature', true);
         setGuild(gid, f === 'welcome' ? { welcomeChannelId: '' } : { autoroleId: '' });
@@ -105,6 +115,7 @@ export const commands = [
           [
             `**Clips channel:** ${cfg.clipChannelId ? `<#${cfg.clipChannelId}>` : '—  (set with /setup clips)'}`,
             `**Welcome channel:** ${cfg.welcomeChannelId ? `<#${cfg.welcomeChannelId}>` : '—'}`,
+            `**Raid channel:** ${cfg.tavernChannelId ? `<#${cfg.tavernChannelId}>` : '— (defaults to clips; set with /setup tavern)'}`,
             `**Auto-role:** ${cfg.autoroleId ? `<@&${cfg.autoroleId}>` : '—'}`,
             `**Clip ingest token:** ${cfg.ingestToken ? 'set ✔ (see /setup ingest)' : '— (get one with /setup ingest)'}`,
           ].join('\n')

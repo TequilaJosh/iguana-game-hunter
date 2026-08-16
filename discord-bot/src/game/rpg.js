@@ -228,7 +228,8 @@ async function cmdBoss(msg, args) {
 async function raidChannel(msg, gid) {
   if (!msg._chat && msg.channel) return msg.channel;
   try {
-    const chanId = getGuild(gid).clipChannelId;
+    const cfg = getGuild(gid);
+    const chanId = cfg.tavernChannelId || cfg.clipChannelId;
     if (chanId && msg.client) { const ch = await msg.client.channels.fetch(chanId).catch(() => null); if (ch && ch.isTextBased()) return ch; }
   } catch { /* ignore */ }
   return null;

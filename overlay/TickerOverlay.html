@@ -4,57 +4,51 @@
 <meta charset="utf-8"/>
 <title>LazerGuanas Ticker</title>
 <style>
-  :root {
-    --accent: #7cc44a;
-    --border: #4a7c3a;
-    --label: #a8c488;
-    --value: #ffffff;
-  }
+  :root { --accent: #7cc44a; --border: #4a7c3a; --label: #a8c488; --value: #ffffff; }
   * { box-sizing: border-box; }
-  html, body {
-    margin: 0; padding: 0; height: 100%;
-    background: transparent; overflow: hidden;
-    font-family: 'Segoe UI', 'Bebas Neue', Arial, sans-serif;
-  }
-  #wrap {
-    position: absolute; left: 0; right: 0; bottom: 0;
-    display: flex; justify-content: center; align-items: flex-end;
-    padding: 0.5em; overflow: hidden;
-  }
-  #wrap.top { bottom: auto; top: 0; align-items: flex-start; }
-  #wrap.scroll { justify-content: flex-start; padding-left: 0; padding-right: 0; }
+  html, body { margin: 0; padding: 0; height: 100%; background: transparent; overflow: hidden;
+               font-family: 'Segoe UI', 'Bebas Neue', Arial, sans-serif; }
+
+  /* Fixed 1280x720 design stage scaled to fit the OBS source (matches the main overlay). */
+  #stage { position: absolute; left: 50%; top: 50%; width: 1280px; height: 720px;
+           transform-origin: center center; transform: translate(-50%,-50%); }
+
   #bar {
-    display: inline-flex; align-items: stretch; gap: 0;
+    position: absolute; overflow: hidden;
+    display: flex; align-items: center;
     background: rgba(10, 20, 16, 0.86);
-    border: 2px solid var(--border); border-radius: 0.6em;
-    box-shadow: 0 0.3em 1em rgba(0, 0, 0, 0.55);
-    overflow: hidden; max-width: 100%;
-    font-size: 20px; will-change: transform;
+    border: 2px solid var(--border); border-radius: 10px;
+    box-shadow: 0 5px 18px rgba(0, 0, 0, 0.55);
+    font-size: 20px;
   }
-  #wrap.scroll #bar { max-width: none; flex: 0 0 auto; border-radius: 0; border-width: 2px 0; }
-  .slot { display: flex; align-items: center; gap: 0.45em; padding: 0.5em 1em; white-space: nowrap; position: relative; }
-  .slot + .slot { border-left: 1px solid rgba(124, 196, 74, 0.28); }
+  #bar.static { justify-content: center; }
+  #bar.scroll { justify-content: flex-start; }
+  #track { display: flex; align-items: stretch; will-change: transform; }
+  .copy { display: flex; align-items: stretch; }
+  .slot { display: flex; align-items: center; gap: 0.45em; padding: 0.5em 1em; white-space: nowrap; }
+  .slot + .slot { border-left: 1px solid rgba(124,196,74,0.28); }
+  .copy + .copy .slot:first-child { border-left: 1px solid rgba(124,196,74,0.28); }
   .slot .ic { font-size: 1.1em; line-height: 1; }
   .slot .txt { display: flex; flex-direction: column; line-height: 1.15; }
   .slot .lab { font-size: 0.55em; font-weight: 700; letter-spacing: 0.06em; color: var(--label); text-transform: uppercase; }
   #bar.nolabels .lab { display: none; }
-  .slot .val { font-size: 1em; font-weight: 700; color: var(--value); max-width: 13em; overflow: hidden; text-overflow: ellipsis; }
-  #wrap.scroll .val { max-width: none; }
+  .slot .val { font-size: 1em; font-weight: 700; color: var(--value); }
   .slot .val .amt { color: var(--accent); font-size: 0.75em; margin-left: 0.3em; }
   .slot .val.empty { color: #6f8560; font-weight: 600; }
   @keyframes bump { 0% { transform: scale(1); } 30% { transform: scale(1.14); color: var(--accent); } 100% { transform: scale(1); } }
   .slot.bump .val { animation: bump 0.6s ease; }
-  .slot.bump { box-shadow: inset 0 0 0 999px rgba(124, 196, 74, 0.10); }
 
-  /* ---- Editor (only with ?edit) ---- */
-  #editor {
-    position: fixed; top: 12px; left: 12px; z-index: 50;
-    width: 300px; max-height: calc(100vh - 24px); overflow: auto;
-    background: rgba(8, 16, 12, 0.96); color: #e8e0c4;
-    border: 1px solid #4a7c3a; border-radius: 10px; padding: 12px 14px;
-    font-size: 13px; box-shadow: 0 8px 26px rgba(0,0,0,0.6);
-  }
-  #editor h3 { margin: 0 0 2px; color: #7cc44a; font-size: 13px; letter-spacing: 0.04em; }
+  /* Edit mode: selectable, draggable, resizable. */
+  body.editing #bar { cursor: move; outline: 2px dashed rgba(124,196,74,0.8); }
+  .rz { display: none; position: absolute; right: -8px; bottom: -8px; width: 16px; height: 16px;
+        border-radius: 3px; background: #7cc44a; border: 2px solid #0a1410; cursor: nwse-resize; z-index: 5; }
+  body.editing .rz { display: block; }
+
+  /* Editor panel */
+  #editor { position: fixed; top: 12px; left: 12px; z-index: 50; width: 300px; max-height: calc(100vh - 24px);
+            overflow: auto; background: rgba(8,16,12,0.96); color: #e8e0c4; border: 1px solid #4a7c3a;
+            border-radius: 10px; padding: 12px 14px; font-size: 13px; box-shadow: 0 8px 26px rgba(0,0,0,0.6); }
+  #editor h3 { margin: 0 0 2px; color: #7cc44a; font-size: 13px; }
   #editor .hint { color: #7a9070; font-size: 11px; margin-bottom: 10px; }
   #editor .grp { margin-bottom: 11px; }
   #editor .grp > label.h { display: block; color: #a8c488; font-weight: 700; font-size: 11px; text-transform: uppercase; margin-bottom: 5px; }
@@ -64,16 +58,20 @@
   #editor input[type=range] { flex: 1; accent-color: #7cc44a; }
   #editor select, #editor input[type=color] { background: #14241c; color: #e8e0c4; border: 1px solid #4a7c3a; border-radius: 4px; padding: 3px 5px; }
   #editor input[type=color] { padding: 1px; width: 40px; height: 26px; }
+  #editor button { background: #14241c; color: #a8c488; border: 1px solid #4a7c3a; border-radius: 4px; padding: 4px 8px; cursor: pointer; }
   #editor .saved { color: #7cc44a; font-size: 11px; height: 14px; }
 </style>
 </head>
 <body>
-  <div id="wrap"><div id="bar"></div></div>
+  <div id="stage">
+    <div id="bar"><div id="track"></div><div class="rz"></div></div>
+  </div>
 
 <script>
 (function () {
   "use strict";
   var EDIT = new URLSearchParams(location.search).has("edit");
+  if (EDIT) document.body.classList.add("editing");
 
   var DEF = {
     sub:    { icon: "⭐", label: "Newest Sub" },
@@ -84,193 +82,233 @@
     clip:   { icon: "🎬", label: "Last Clip" }
   };
   var KIND_ORDER = ["sub", "follow", "gift", "raid", "redeem", "clip"];
+  var CANVAS_W = 1280, CANVAS_H = 720;
 
-  var DEFAULT_CONFIG = { kinds: ["sub", "follow", "gift"], size: 20, scroll: "off", speed: 60, pos: "bottom", bg: 86, accent: "#7cc44a", labels: true };
+  var DEFAULT_CONFIG = { kinds: ["sub", "follow", "gift"], size: 22, scroll: "off", speed: 60,
+                         bg: 86, accent: "#7cc44a", labels: true, x: 190, y: 630, w: 900, h: 62 };
   var config = Object.assign({}, DEFAULT_CONFIG);
-  var latest = {};   // kind -> latest item (independent of config)
+  var latest = {};
 
-  // Optional URL overrides (power users). Ignored in edit mode so the editor shows saved state.
+  function clampNum(v, lo, hi, dflt) { v = Math.round(+v); return isFinite(v) ? Math.min(hi, Math.max(lo, v)) : dflt; }
+  function coerce(c) {
+    var o = Object.assign({}, DEFAULT_CONFIG, c || {});
+    o.kinds = Array.isArray(o.kinds) ? o.kinds.filter(function (k) { return DEF[k]; }) : DEFAULT_CONFIG.kinds.slice();
+    if (!o.kinds.length) o.kinds = ["sub"];
+    o.size = clampNum(o.size, 8, 120, 22);
+    o.speed = clampNum(o.speed, 5, 1000, 60);
+    o.bg = clampNum(o.bg, 0, 100, 86);
+    if (o.scroll !== "rtl" && o.scroll !== "ltr") o.scroll = "off";
+    if (!/^#[0-9a-fA-F]{6}$/.test(o.accent)) o.accent = "#7cc44a";
+    o.labels = o.labels !== false;
+    o.x = clampNum(o.x, -400, CANVAS_W, DEFAULT_CONFIG.x);
+    o.y = clampNum(o.y, -200, CANVAS_H, DEFAULT_CONFIG.y);
+    o.w = clampNum(o.w, 80, 1280, DEFAULT_CONFIG.w);
+    o.h = clampNum(o.h, 24, 400, DEFAULT_CONFIG.h);
+    return o;
+  }
+
   function urlOverrides() {
     var p = new URLSearchParams(location.search), o = {};
     if (p.get("kinds")) { var ks = p.get("kinds").split(",").map(function (k) { return k.trim().toLowerCase(); }).filter(function (k) { return DEF[k]; }); if (ks.length) o.kinds = ks; }
-    var size = parseInt(p.get("size"), 10); if (size >= 8 && size <= 120) o.size = size;
-    var sc = (p.get("scroll") || "").toLowerCase(); if (sc === "left") sc = "rtl"; if (sc === "right") sc = "ltr"; if (sc === "rtl" || sc === "ltr" || sc === "off") o.scroll = sc;
-    var sp = parseInt(p.get("speed"), 10); if (sp >= 5 && sp <= 1000) o.speed = sp;
-    var pos = (p.get("pos") || "").toLowerCase(); if (pos === "top" || pos === "bottom") o.pos = pos;
-    var bg = parseInt(p.get("bg"), 10); if (bg >= 0 && bg <= 100) o.bg = bg;
-    var ac = p.get("accent"); if (ac && /^#?[0-9a-fA-F]{6}$/.test(ac)) o.accent = (ac[0] === "#" ? ac : "#" + ac);
+    ["size", "speed", "bg", "x", "y", "w", "h"].forEach(function (n) { var v = parseInt(p.get(n), 10); if (isFinite(v)) o[n] = v; });
+    var sc = (p.get("scroll") || "").toLowerCase(); if (sc === "left") sc = "rtl"; if (sc === "right") sc = "ltr"; if (["off", "rtl", "ltr"].indexOf(sc) >= 0) o.scroll = sc;
+    var ac = p.get("accent"); if (ac && /^#?[0-9a-fA-F]{6}$/.test(ac)) o.accent = ac[0] === "#" ? ac : "#" + ac;
     if (p.get("labels") === "0") o.labels = false; if (p.get("labels") === "1") o.labels = true;
     return o;
   }
   var OVERRIDES = urlOverrides();
 
-  function coerce(c) {
-    var out = Object.assign({}, DEFAULT_CONFIG, c || {});
-    out.kinds = Array.isArray(out.kinds) ? out.kinds.filter(function (k) { return DEF[k]; }) : DEFAULT_CONFIG.kinds.slice();
-    if (!out.kinds.length) out.kinds = ["sub"];
-    out.size = Math.min(120, Math.max(8, out.size | 0));
-    out.speed = Math.min(1000, Math.max(5, out.speed | 0));
-    out.bg = Math.min(100, Math.max(0, out.bg | 0));
-    if (out.scroll !== "rtl" && out.scroll !== "ltr") out.scroll = "off";
-    if (out.pos !== "top") out.pos = "bottom";
-    if (!/^#[0-9a-fA-F]{6}$/.test(out.accent)) out.accent = "#7cc44a";
-    out.labels = out.labels !== false;
-    return out;
-  }
-
-  var wrap = document.getElementById("wrap");
+  var stage = document.getElementById("stage");
   var bar = document.getElementById("bar");
-  var slots = {};
+  var track = document.getElementById("track");
+  var slots = {};   // kind -> array of { el, val } (one per copy)
   var raf = 0, mx = null, mlast = null;
 
-  function stopMarquee() { if (raf) { cancelAnimationFrame(raf); raf = 0; } mx = null; mlast = null; bar.style.transform = ""; }
-  function startMarquee(dir, speed) {
+  // ---- stage scaling ----
+  var scaleRaf = 0, stageScale = 1;
+  function applyScale() { stageScale = Math.min(window.innerWidth / CANVAS_W, window.innerHeight / CANVAS_H); stage.style.transform = "translate(-50%,-50%) scale(" + stageScale + ")"; }
+  window.addEventListener("resize", function () { if (scaleRaf) return; scaleRaf = requestAnimationFrame(function () { scaleRaf = 0; applyScale(); }); });
+  applyScale();
+
+  function makeSlot(kind) {
+    var d = DEF[kind];
+    var slot = document.createElement("div"); slot.className = "slot";
+    var ic = document.createElement("span"); ic.className = "ic"; ic.textContent = d.icon;
+    var txt = document.createElement("span"); txt.className = "txt";
+    var lab = document.createElement("span"); lab.className = "lab"; lab.textContent = d.label;
+    var val = document.createElement("span"); val.className = "val empty"; val.textContent = "—";
+    txt.appendChild(lab); txt.appendChild(val);
+    slot.appendChild(ic); slot.appendChild(txt);
+    return { slot: slot, val: val };
+  }
+  function addCopy() {
+    var copy = document.createElement("div"); copy.className = "copy";
+    config.kinds.forEach(function (kind) {
+      var m = makeSlot(kind); copy.appendChild(m.slot);
+      (slots[kind] = slots[kind] || []).push({ el: m.slot, val: m.val });
+    });
+    track.appendChild(copy);
+  }
+  function setSlot(kind, item, animate) {
+    var arr = slots[kind]; if (!arr || !item) return;
+    var name = (item.user || "").toString().trim() || "Someone";
+    arr.forEach(function (s) {
+      s.val.classList.remove("empty");
+      if (kind === "gift" && item.amount > 0) {
+        s.val.innerHTML = ""; s.val.appendChild(document.createTextNode(name));
+        var amt = document.createElement("span"); amt.className = "amt"; amt.textContent = item.amount + " 🪙"; s.val.appendChild(amt);
+      } else { s.val.textContent = name; }
+      if (animate && config.scroll === "off") { s.el.classList.remove("bump"); void s.el.offsetWidth; s.el.classList.add("bump"); }
+    });
+  }
+
+  function stopMarquee() { if (raf) cancelAnimationFrame(raf); raf = 0; mx = null; mlast = null; track.style.transform = ""; }
+  function startMarquee() {
     stopMarquee();
+    var dir = config.scroll, speed = config.speed;
     function frame(t) {
-      var wrapW = wrap.offsetWidth, barW = bar.offsetWidth;
-      if (mx === null) mx = (dir === "rtl") ? wrapW : -barW;
+      var cw = track.firstChild ? track.firstChild.offsetWidth : 0;
+      if (cw <= 0) { raf = requestAnimationFrame(frame); return; }
+      if (mx === null) mx = (dir === "rtl") ? 0 : -cw;
       if (mlast === null) mlast = t;
       var dt = Math.min(0.05, (t - mlast) / 1000); mlast = t;
-      if (dir === "rtl") { mx -= speed * dt; if (mx < -barW) mx = wrapW; }
-      else { mx += speed * dt; if (mx > wrapW) mx = -barW; }
-      bar.style.transform = "translateX(" + Math.round(mx) + "px)";
+      if (dir === "rtl") { mx -= speed * dt; if (mx <= -cw) mx += cw; }
+      else { mx += speed * dt; if (mx >= 0) mx -= cw; }
+      track.style.transform = "translateX(" + mx + "px)";
       raf = requestAnimationFrame(frame);
     }
     raf = requestAnimationFrame(frame);
   }
 
-  function setSlot(kind, item, animate) {
-    var s = slots[kind]; if (!s || !item) return;
-    var name = (item.user || "").toString().trim() || "Someone";
-    s.val.classList.remove("empty");
-    if (kind === "gift" && item.amount > 0) {
-      s.val.innerHTML = "";
-      s.val.appendChild(document.createTextNode(name));
-      var amt = document.createElement("span"); amt.className = "amt"; amt.textContent = item.amount + " 🪙";
-      s.val.appendChild(amt);
-    } else { s.val.textContent = name; }
-    if (animate && config.scroll === "off") { s.el.classList.remove("bump"); void s.el.offsetWidth; s.el.classList.add("bump"); }
-  }
-
   function render() {
     var c = config;
-    // styles
     document.documentElement.style.setProperty("--accent", c.accent);
     document.documentElement.style.setProperty("--label", c.accent);
     document.documentElement.style.setProperty("--border", c.accent);
+    // geometry
+    bar.style.left = c.x + "px"; bar.style.top = c.y + "px";
+    bar.style.width = c.w + "px"; bar.style.height = c.h + "px";
     bar.style.fontSize = c.size + "px";
     bar.style.background = "rgba(10, 20, 16, " + (c.bg / 100) + ")";
     bar.classList.toggle("nolabels", !c.labels);
-    wrap.classList.toggle("top", c.pos === "top");
-    // slots
-    while (bar.firstChild) bar.removeChild(bar.firstChild);
-    slots = {};
-    c.kinds.forEach(function (kind) {
-      var d = DEF[kind]; if (!d) return;
-      var slot = document.createElement("div"); slot.className = "slot";
-      var ic = document.createElement("span"); ic.className = "ic"; ic.textContent = d.icon;
-      var txt = document.createElement("span"); txt.className = "txt";
-      var lab = document.createElement("span"); lab.className = "lab"; lab.textContent = d.label;
-      var val = document.createElement("span"); val.className = "val empty"; val.textContent = "—";
-      txt.appendChild(lab); txt.appendChild(val);
-      slot.appendChild(ic); slot.appendChild(txt);
-      bar.appendChild(slot);
-      slots[kind] = { el: slot, val: val };
-      if (latest[kind]) setSlot(kind, latest[kind], false);
-    });
-    // marquee
-    wrap.classList.toggle("scroll", c.scroll !== "off");
-    if (c.scroll !== "off") startMarquee(c.scroll, c.speed); else stopMarquee();
+    var scrolling = c.scroll !== "off";
+    bar.classList.toggle("scroll", scrolling);
+    bar.classList.toggle("static", !scrolling);
+    // (re)build track
+    stopMarquee();
+    track.innerHTML = ""; slots = {};
+    addCopy();
+    c.kinds.forEach(function (k) { if (latest[k]) setSlot(k, latest[k], false); });
+    if (scrolling) {
+      var cw = track.firstChild.offsetWidth || 1;
+      var need = Math.max(2, Math.ceil(c.w / cw) + 1);
+      while (track.children.length < need) addCopy();
+      c.kinds.forEach(function (k) { if (latest[k]) setSlot(k, latest[k], false); });
+      startMarquee();
+    }
   }
 
-  // In edit mode the editor shows the true saved config; in OBS, URL params (if any) win.
   function applyConfig(c) {
     config = EDIT ? coerce(c) : coerce(Object.assign({}, c, OVERRIDES));
     render();
     if (EDIT) syncControls();
   }
 
-  // ---- Editor ----
-  var editorEls = {};
+  // ---- drag + resize (edit mode) ----
+  function attachDragResize() {
+    var rz = bar.querySelector(".rz");
+    bar.addEventListener("pointerdown", function (e) {
+      if (e.target === rz) return;
+      var sx = e.clientX, sy = e.clientY, ox = config.x, oy = config.y;
+      bar.setPointerCapture(e.pointerId);
+      function move(ev) { config.x = Math.round(ox + (ev.clientX - sx) / stageScale); config.y = Math.round(oy + (ev.clientY - sy) / stageScale); bar.style.left = config.x + "px"; bar.style.top = config.y + "px"; }
+      function up() { try { bar.releasePointerCapture(e.pointerId); } catch (x) {} bar.removeEventListener("pointermove", move); bar.removeEventListener("pointerup", up); scheduleSave(); }
+      bar.addEventListener("pointermove", move); bar.addEventListener("pointerup", up);
+    });
+    rz.addEventListener("pointerdown", function (e) {
+      e.stopPropagation();
+      var sx = e.clientX, sy = e.clientY, ow = config.w, oh = config.h;
+      rz.setPointerCapture(e.pointerId);
+      function move(ev) {
+        config.w = clampNum(ow + (ev.clientX - sx) / stageScale, 80, 1280, ow);
+        config.h = clampNum(oh + (ev.clientY - sy) / stageScale, 24, 400, oh);
+        bar.style.width = config.w + "px"; bar.style.height = config.h + "px";   // live resize
+      }
+      function up() { try { rz.releasePointerCapture(e.pointerId); } catch (x) {} rz.removeEventListener("pointermove", move); rz.removeEventListener("pointerup", up); render(); scheduleSave(); }
+      rz.addEventListener("pointermove", move); rz.addEventListener("pointerup", up);
+    });
+  }
+
+  // ---- editor panel ----
+  var E = {};
+  function bind(id, fn) { var el = document.getElementById(id); el.addEventListener("input", fn); el.addEventListener("change", fn); return el; }
   function buildEditor() {
     var e = document.createElement("div"); e.id = "editor";
     e.innerHTML =
       '<h3>🎛 Ticker editor</h3>' +
-      '<div class="hint">Changes apply live and save automatically. Close this tab in OBS — use the plain URL there.</div>' +
+      '<div class="hint">Drag the bar to move it, drag the green corner to resize. Everything saves automatically. In OBS, use the plain /ticker URL.</div>' +
       '<div class="grp"><label class="h">Show</label><div class="kinds" id="edKinds"></div></div>' +
-      '<div class="grp"><label class="h">Text size</label><div class="row"><input type="range" id="edSize" min="12" max="60"><span class="rv" id="edSizeV"></span></div></div>' +
-      '<div class="grp"><label class="h">Scroll</label><div class="row"><select id="edScroll"><option value="off">Off (static)</option><option value="rtl">Right → Left</option><option value="ltr">Left → Right</option></select></div></div>' +
+      '<div class="grp"><label class="h">Text size</label><div class="row"><input type="range" id="edSize" min="10" max="80"><span class="rv" id="edSizeV"></span></div></div>' +
+      '<div class="grp"><label class="h">Scroll contents</label><div class="row"><select id="edScroll"><option value="off">Off (static)</option><option value="rtl">Right → Left</option><option value="ltr">Left → Right</option></select></div></div>' +
       '<div class="grp"><label class="h">Scroll speed</label><div class="row"><input type="range" id="edSpeed" min="10" max="300"><span class="rv" id="edSpeedV"></span></div></div>' +
-      '<div class="grp"><label class="h">Position</label><div class="row"><select id="edPos"><option value="bottom">Bottom</option><option value="top">Top</option></select></div></div>' +
       '<div class="grp"><label class="h">Accent colour</label><div class="row"><input type="color" id="edAccent"><span class="rv" id="edAccentV"></span></div></div>' +
       '<div class="grp"><label class="h">Background</label><div class="row"><input type="range" id="edBg" min="0" max="100"><span class="rv" id="edBgV"></span></div></div>' +
       '<div class="grp"><label><input type="checkbox" id="edLabels"> Show labels</label></div>' +
+      '<div class="grp"><button id="edReset">↺ Reset position &amp; size</button></div>' +
       '<div class="saved" id="edSaved"></div>';
     document.body.appendChild(e);
-
     var kinds = document.getElementById("edKinds");
     KIND_ORDER.forEach(function (k) {
       var lab = document.createElement("label");
-      var cb = document.createElement("input"); cb.type = "checkbox"; cb.dataset.kind = k;
-      cb.addEventListener("change", onChange);
+      var cb = document.createElement("input"); cb.type = "checkbox"; cb.dataset.kind = k; cb.addEventListener("change", onChange);
       lab.appendChild(cb); lab.appendChild(document.createTextNode(" " + DEF[k].icon + " " + DEF[k].label.replace(/^(Newest|Latest|Last) /, "")));
-      kinds.appendChild(lab);
-      editorEls["k_" + k] = cb;
+      kinds.appendChild(lab); E["k_" + k] = cb;
     });
-    editorEls.size = bind("edSize", onChange);
-    editorEls.sizeV = document.getElementById("edSizeV");
-    editorEls.scroll = bind("edScroll", onChange);
-    editorEls.speed = bind("edSpeed", onChange);
-    editorEls.speedV = document.getElementById("edSpeedV");
-    editorEls.pos = bind("edPos", onChange);
-    editorEls.accent = bind("edAccent", onChange);
-    editorEls.accentV = document.getElementById("edAccentV");
-    editorEls.bg = bind("edBg", onChange);
-    editorEls.bgV = document.getElementById("edBgV");
-    editorEls.labels = bind("edLabels", onChange);
-    editorEls.saved = document.getElementById("edSaved");
+    E.size = bind("edSize", onChange); E.sizeV = document.getElementById("edSizeV");
+    E.scroll = bind("edScroll", onChange);
+    E.speed = bind("edSpeed", onChange); E.speedV = document.getElementById("edSpeedV");
+    E.accent = bind("edAccent", onChange); E.accentV = document.getElementById("edAccentV");
+    E.bg = bind("edBg", onChange); E.bgV = document.getElementById("edBgV");
+    E.labels = bind("edLabels", onChange);
+    E.saved = document.getElementById("edSaved");
+    document.getElementById("edReset").addEventListener("click", function () {
+      config.x = DEFAULT_CONFIG.x; config.y = DEFAULT_CONFIG.y; config.w = DEFAULT_CONFIG.w; config.h = DEFAULT_CONFIG.h;
+      render(); scheduleSave();
+    });
     syncControls();
+    attachDragResize();
   }
-  function bind(id, fn) { var el = document.getElementById(id); el.addEventListener("input", fn); el.addEventListener("change", fn); return el; }
-
   function syncControls() {
-    if (!editorEls.size) return;
-    KIND_ORDER.forEach(function (k) { editorEls["k_" + k].checked = config.kinds.indexOf(k) >= 0; });
-    editorEls.size.value = config.size; editorEls.sizeV.textContent = config.size + "px";
-    editorEls.scroll.value = config.scroll;
-    editorEls.speed.value = config.speed; editorEls.speedV.textContent = config.speed + "/s";
-    editorEls.pos.value = config.pos;
-    editorEls.accent.value = config.accent; editorEls.accentV.textContent = config.accent;
-    editorEls.bg.value = config.bg; editorEls.bgV.textContent = config.bg + "%";
-    editorEls.labels.checked = config.labels;
+    if (!E.size) return;
+    KIND_ORDER.forEach(function (k) { E["k_" + k].checked = config.kinds.indexOf(k) >= 0; });
+    E.size.value = config.size; E.sizeV.textContent = config.size + "px";
+    E.scroll.value = config.scroll;
+    E.speed.value = config.speed; E.speedV.textContent = config.speed + "/s";
+    E.accent.value = config.accent; E.accentV.textContent = config.accent;
+    E.bg.value = config.bg; E.bgV.textContent = config.bg + "%";
+    E.labels.checked = config.labels;
+  }
+  function onChange() {
+    var kinds = KIND_ORDER.filter(function (k) { return E["k_" + k].checked; });
+    if (!kinds.length) { kinds = ["sub"]; E.k_sub.checked = true; }
+    config = coerce({
+      kinds: kinds, size: +E.size.value, scroll: E.scroll.value, speed: +E.speed.value,
+      accent: E.accent.value, bg: +E.bg.value, labels: E.labels.checked,
+      x: config.x, y: config.y, w: config.w, h: config.h
+    });
+    E.sizeV.textContent = config.size + "px"; E.speedV.textContent = config.speed + "/s";
+    E.bgV.textContent = config.bg + "%"; E.accentV.textContent = config.accent;
+    render(); scheduleSave();
   }
 
   var saveTimer = null;
-  function onChange() {
-    var kinds = KIND_ORDER.filter(function (k) { return editorEls["k_" + k].checked; });
-    if (!kinds.length) { kinds = ["sub"]; editorEls.k_sub.checked = true; }
-    config = coerce({
-      kinds: kinds,
-      size: parseInt(editorEls.size.value, 10),
-      scroll: editorEls.scroll.value,
-      speed: parseInt(editorEls.speed.value, 10),
-      pos: editorEls.pos.value,
-      accent: editorEls.accent.value,
-      bg: parseInt(editorEls.bg.value, 10),
-      labels: editorEls.labels.checked
-    });
-    editorEls.sizeV.textContent = config.size + "px";
-    editorEls.speedV.textContent = config.speed + "/s";
-    editorEls.bgV.textContent = config.bg + "%";
-    editorEls.accentV.textContent = config.accent;
-    render();
+  function scheduleSave() {
+    if (!EDIT) return;
     if (saveTimer) clearTimeout(saveTimer);
     saveTimer = setTimeout(function () {
-      saveTimer = null;
-      send({ type: "saveTicker", ticker: config });
-      editorEls.saved.textContent = "✓ saved";
-      setTimeout(function () { if (editorEls.saved) editorEls.saved.textContent = ""; }, 1200);
-    }, 350);
+      saveTimer = null; send({ type: "saveTicker", ticker: config });
+      if (E.saved) { E.saved.textContent = "✓ saved"; setTimeout(function () { if (E.saved) E.saved.textContent = ""; }, 1200); }
+    }, 300);
   }
 
   // ---- WebSocket ----
@@ -284,18 +322,13 @@
       applyConfig(d.ticker || {});
     } else if (d.type === "tickerConfig") {
       if (!EDIT) applyConfig(d.ticker || {});
-      else { config = coerce(d.ticker || {}); render(); syncControls(); }   // reflect edits made elsewhere
+      else { config = coerce(d.ticker || {}); render(); syncControls(); }
     } else if (d.type === "activity" && d.item && d.item.kind) {
-      latest[d.item.kind] = d.item;
-      setSlot(d.item.kind, d.item, true);
+      latest[d.item.kind] = d.item; setSlot(d.item.kind, d.item, true);
     }
   }
-
   var ws = null, retry = null;
-  function wsUrl() {
-    if (location.protocol === "http:" || location.protocol === "https:") return (location.protocol === "https:" ? "wss:" : "ws:") + "//" + location.host + "/ws";
-    return "ws://localhost:3620/ws";
-  }
+  function wsUrl() { if (location.protocol === "http:" || location.protocol === "https:") return (location.protocol === "https:" ? "wss:" : "ws:") + "//" + location.host + "/ws"; return "ws://localhost:3620/ws"; }
   function schedule() { if (!retry) retry = setTimeout(function () { retry = null; connect(); }, 1500); }
   function send(obj) { try { if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj)); } catch (e) {} }
   function connect() {
@@ -306,8 +339,7 @@
     ws.onerror = function () { try { ws.close(); } catch (e) {} };
   }
 
-  // init
-  applyConfig({});     // defaults + any URL overrides until the server snapshot arrives
+  applyConfig({});
   if (EDIT) buildEditor();
   connect();
 })();

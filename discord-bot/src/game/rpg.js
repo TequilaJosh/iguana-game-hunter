@@ -456,17 +456,35 @@ function cmdBuy(msg, args) {
   }
   if (!pick) return msg.reply(`Not in the shop. See \`!shop\` (buy by number, e.g. \`!buy 1\`).`);
 
+  const base = ITEMS[pick.id];
+  const isGear = GEAR_SLOTS.includes(base.slot);
+  if (isGear) qty = 1; // gear auto-equips — no point buying stacks
   qty = Math.max(1, Math.min(qty, 99));
   const total = pick.price * qty;
   if ((char.gold || 0) < total) return msg.reply(`Not enough gold — ${qty}× ${pick.name} costs ${total} 🪙, you have ${char.gold || 0}.`);
   char.gold -= total;
-  const base = ITEMS[pick.id];
+
+  if (isGear) {
+    const bought = makeGear(base.id, RARITIES[0]);
+    char.equipped = char.equipped || {};
+    const old = char.equipped[base.slot];
+    if (old && gearScore(old) > gearScore(bought)) {
+      addItem(char, bought); // keep the better equipped item; stash the purchase
+      savePlayer(msg.author.id, char);
+      return msg.reply(`🛒 Bought **${bought.name}** for ${pick.price} 🪙, but your equipped **${old.name}** is better — kept it on. New one's in your bag. (${char.gold} left)`);
+    }
+    char.equipped[base.slot] = bought;
+    let tail = ' Auto-equipped.';
+    if (old) { const sold = sellValue(old); char.gold += sold; tail = ` Auto-equipped and sold your old **${old.name}** for ${sold} 🪙.`; }
+    savePlayer(msg.author.id, char);
+    return msg.reply(`🛒 Bought **${bought.name}** for ${pick.price} 🪙.${tail} (${char.gold} left)`);
+  }
+
   for (let i = 0; i < qty; i++) {
-    if (GEAR_SLOTS.includes(base.slot)) addItem(char, makeGear(base.id, RARITIES[0]));
-    else addItem(char, { base: base.id, slot: base.slot, name: base.name, qty: 1, stackable: !!base.stackable, effect: base.effect, magnitude: base.magnitude, value: base.value });
+    addItem(char, { base: base.id, slot: base.slot, name: base.name, qty: 1, stackable: !!base.stackable, effect: base.effect, magnitude: base.magnitude, value: base.value });
   }
   savePlayer(msg.author.id, char);
-  return msg.reply(`🛒 Bought **${qty}× ${pick.name}** for ${total} 🪙. (${char.gold} left)${GEAR_SLOTS.includes(base.slot) ? ' Equip with `!inv` → `!equip <#>`.' : ''}`);
+  return msg.reply(`🛒 Bought **${qty}× ${pick.name}** for ${total} 🪙. (${char.gold} left)`);
 }
 
 function cmdSell(msg, args) {

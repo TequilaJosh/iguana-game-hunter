@@ -347,3 +347,40 @@ export async function handleRpg(msg) {
   if (!fn) return;
   await fn(msg, parts);
 }
+
+// Flatten an embed to plain text (for non-Discord platforms).
+function embedToText(e) {
+  const d = e?.data || {};
+  const s = [];
+  if (d.title) s.push(d.title);
+  if (d.description) s.push(d.description);
+  for (const f of d.fields || []) s.push(`${f.name}: ${f.value}`);
+  if (d.footer?.text) s.push(d.footer.text);
+  return s.join('\n');
+}
+
+// Collapse a rich reply into a single chat-safe line (Twitch etc. are one-line).
+function toChatLine(t) {
+  return String(t).replace(/\*\*/g, '').replace(/`/g, '').replace(/\n+/g, ' · ')
+    .replace(/\s{2,}/g, ' ').trim().slice(0, 480);
+}
+
+/**
+ * Run a game command for a non-Discord chatter (already resolved to a Discord id),
+ * reusing the exact same handlers, and return a one-line plain-text reply.
+ */
+export async function runForChat({ discordId, username, content }) {
+  let captured = null;
+  const msg = {
+    author: { id: discordId, username, bot: false },
+    content,
+    reply: async (payload) => { captured = payload; return {}; },
+  };
+  await handleRpg(msg);
+  if (captured == null) return null;
+  if (typeof captured === 'string') return toChatLine(captured);
+  const parts = [];
+  if (captured.content) parts.push(captured.content);
+  for (const e of captured.embeds || []) parts.push(embedToText(e));
+  return toChatLine(parts.join('\n'));
+}

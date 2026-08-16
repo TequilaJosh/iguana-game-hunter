@@ -2,6 +2,7 @@ import express from 'express';
 import { config } from './config.js';
 import { findGuildByToken, getGuild } from './guildStore.js';
 import { postClip } from './features/clips.js';
+import { handleGameMessage } from './game/bridge.js';
 import { log } from './logger.js';
 
 /**
@@ -50,6 +51,23 @@ export function startIngestServer(client) {
       return false;
     });
     res.status(ok ? 200 : 500).json({ ok });
+  });
+
+  // Tavern Tales bridge: Game Hunter forwards chat "!" game commands here.
+  app.post('/game', async (req, res) => {
+    const header = req.get('authorization') || '';
+    const token = header.replace(/^Bearer\s+/i, '') || req.get('x-ingest-token') || '';
+    const guildId = findGuildByToken(token);
+    if (!guildId) return res.status(401).json({ ok: false, error: 'unknown ingest token' });
+
+    const { platform, user, text } = req.body || {};
+    if (!platform || !user || !text) return res.status(400).json({ ok: false, error: 'need platform, user, text' });
+
+    const reply = await handleGameMessage(client, guildId, platform, user, text).catch((e) => {
+      log.error('game bridge failed:', e);
+      return 'Something went wrong.';
+    });
+    res.json({ ok: true, reply });
   });
 
   app.listen(config.port, () => log.info(`Ingest server listening on :${config.port}`));

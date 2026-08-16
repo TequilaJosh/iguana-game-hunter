@@ -7,6 +7,7 @@ import { startIngestServer } from './ingest.js';
 import { isRpgCommand, handleRpg } from './game/rpg.js';
 import { startRaidScheduler } from './game/raids.js';
 import { handleGhCommand, startUpdateWatcher } from './features/updates.js';
+import { startTwitch } from './features/twitch.js';
 import { log } from './logger.js';
 
 assertCoreConfig();
@@ -18,6 +19,7 @@ client.once(Events.ClientReady, (c) => {
   startIngestServer(client);
   startRaidScheduler(client); // announces raids every 6–12h per server
   startUpdateWatcher(client); // announces new Game Hunter releases to opted-in servers
+  startTwitch(client);        // Tavern Tales directly in Twitch chat (joins channels on live)
 });
 
 // A new server added the bot: point their admins at /setup.

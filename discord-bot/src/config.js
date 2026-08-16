@@ -16,6 +16,16 @@ export const config = {
 
   // Where per-server config is persisted. On a host, point this at a persistent volume.
   dataDir: process.env.DATA_DIR || './data',
+
+  // Twitch chat integration (optional): a bot account that joins streamers' channels
+  // and runs Tavern Tales in chat, independent of Game Hunter. Channels are set per
+  // server with /setup twitch. Live-join needs a Twitch app (client id + secret).
+  twitch: {
+    username: get('TWITCH_BOT_USERNAME'),          // the bot account's login (lowercase)
+    oauth: get('TWITCH_BOT_OAUTH'),                // "oauth:xxxx" chat token (chat:read, chat:edit)
+    clientId: get('TWITCH_CLIENT_ID'),            // app client id — for live-status polling (optional)
+    clientSecret: get('TWITCH_CLIENT_SECRET'),    // app secret — for live-status polling (optional)
+  },
 };
 
 /** Throw early with a clear message if the essentials aren't set. */

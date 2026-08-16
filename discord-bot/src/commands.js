@@ -52,13 +52,19 @@ export const commands = [
         )
       )
       .addSubcommand((s) =>
+        s.setName('twitch').setDescription('Run Tavern Tales in your Twitch chat (the bot joins when you go live).').addStringOption((o) =>
+          o.setName('channel').setDescription('Your Twitch channel/login (no #)').setRequired(true)
+        )
+      )
+      .addSubcommand((s) =>
         s.setName('ingest').setDescription('Get this server’s clip ingest token for Game Hunter.')
       )
       .addSubcommand((s) =>
         s.setName('disable').setDescription('Turn a feature off.').addStringOption((o) =>
           o.setName('feature').setDescription('Which feature').setRequired(true).addChoices(
             { name: 'welcome', value: 'welcome' },
-            { name: 'autorole', value: 'autorole' }
+            { name: 'autorole', value: 'autorole' },
+            { name: 'twitch', value: 'twitch' }
           )
         )
       ),
@@ -87,9 +93,23 @@ export const commands = [
         setGuild(gid, { tavernChannelId: ch.id });
         return interaction.reply({ content: `✅ Tavern Tales raids will be announced in <#${ch.id}>.`, ...EPHEMERAL });
       }
+      if (sub === 'twitch') {
+        const raw = interaction.options.getString('channel', true);
+        const chan = raw.trim().toLowerCase()
+          .replace(/^https?:\/\/(www\.)?twitch\.tv\//, '').replace(/^#/, '').replace(/[^a-z0-9_]/g, '');
+        if (!chan) return interaction.reply({ content: 'That doesn’t look like a Twitch channel. Just the login, e.g. `shroud`.', ...EPHEMERAL });
+        setGuild(gid, { twitchChannel: chan });
+        const live = config.twitch?.clientId && config.twitch?.clientSecret ? 'when you go live' : 'now';
+        return interaction.reply({
+          content: `✅ Tavern Tales will run in **twitch.tv/${chan}** (${live}). Viewers play with \`tt\` commands, same as Discord.` +
+            (config.twitch?.oauth ? '' : '\n⚠️ The bot owner hasn’t set up the Twitch bot account yet, so this won’t connect until they do.'),
+          ...EPHEMERAL,
+        });
+      }
       if (sub === 'disable') {
         const f = interaction.options.getString('feature', true);
-        setGuild(gid, f === 'welcome' ? { welcomeChannelId: '' } : { autoroleId: '' });
+        const patch = f === 'welcome' ? { welcomeChannelId: '' } : f === 'twitch' ? { twitchChannel: '' } : { autoroleId: '' };
+        setGuild(gid, patch);
         return interaction.reply({ content: `✅ Turned off ${f}.`, ...EPHEMERAL });
       }
       if (sub === 'ingest') {
@@ -117,6 +137,7 @@ export const commands = [
             `**Welcome channel:** ${cfg.welcomeChannelId ? `<#${cfg.welcomeChannelId}>` : '—'}`,
             `**Raid channel:** ${cfg.tavernChannelId ? `<#${cfg.tavernChannelId}>` : '— (defaults to clips; set with /setup tavern)'}`,
             `**Auto-role:** ${cfg.autoroleId ? `<@&${cfg.autoroleId}>` : '—'}`,
+            `**Twitch channel:** ${cfg.twitchChannel ? `twitch.tv/${cfg.twitchChannel}` : '— (set with /setup twitch)'}`,
             `**Clip ingest token:** ${cfg.ingestToken ? 'set ✔ (see /setup ingest)' : '— (get one with /setup ingest)'}`,
           ].join('\n')
         );

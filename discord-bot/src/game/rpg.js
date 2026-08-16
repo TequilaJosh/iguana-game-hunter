@@ -151,7 +151,7 @@ function bestZoneFor(level) {
   return eligible[eligible.length - 1] || ZONE_LIST[0];
 }
 
-function cmdAdventure(msg, args) {
+async function cmdAdventure(msg, args) {
   const char = getPlayer(msg.author.id);
   if (!char) return msg.reply('No hero yet — `!create` first.');
   if (hasFight(msg.author.id)) return msg.reply('You’re already in a fight! `!attack`, `!skill`, `!use`, or `!flee`.');
@@ -180,46 +180,84 @@ function cmdAdventure(msg, args) {
 
   const fight = startFight(msg.author.id, char, monsterId, zone.id);
   fight.log.push(`You venture into **${zone.name}** and a **${fight.monster.name}** appears!`);
-  return msg.reply({ embeds: [fightEmbed(fight)] });
+
+  // Stream chat can't edit messages, so it stays manual (type !attack each turn).
+  if (msg._chat) return msg.reply({ embeds: [fightEmbed(fight)] });
+
+  // Discord: show the encounter and WAIT. The live auto-battle starts on their first
+  // action (registered but not armed yet).
+  const sent = await msg.reply({
+    content: '⚔️ **Type `!attack` to begin!** (or `!skill <name>` · `!flee`)',
+    embeds: [fightEmbed(fight)],
+  });
+  autos.set(msg.author.id, { message: sent, char, timer: null });
 }
 
+// ── shared win/lose rendering ────────────────────────────────────────────────
+function victoryEmbed(fight, reward, char) {
+  let desc = fight.log.slice(-6).join('\n') + `\n\n**+${reward.xp} XP · +${reward.gold} 🪙**`;
+  if (reward.items.length) desc += '\n\n**Loot:**\n' + reward.items.map((i) => `${RARITY_EMOJI[i.rarity] || '•'} ${i.name}${i.qty > 1 ? ` x${i.qty}` : ''}`).join('\n');
+  if (reward.levels.length) desc += `\n\n🎉 **LEVEL UP!** You’re now level **${char.level}** (fully healed).`;
+  const next = ['`!adventure`'];
+  if (reward.levels.length) next.push('`!skills`');
+  if (reward.items.length) next.push('`!inv`');
+  next.push('`!char`', '`!shop`', '`!rest`');
+  desc += `\n\n▶️ **Next:** ${next.join(' · ')}`;
+  return new EmbedBuilder().setColor(0x3fa34d).setTitle(`🏆 ${fight.monster.name} defeated!`).setDescription(desc);
+}
+function defeatEmbed(fight, lost) {
+  return new EmbedBuilder().setColor(0xd64f4f).setTitle('💀 You have fallen…')
+    .setDescription(fight.log.slice(-6).join('\n') + `\n\nYou wake at the tavern, down **${lost}** 🪙 but alive. Rest with \`!rest\`.`);
+}
+
+// ── Discord auto-battle loop (edits one message in place) ─────────────────────
+const AUTO_MS = 1500;
+const autos = new Map(); // uid -> { message, char, timer }
+
+function disarm(uid) { const a = autos.get(uid); if (a && a.timer) { clearTimeout(a.timer); a.timer = null; } }
+function stopAuto(uid) { disarm(uid); autos.delete(uid); }
+function arm(uid) { const a = autos.get(uid); if (!a) return; if (a.timer) clearTimeout(a.timer); a.timer = setTimeout(() => autoTick(uid), AUTO_MS); }
+
+async function autoTick(uid) {
+  const a = autos.get(uid); if (!a) return;
+  const fight = getFight(uid); if (!fight) { stopAuto(uid); return; }
+  const res = takeTurn(fight, 'attack');
+  fight.log.push(...res.log);
+  await settleAuto(uid, fight, res);
+}
+
+// Apply an outcome to the live message; re-arm the timer if the fight continues.
+async function settleAuto(uid, fight, res) {
+  const a = autos.get(uid); if (!a) return;
+  const char = a.char;
+  if (res.win) { stopAuto(uid); const reward = resolveWin(fight, char); endFight(uid); savePlayer(uid, char); await a.message.edit({ content: '', embeds: [victoryEmbed(fight, reward, char)] }).catch(() => {}); return; }
+  if (res.lose) { stopAuto(uid); const { lost } = resolveLoss(char); endFight(uid); savePlayer(uid, char); await a.message.edit({ content: '', embeds: [defeatEmbed(fight, lost)] }).catch(() => {}); return; }
+  if (res.fled) { stopAuto(uid); char.hp = fight.php; char.mp = fight.pmp; endFight(uid); savePlayer(uid, char); await a.message.edit({ content: '🏃 You fled the fight.', embeds: [] }).catch(() => {}); return; }
+  await a.message.edit({ content: '', embeds: [fightEmbed(fight)] }).catch(() => {});
+  arm(uid);
+}
+
+// Route a player action: Discord auto-fight edits the live message; chat replies.
+async function act(msg, char, res) {
+  const uid = msg.author.id;
+  if (res.error) return msg.reply(`⚠️ ${res.error}`);
+  if (autos.has(uid) && !msg._chat) {
+    disarm(uid);
+    const fight = getFight(uid);
+    if (fight) fight.log.push(...res.log);
+    return settleAuto(uid, fight, res);
+  }
+  return afterTurn(msg, char, res);
+}
+
+// Manual (chat / non-auto) turn handling — one reply per action.
 async function afterTurn(msg, char, res) {
   const fight = getFight(msg.author.id);
   if (res.error) return msg.reply(`⚠️ ${res.error}`);
   if (fight) fight.log.push(...res.log);
-
-  if (res.fled) {
-    char.hp = fight.php; char.mp = fight.pmp;
-    endFight(msg.author.id); savePlayer(msg.author.id, char);
-    return msg.reply('🏃 ' + res.log.join('\n'));
-  }
-  if (res.win) {
-    const reward = resolveWin(fight, char);
-    endFight(msg.author.id); savePlayer(msg.author.id, char);
-    const e = new EmbedBuilder().setColor(0x3fa34d).setTitle(`🏆 ${fight.monster.name} defeated!`);
-    let desc = res.log.join('\n') + `\n\n**+${reward.xp} XP · +${reward.gold} 🪙**`;
-    if (reward.items.length) {
-      desc += '\n\n**Loot:**\n' + reward.items.map((i) => `${RARITY_EMOJI[i.rarity] || '•'} ${i.name}${i.qty > 1 ? ` x${i.qty}` : ''}`).join('\n');
-    }
-    if (reward.levels.length) desc += `\n\n🎉 **LEVEL UP!** You’re now level **${char.level}** (fully healed).`;
-
-    // What players can do next.
-    const next = ['`!adventure`'];
-    if (reward.levels.length) next.push('`!skills`');
-    if (reward.items.length) next.push('`!inv`');
-    next.push('`!char`', '`!shop`', '`!rest`');
-    desc += `\n\n▶️ **Next:** ${next.join(' · ')}`;
-
-    e.setDescription(desc);
-    return msg.reply({ embeds: [e] });
-  }
-  if (res.lose) {
-    const { lost } = resolveLoss(char);
-    endFight(msg.author.id); savePlayer(msg.author.id, char);
-    const e = new EmbedBuilder().setColor(0xd64f4f).setTitle('💀 You have fallen…')
-      .setDescription(res.log.join('\n') + `\n\nYou wake at the tavern, down **${lost}** 🪙 but alive. Rest with \`!rest\`.`);
-    return msg.reply({ embeds: [e] });
-  }
+  if (res.fled) { char.hp = fight.php; char.mp = fight.pmp; endFight(msg.author.id); savePlayer(msg.author.id, char); return msg.reply('🏃 ' + res.log.join('\n')); }
+  if (res.win) { const reward = resolveWin(fight, char); endFight(msg.author.id); savePlayer(msg.author.id, char); return msg.reply({ embeds: [victoryEmbed(fight, reward, char)] }); }
+  if (res.lose) { const { lost } = resolveLoss(char); endFight(msg.author.id); savePlayer(msg.author.id, char); return msg.reply({ embeds: [defeatEmbed(fight, lost)] }); }
   return msg.reply({ embeds: [fightEmbed(fight)] });
 }
 
@@ -227,7 +265,7 @@ function cmdAttack(msg) {
   const char = getPlayer(msg.author.id);
   const fight = getFight(msg.author.id);
   if (!char || !fight) return msg.reply('You’re not in a fight. `!adventure` to find one.');
-  return afterTurn(msg, char, takeTurn(fight, 'attack'));
+  return act(msg, char, takeTurn(fight, 'attack'));
 }
 
 function cmdSkill(msg, args) {
@@ -240,7 +278,7 @@ function cmdSkill(msg, args) {
   const skill = list.find((s) => s.id === q || s.name.toLowerCase() === q)
     || list.find((s) => s.name.toLowerCase().includes(q) || s.id.includes(q));
   if (!skill) return msg.reply(`No skill "${args.join(' ')}". Yours: ${list.map((s) => s.name).join(', ') || 'none'}.`);
-  return afterTurn(msg, char, takeTurn(fight, 'skill', skill));
+  return act(msg, char, takeTurn(fight, 'skill', skill));
 }
 
 function cmdUse(msg) {
@@ -252,14 +290,14 @@ function cmdUse(msg) {
   const heal = Math.round(fight.pd.maxhp * (pot.magnitude || 30) / 100);
   pot.qty -= 1;
   if (pot.qty <= 0) char.inventory = char.inventory.filter((i) => i !== pot);
-  return afterTurn(msg, char, takeTurn(fight, 'use', heal));
+  return act(msg, char, takeTurn(fight, 'use', heal));
 }
 
 function cmdFlee(msg) {
   const char = getPlayer(msg.author.id);
   const fight = getFight(msg.author.id);
   if (!char || !fight) return msg.reply('You’re not in a fight.');
-  return afterTurn(msg, char, takeTurn(fight, 'flee'));
+  return act(msg, char, takeTurn(fight, 'flee'));
 }
 
 function cmdStatus(msg) {
@@ -442,6 +480,7 @@ export async function runForChat({ discordId, username, content }) {
   const msg = {
     author: { id: discordId, username, bot: false },
     content,
+    _chat: true, // stream chat: manual mode, no auto-battle loop / message editing
     reply: async (payload) => { captured = payload; return {}; },
   };
   await handleRpg(msg);

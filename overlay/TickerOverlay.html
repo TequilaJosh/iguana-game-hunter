@@ -6,7 +6,6 @@
 <style>
   :root {
     --accent: #7cc44a;
-    --bg: rgba(10, 20, 16, 0.86);
     --border: #4a7c3a;
     --label: #a8c488;
     --value: #ffffff;
@@ -17,7 +16,6 @@
     background: transparent; overflow: hidden;
     font-family: 'Segoe UI', 'Bebas Neue', Arial, sans-serif;
   }
-  /* Bottom strip; the OBS source rectangle sets the overall size, the ?size param the text. */
   #wrap {
     position: absolute; left: 0; right: 0; bottom: 0;
     display: flex; justify-content: center; align-items: flex-end;
@@ -27,41 +25,46 @@
   #wrap.scroll { justify-content: flex-start; padding-left: 0; padding-right: 0; }
   #bar {
     display: inline-flex; align-items: stretch; gap: 0;
-    background: var(--bg);
+    background: rgba(10, 20, 16, 0.86);
     border: 2px solid var(--border); border-radius: 0.6em;
     box-shadow: 0 0.3em 1em rgba(0, 0, 0, 0.55);
     overflow: hidden; max-width: 100%;
-    font-size: 20px;                 /* base size — scaled by ?size; children use em */
-    will-change: transform;
+    font-size: 20px; will-change: transform;
   }
   #wrap.scroll #bar { max-width: none; flex: 0 0 auto; border-radius: 0; border-width: 2px 0; }
-  .slot {
-    display: flex; align-items: center; gap: 0.45em;
-    padding: 0.5em 1em; white-space: nowrap; position: relative;
-  }
+  .slot { display: flex; align-items: center; gap: 0.45em; padding: 0.5em 1em; white-space: nowrap; position: relative; }
   .slot + .slot { border-left: 1px solid rgba(124, 196, 74, 0.28); }
   .slot .ic { font-size: 1.1em; line-height: 1; }
   .slot .txt { display: flex; flex-direction: column; line-height: 1.15; }
-  .slot .lab {
-    font-size: 0.55em; font-weight: 700; letter-spacing: 0.06em;
-    color: var(--label); text-transform: uppercase;
-  }
+  .slot .lab { font-size: 0.55em; font-weight: 700; letter-spacing: 0.06em; color: var(--label); text-transform: uppercase; }
   #bar.nolabels .lab { display: none; }
-  #bar.nolabels .val { font-size: 1em; }
-  .slot .val {
-    font-size: 1em; font-weight: 700; color: var(--value);
-    max-width: 13em; overflow: hidden; text-overflow: ellipsis;
-  }
-  #wrap.scroll .val { max-width: none; }   /* full names while scrolling */
+  .slot .val { font-size: 1em; font-weight: 700; color: var(--value); max-width: 13em; overflow: hidden; text-overflow: ellipsis; }
+  #wrap.scroll .val { max-width: none; }
   .slot .val .amt { color: var(--accent); font-size: 0.75em; margin-left: 0.3em; }
   .slot .val.empty { color: #6f8560; font-weight: 600; }
-  @keyframes bump {
-    0% { transform: scale(1); }
-    30% { transform: scale(1.14); color: var(--accent); }
-    100% { transform: scale(1); }
-  }
+  @keyframes bump { 0% { transform: scale(1); } 30% { transform: scale(1.14); color: var(--accent); } 100% { transform: scale(1); } }
   .slot.bump .val { animation: bump 0.6s ease; }
   .slot.bump { box-shadow: inset 0 0 0 999px rgba(124, 196, 74, 0.10); }
+
+  /* ---- Editor (only with ?edit) ---- */
+  #editor {
+    position: fixed; top: 12px; left: 12px; z-index: 50;
+    width: 300px; max-height: calc(100vh - 24px); overflow: auto;
+    background: rgba(8, 16, 12, 0.96); color: #e8e0c4;
+    border: 1px solid #4a7c3a; border-radius: 10px; padding: 12px 14px;
+    font-size: 13px; box-shadow: 0 8px 26px rgba(0,0,0,0.6);
+  }
+  #editor h3 { margin: 0 0 2px; color: #7cc44a; font-size: 13px; letter-spacing: 0.04em; }
+  #editor .hint { color: #7a9070; font-size: 11px; margin-bottom: 10px; }
+  #editor .grp { margin-bottom: 11px; }
+  #editor .grp > label.h { display: block; color: #a8c488; font-weight: 700; font-size: 11px; text-transform: uppercase; margin-bottom: 5px; }
+  #editor .kinds label { display: inline-flex; align-items: center; gap: 4px; margin: 0 10px 5px 0; cursor: pointer; }
+  #editor .row { display: flex; align-items: center; gap: 8px; }
+  #editor .row .rv { margin-left: auto; color: #a8c488; min-width: 42px; text-align: right; }
+  #editor input[type=range] { flex: 1; accent-color: #7cc44a; }
+  #editor select, #editor input[type=color] { background: #14241c; color: #e8e0c4; border: 1px solid #4a7c3a; border-radius: 4px; padding: 3px 5px; }
+  #editor input[type=color] { padding: 1px; width: 40px; height: 26px; }
+  #editor .saved { color: #7cc44a; font-size: 11px; height: 14px; }
 </style>
 </head>
 <body>
@@ -70,6 +73,8 @@
 <script>
 (function () {
   "use strict";
+  var EDIT = new URLSearchParams(location.search).has("edit");
+
   var DEF = {
     sub:    { icon: "⭐", label: "Newest Sub" },
     gift:   { icon: "🎁", label: "Latest Gift" },
@@ -78,130 +83,232 @@
     redeem: { icon: "✨", label: "Last Redeem" },
     clip:   { icon: "🎬", label: "Last Clip" }
   };
-  var params = new URLSearchParams(location.search);
+  var KIND_ORDER = ["sub", "follow", "gift", "raid", "redeem", "clip"];
 
-  var kinds = (params.get("kinds") || "sub,follow,gift")
-    .split(",").map(function (k) { return k.trim().toLowerCase(); })
-    .filter(function (k) { return DEF[k]; });
-  if (!kinds.length) kinds = ["sub", "follow", "gift"];
+  var DEFAULT_CONFIG = { kinds: ["sub", "follow", "gift"], size: 20, scroll: "off", speed: 60, pos: "bottom", bg: 86, accent: "#7cc44a", labels: true };
+  var config = Object.assign({}, DEFAULT_CONFIG);
+  var latest = {};   // kind -> latest item (independent of config)
 
-  // ?size = base text size in px (default 20). Scales the whole bar (children use em).
-  var size = parseInt(params.get("size"), 10);
-  if (!(size >= 8 && size <= 120)) size = 20;
-
-  // ?scroll = off | rtl (right→left) | ltr (left→right).  ?speed = pixels/second.
-  var scroll = (params.get("scroll") || "off").toLowerCase();
-  if (scroll === "left" || scroll === "leftward") scroll = "rtl";
-  if (scroll === "right" || scroll === "rightward") scroll = "ltr";
-  if (scroll !== "rtl" && scroll !== "ltr") scroll = "off";
-  var speed = parseInt(params.get("speed"), 10);
-  if (!(speed >= 5 && speed <= 1000)) speed = 60;
-
-  // ?pos = bottom | top   ?bg = 0..100 (bar opacity)   ?accent = hex   ?labels = 0|1
-  var pos = (params.get("pos") || "bottom").toLowerCase();
-  var bg = parseInt(params.get("bg"), 10);
-  if (!(bg >= 0 && bg <= 100)) bg = 86;
-  var accent = params.get("accent");
-  if (accent && /^#?[0-9a-fA-F]{6}$/.test(accent)) {
-    if (accent[0] !== "#") accent = "#" + accent;
-    document.documentElement.style.setProperty("--accent", accent);
-    document.documentElement.style.setProperty("--label", accent);
-    document.documentElement.style.setProperty("--border", accent);
+  // Optional URL overrides (power users). Ignored in edit mode so the editor shows saved state.
+  function urlOverrides() {
+    var p = new URLSearchParams(location.search), o = {};
+    if (p.get("kinds")) { var ks = p.get("kinds").split(",").map(function (k) { return k.trim().toLowerCase(); }).filter(function (k) { return DEF[k]; }); if (ks.length) o.kinds = ks; }
+    var size = parseInt(p.get("size"), 10); if (size >= 8 && size <= 120) o.size = size;
+    var sc = (p.get("scroll") || "").toLowerCase(); if (sc === "left") sc = "rtl"; if (sc === "right") sc = "ltr"; if (sc === "rtl" || sc === "ltr" || sc === "off") o.scroll = sc;
+    var sp = parseInt(p.get("speed"), 10); if (sp >= 5 && sp <= 1000) o.speed = sp;
+    var pos = (p.get("pos") || "").toLowerCase(); if (pos === "top" || pos === "bottom") o.pos = pos;
+    var bg = parseInt(p.get("bg"), 10); if (bg >= 0 && bg <= 100) o.bg = bg;
+    var ac = p.get("accent"); if (ac && /^#?[0-9a-fA-F]{6}$/.test(ac)) o.accent = (ac[0] === "#" ? ac : "#" + ac);
+    if (p.get("labels") === "0") o.labels = false; if (p.get("labels") === "1") o.labels = true;
+    return o;
   }
-  var showLabels = params.get("labels") !== "0";
+  var OVERRIDES = urlOverrides();
+
+  function coerce(c) {
+    var out = Object.assign({}, DEFAULT_CONFIG, c || {});
+    out.kinds = Array.isArray(out.kinds) ? out.kinds.filter(function (k) { return DEF[k]; }) : DEFAULT_CONFIG.kinds.slice();
+    if (!out.kinds.length) out.kinds = ["sub"];
+    out.size = Math.min(120, Math.max(8, out.size | 0));
+    out.speed = Math.min(1000, Math.max(5, out.speed | 0));
+    out.bg = Math.min(100, Math.max(0, out.bg | 0));
+    if (out.scroll !== "rtl" && out.scroll !== "ltr") out.scroll = "off";
+    if (out.pos !== "top") out.pos = "bottom";
+    if (!/^#[0-9a-fA-F]{6}$/.test(out.accent)) out.accent = "#7cc44a";
+    out.labels = out.labels !== false;
+    return out;
+  }
 
   var wrap = document.getElementById("wrap");
   var bar = document.getElementById("bar");
-  bar.style.fontSize = size + "px";
-  if (pos === "top") wrap.classList.add("top");
-  if (!showLabels) bar.classList.add("nolabels");
-  bar.style.background = "rgba(10, 20, 16, " + (bg / 100) + ")";
-
   var slots = {};
-  kinds.forEach(function (kind) {
-    var d = DEF[kind];
-    var slot = document.createElement("div");
-    slot.className = "slot";
-    var ic = document.createElement("span"); ic.className = "ic"; ic.textContent = d.icon;
-    var txt = document.createElement("span"); txt.className = "txt";
-    var lab = document.createElement("span"); lab.className = "lab"; lab.textContent = d.label;
-    var val = document.createElement("span"); val.className = "val empty"; val.textContent = "—";
-    txt.appendChild(lab); txt.appendChild(val);
-    slot.appendChild(ic); slot.appendChild(txt);
-    bar.appendChild(slot);
-    slots[kind] = { el: slot, val: val };
-  });
+  var raf = 0, mx = null, mlast = null;
 
-  function setSlot(kind, item, animate) {
-    var s = slots[kind];
-    if (!s || !item) return;
-    var name = (item.user || "").toString().trim() || "Someone";
-    s.val.classList.remove("empty");
-    if (kind === "gift" && item.amount > 0) {
-      s.val.innerHTML = "";
-      s.val.appendChild(document.createTextNode(name));
-      var amt = document.createElement("span"); amt.className = "amt";
-      amt.textContent = item.amount + " 🪙";
-      s.val.appendChild(amt);
-    } else {
-      s.val.textContent = name;
-    }
-    if (animate && scroll === "off") {   // the bump animation fights the marquee transform
-      s.el.classList.remove("bump");
-      void s.el.offsetWidth;
-      s.el.classList.add("bump");
-    }
-  }
-
-  // ---- Marquee (optional) ----
-  if (scroll !== "off") {
-    wrap.classList.add("scroll");
-    var x = null, last = null, raf = 0;
+  function stopMarquee() { if (raf) { cancelAnimationFrame(raf); raf = 0; } mx = null; mlast = null; bar.style.transform = ""; }
+  function startMarquee(dir, speed) {
+    stopMarquee();
     function frame(t) {
       var wrapW = wrap.offsetWidth, barW = bar.offsetWidth;
-      if (x === null) x = (scroll === "rtl") ? wrapW : -barW;
-      if (last === null) last = t;
-      var dt = Math.min(0.05, (t - last) / 1000); last = t;
-      if (scroll === "rtl") { x -= speed * dt; if (x < -barW) x = wrapW; }
-      else { x += speed * dt; if (x > wrapW) x = -barW; }
-      bar.style.transform = "translateX(" + Math.round(x) + "px)";
+      if (mx === null) mx = (dir === "rtl") ? wrapW : -barW;
+      if (mlast === null) mlast = t;
+      var dt = Math.min(0.05, (t - mlast) / 1000); mlast = t;
+      if (dir === "rtl") { mx -= speed * dt; if (mx < -barW) mx = wrapW; }
+      else { mx += speed * dt; if (mx > wrapW) mx = -barW; }
+      bar.style.transform = "translateX(" + Math.round(mx) + "px)";
       raf = requestAnimationFrame(frame);
     }
     raf = requestAnimationFrame(frame);
   }
 
+  function setSlot(kind, item, animate) {
+    var s = slots[kind]; if (!s || !item) return;
+    var name = (item.user || "").toString().trim() || "Someone";
+    s.val.classList.remove("empty");
+    if (kind === "gift" && item.amount > 0) {
+      s.val.innerHTML = "";
+      s.val.appendChild(document.createTextNode(name));
+      var amt = document.createElement("span"); amt.className = "amt"; amt.textContent = item.amount + " 🪙";
+      s.val.appendChild(amt);
+    } else { s.val.textContent = name; }
+    if (animate && config.scroll === "off") { s.el.classList.remove("bump"); void s.el.offsetWidth; s.el.classList.add("bump"); }
+  }
+
+  function render() {
+    var c = config;
+    // styles
+    document.documentElement.style.setProperty("--accent", c.accent);
+    document.documentElement.style.setProperty("--label", c.accent);
+    document.documentElement.style.setProperty("--border", c.accent);
+    bar.style.fontSize = c.size + "px";
+    bar.style.background = "rgba(10, 20, 16, " + (c.bg / 100) + ")";
+    bar.classList.toggle("nolabels", !c.labels);
+    wrap.classList.toggle("top", c.pos === "top");
+    // slots
+    while (bar.firstChild) bar.removeChild(bar.firstChild);
+    slots = {};
+    c.kinds.forEach(function (kind) {
+      var d = DEF[kind]; if (!d) return;
+      var slot = document.createElement("div"); slot.className = "slot";
+      var ic = document.createElement("span"); ic.className = "ic"; ic.textContent = d.icon;
+      var txt = document.createElement("span"); txt.className = "txt";
+      var lab = document.createElement("span"); lab.className = "lab"; lab.textContent = d.label;
+      var val = document.createElement("span"); val.className = "val empty"; val.textContent = "—";
+      txt.appendChild(lab); txt.appendChild(val);
+      slot.appendChild(ic); slot.appendChild(txt);
+      bar.appendChild(slot);
+      slots[kind] = { el: slot, val: val };
+      if (latest[kind]) setSlot(kind, latest[kind], false);
+    });
+    // marquee
+    wrap.classList.toggle("scroll", c.scroll !== "off");
+    if (c.scroll !== "off") startMarquee(c.scroll, c.speed); else stopMarquee();
+  }
+
+  // In edit mode the editor shows the true saved config; in OBS, URL params (if any) win.
+  function applyConfig(c) {
+    config = EDIT ? coerce(c) : coerce(Object.assign({}, c, OVERRIDES));
+    render();
+    if (EDIT) syncControls();
+  }
+
+  // ---- Editor ----
+  var editorEls = {};
+  function buildEditor() {
+    var e = document.createElement("div"); e.id = "editor";
+    e.innerHTML =
+      '<h3>🎛 Ticker editor</h3>' +
+      '<div class="hint">Changes apply live and save automatically. Close this tab in OBS — use the plain URL there.</div>' +
+      '<div class="grp"><label class="h">Show</label><div class="kinds" id="edKinds"></div></div>' +
+      '<div class="grp"><label class="h">Text size</label><div class="row"><input type="range" id="edSize" min="12" max="60"><span class="rv" id="edSizeV"></span></div></div>' +
+      '<div class="grp"><label class="h">Scroll</label><div class="row"><select id="edScroll"><option value="off">Off (static)</option><option value="rtl">Right → Left</option><option value="ltr">Left → Right</option></select></div></div>' +
+      '<div class="grp"><label class="h">Scroll speed</label><div class="row"><input type="range" id="edSpeed" min="10" max="300"><span class="rv" id="edSpeedV"></span></div></div>' +
+      '<div class="grp"><label class="h">Position</label><div class="row"><select id="edPos"><option value="bottom">Bottom</option><option value="top">Top</option></select></div></div>' +
+      '<div class="grp"><label class="h">Accent colour</label><div class="row"><input type="color" id="edAccent"><span class="rv" id="edAccentV"></span></div></div>' +
+      '<div class="grp"><label class="h">Background</label><div class="row"><input type="range" id="edBg" min="0" max="100"><span class="rv" id="edBgV"></span></div></div>' +
+      '<div class="grp"><label><input type="checkbox" id="edLabels"> Show labels</label></div>' +
+      '<div class="saved" id="edSaved"></div>';
+    document.body.appendChild(e);
+
+    var kinds = document.getElementById("edKinds");
+    KIND_ORDER.forEach(function (k) {
+      var lab = document.createElement("label");
+      var cb = document.createElement("input"); cb.type = "checkbox"; cb.dataset.kind = k;
+      cb.addEventListener("change", onChange);
+      lab.appendChild(cb); lab.appendChild(document.createTextNode(" " + DEF[k].icon + " " + DEF[k].label.replace(/^(Newest|Latest|Last) /, "")));
+      kinds.appendChild(lab);
+      editorEls["k_" + k] = cb;
+    });
+    editorEls.size = bind("edSize", onChange);
+    editorEls.sizeV = document.getElementById("edSizeV");
+    editorEls.scroll = bind("edScroll", onChange);
+    editorEls.speed = bind("edSpeed", onChange);
+    editorEls.speedV = document.getElementById("edSpeedV");
+    editorEls.pos = bind("edPos", onChange);
+    editorEls.accent = bind("edAccent", onChange);
+    editorEls.accentV = document.getElementById("edAccentV");
+    editorEls.bg = bind("edBg", onChange);
+    editorEls.bgV = document.getElementById("edBgV");
+    editorEls.labels = bind("edLabels", onChange);
+    editorEls.saved = document.getElementById("edSaved");
+    syncControls();
+  }
+  function bind(id, fn) { var el = document.getElementById(id); el.addEventListener("input", fn); el.addEventListener("change", fn); return el; }
+
+  function syncControls() {
+    if (!editorEls.size) return;
+    KIND_ORDER.forEach(function (k) { editorEls["k_" + k].checked = config.kinds.indexOf(k) >= 0; });
+    editorEls.size.value = config.size; editorEls.sizeV.textContent = config.size + "px";
+    editorEls.scroll.value = config.scroll;
+    editorEls.speed.value = config.speed; editorEls.speedV.textContent = config.speed + "/s";
+    editorEls.pos.value = config.pos;
+    editorEls.accent.value = config.accent; editorEls.accentV.textContent = config.accent;
+    editorEls.bg.value = config.bg; editorEls.bgV.textContent = config.bg + "%";
+    editorEls.labels.checked = config.labels;
+  }
+
+  var saveTimer = null;
+  function onChange() {
+    var kinds = KIND_ORDER.filter(function (k) { return editorEls["k_" + k].checked; });
+    if (!kinds.length) { kinds = ["sub"]; editorEls.k_sub.checked = true; }
+    config = coerce({
+      kinds: kinds,
+      size: parseInt(editorEls.size.value, 10),
+      scroll: editorEls.scroll.value,
+      speed: parseInt(editorEls.speed.value, 10),
+      pos: editorEls.pos.value,
+      accent: editorEls.accent.value,
+      bg: parseInt(editorEls.bg.value, 10),
+      labels: editorEls.labels.checked
+    });
+    editorEls.sizeV.textContent = config.size + "px";
+    editorEls.speedV.textContent = config.speed + "/s";
+    editorEls.bgV.textContent = config.bg + "%";
+    editorEls.accentV.textContent = config.accent;
+    render();
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () {
+      saveTimer = null;
+      send({ type: "saveTicker", ticker: config });
+      editorEls.saved.textContent = "✓ saved";
+      setTimeout(function () { if (editorEls.saved) editorEls.saved.textContent = ""; }, 1200);
+    }, 350);
+  }
+
+  // ---- WebSocket ----
   function onFrame(raw) {
-    var d;
-    try { d = JSON.parse(raw); } catch (e) { return; }
+    var d; try { d = JSON.parse(raw); } catch (e) { return; }
     if (!d || typeof d.type !== "string") return;
     if (d.type === "snapshot") {
-      var latest = d.activityLatest || {};
-      if ((!latest || !Object.keys(latest).length) && Array.isArray(d.activity)) {
-        latest = {};
-        for (var i = 0; i < d.activity.length; i++) { var it = d.activity[i]; if (it && it.kind) latest[it.kind] = it; }
-      }
-      kinds.forEach(function (k) { if (latest[k]) setSlot(k, latest[k], false); });
+      var l = d.activityLatest || {};
+      if ((!l || !Object.keys(l).length) && Array.isArray(d.activity)) { l = {}; for (var i = 0; i < d.activity.length; i++) { var it = d.activity[i]; if (it && it.kind) l[it.kind] = it; } }
+      latest = l || {};
+      applyConfig(d.ticker || {});
+    } else if (d.type === "tickerConfig") {
+      if (!EDIT) applyConfig(d.ticker || {});
+      else { config = coerce(d.ticker || {}); render(); syncControls(); }   // reflect edits made elsewhere
     } else if (d.type === "activity" && d.item && d.item.kind) {
+      latest[d.item.kind] = d.item;
       setSlot(d.item.kind, d.item, true);
     }
   }
 
-  // ---- WebSocket (same server as the other overlays) ----
+  var ws = null, retry = null;
   function wsUrl() {
-    if (location.protocol === "http:" || location.protocol === "https:") {
-      return (location.protocol === "https:" ? "wss:" : "ws:") + "//" + location.host + "/ws";
-    }
+    if (location.protocol === "http:" || location.protocol === "https:") return (location.protocol === "https:" ? "wss:" : "ws:") + "//" + location.host + "/ws";
     return "ws://localhost:3620/ws";
   }
-  var ws = null, retry = null;
   function schedule() { if (!retry) retry = setTimeout(function () { retry = null; connect(); }, 1500); }
+  function send(obj) { try { if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj)); } catch (e) {} }
   function connect() {
     try { ws = new WebSocket(wsUrl()); } catch (e) { schedule(); return; }
-    ws.onopen = function () { try { ws.send(JSON.stringify({ type: "hello", client: "ticker" })); } catch (e) {} };
+    ws.onopen = function () { send({ type: "hello", client: "ticker" }); };
     ws.onmessage = function (ev) { onFrame(ev.data); };
     ws.onclose = function () { schedule(); };
     ws.onerror = function () { try { ws.close(); } catch (e) {} };
   }
+
+  // init
+  applyConfig({});     // defaults + any URL overrides until the server snapshot arrives
+  if (EDIT) buildEditor();
   connect();
 })();
 </script>

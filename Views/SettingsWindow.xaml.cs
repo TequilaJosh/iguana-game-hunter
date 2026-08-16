@@ -79,7 +79,6 @@ namespace GameTracker.Views
             // Overlay
             PortBox.Text = OverlayServer.Port.ToString();
             ChatLinesBox.Text = SettingsService.LoadOverlayChatLines().ToString();
-            LoadTickerControls();
             UpdateOverlayStatus();
 
             _ready = true;
@@ -381,7 +380,7 @@ namespace GameTracker.Views
             Section("Gift alerts & the activity feed");
             Body("Gifts from your streams (TikTok Roses, etc.) can trigger tiered sound alerts, and a live Activity Feed can show gifts, follows, subs and redeems right on your overlay.");
             Step(1, "Settings → Chat → 🎁 Gift Alerts: add tiers by coin value. When a gift arrives, the highest tier its value reaches plays its sound (and optional confetti/fireworks/shake). Example: a small gift plays a chime, a 1000-coin gift sets off fireworks.");
-            Step(2, "Two ways to show it. (a) Activity Feed — a live scrolling list: open the overlay with ?edit, tick \"Activity Feed\", drag it where you like; new gifts/follows/subs/raids/redeems slide in. (b) Activity Ticker — a separate banner (Settings → Overlay → \"Copy activity ticker URL\", /ticker) that stays static and shows the latest of each (Newest Sub, Latest Gift, Newest Follower), swapping the name in place when a new one happens. Add the ticker as its own thin OBS Browser source; pick slots with ?kinds=sub,gift,follow.");
+            Step(2, "Two ways to show it. (a) Activity Feed — a live scrolling list: open the overlay with ?edit, tick \"Activity Feed\", drag it where you like; new gifts/follows/subs/raids/redeems slide in. (b) Activity Ticker — a separate banner (Settings → Overlay → \"Copy ticker URL\") that shows the latest of each and swaps the name in place. Add the ticker URL as its own OBS Browser source, then click \"Copy editor URL\", open it in a browser, and design the ticker live — pick slots with checkboxes, set size, scroll direction & speed, position, colour and opacity. Changes save and update OBS instantly, exactly like the main overlay's edit mode.");
             Step(3, "Gifts, follows and subs are also tallied in Stream Stats and included in the recap.");
             Step(4, "Share the recap to Discord: open Stream Stats → \"📤 Share to Discord\". It posts through the companion bot (into your recap/tavern/clips channel) or a webhook if that's all you've set. Admins can pick the recap channel in Discord with !gh setup recapchannel.");
             Step(5, "Gift/follow/sub detection reads Social Stream Ninja's event data; if a gift ever doesn't trigger, a diagnostic log at %AppData%\\LazerGuanas Game Hunter\\events-debug.log captures the raw event so mappings can be tuned.");
@@ -663,65 +662,17 @@ namespace GameTracker.Views
             catch { /* clipboard can be momentarily locked */ }
         }
 
-        // Ticker "kind" checkboxes in display order.
-        private (System.Windows.Controls.CheckBox box, string kind)[] TickerKindBoxes() => new[]
-        {
-            (TkSub, "sub"), (TkFollow, "follow"), (TkGift, "gift"),
-            (TkRaid, "raid"), (TkRedeem, "redeem"), (TkClip, "clip"),
-        };
-
-        private void LoadTickerControls()
-        {
-            var t = SettingsService.LoadTicker();
-            foreach (var (box, kind) in TickerKindBoxes())
-                box.IsChecked = t.Kinds != null && t.Kinds.Contains(kind);
-            TkSize.Value = System.Math.Clamp(t.Size, (int)TkSize.Minimum, (int)TkSize.Maximum);
-            TkSpeed.Value = System.Math.Clamp(t.Speed, (int)TkSpeed.Minimum, (int)TkSpeed.Maximum);
-            TkBg.Value = System.Math.Clamp(t.BgOpacity, 0, 100);
-            TkScroll.SelectedValue = string.IsNullOrEmpty(t.Scroll) ? "off" : t.Scroll;
-            if (TkScroll.SelectedValue == null) TkScroll.SelectedIndex = 0;
-            TkPos.SelectedValue = t.Position == "top" ? "top" : "bottom";
-            if (TkPos.SelectedValue == null) TkPos.SelectedIndex = 0;
-            TkAccent.SelectedValue = (t.Accent ?? "#7cc44a").TrimStart('#').ToLowerInvariant();
-            if (TkAccent.SelectedValue == null) TkAccent.SelectedIndex = 0;
-            TkLabels.IsChecked = t.ShowLabels;
-        }
-
-        private TickerSettings BuildTickerSettings()
-        {
-            var kinds = new System.Collections.Generic.List<string>();
-            foreach (var (box, kind) in TickerKindBoxes())
-                if (box.IsChecked == true) kinds.Add(kind);
-            if (kinds.Count == 0) kinds.Add("sub");   // never empty
-            return new TickerSettings
-            {
-                Kinds = kinds,
-                Size = (int)TkSize.Value,
-                Speed = (int)TkSpeed.Value,
-                BgOpacity = (int)TkBg.Value,
-                Scroll = (TkScroll.SelectedValue as string) ?? "off",
-                Position = (TkPos.SelectedValue as string) ?? "bottom",
-                Accent = "#" + ((TkAccent.SelectedValue as string) ?? "7cc44a"),
-                ShowLabels = TkLabels.IsChecked == true,
-            };
-        }
-
         private void CopyTickerUrl_Click(object sender, RoutedEventArgs e)
         {
-            var t = BuildTickerSettings();
-            SettingsService.SaveTicker(t);   // remember the choices
+            var url = OverlayUrl + "ticker";
+            try { Clipboard.SetText(url); OverlayStatus.Text = "Copied: " + url + " — add as its own OBS Browser source (a thin banner)."; }
+            catch { /* clipboard can be momentarily locked */ }
+        }
 
-            var q = "kinds=" + string.Join(",", t.Kinds) +
-                    "&size=" + t.Size +
-                    "&pos=" + t.Position +
-                    "&bg=" + t.BgOpacity +
-                    "&accent=" + t.Accent.TrimStart('#') +
-                    "&labels=" + (t.ShowLabels ? "1" : "0");
-            if (t.Scroll == "rtl" || t.Scroll == "ltr")
-                q += "&scroll=" + t.Scroll + "&speed=" + t.Speed;
-
-            var url = OverlayUrl + "ticker?" + q;
-            try { Clipboard.SetText(url); OverlayStatus.Text = "Copied ticker URL — paste it into an OBS Browser source. Re-copy after any change."; }
+        private void CopyTickerEditUrl_Click(object sender, RoutedEventArgs e)
+        {
+            var url = OverlayUrl + "ticker?edit";
+            try { Clipboard.SetText(url); OverlayStatus.Text = "Copied editor URL — open it in a browser to design the ticker; changes save & update OBS live."; }
             catch { /* clipboard can be momentarily locked */ }
         }
 

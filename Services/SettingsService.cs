@@ -43,7 +43,7 @@ namespace GameTracker.Services
             public List<StreamGoal> Goals { get; set; } = new();       // overlay goal bars
             public int MigrationRev { get; set; }                      // one-time defaults migrations applied
             public MorphSettings Morph { get; set; } = new();          // live mic voice morph
-            public TickerSettings Ticker { get; set; } = new();        // activity ticker banner overlay
+            public string? OverlayTicker { get; set; }                 // JSON: ticker banner config (null = default)
             public List<WheelPreset> WheelPresets { get; set; } = new(); // reusable named challenge lists
             public List<WheelPreset> WheelGamePresets { get; set; } = new(); // named game-picker sets (by title)
         }
@@ -78,12 +78,13 @@ namespace GameTracker.Services
             catch { /* best-effort */ }
         }
 
-        public static TickerSettings LoadTicker() => LoadAll().Ticker ?? new TickerSettings();
+        // Ticker banner config as raw JSON (edited live in /ticker?edit), mirroring the layout.
+        public static string? LoadOverlayTicker() => LoadAll().OverlayTicker;
 
-        public static void SaveTicker(TickerSettings ticker)
+        public static void SaveOverlayTicker(string? tickerJson)
         {
             var s = LoadAll();
-            s.Ticker = ticker;
+            s.OverlayTicker = tickerJson;
             SaveAll(s);
         }
 

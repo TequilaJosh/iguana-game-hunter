@@ -73,6 +73,7 @@ namespace GameTracker.Services
         private static object? _poll;     // active poll (wire form; null = none)
         private static readonly List<object> _activity = new(); // live activity feed (gifts/follows/subs…)
         private static readonly Dictionary<string, object> _latestByKind = new(); // newest item per kind (ticker)
+        private static JToken? _ticker;   // ticker banner config (edited live in /ticker?edit)
         private const int ActivityMax = 25;
         private static string? _panelHtml; // PanelOverlay.html template (index injected per request)
 
@@ -100,6 +101,7 @@ namespace GameTracker.Services
                 _html = LoadOverlayHtml();          // injects the live port for file:// use
                 _layout = ParseLayout(SettingsService.LoadOverlayLayout());
                 _presets = ParseLayout(SettingsService.LoadOverlayPresets());
+                _ticker = ParseLayout(SettingsService.LoadOverlayTicker());   // ticker banner config
                 var f = SettingsService.LoadChatFeatures();
                 _style = new { mode = f.ChatStyle, colors = f.BoxColors.ToArray() };
                 _panels = PanelsToWire(SettingsService.LoadTextPanels());
@@ -650,6 +652,7 @@ namespace GameTracker.Services
                 panels = _panels, morph = MorphSnapshot(), goals = _goals, poll = _poll,
                 activity = _activity.ToArray(),
                 activityLatest = new Dictionary<string, object>(_latestByKind),
+                ticker = _ticker,
             };
             await SendText(client, JsonConvert.SerializeObject(snapshot), ct);
 
@@ -723,6 +726,19 @@ namespace GameTracker.Services
                         SettingsService.SaveOverlayLayout(layout.ToString(Formatting.None));
                         lock (Gate) _layout = layout;
                         Broadcast(new { type = "layout", layout });
+                    }
+                }
+
+                // Ticker editor (/ticker?edit) saved a config -> persist and push live to every
+                // ticker source so the OBS banner updates immediately.
+                if (msg.Contains("\"saveTicker\""))
+                {
+                    var o = JObject.Parse(msg);
+                    if ((string?)o["type"] == "saveTicker" && o["ticker"] is JToken tk)
+                    {
+                        SettingsService.SaveOverlayTicker(tk.ToString(Formatting.None));
+                        lock (Gate) _ticker = tk;
+                        Broadcast(new { type = "tickerConfig", ticker = tk });
                     }
                 }
 

@@ -15,14 +15,24 @@ export function startIngestServer(client) {
 
   app.get('/health', (_req, res) => res.json({ ok: true, uptime: Math.round(process.uptime()) }));
 
-  // Connection test for Game Hunter's "Test bot" button: validates the token and
-  // reports whether a clips channel is set — without posting anything to Discord.
-  app.post('/verify', (req, res) => {
+  // Connection test for Game Hunter's "Test bot" button: validates the token, and
+  // (if a clips channel is set) posts a short confirmation there so it's visible.
+  app.post('/verify', async (req, res) => {
     const header = req.get('authorization') || '';
     const token = header.replace(/^Bearer\s+/i, '') || req.get('x-ingest-token') || '';
     const guildId = findGuildByToken(token);
     if (!guildId) return res.status(401).json({ ok: false, error: 'unknown ingest token' });
-    res.json({ ok: true, clipChannel: !!getGuild(guildId).clipChannelId });
+
+    const cfg = getGuild(guildId);
+    let posted = false;
+    if (cfg.clipChannelId) {
+      const ch = await client.channels.fetch(cfg.clipChannelId).catch(() => null);
+      if (ch && ch.isTextBased()) {
+        await ch.send('🔌 **Connection test** — Game Hunter is linked to this channel ✅').catch(() => {});
+        posted = true;
+      }
+    }
+    res.json({ ok: true, clipChannel: !!cfg.clipChannelId, posted });
   });
 
   app.post('/clip', async (req, res) => {

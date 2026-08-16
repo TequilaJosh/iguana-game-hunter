@@ -16,7 +16,8 @@ import { getRaid, joinRaid, raidAction, startRaid, raidEmbed } from './raids.js'
 import { gather, getWorker, workerXpToNext } from './gather.js';
 import { PROFESSIONS, getProf, profXpToNext } from './professions.js';
 import { craft, listRecipes, recipeName, inputsLine } from './recipes.js';
-import { hasMats } from './invutil.js';
+import { hasMats, countMat } from './invutil.js';
+import { enchantList, enchantCap, nextCost, doEnchant, REAGENT_NAME } from './enchant.js';
 import { getGuild } from '../guildStore.js';
 
 const PREFIX = '!';
@@ -692,6 +693,48 @@ function cmdRecipes(msg, args) {
 const cmdCraft = (msg, args) => cmdMake(msg, args, 'crafter', 'craft');
 const cmdBrew = (msg, args) => cmdMake(msg, args, 'alchemist', 'brew');
 
+// ── enchanting (Enchanter) ───────────────────────────────────────────────────
+function cmdEnchant(msg, args) {
+  const char = getPlayer(msg.author.id);
+  if (!char) return msg.reply('No hero yet — `tt create` first.');
+  const list = enchantList(char);
+  if (!list.length) return msg.reply('No gear to enchant yet — craft or find some first.');
+  const cap = enchantCap(char);
+
+  if (!args.length || !/^\d+$/.test(args[0])) {
+    const lines = list.map((e, i) => {
+      const lvl = e.item.enchant || 0;
+      const c = nextCost(e.item);
+      const where = e.where === 'equipped' ? '⚔️' : '🎒';
+      const cost = lvl >= cap ? '**MAX**' : `${c.gold} 🪙 + ${c.quartz} ${REAGENT_NAME}`;
+      return `\`${i + 1}\` ${where} ${RARITY_EMOJI[e.item.rarity] || '•'} ${e.item.name} — next: ${cost}`;
+    });
+    return msg.reply(
+      `✨ **Enchanting** (Enchanter Lv ${getProf(char, 'enchanter').level}, cap +${cap}) — upgrade with \`tt enchant <#>\`\n` +
+      lines.join('\n') +
+      `\n\nEach enchant boosts the piece's stats. Reagent: **${REAGENT_NAME}** (mine it). You have ${countMat(char, 'quartz')}.`
+    );
+  }
+
+  const entry = list[parseInt(args[0], 10) - 1];
+  if (!entry) return msg.reply(`No item #${args[0]}. See \`tt enchant\`.`);
+
+  const res = doEnchant(char, entry);
+  if (!res.ok) {
+    if (res.reason === 'maxed') return msg.reply(`**${entry.item.name}** is at your cap (+${res.cap}). Level up Enchanting to raise it.`);
+    if (res.reason === 'gold') return msg.reply(`Not enough gold — that enchant costs ${res.cost.gold} 🪙 (you have ${char.gold || 0}).`);
+    return msg.reply(`Not enough ${REAGENT_NAME} — need ${res.cost.quartz} (you have ${countMat(char, 'quartz')}). Mine more with \`tt mine\`.`);
+  }
+  savePlayer(msg.author.id, char);
+  const stats = [];
+  if (res.item.power != null) stats.push(`PWR ${res.item.power}`);
+  if (res.item.defense != null) stats.push(`DEF ${res.item.defense}`);
+  if (res.item.resist != null) stats.push(`RES ${res.item.resist}`);
+  let out = `✨ Enchanted **${res.item.name}**! ${stats.join(' · ')}. +${res.xp} Enchanter XP (Lv ${res.profLevel}).`;
+  if (res.levelsGained) out += ' 🎉 **Enchanter level up!**';
+  return msg.reply(out);
+}
+
 function cmdLeaderboard(msg) {
   const all = Object.values(allPlayers()).filter(Boolean);
   if (!all.length) return msg.reply('No heroes yet. Be the first with `tt create`!');
@@ -711,7 +754,7 @@ const COMMANDS = {
   chop: (m, a) => cmdGather(m, a, 'chop'), mine: (m, a) => cmdGather(m, a, 'mine'),
   fish: (m, a) => cmdGather(m, a, 'fish'), forage: (m, a) => cmdGather(m, a, 'forage'),
   dig: (m, a) => cmdGather(m, a, 'dig'), scavenge: (m, a) => cmdGather(m, a, 'scavenge'),
-  recipes: cmdRecipes, craft: cmdCraft, brew: cmdBrew,
+  recipes: cmdRecipes, craft: cmdCraft, brew: cmdBrew, enchant: cmdEnchant,
   attack: cmdAttack, a: cmdAttack,
   skill: cmdSkill, cast: cmdSkill,
   use: cmdUse, potion: cmdUse,

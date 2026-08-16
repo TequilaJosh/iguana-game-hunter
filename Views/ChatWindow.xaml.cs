@@ -464,6 +464,13 @@ namespace GameTracker.Views
             if (text.Length == 0) return;
             if (_ttsSettings.SkipCommands && text.StartsWith("!", StringComparison.Ordinal)) return;
 
+            // Tavern Tales: never read game commands or the bot's echoed replies aloud.
+            if (_features.RpgEnabled)
+            {
+                if (IsGameCommand(text.Split(' ')[0])) return;
+                if (_recentGameReplies.Contains(text)) return;
+            }
+
             // Ignore rules: known bots, muted users, muted keywords, redeem announcements.
             if (KnownBots.Contains((m.User ?? string.Empty).Trim())) return;
             if (_ttsSettings.IgnoreUsers.Any(u =>
@@ -708,6 +715,17 @@ namespace GameTracker.Views
 
         private static bool IsGameCommand(string cmd) => GameCommands.Contains(cmd.Trim());
 
+        // Recently-sent game replies — so when SSN echoes them back into chat, TTS skips them.
+        private readonly HashSet<string> _recentGameReplies = new();
+        private readonly Queue<string> _recentGameOrder = new();
+
+        private void RememberGameReply(string full)
+        {
+            _recentGameReplies.Add(full);
+            _recentGameOrder.Enqueue(full);
+            while (_recentGameOrder.Count > 40) _recentGameReplies.Remove(_recentGameOrder.Dequeue());
+        }
+
         // Send a chat game command to the bot and relay its one-line reply to the chatter.
         private async System.Threading.Tasks.Task ForwardGameCommand(ChatMessage m, string text)
         {
@@ -715,7 +733,11 @@ namespace GameTracker.Views
                 _features.BotIngestUrl, _features.BotIngestToken,
                 string.IsNullOrWhiteSpace(m.Platform) ? "chat" : m.Platform, m.User ?? string.Empty, text);
             if (!string.IsNullOrWhiteSpace(reply))
-                SendChatReply($"@{m.User} {reply}", m.Platform);
+            {
+                var full = $"@{m.User} {reply}";
+                RememberGameReply(full);   // so TTS ignores it when it echoes back
+                SendChatReply(full, m.Platform);
+            }
         }
 
         // Post a clip to Discord (fire-and-forget). Prefers the companion bot's ingest

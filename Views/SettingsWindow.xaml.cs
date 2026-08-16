@@ -383,7 +383,8 @@ namespace GameTracker.Views
             Step(2, "Discord players just start: !create <class> <race> [name], then !adventure. Everyone in the channel sees the fights — great for drawing a crowd.");
             Step(3, "Stream-chat viewers link first: !play <their Discord @username> → the bot DMs them a code → they type !confirm <code> in chat. Now their chat and Discord share the same hero.");
             Step(4, "Play commands: !help (menu) · !char · !skills · !zones · !adventure · in combat !attack / !skill <name> / !use / !flee · !inv · !equip <#> · !shop / !buy / !sell · !rest · !leaderboard.");
-            Step(5, "Tavern Tales chat is auto-ignored by TTS (both commands and the bot's replies), so it won't spam your text-to-speech.");
+            Step(5, "Progression & raids: beat a zone's boss with !boss to unlock the next zone. Raids (a shared boss) are announced every 1–3 hours — viewers !raid join, then it auto-battles and everyone who joins shares the loot (fall in a raid and you revive after, with reduced rewards).");
+            Step(6, "Tavern Tales chat is auto-ignored by TTS (both commands and the bot's replies), so it won't spam your text-to-speech.");
 
             Section("Updates");
             Step(1, "The app checks for updates at launch and installs them silently — windows you had open reopen afterward, and your data is untouched.");

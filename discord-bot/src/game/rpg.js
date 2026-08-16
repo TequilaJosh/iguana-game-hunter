@@ -870,8 +870,10 @@ function cmdAscend(msg, args) {
 function cmdLeaderboard(msg) {
   const all = Object.values(allPlayers()).filter(Boolean);
   if (!all.length) return msg.reply('No heroes yet. Be the first with `tt create`!');
-  const top = all.sort((a, b) => (b.level - a.level) || ((b.xp || 0) - (a.xp || 0))).slice(0, 10);
-  const lines = top.map((c, i) => `${['🥇', '🥈', '🥉'][i] || `\`${i + 1}\``} **${c.name}** — Lv ${c.level} ${CLASSES[c.cls]?.name || ''}`);
+  const top = all.sort((a, b) =>
+    ((b.ascension || 0) - (a.ascension || 0)) || (b.level - a.level) || ((b.xp || 0) - (a.xp || 0))
+  ).slice(0, 10);
+  const lines = top.map((c, i) => `${['🥇', '🥈', '🥉'][i] || `\`${i + 1}\``} **${c.name}** — ${c.ascension ? `⭐${c.ascension} ` : ''}Lv ${c.level} ${CLASSES[c.cls]?.name || ''}`);
   return msg.reply('🏆 **Top heroes**\n' + lines.join('\n'));
 }
 

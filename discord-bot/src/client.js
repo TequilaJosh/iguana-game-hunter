@@ -1,15 +1,21 @@
 import { Client, GatewayIntentBits, Partials } from 'discord.js';
 
 /**
- * Intents kept minimal on purpose:
+ * Intents:
  *  - Guilds         : always required.
  *  - GuildMembers   : welcome messages + auto-role (PRIVILEGED — enable
  *                     "Server Members Intent" in the Developer Portal → Bot).
- * Moderation uses slash commands, so the privileged Message Content intent is NOT needed.
+ *  - GuildMessages + MessageContent : read "!" game commands (Tavern Tales).
+ *                     MessageContent is PRIVILEGED — enable "Message Content Intent".
  */
 export function createClient() {
   return new Client({
-    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
+    intents: [
+      GatewayIntentBits.Guilds,
+      GatewayIntentBits.GuildMembers,
+      GatewayIntentBits.GuildMessages,
+      GatewayIntentBits.MessageContent,
+    ],
     partials: [Partials.Channel],
   });
 }

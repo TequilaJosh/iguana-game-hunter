@@ -1,0 +1,6853 @@
+{
+ "version": 1,
+ "races": [
+  {
+   "id": "human",
+   "name": "Human",
+   "blurb": "Adaptable and quick to learn.",
+   "stat_mods": {
+    "str": 1,
+    "mag": 1,
+    "vit": 1,
+    "spr": 1,
+    "agi": 1,
+    "lck": 1
+   },
+   "traits": {
+    "xp_mod": 1.1
+   }
+  },
+  {
+   "id": "elf",
+   "name": "Elf",
+   "blurb": "Long-lived, keen-eyed, born to magic.",
+   "stat_mods": {
+    "str": -1,
+    "mag": 4,
+    "vit": -1,
+    "spr": 2,
+    "agi": 2,
+    "lck": 0
+   },
+   "traits": {
+    "mp_mod": 1.15
+   }
+  },
+  {
+   "id": "dwarf",
+   "name": "Dwarf",
+   "blurb": "Stubborn as the stone they mine.",
+   "stat_mods": {
+    "str": 2,
+    "mag": -1,
+    "vit": 4,
+    "spr": 1,
+    "agi": -2,
+    "lck": 1
+   },
+   "traits": {
+    "hp_mod": 1.15
+   }
+  },
+  {
+   "id": "beastkin",
+   "name": "Beastkin",
+   "blurb": "Claw, fang and a temper to match.",
+   "stat_mods": {
+    "str": 3,
+    "mag": -2,
+    "vit": 2,
+    "spr": -1,
+    "agi": 3,
+    "lck": 0
+   },
+   "traits": {
+    "crit_bonus": 2
+   }
+  },
+  {
+   "id": "halfling",
+   "name": "Halfling",
+   "blurb": "Small, lucky, impossible to corner.",
+   "stat_mods": {
+    "str": -2,
+    "mag": 1,
+    "vit": 0,
+    "spr": 1,
+    "agi": 3,
+    "lck": 5
+   },
+   "traits": {
+    "flee_bonus": 15
+   }
+  },
+  {
+   "id": "revenant",
+   "name": "Revenant",
+   "blurb": "You died once. It did not take.",
+   "stat_mods": {
+    "str": 2,
+    "mag": 2,
+    "vit": 2,
+    "spr": -3,
+    "agi": 0,
+    "lck": -1
+   },
+   "traits": {
+    "dark_resist": 30,
+    "holy_weak": 25,
+    "heal_received": 0.75
+   }
+  }
+ ],
+ "classes": [
+  {
+   "id": "knight",
+   "name": "Knight",
+   "blurb": "A wall with a sword behind it.",
+   "base_stats": {
+    "str": 12,
+    "mag": 5,
+    "vit": 14,
+    "spr": 8,
+    "agi": 7,
+    "lck": 7
+   },
+   "growth": {
+    "str": 2.0,
+    "mag": 0.5,
+    "vit": 2.4,
+    "spr": 1.0,
+    "agi": 0.9,
+    "lck": 0.8
+   },
+   "weapons": [
+    "sword",
+    "greatsword",
+    "mace",
+    "spear"
+   ],
+   "armor_weight": "heavy",
+   "primary": "str"
+  },
+  {
+   "id": "berserker",
+   "name": "Berserker",
+   "blurb": "No guard. No brakes.",
+   "base_stats": {
+    "str": 16,
+    "mag": 4,
+    "vit": 11,
+    "spr": 5,
+    "agi": 10,
+    "lck": 7
+   },
+   "growth": {
+    "str": 2.7,
+    "mag": 0.3,
+    "vit": 1.6,
+    "spr": 0.6,
+    "agi": 1.5,
+    "lck": 0.9
+   },
+   "weapons": [
+    "greatsword",
+    "axe",
+    "knuckles"
+   ],
+   "armor_weight": "medium",
+   "primary": "str"
+  },
+  {
+   "id": "paladin",
+   "name": "Paladin",
+   "blurb": "Holds the line and the light.",
+   "base_stats": {
+    "str": 11,
+    "mag": 8,
+    "vit": 12,
+    "spr": 12,
+    "agi": 6,
+    "lck": 8
+   },
+   "growth": {
+    "str": 1.8,
+    "mag": 1.2,
+    "vit": 2.0,
+    "spr": 2.0,
+    "agi": 0.8,
+    "lck": 1.0
+   },
+   "weapons": [
+    "sword",
+    "mace",
+    "spear"
+   ],
+   "armor_weight": "heavy",
+   "primary": "str"
+  },
+  {
+   "id": "ranger",
+   "name": "Ranger",
+   "blurb": "Ends fights before they start.",
+   "base_stats": {
+    "str": 11,
+    "mag": 6,
+    "vit": 9,
+    "spr": 8,
+    "agi": 13,
+    "lck": 9
+   },
+   "growth": {
+    "str": 1.8,
+    "mag": 0.8,
+    "vit": 1.3,
+    "spr": 1.0,
+    "agi": 2.3,
+    "lck": 1.3
+   },
+   "weapons": [
+    "bow",
+    "dagger",
+    "sword"
+   ],
+   "armor_weight": "light",
+   "primary": "agi"
+  },
+  {
+   "id": "rogue",
+   "name": "Rogue",
+   "blurb": "Hits the soft parts.",
+   "base_stats": {
+    "str": 10,
+    "mag": 5,
+    "vit": 8,
+    "spr": 6,
+    "agi": 15,
+    "lck": 13
+   },
+   "growth": {
+    "str": 1.6,
+    "mag": 0.6,
+    "vit": 1.1,
+    "spr": 0.7,
+    "agi": 2.6,
+    "lck": 2.0
+   },
+   "weapons": [
+    "dagger",
+    "sword",
+    "bow"
+   ],
+   "armor_weight": "light",
+   "primary": "agi"
+  },
+  {
+   "id": "mage",
+   "name": "Mage",
+   "blurb": "Deletes things at range.",
+   "base_stats": {
+    "str": 5,
+    "mag": 16,
+    "vit": 7,
+    "spr": 11,
+    "agi": 8,
+    "lck": 8
+   },
+   "growth": {
+    "str": 0.5,
+    "mag": 2.8,
+    "vit": 1.0,
+    "spr": 1.7,
+    "agi": 1.1,
+    "lck": 1.0
+   },
+   "weapons": [
+    "staff",
+    "rod",
+    "dagger"
+   ],
+   "armor_weight": "cloth",
+   "primary": "mag"
+  },
+  {
+   "id": "cleric",
+   "name": "Cleric",
+   "blurb": "The reason the party is still alive.",
+   "base_stats": {
+    "str": 7,
+    "mag": 11,
+    "vit": 10,
+    "spr": 15,
+    "agi": 7,
+    "lck": 9
+   },
+   "growth": {
+    "str": 0.9,
+    "mag": 1.8,
+    "vit": 1.5,
+    "spr": 2.6,
+    "agi": 0.9,
+    "lck": 1.2
+   },
+   "weapons": [
+    "mace",
+    "staff",
+    "rod"
+   ],
+   "armor_weight": "medium",
+   "primary": "mag"
+  },
+  {
+   "id": "necromancer",
+   "name": "Necromancer",
+   "blurb": "Borrows life. Never returns it.",
+   "base_stats": {
+    "str": 6,
+    "mag": 15,
+    "vit": 9,
+    "spr": 9,
+    "agi": 7,
+    "lck": 9
+   },
+   "growth": {
+    "str": 0.6,
+    "mag": 2.6,
+    "vit": 1.4,
+    "spr": 1.3,
+    "agi": 1.0,
+    "lck": 1.3
+   },
+   "weapons": [
+    "staff",
+    "rod",
+    "dagger"
+   ],
+   "armor_weight": "cloth",
+   "primary": "mag"
+  },
+  {
+   "id": "monk",
+   "name": "Monk",
+   "blurb": "Fists, patience, broken ribs.",
+   "base_stats": {
+    "str": 14,
+    "mag": 5,
+    "vit": 12,
+    "spr": 9,
+    "agi": 12,
+    "lck": 8
+   },
+   "growth": {
+    "str": 2.3,
+    "mag": 0.5,
+    "vit": 1.9,
+    "spr": 1.2,
+    "agi": 1.9,
+    "lck": 1.0
+   },
+   "weapons": [
+    "knuckles",
+    "staff",
+    "spear"
+   ],
+   "armor_weight": "light",
+   "primary": "str"
+  },
+  {
+   "id": "bard",
+   "name": "Bard",
+   "blurb": "Wins by making everyone else better.",
+   "base_stats": {
+    "str": 8,
+    "mag": 11,
+    "vit": 9,
+    "spr": 11,
+    "agi": 11,
+    "lck": 13
+   },
+   "growth": {
+    "str": 1.1,
+    "mag": 1.7,
+    "vit": 1.3,
+    "spr": 1.6,
+    "agi": 1.7,
+    "lck": 2.2
+   },
+   "weapons": [
+    "dagger",
+    "sword",
+    "rod"
+   ],
+   "armor_weight": "light",
+   "primary": "mag"
+  }
+ ],
+ "skills": [
+  {
+   "id": "shield_bash",
+   "name": "Shield Bash",
+   "class": "knight",
+   "unlock_level": 1,
+   "mp": 4,
+   "type": "physical",
+   "power": 1.1,
+   "target": "one",
+   "effect": "stun:25"
+  },
+  {
+   "id": "taunt",
+   "name": "Taunt",
+   "class": "knight",
+   "unlock_level": 5,
+   "mp": 3,
+   "type": "buff",
+   "power": 0,
+   "target": "self",
+   "effect": "defense_up:2"
+  },
+  {
+   "id": "bulwark",
+   "name": "Bulwark",
+   "class": "knight",
+   "unlock_level": 10,
+   "mp": 6,
+   "type": "buff",
+   "power": 0,
+   "target": "self",
+   "effect": "damage_cut:40:2"
+  },
+  {
+   "id": "cleave",
+   "name": "Cleave",
+   "class": "knight",
+   "unlock_level": 16,
+   "mp": 9,
+   "type": "physical",
+   "power": 1.05,
+   "target": "all",
+   "effect": null
+  },
+  {
+   "id": "iron_will",
+   "name": "Iron Will",
+   "class": "knight",
+   "unlock_level": 24,
+   "mp": 12,
+   "type": "buff",
+   "power": 0,
+   "target": "self",
+   "effect": "regen:5:3"
+  },
+  {
+   "id": "kings_judgment",
+   "name": "King's Judgment",
+   "class": "knight",
+   "unlock_level": 34,
+   "mp": 22,
+   "type": "physical",
+   "power": 2.3,
+   "target": "one",
+   "effect": "defense_ignore:50"
+  },
+  {
+   "id": "wild_swing",
+   "name": "Wild Swing",
+   "class": "berserker",
+   "unlock_level": 1,
+   "mp": 4,
+   "type": "physical",
+   "power": 1.25,
+   "target": "one",
+   "effect": "accuracy:-15"
+  },
+  {
+   "id": "blood_rage",
+   "name": "Blood Rage",
+   "class": "berserker",
+   "unlock_level": 5,
+   "mp": 6,
+   "type": "buff",
+   "power": 0,
+   "target": "self",
+   "effect": "attack_up:3:hp_cost:8"
+  },
+  {
+   "id": "whirlwind",
+   "name": "Whirlwind",
+   "class": "berserker",
+   "unlock_level": 10,
+   "mp": 10,
+   "type": "physical",
+   "power": 1.15,
+   "target": "all",
+   "effect": null
+  },
+  {
+   "id": "reckless_charge",
+   "name": "Reckless Charge",
+   "class": "berserker",
+   "unlock_level": 16,
+   "mp": 12,
+   "type": "physical",
+   "power": 1.8,
+   "target": "one",
+   "effect": "self_damage:10"
+  },
+  {
+   "id": "undying_fury",
+   "name": "Undying Fury",
+   "class": "berserker",
+   "unlock_level": 24,
+   "mp": 15,
+   "type": "buff",
+   "power": 0,
+   "target": "self",
+   "effect": "survive_lethal:1"
+  },
+  {
+   "id": "ragnarok_swing",
+   "name": "Ragnarok",
+   "class": "berserker",
+   "unlock_level": 34,
+   "mp": 25,
+   "type": "physical",
+   "power": 2.6,
+   "target": "one",
+   "effect": "crit_bonus:25"
+  },
+  {
+   "id": "smite",
+   "name": "Smite",
+   "class": "paladin",
+   "unlock_level": 1,
+   "mp": 5,
+   "type": "holy",
+   "power": 1.2,
+   "target": "one",
+   "effect": "undead_bonus:50"
+  },
+  {
+   "id": "lay_on_hands",
+   "name": "Lay on Hands",
+   "class": "paladin",
+   "unlock_level": 5,
+   "mp": 7,
+   "type": "heal",
+   "power": 1.0,
+   "target": "self",
+   "effect": null
+  },
+  {
+   "id": "sanctuary",
+   "name": "Sanctuary",
+   "class": "paladin",
+   "unlock_level": 10,
+   "mp": 9,
+   "type": "buff",
+   "power": 0,
+   "target": "self",
+   "effect": "resist_up:3"
+  },
+  {
+   "id": "consecrate",
+   "name": "Consecrate",
+   "class": "paladin",
+   "unlock_level": 16,
+   "mp": 13,
+   "type": "holy",
+   "power": 1.1,
+   "target": "all",
+   "effect": null
+  },
+  {
+   "id": "divine_shield",
+   "name": "Divine Shield",
+   "class": "paladin",
+   "unlock_level": 24,
+   "mp": 18,
+   "type": "buff",
+   "power": 0,
+   "target": "self",
+   "effect": "immune:1"
+  },
+  {
+   "id": "radiant_lance",
+   "name": "Radiant Lance",
+   "class": "paladin",
+   "unlock_level": 34,
+   "mp": 24,
+   "type": "holy",
+   "power": 2.4,
+   "target": "one",
+   "effect": "blind:40"
+  },
+  {
+   "id": "aimed_shot",
+   "name": "Aimed Shot",
+   "class": "ranger",
+   "unlock_level": 1,
+   "mp": 4,
+   "type": "physical",
+   "power": 1.3,
+   "target": "one",
+   "effect": "accuracy:+20"
+  },
+  {
+   "id": "hunters_mark",
+   "name": "Hunter's Mark",
+   "class": "ranger",
+   "unlock_level": 5,
+   "mp": 5,
+   "type": "debuff",
+   "power": 0,
+   "target": "one",
+   "effect": "marked:3"
+  },
+  {
+   "id": "volley",
+   "name": "Volley",
+   "class": "ranger",
+   "unlock_level": 10,
+   "mp": 9,
+   "type": "physical",
+   "power": 0.95,
+   "target": "all",
+   "effect": null
+  },
+  {
+   "id": "snare_trap",
+   "name": "Snare Trap",
+   "class": "ranger",
+   "unlock_level": 16,
+   "mp": 8,
+   "type": "debuff",
+   "power": 0,
+   "target": "one",
+   "effect": "slow:3"
+  },
+  {
+   "id": "beast_lore",
+   "name": "Beast Lore",
+   "class": "ranger",
+   "unlock_level": 24,
+   "mp": 10,
+   "type": "buff",
+   "power": 0,
+   "target": "self",
+   "effect": "damage_up_vs_family:35:3"
+  },
+  {
+   "id": "piercing_arrow",
+   "name": "Piercing Arrow",
+   "class": "ranger",
+   "unlock_level": 34,
+   "mp": 20,
+   "type": "physical",
+   "power": 2.45,
+   "target": "one",
+   "effect": "defense_ignore:60"
+  },
+  {
+   "id": "backstab",
+   "name": "Backstab",
+   "class": "rogue",
+   "unlock_level": 1,
+   "mp": 4,
+   "type": "physical",
+   "power": 1.35,
+   "target": "one",
+   "effect": "crit_bonus:20"
+  },
+  {
+   "id": "poison_blade",
+   "name": "Poison Blade",
+   "class": "rogue",
+   "unlock_level": 5,
+   "mp": 6,
+   "type": "physical",
+   "power": 0.9,
+   "target": "one",
+   "effect": "poison:60"
+  },
+  {
+   "id": "smoke_bomb",
+   "name": "Smoke Bomb",
+   "class": "rogue",
+   "unlock_level": 10,
+   "mp": 7,
+   "type": "buff",
+   "power": 0,
+   "target": "self",
+   "effect": "evade_up:2"
+  },
+  {
+   "id": "pickpocket",
+   "name": "Pickpocket",
+   "class": "rogue",
+   "unlock_level": 16,
+   "mp": 5,
+   "type": "utility",
+   "power": 0,
+   "target": "one",
+   "effect": "steal_gold"
+  },
+  {
+   "id": "shadowstep",
+   "name": "Shadowstep",
+   "class": "rogue",
+   "unlock_level": 24,
+   "mp": 14,
+   "type": "physical",
+   "power": 1.6,
+   "target": "one",
+   "effect": "guaranteed_crit"
+  },
+  {
+   "id": "assassinate",
+   "name": "Assassinate",
+   "class": "rogue",
+   "unlock_level": 34,
+   "mp": 22,
+   "type": "physical",
+   "power": 2.2,
+   "target": "one",
+   "effect": "execute_below:20"
+  },
+  {
+   "id": "firebolt",
+   "name": "Firebolt",
+   "class": "mage",
+   "unlock_level": 1,
+   "mp": 5,
+   "type": "fire",
+   "power": 1.25,
+   "target": "one",
+   "effect": null
+  },
+  {
+   "id": "frost_shard",
+   "name": "Frost Shard",
+   "class": "mage",
+   "unlock_level": 5,
+   "mp": 6,
+   "type": "ice",
+   "power": 1.2,
+   "target": "one",
+   "effect": "slow:25"
+  },
+  {
+   "id": "thunderclap",
+   "name": "Thunderclap",
+   "class": "mage",
+   "unlock_level": 10,
+   "mp": 9,
+   "type": "lightning",
+   "power": 1.3,
+   "target": "one",
+   "effect": "stun:20"
+  },
+  {
+   "id": "fireball",
+   "name": "Fireball",
+   "class": "mage",
+   "unlock_level": 16,
+   "mp": 14,
+   "type": "fire",
+   "power": 1.15,
+   "target": "all",
+   "effect": null
+  },
+  {
+   "id": "mana_shield",
+   "name": "Mana Shield",
+   "class": "mage",
+   "unlock_level": 24,
+   "mp": 10,
+   "type": "buff",
+   "power": 0,
+   "target": "self",
+   "effect": "mp_absorb:50:3"
+  },
+  {
+   "id": "meteor",
+   "name": "Meteor",
+   "class": "mage",
+   "unlock_level": 34,
+   "mp": 30,
+   "type": "fire",
+   "power": 2.1,
+   "target": "all",
+   "effect": null
+  },
+  {
+   "id": "cure",
+   "name": "Cure",
+   "class": "cleric",
+   "unlock_level": 1,
+   "mp": 5,
+   "type": "heal",
+   "power": 1.0,
+   "target": "self",
+   "effect": null
+  },
+  {
+   "id": "holy_spark",
+   "name": "Holy Spark",
+   "class": "cleric",
+   "unlock_level": 5,
+   "mp": 6,
+   "type": "holy",
+   "power": 1.15,
+   "target": "one",
+   "effect": "undead_bonus:40"
+  },
+  {
+   "id": "bless",
+   "name": "Bless",
+   "class": "cleric",
+   "unlock_level": 10,
+   "mp": 8,
+   "type": "buff",
+   "power": 0,
+   "target": "self",
+   "effect": "all_stats_up:3"
+  },
+  {
+   "id": "purify",
+   "name": "Purify",
+   "class": "cleric",
+   "unlock_level": 16,
+   "mp": 7,
+   "type": "utility",
+   "power": 0,
+   "target": "self",
+   "effect": "cleanse_all"
+  },
+  {
+   "id": "greater_heal",
+   "name": "Greater Heal",
+   "class": "cleric",
+   "unlock_level": 24,
+   "mp": 16,
+   "type": "heal",
+   "power": 1.9,
+   "target": "self",
+   "effect": null
+  },
+  {
+   "id": "resurrection",
+   "name": "Resurrection",
+   "class": "cleric",
+   "unlock_level": 34,
+   "mp": 28,
+   "type": "utility",
+   "power": 0,
+   "target": "self",
+   "effect": "auto_revive:50"
+  },
+  {
+   "id": "drain",
+   "name": "Drain",
+   "class": "necromancer",
+   "unlock_level": 1,
+   "mp": 5,
+   "type": "dark",
+   "power": 1.05,
+   "target": "one",
+   "effect": "lifesteal:60"
+  },
+  {
+   "id": "bone_spear",
+   "name": "Bone Spear",
+   "class": "necromancer",
+   "unlock_level": 5,
+   "mp": 7,
+   "type": "dark",
+   "power": 1.3,
+   "target": "one",
+   "effect": null
+  },
+  {
+   "id": "raise_thrall",
+   "name": "Raise Thrall",
+   "class": "necromancer",
+   "unlock_level": 10,
+   "mp": 12,
+   "type": "summon",
+   "power": 0.7,
+   "target": "one",
+   "effect": "summon:3"
+  },
+  {
+   "id": "curse",
+   "name": "Curse",
+   "class": "necromancer",
+   "unlock_level": 16,
+   "mp": 9,
+   "type": "debuff",
+   "power": 0,
+   "target": "one",
+   "effect": "all_stats_down:3"
+  },
+  {
+   "id": "soul_harvest",
+   "name": "Soul Harvest",
+   "class": "necromancer",
+   "unlock_level": 24,
+   "mp": 15,
+   "type": "dark",
+   "power": 1.25,
+   "target": "all",
+   "effect": "lifesteal:30"
+  },
+  {
+   "id": "death_sentence",
+   "name": "Death Sentence",
+   "class": "necromancer",
+   "unlock_level": 34,
+   "mp": 26,
+   "type": "dark",
+   "power": 1.9,
+   "target": "one",
+   "effect": "doom:3"
+  },
+  {
+   "id": "palm_strike",
+   "name": "Palm Strike",
+   "class": "monk",
+   "unlock_level": 1,
+   "mp": 3,
+   "type": "physical",
+   "power": 1.2,
+   "target": "one",
+   "effect": null
+  },
+  {
+   "id": "inner_focus",
+   "name": "Inner Focus",
+   "class": "monk",
+   "unlock_level": 5,
+   "mp": 0,
+   "type": "heal",
+   "power": 0.6,
+   "target": "self",
+   "effect": "mp_free"
+  },
+  {
+   "id": "flurry",
+   "name": "Flurry",
+   "class": "monk",
+   "unlock_level": 10,
+   "mp": 8,
+   "type": "physical",
+   "power": 0.55,
+   "target": "one",
+   "effect": "hits:3"
+  },
+  {
+   "id": "counter_stance",
+   "name": "Counter Stance",
+   "class": "monk",
+   "unlock_level": 16,
+   "mp": 9,
+   "type": "buff",
+   "power": 0,
+   "target": "self",
+   "effect": "counter:70:3"
+  },
+  {
+   "id": "chakra",
+   "name": "Chakra",
+   "class": "monk",
+   "unlock_level": 24,
+   "mp": 12,
+   "type": "heal",
+   "power": 1.3,
+   "target": "self",
+   "effect": "cleanse_all"
+  },
+  {
+   "id": "thousand_fists",
+   "name": "Thousand Fists",
+   "class": "monk",
+   "unlock_level": 34,
+   "mp": 24,
+   "type": "physical",
+   "power": 0.6,
+   "target": "one",
+   "effect": "hits:6"
+  },
+  {
+   "id": "discordant_note",
+   "name": "Discordant Note",
+   "class": "bard",
+   "unlock_level": 1,
+   "mp": 4,
+   "type": "magic",
+   "power": 1.1,
+   "target": "one",
+   "effect": "accuracy_down:20"
+  },
+  {
+   "id": "battle_hymn",
+   "name": "Battle Hymn",
+   "class": "bard",
+   "unlock_level": 5,
+   "mp": 7,
+   "type": "buff",
+   "power": 0,
+   "target": "self",
+   "effect": "attack_up:4"
+  },
+  {
+   "id": "lullaby",
+   "name": "Lullaby",
+   "class": "bard",
+   "unlock_level": 10,
+   "mp": 8,
+   "type": "debuff",
+   "power": 0,
+   "target": "all",
+   "effect": "sleep:40"
+  },
+  {
+   "id": "healing_ballad",
+   "name": "Healing Ballad",
+   "class": "bard",
+   "unlock_level": 16,
+   "mp": 11,
+   "type": "heal",
+   "power": 1.2,
+   "target": "self",
+   "effect": "regen:6:3"
+  },
+  {
+   "id": "ballad_of_fortune",
+   "name": "Ballad of Fortune",
+   "class": "bard",
+   "unlock_level": 24,
+   "mp": 13,
+   "type": "buff",
+   "power": 0,
+   "target": "self",
+   "effect": "loot_up:50:5"
+  },
+  {
+   "id": "finale",
+   "name": "Finale",
+   "class": "bard",
+   "unlock_level": 34,
+   "mp": 26,
+   "type": "magic",
+   "power": 2.15,
+   "target": "all",
+   "effect": "all_stats_down:3"
+  }
+ ],
+ "rarities": [
+  {
+   "id": "common",
+   "name": "Common",
+   "stat_mult": 1.0,
+   "affixes": 0,
+   "drop_weight": 0.6,
+   "color": "#9aa0a6"
+  },
+  {
+   "id": "uncommon",
+   "name": "Uncommon",
+   "stat_mult": 1.18,
+   "affixes": 1,
+   "drop_weight": 0.25,
+   "color": "#3fa34d"
+  },
+  {
+   "id": "rare",
+   "name": "Rare",
+   "stat_mult": 1.4,
+   "affixes": 2,
+   "drop_weight": 0.11,
+   "color": "#3f7fd6"
+  },
+  {
+   "id": "epic",
+   "name": "Epic",
+   "stat_mult": 1.7,
+   "affixes": 3,
+   "drop_weight": 0.033,
+   "color": "#9a4fd6"
+  },
+  {
+   "id": "legendary",
+   "name": "Legendary",
+   "stat_mult": 2.1,
+   "affixes": 4,
+   "drop_weight": 0.007,
+   "color": "#d69a2f"
+  }
+ ],
+ "affixes": {
+  "prefix": [
+   {
+    "id": "keen",
+    "name": "Keen",
+    "stat": "crit",
+    "format": "+%d%%",
+    "values": [
+     3,
+     5,
+     8,
+     12
+    ]
+   },
+   {
+    "id": "brutal",
+    "name": "Brutal",
+    "stat": "str",
+    "format": "+%d",
+    "values": [
+     2,
+     4,
+     7,
+     11
+    ]
+   },
+   {
+    "id": "arcane",
+    "name": "Arcane",
+    "stat": "mag",
+    "format": "+%d",
+    "values": [
+     2,
+     4,
+     7,
+     11
+    ]
+   },
+   {
+    "id": "stalwart",
+    "name": "Stalwart",
+    "stat": "vit",
+    "format": "+%d",
+    "values": [
+     2,
+     4,
+     7,
+     11
+    ]
+   },
+   {
+    "id": "swift",
+    "name": "Swift",
+    "stat": "agi",
+    "format": "+%d",
+    "values": [
+     2,
+     4,
+     7,
+     11
+    ]
+   },
+   {
+    "id": "blessed",
+    "name": "Blessed",
+    "stat": "spr",
+    "format": "+%d",
+    "values": [
+     2,
+     4,
+     7,
+     11
+    ]
+   },
+   {
+    "id": "lucky",
+    "name": "Lucky",
+    "stat": "lck",
+    "format": "+%d",
+    "values": [
+     3,
+     5,
+     9,
+     14
+    ]
+   },
+   {
+    "id": "vampiric",
+    "name": "Vampiric",
+    "stat": "lifesteal",
+    "format": "+%d%%",
+    "values": [
+     4,
+     7,
+     11,
+     16
+    ]
+   }
+  ],
+  "suffix": [
+   {
+    "id": "of_the_bear",
+    "name": "of the Bear",
+    "stat": "hp",
+    "format": "+%d",
+    "values": [
+     15,
+     35,
+     70,
+     140
+    ]
+   },
+   {
+    "id": "of_the_owl",
+    "name": "of the Owl",
+    "stat": "mp",
+    "format": "+%d",
+    "values": [
+     8,
+     18,
+     35,
+     70
+    ]
+   },
+   {
+    "id": "of_flame",
+    "name": "of Flame",
+    "stat": "fire_dmg",
+    "format": "+%d%%",
+    "values": [
+     8,
+     14,
+     22,
+     32
+    ]
+   },
+   {
+    "id": "of_frost",
+    "name": "of Frost",
+    "stat": "ice_dmg",
+    "format": "+%d%%",
+    "values": [
+     8,
+     14,
+     22,
+     32
+    ]
+   },
+   {
+    "id": "of_storms",
+    "name": "of Storms",
+    "stat": "lightning_dmg",
+    "format": "+%d%%",
+    "values": [
+     8,
+     14,
+     22,
+     32
+    ]
+   },
+   {
+    "id": "of_warding",
+    "name": "of Warding",
+    "stat": "res",
+    "format": "+%d",
+    "values": [
+     3,
+     6,
+     10,
+     16
+    ]
+   },
+   {
+    "id": "of_the_fortress",
+    "name": "of the Fortress",
+    "stat": "def",
+    "format": "+%d",
+    "values": [
+     3,
+     6,
+     10,
+     16
+    ]
+   },
+   {
+    "id": "of_the_leech",
+    "name": "of the Leech",
+    "stat": "regen",
+    "format": "+%d",
+    "values": [
+     2,
+     4,
+     7,
+     11
+    ]
+   }
+  ]
+ },
+ "items": [
+  {
+   "id": "sword_t1",
+   "name": "Rusted Sword",
+   "slot": "weapon",
+   "weapon_type": "sword",
+   "tier": 1,
+   "power": 6,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 1
+   },
+   "value": 60,
+   "drop_table": "gear_t1"
+  },
+  {
+   "id": "sword_t2",
+   "name": "Iron Sword",
+   "slot": "weapon",
+   "weapon_type": "sword",
+   "tier": 2,
+   "power": 17,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 2
+   },
+   "value": 114,
+   "drop_table": "gear_t2"
+  },
+  {
+   "id": "sword_t3",
+   "name": "Steel Longsword",
+   "slot": "weapon",
+   "weapon_type": "sword",
+   "tier": 3,
+   "power": 30,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 3
+   },
+   "value": 217,
+   "drop_table": "gear_t3"
+  },
+  {
+   "id": "sword_t4",
+   "name": "Silvered Blade",
+   "slot": "weapon",
+   "weapon_type": "sword",
+   "tier": 4,
+   "power": 47,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 4
+   },
+   "value": 412,
+   "drop_table": "gear_t4"
+  },
+  {
+   "id": "sword_t5",
+   "name": "Runed Longsword",
+   "slot": "weapon",
+   "weapon_type": "sword",
+   "tier": 5,
+   "power": 68,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 5
+   },
+   "value": 782,
+   "drop_table": "gear_t5"
+  },
+  {
+   "id": "sword_t6",
+   "name": "Dragonbone Sword",
+   "slot": "weapon",
+   "weapon_type": "sword",
+   "tier": 6,
+   "power": 91,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 6
+   },
+   "value": 1486,
+   "drop_table": "gear_t6"
+  },
+  {
+   "id": "sword_t7",
+   "name": "Starforged Blade",
+   "slot": "weapon",
+   "weapon_type": "sword",
+   "tier": 7,
+   "power": 118,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 7
+   },
+   "value": 2823,
+   "drop_table": "gear_t7"
+  },
+  {
+   "id": "sword_t8",
+   "name": "Worldender",
+   "slot": "weapon",
+   "weapon_type": "sword",
+   "tier": 8,
+   "power": 147,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 8
+   },
+   "value": 5363,
+   "drop_table": "gear_t8"
+  },
+  {
+   "id": "greatsword_t1",
+   "name": "Chipped Greatsword",
+   "slot": "weapon",
+   "weapon_type": "greatsword",
+   "tier": 1,
+   "power": 6,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 1
+   },
+   "value": 60,
+   "drop_table": "gear_t1"
+  },
+  {
+   "id": "greatsword_t2",
+   "name": "Iron Greatsword",
+   "slot": "weapon",
+   "weapon_type": "greatsword",
+   "tier": 2,
+   "power": 17,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 2
+   },
+   "value": 114,
+   "drop_table": "gear_t2"
+  },
+  {
+   "id": "greatsword_t3",
+   "name": "Steel Zweihander",
+   "slot": "weapon",
+   "weapon_type": "greatsword",
+   "tier": 3,
+   "power": 30,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 3
+   },
+   "value": 217,
+   "drop_table": "gear_t3"
+  },
+  {
+   "id": "greatsword_t4",
+   "name": "Knight's Greatblade",
+   "slot": "weapon",
+   "weapon_type": "greatsword",
+   "tier": 4,
+   "power": 47,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 4
+   },
+   "value": 412,
+   "drop_table": "gear_t4"
+  },
+  {
+   "id": "greatsword_t5",
+   "name": "Runed Zweihander",
+   "slot": "weapon",
+   "weapon_type": "greatsword",
+   "tier": 5,
+   "power": 68,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 5
+   },
+   "value": 782,
+   "drop_table": "gear_t5"
+  },
+  {
+   "id": "greatsword_t6",
+   "name": "Dragonbone Greatsword",
+   "slot": "weapon",
+   "weapon_type": "greatsword",
+   "tier": 6,
+   "power": 91,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 6
+   },
+   "value": 1486,
+   "drop_table": "gear_t6"
+  },
+  {
+   "id": "greatsword_t7",
+   "name": "Starforged Colossus",
+   "slot": "weapon",
+   "weapon_type": "greatsword",
+   "tier": 7,
+   "power": 118,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 7
+   },
+   "value": 2823,
+   "drop_table": "gear_t7"
+  },
+  {
+   "id": "greatsword_t8",
+   "name": "Mountainsplitter",
+   "slot": "weapon",
+   "weapon_type": "greatsword",
+   "tier": 8,
+   "power": 147,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 8
+   },
+   "value": 5363,
+   "drop_table": "gear_t8"
+  },
+  {
+   "id": "axe_t1",
+   "name": "Woodcutter's Axe",
+   "slot": "weapon",
+   "weapon_type": "axe",
+   "tier": 1,
+   "power": 6,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 1
+   },
+   "value": 60,
+   "drop_table": "gear_t1"
+  },
+  {
+   "id": "axe_t2",
+   "name": "Iron Waraxe",
+   "slot": "weapon",
+   "weapon_type": "axe",
+   "tier": 2,
+   "power": 17,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 2
+   },
+   "value": 114,
+   "drop_table": "gear_t2"
+  },
+  {
+   "id": "axe_t3",
+   "name": "Steel Battleaxe",
+   "slot": "weapon",
+   "weapon_type": "axe",
+   "tier": 3,
+   "power": 30,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 3
+   },
+   "value": 217,
+   "drop_table": "gear_t3"
+  },
+  {
+   "id": "axe_t4",
+   "name": "Berserker's Cleaver",
+   "slot": "weapon",
+   "weapon_type": "axe",
+   "tier": 4,
+   "power": 47,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 4
+   },
+   "value": 412,
+   "drop_table": "gear_t4"
+  },
+  {
+   "id": "axe_t5",
+   "name": "Runed Waraxe",
+   "slot": "weapon",
+   "weapon_type": "axe",
+   "tier": 5,
+   "power": 68,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 5
+   },
+   "value": 782,
+   "drop_table": "gear_t5"
+  },
+  {
+   "id": "axe_t6",
+   "name": "Dragonbone Cleaver",
+   "slot": "weapon",
+   "weapon_type": "axe",
+   "tier": 6,
+   "power": 91,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 6
+   },
+   "value": 1486,
+   "drop_table": "gear_t6"
+  },
+  {
+   "id": "axe_t7",
+   "name": "Starforged Reaver",
+   "slot": "weapon",
+   "weapon_type": "axe",
+   "tier": 7,
+   "power": 118,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 7
+   },
+   "value": 2823,
+   "drop_table": "gear_t7"
+  },
+  {
+   "id": "axe_t8",
+   "name": "Skyrender",
+   "slot": "weapon",
+   "weapon_type": "axe",
+   "tier": 8,
+   "power": 147,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 8
+   },
+   "value": 5363,
+   "drop_table": "gear_t8"
+  },
+  {
+   "id": "spear_t1",
+   "name": "Sharpened Pole",
+   "slot": "weapon",
+   "weapon_type": "spear",
+   "tier": 1,
+   "power": 6,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 1
+   },
+   "value": 60,
+   "drop_table": "gear_t1"
+  },
+  {
+   "id": "spear_t2",
+   "name": "Iron Spear",
+   "slot": "weapon",
+   "weapon_type": "spear",
+   "tier": 2,
+   "power": 17,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 2
+   },
+   "value": 114,
+   "drop_table": "gear_t2"
+  },
+  {
+   "id": "spear_t3",
+   "name": "Steel Halberd",
+   "slot": "weapon",
+   "weapon_type": "spear",
+   "tier": 3,
+   "power": 30,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 3
+   },
+   "value": 217,
+   "drop_table": "gear_t3"
+  },
+  {
+   "id": "spear_t4",
+   "name": "Lancer's Pike",
+   "slot": "weapon",
+   "weapon_type": "spear",
+   "tier": 4,
+   "power": 47,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 4
+   },
+   "value": 412,
+   "drop_table": "gear_t4"
+  },
+  {
+   "id": "spear_t5",
+   "name": "Runed Halberd",
+   "slot": "weapon",
+   "weapon_type": "spear",
+   "tier": 5,
+   "power": 68,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 5
+   },
+   "value": 782,
+   "drop_table": "gear_t5"
+  },
+  {
+   "id": "spear_t6",
+   "name": "Dragonbone Lance",
+   "slot": "weapon",
+   "weapon_type": "spear",
+   "tier": 6,
+   "power": 91,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 6
+   },
+   "value": 1486,
+   "drop_table": "gear_t6"
+  },
+  {
+   "id": "spear_t7",
+   "name": "Starforged Glaive",
+   "slot": "weapon",
+   "weapon_type": "spear",
+   "tier": 7,
+   "power": 118,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 7
+   },
+   "value": 2823,
+   "drop_table": "gear_t7"
+  },
+  {
+   "id": "spear_t8",
+   "name": "Heavenpiercer",
+   "slot": "weapon",
+   "weapon_type": "spear",
+   "tier": 8,
+   "power": 147,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 8
+   },
+   "value": 5363,
+   "drop_table": "gear_t8"
+  },
+  {
+   "id": "dagger_t1",
+   "name": "Rusty Knife",
+   "slot": "weapon",
+   "weapon_type": "dagger",
+   "tier": 1,
+   "power": 6,
+   "scales": "agi",
+   "stat_bonus": {
+    "agi": 1
+   },
+   "value": 60,
+   "drop_table": "gear_t1"
+  },
+  {
+   "id": "dagger_t2",
+   "name": "Iron Dirk",
+   "slot": "weapon",
+   "weapon_type": "dagger",
+   "tier": 2,
+   "power": 17,
+   "scales": "agi",
+   "stat_bonus": {
+    "agi": 2
+   },
+   "value": 114,
+   "drop_table": "gear_t2"
+  },
+  {
+   "id": "dagger_t3",
+   "name": "Steel Stiletto",
+   "slot": "weapon",
+   "weapon_type": "dagger",
+   "tier": 3,
+   "power": 30,
+   "scales": "agi",
+   "stat_bonus": {
+    "agi": 3
+   },
+   "value": 217,
+   "drop_table": "gear_t3"
+  },
+  {
+   "id": "dagger_t4",
+   "name": "Silvered Kris",
+   "slot": "weapon",
+   "weapon_type": "dagger",
+   "tier": 4,
+   "power": 47,
+   "scales": "agi",
+   "stat_bonus": {
+    "agi": 4
+   },
+   "value": 412,
+   "drop_table": "gear_t4"
+  },
+  {
+   "id": "dagger_t5",
+   "name": "Runed Fang",
+   "slot": "weapon",
+   "weapon_type": "dagger",
+   "tier": 5,
+   "power": 68,
+   "scales": "agi",
+   "stat_bonus": {
+    "agi": 5
+   },
+   "value": 782,
+   "drop_table": "gear_t5"
+  },
+  {
+   "id": "dagger_t6",
+   "name": "Dragonbone Kris",
+   "slot": "weapon",
+   "weapon_type": "dagger",
+   "tier": 6,
+   "power": 91,
+   "scales": "agi",
+   "stat_bonus": {
+    "agi": 6
+   },
+   "value": 1486,
+   "drop_table": "gear_t6"
+  },
+  {
+   "id": "dagger_t7",
+   "name": "Starforged Fang",
+   "slot": "weapon",
+   "weapon_type": "dagger",
+   "tier": 7,
+   "power": 118,
+   "scales": "agi",
+   "stat_bonus": {
+    "agi": 7
+   },
+   "value": 2823,
+   "drop_table": "gear_t7"
+  },
+  {
+   "id": "dagger_t8",
+   "name": "Last Word",
+   "slot": "weapon",
+   "weapon_type": "dagger",
+   "tier": 8,
+   "power": 147,
+   "scales": "agi",
+   "stat_bonus": {
+    "agi": 8
+   },
+   "value": 5363,
+   "drop_table": "gear_t8"
+  },
+  {
+   "id": "bow_t1",
+   "name": "Hunting Bow",
+   "slot": "weapon",
+   "weapon_type": "bow",
+   "tier": 1,
+   "power": 6,
+   "scales": "agi",
+   "stat_bonus": {
+    "agi": 1
+   },
+   "value": 60,
+   "drop_table": "gear_t1"
+  },
+  {
+   "id": "bow_t2",
+   "name": "Yew Longbow",
+   "slot": "weapon",
+   "weapon_type": "bow",
+   "tier": 2,
+   "power": 17,
+   "scales": "agi",
+   "stat_bonus": {
+    "agi": 2
+   },
+   "value": 114,
+   "drop_table": "gear_t2"
+  },
+  {
+   "id": "bow_t3",
+   "name": "Composite Bow",
+   "slot": "weapon",
+   "weapon_type": "bow",
+   "tier": 3,
+   "power": 30,
+   "scales": "agi",
+   "stat_bonus": {
+    "agi": 3
+   },
+   "value": 217,
+   "drop_table": "gear_t3"
+  },
+  {
+   "id": "bow_t4",
+   "name": "Ranger's Recurve",
+   "slot": "weapon",
+   "weapon_type": "bow",
+   "tier": 4,
+   "power": 47,
+   "scales": "agi",
+   "stat_bonus": {
+    "agi": 4
+   },
+   "value": 412,
+   "drop_table": "gear_t4"
+  },
+  {
+   "id": "bow_t5",
+   "name": "Runed Longbow",
+   "slot": "weapon",
+   "weapon_type": "bow",
+   "tier": 5,
+   "power": 68,
+   "scales": "agi",
+   "stat_bonus": {
+    "agi": 5
+   },
+   "value": 782,
+   "drop_table": "gear_t5"
+  },
+  {
+   "id": "bow_t6",
+   "name": "Dragonbone Bow",
+   "slot": "weapon",
+   "weapon_type": "bow",
+   "tier": 6,
+   "power": 91,
+   "scales": "agi",
+   "stat_bonus": {
+    "agi": 6
+   },
+   "value": 1486,
+   "drop_table": "gear_t6"
+  },
+  {
+   "id": "bow_t7",
+   "name": "Starforged Arc",
+   "slot": "weapon",
+   "weapon_type": "bow",
+   "tier": 7,
+   "power": 118,
+   "scales": "agi",
+   "stat_bonus": {
+    "agi": 7
+   },
+   "value": 2823,
+   "drop_table": "gear_t7"
+  },
+  {
+   "id": "bow_t8",
+   "name": "Horizon's End",
+   "slot": "weapon",
+   "weapon_type": "bow",
+   "tier": 8,
+   "power": 147,
+   "scales": "agi",
+   "stat_bonus": {
+    "agi": 8
+   },
+   "value": 5363,
+   "drop_table": "gear_t8"
+  },
+  {
+   "id": "knuckles_t1",
+   "name": "Wrapped Fists",
+   "slot": "weapon",
+   "weapon_type": "knuckles",
+   "tier": 1,
+   "power": 6,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 1
+   },
+   "value": 60,
+   "drop_table": "gear_t1"
+  },
+  {
+   "id": "knuckles_t2",
+   "name": "Iron Knuckles",
+   "slot": "weapon",
+   "weapon_type": "knuckles",
+   "tier": 2,
+   "power": 17,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 2
+   },
+   "value": 114,
+   "drop_table": "gear_t2"
+  },
+  {
+   "id": "knuckles_t3",
+   "name": "Steel Claws",
+   "slot": "weapon",
+   "weapon_type": "knuckles",
+   "tier": 3,
+   "power": 30,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 3
+   },
+   "value": 217,
+   "drop_table": "gear_t3"
+  },
+  {
+   "id": "knuckles_t4",
+   "name": "Monk's Gauntlets",
+   "slot": "weapon",
+   "weapon_type": "knuckles",
+   "tier": 4,
+   "power": 47,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 4
+   },
+   "value": 412,
+   "drop_table": "gear_t4"
+  },
+  {
+   "id": "knuckles_t5",
+   "name": "Runed Gauntlets",
+   "slot": "weapon",
+   "weapon_type": "knuckles",
+   "tier": 5,
+   "power": 68,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 5
+   },
+   "value": 782,
+   "drop_table": "gear_t5"
+  },
+  {
+   "id": "knuckles_t6",
+   "name": "Dragonbone Claws",
+   "slot": "weapon",
+   "weapon_type": "knuckles",
+   "tier": 6,
+   "power": 91,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 6
+   },
+   "value": 1486,
+   "drop_table": "gear_t6"
+  },
+  {
+   "id": "knuckles_t7",
+   "name": "Starforged Fists",
+   "slot": "weapon",
+   "weapon_type": "knuckles",
+   "tier": 7,
+   "power": 118,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 7
+   },
+   "value": 2823,
+   "drop_table": "gear_t7"
+  },
+  {
+   "id": "knuckles_t8",
+   "name": "Godhand",
+   "slot": "weapon",
+   "weapon_type": "knuckles",
+   "tier": 8,
+   "power": 147,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 8
+   },
+   "value": 5363,
+   "drop_table": "gear_t8"
+  },
+  {
+   "id": "staff_t1",
+   "name": "Gnarled Branch",
+   "slot": "weapon",
+   "weapon_type": "staff",
+   "tier": 1,
+   "power": 6,
+   "scales": "mag",
+   "stat_bonus": {
+    "mag": 1
+   },
+   "value": 60,
+   "drop_table": "gear_t1"
+  },
+  {
+   "id": "staff_t2",
+   "name": "Oak Staff",
+   "slot": "weapon",
+   "weapon_type": "staff",
+   "tier": 2,
+   "power": 17,
+   "scales": "mag",
+   "stat_bonus": {
+    "mag": 2
+   },
+   "value": 114,
+   "drop_table": "gear_t2"
+  },
+  {
+   "id": "staff_t3",
+   "name": "Scholar's Staff",
+   "slot": "weapon",
+   "weapon_type": "staff",
+   "tier": 3,
+   "power": 30,
+   "scales": "mag",
+   "stat_bonus": {
+    "mag": 3
+   },
+   "value": 217,
+   "drop_table": "gear_t3"
+  },
+  {
+   "id": "staff_t4",
+   "name": "Silvered Staff",
+   "slot": "weapon",
+   "weapon_type": "staff",
+   "tier": 4,
+   "power": 47,
+   "scales": "mag",
+   "stat_bonus": {
+    "mag": 4
+   },
+   "value": 412,
+   "drop_table": "gear_t4"
+  },
+  {
+   "id": "staff_t5",
+   "name": "Runed Staff",
+   "slot": "weapon",
+   "weapon_type": "staff",
+   "tier": 5,
+   "power": 68,
+   "scales": "mag",
+   "stat_bonus": {
+    "mag": 5
+   },
+   "value": 782,
+   "drop_table": "gear_t5"
+  },
+  {
+   "id": "staff_t6",
+   "name": "Dragonbone Stave",
+   "slot": "weapon",
+   "weapon_type": "staff",
+   "tier": 6,
+   "power": 91,
+   "scales": "mag",
+   "stat_bonus": {
+    "mag": 6
+   },
+   "value": 1486,
+   "drop_table": "gear_t6"
+  },
+  {
+   "id": "staff_t7",
+   "name": "Starforged Stave",
+   "slot": "weapon",
+   "weapon_type": "staff",
+   "tier": 7,
+   "power": 118,
+   "scales": "mag",
+   "stat_bonus": {
+    "mag": 7
+   },
+   "value": 2823,
+   "drop_table": "gear_t7"
+  },
+  {
+   "id": "staff_t8",
+   "name": "Axis Mundi",
+   "slot": "weapon",
+   "weapon_type": "staff",
+   "tier": 8,
+   "power": 147,
+   "scales": "mag",
+   "stat_bonus": {
+    "mag": 8
+   },
+   "value": 5363,
+   "drop_table": "gear_t8"
+  },
+  {
+   "id": "rod_t1",
+   "name": "Cracked Wand",
+   "slot": "weapon",
+   "weapon_type": "rod",
+   "tier": 1,
+   "power": 6,
+   "scales": "mag",
+   "stat_bonus": {
+    "mag": 1
+   },
+   "value": 60,
+   "drop_table": "gear_t1"
+  },
+  {
+   "id": "rod_t2",
+   "name": "Copper Rod",
+   "slot": "weapon",
+   "weapon_type": "rod",
+   "tier": 2,
+   "power": 17,
+   "scales": "mag",
+   "stat_bonus": {
+    "mag": 2
+   },
+   "value": 114,
+   "drop_table": "gear_t2"
+  },
+  {
+   "id": "rod_t3",
+   "name": "Silver Rod",
+   "slot": "weapon",
+   "weapon_type": "rod",
+   "tier": 3,
+   "power": 30,
+   "scales": "mag",
+   "stat_bonus": {
+    "mag": 3
+   },
+   "value": 217,
+   "drop_table": "gear_t3"
+  },
+  {
+   "id": "rod_t4",
+   "name": "Adept's Rod",
+   "slot": "weapon",
+   "weapon_type": "rod",
+   "tier": 4,
+   "power": 47,
+   "scales": "mag",
+   "stat_bonus": {
+    "mag": 4
+   },
+   "value": 412,
+   "drop_table": "gear_t4"
+  },
+  {
+   "id": "rod_t5",
+   "name": "Runed Scepter",
+   "slot": "weapon",
+   "weapon_type": "rod",
+   "tier": 5,
+   "power": 68,
+   "scales": "mag",
+   "stat_bonus": {
+    "mag": 5
+   },
+   "value": 782,
+   "drop_table": "gear_t5"
+  },
+  {
+   "id": "rod_t6",
+   "name": "Dragonbone Rod",
+   "slot": "weapon",
+   "weapon_type": "rod",
+   "tier": 6,
+   "power": 91,
+   "scales": "mag",
+   "stat_bonus": {
+    "mag": 6
+   },
+   "value": 1486,
+   "drop_table": "gear_t6"
+  },
+  {
+   "id": "rod_t7",
+   "name": "Starforged Scepter",
+   "slot": "weapon",
+   "weapon_type": "rod",
+   "tier": 7,
+   "power": 118,
+   "scales": "mag",
+   "stat_bonus": {
+    "mag": 7
+   },
+   "value": 2823,
+   "drop_table": "gear_t7"
+  },
+  {
+   "id": "rod_t8",
+   "name": "Word of Creation",
+   "slot": "weapon",
+   "weapon_type": "rod",
+   "tier": 8,
+   "power": 147,
+   "scales": "mag",
+   "stat_bonus": {
+    "mag": 8
+   },
+   "value": 5363,
+   "drop_table": "gear_t8"
+  },
+  {
+   "id": "mace_t1",
+   "name": "Wooden Club",
+   "slot": "weapon",
+   "weapon_type": "mace",
+   "tier": 1,
+   "power": 6,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 1
+   },
+   "value": 60,
+   "drop_table": "gear_t1"
+  },
+  {
+   "id": "mace_t2",
+   "name": "Iron Mace",
+   "slot": "weapon",
+   "weapon_type": "mace",
+   "tier": 2,
+   "power": 17,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 2
+   },
+   "value": 114,
+   "drop_table": "gear_t2"
+  },
+  {
+   "id": "mace_t3",
+   "name": "Steel Morningstar",
+   "slot": "weapon",
+   "weapon_type": "mace",
+   "tier": 3,
+   "power": 30,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 3
+   },
+   "value": 217,
+   "drop_table": "gear_t3"
+  },
+  {
+   "id": "mace_t4",
+   "name": "Blessed Maul",
+   "slot": "weapon",
+   "weapon_type": "mace",
+   "tier": 4,
+   "power": 47,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 4
+   },
+   "value": 412,
+   "drop_table": "gear_t4"
+  },
+  {
+   "id": "mace_t5",
+   "name": "Runed Morningstar",
+   "slot": "weapon",
+   "weapon_type": "mace",
+   "tier": 5,
+   "power": 68,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 5
+   },
+   "value": 782,
+   "drop_table": "gear_t5"
+  },
+  {
+   "id": "mace_t6",
+   "name": "Dragonbone Maul",
+   "slot": "weapon",
+   "weapon_type": "mace",
+   "tier": 6,
+   "power": 91,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 6
+   },
+   "value": 1486,
+   "drop_table": "gear_t6"
+  },
+  {
+   "id": "mace_t7",
+   "name": "Starforged Hammer",
+   "slot": "weapon",
+   "weapon_type": "mace",
+   "tier": 7,
+   "power": 118,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 7
+   },
+   "value": 2823,
+   "drop_table": "gear_t7"
+  },
+  {
+   "id": "mace_t8",
+   "name": "Judgment",
+   "slot": "weapon",
+   "weapon_type": "mace",
+   "tier": 8,
+   "power": 147,
+   "scales": "str",
+   "stat_bonus": {
+    "str": 8
+   },
+   "value": 5363,
+   "drop_table": "gear_t8"
+  },
+  {
+   "id": "head_t1",
+   "name": "Leather Cap",
+   "slot": "head",
+   "tier": 1,
+   "defense": 3,
+   "resist": 2,
+   "stat_bonus": {
+    "vit": 1
+   },
+   "value": 48,
+   "drop_table": "gear_t1"
+  },
+  {
+   "id": "head_t2",
+   "name": "Iron Helm",
+   "slot": "head",
+   "tier": 2,
+   "defense": 7,
+   "resist": 6,
+   "stat_bonus": {
+    "vit": 1
+   },
+   "value": 72,
+   "drop_table": "gear_t2"
+  },
+  {
+   "id": "head_t3",
+   "name": "Steel Helm",
+   "slot": "head",
+   "tier": 3,
+   "defense": 13,
+   "resist": 10,
+   "stat_bonus": {
+    "vit": 2
+   },
+   "value": 119,
+   "drop_table": "gear_t3"
+  },
+  {
+   "id": "head_t4",
+   "name": "Knight's Barbute",
+   "slot": "head",
+   "tier": 4,
+   "defense": 18,
+   "resist": 15,
+   "stat_bonus": {
+    "vit": 2
+   },
+   "value": 209,
+   "drop_table": "gear_t4"
+  },
+  {
+   "id": "head_t5",
+   "name": "Runed Helm",
+   "slot": "head",
+   "tier": 5,
+   "defense": 25,
+   "resist": 20,
+   "stat_bonus": {
+    "vit": 3
+   },
+   "value": 378,
+   "drop_table": "gear_t5"
+  },
+  {
+   "id": "head_t6",
+   "name": "Dragonbone Helm",
+   "slot": "head",
+   "tier": 6,
+   "defense": 32,
+   "resist": 26,
+   "stat_bonus": {
+    "vit": 3
+   },
+   "value": 701,
+   "drop_table": "gear_t6"
+  },
+  {
+   "id": "head_t7",
+   "name": "Starforged Crown",
+   "slot": "head",
+   "tier": 7,
+   "defense": 39,
+   "resist": 32,
+   "stat_bonus": {
+    "vit": 4
+   },
+   "value": 1314,
+   "drop_table": "gear_t7"
+  },
+  {
+   "id": "head_t8",
+   "name": "Halo of the Nameless",
+   "slot": "head",
+   "tier": 8,
+   "defense": 47,
+   "resist": 38,
+   "stat_bonus": {
+    "vit": 4
+   },
+   "value": 2478,
+   "drop_table": "gear_t8"
+  },
+  {
+   "id": "body_t1",
+   "name": "Padded Vest",
+   "slot": "body",
+   "tier": 1,
+   "defense": 5,
+   "resist": 4,
+   "stat_bonus": {
+    "vit": 1
+   },
+   "value": 70,
+   "drop_table": "gear_t1"
+  },
+  {
+   "id": "body_t2",
+   "name": "Iron Mail",
+   "slot": "body",
+   "tier": 2,
+   "defense": 14,
+   "resist": 11,
+   "stat_bonus": {
+    "vit": 2
+   },
+   "value": 115,
+   "drop_table": "gear_t2"
+  },
+  {
+   "id": "body_t3",
+   "name": "Steel Plate",
+   "slot": "body",
+   "tier": 3,
+   "defense": 23,
+   "resist": 19,
+   "stat_bonus": {
+    "vit": 3
+   },
+   "value": 200,
+   "drop_table": "gear_t3"
+  },
+  {
+   "id": "body_t4",
+   "name": "Knight's Cuirass",
+   "slot": "body",
+   "tier": 4,
+   "defense": 34,
+   "resist": 27,
+   "stat_bonus": {
+    "vit": 4
+   },
+   "value": 363,
+   "drop_table": "gear_t4"
+  },
+  {
+   "id": "body_t5",
+   "name": "Runed Plate",
+   "slot": "body",
+   "tier": 5,
+   "defense": 45,
+   "resist": 36,
+   "stat_bonus": {
+    "vit": 5
+   },
+   "value": 672,
+   "drop_table": "gear_t5"
+  },
+  {
+   "id": "body_t6",
+   "name": "Dragonbone Plate",
+   "slot": "body",
+   "tier": 6,
+   "defense": 58,
+   "resist": 46,
+   "stat_bonus": {
+    "vit": 6
+   },
+   "value": 1258,
+   "drop_table": "gear_t6"
+  },
+  {
+   "id": "body_t7",
+   "name": "Starforged Aegis",
+   "slot": "body",
+   "tier": 7,
+   "defense": 71,
+   "resist": 57,
+   "stat_bonus": {
+    "vit": 7
+   },
+   "value": 2372,
+   "drop_table": "gear_t7"
+  },
+  {
+   "id": "body_t8",
+   "name": "Mantle of the First Dawn",
+   "slot": "body",
+   "tier": 8,
+   "defense": 86,
+   "resist": 69,
+   "stat_bonus": {
+    "vit": 8
+   },
+   "value": 4489,
+   "drop_table": "gear_t8"
+  },
+  {
+   "id": "shield_t1",
+   "name": "Wooden Buckler",
+   "slot": "shield",
+   "tier": 1,
+   "defense": 4,
+   "resist": 3,
+   "stat_bonus": {
+    "vit": 1
+   },
+   "value": 58,
+   "drop_table": "gear_t1"
+  },
+  {
+   "id": "shield_t2",
+   "name": "Iron Shield",
+   "slot": "shield",
+   "tier": 2,
+   "defense": 10,
+   "resist": 8,
+   "stat_bonus": {
+    "vit": 2
+   },
+   "value": 91,
+   "drop_table": "gear_t2"
+  },
+  {
+   "id": "shield_t3",
+   "name": "Steel Kite Shield",
+   "slot": "shield",
+   "tier": 3,
+   "defense": 17,
+   "resist": 14,
+   "stat_bonus": {
+    "vit": 2
+   },
+   "value": 155,
+   "drop_table": "gear_t3"
+  },
+  {
+   "id": "shield_t4",
+   "name": "Knight's Bulwark",
+   "slot": "shield",
+   "tier": 4,
+   "defense": 25,
+   "resist": 20,
+   "stat_bonus": {
+    "vit": 3
+   },
+   "value": 277,
+   "drop_table": "gear_t4"
+  },
+  {
+   "id": "shield_t5",
+   "name": "Runed Aegis",
+   "slot": "shield",
+   "tier": 5,
+   "defense": 34,
+   "resist": 27,
+   "stat_bonus": {
+    "vit": 4
+   },
+   "value": 509,
+   "drop_table": "gear_t5"
+  },
+  {
+   "id": "shield_t6",
+   "name": "Dragonbone Wall",
+   "slot": "shield",
+   "tier": 6,
+   "defense": 43,
+   "resist": 35,
+   "stat_bonus": {
+    "vit": 4
+   },
+   "value": 949,
+   "drop_table": "gear_t6"
+  },
+  {
+   "id": "shield_t7",
+   "name": "Starforged Bastion",
+   "slot": "shield",
+   "tier": 7,
+   "defense": 53,
+   "resist": 43,
+   "stat_bonus": {
+    "vit": 5
+   },
+   "value": 1784,
+   "drop_table": "gear_t7"
+  },
+  {
+   "id": "shield_t8",
+   "name": "Unbroken Vow",
+   "slot": "shield",
+   "tier": 8,
+   "defense": 64,
+   "resist": 52,
+   "stat_bonus": {
+    "vit": 6
+   },
+   "value": 3372,
+   "drop_table": "gear_t8"
+  },
+  {
+   "id": "feet_t1",
+   "name": "Worn Boots",
+   "slot": "feet",
+   "tier": 1,
+   "defense": 2,
+   "resist": 2,
+   "stat_bonus": {
+    "vit": 1
+   },
+   "value": 42,
+   "drop_table": "gear_t1"
+  },
+  {
+   "id": "feet_t2",
+   "name": "Leather Greaves",
+   "slot": "feet",
+   "tier": 2,
+   "defense": 6,
+   "resist": 5,
+   "stat_bonus": {
+    "vit": 1
+   },
+   "value": 63,
+   "drop_table": "gear_t2"
+  },
+  {
+   "id": "feet_t3",
+   "name": "Steel Sabatons",
+   "slot": "feet",
+   "tier": 3,
+   "defense": 10,
+   "resist": 8,
+   "stat_bonus": {
+    "vit": 1
+   },
+   "value": 101,
+   "drop_table": "gear_t3"
+  },
+  {
+   "id": "feet_t4",
+   "name": "Swift Striders",
+   "slot": "feet",
+   "tier": 4,
+   "defense": 15,
+   "resist": 12,
+   "stat_bonus": {
+    "vit": 2
+   },
+   "value": 174,
+   "drop_table": "gear_t4"
+  },
+  {
+   "id": "feet_t5",
+   "name": "Runed Greaves",
+   "slot": "feet",
+   "tier": 5,
+   "defense": 20,
+   "resist": 16,
+   "stat_bonus": {
+    "vit": 2
+   },
+   "value": 313,
+   "drop_table": "gear_t5"
+  },
+  {
+   "id": "feet_t6",
+   "name": "Dragonbone Sabatons",
+   "slot": "feet",
+   "tier": 6,
+   "defense": 26,
+   "resist": 21,
+   "stat_bonus": {
+    "vit": 3
+   },
+   "value": 577,
+   "drop_table": "gear_t6"
+  },
+  {
+   "id": "feet_t7",
+   "name": "Starforged Treads",
+   "slot": "feet",
+   "tier": 7,
+   "defense": 32,
+   "resist": 26,
+   "stat_bonus": {
+    "vit": 3
+   },
+   "value": 1079,
+   "drop_table": "gear_t7"
+  },
+  {
+   "id": "feet_t8",
+   "name": "Seven League Boots",
+   "slot": "feet",
+   "tier": 8,
+   "defense": 38,
+   "resist": 31,
+   "stat_bonus": {
+    "vit": 4
+   },
+   "value": 2031,
+   "drop_table": "gear_t8"
+  },
+  {
+   "id": "ring_power_t1",
+   "name": "Ring of Power I",
+   "slot": "accessory",
+   "tier": 1,
+   "stat_bonus": {
+    "str": 4
+   },
+   "value": 90,
+   "drop_table": "gear_t1"
+  },
+  {
+   "id": "ring_power_t2",
+   "name": "Ring of Power II",
+   "slot": "accessory",
+   "tier": 2,
+   "stat_bonus": {
+    "str": 6
+   },
+   "value": 166,
+   "drop_table": "gear_t2"
+  },
+  {
+   "id": "ring_power_t3",
+   "name": "Ring of Power III",
+   "slot": "accessory",
+   "tier": 3,
+   "stat_bonus": {
+    "str": 9
+   },
+   "value": 308,
+   "drop_table": "gear_t3"
+  },
+  {
+   "id": "ring_power_t4",
+   "name": "Ring of Power IV",
+   "slot": "accessory",
+   "tier": 4,
+   "stat_bonus": {
+    "str": 11
+   },
+   "value": 570,
+   "drop_table": "gear_t4"
+  },
+  {
+   "id": "ring_power_t5",
+   "name": "Ring of Power V",
+   "slot": "accessory",
+   "tier": 5,
+   "stat_bonus": {
+    "str": 13
+   },
+   "value": 1054,
+   "drop_table": "gear_t5"
+  },
+  {
+   "id": "ring_power_t6",
+   "name": "Ring of Power VI",
+   "slot": "accessory",
+   "tier": 6,
+   "stat_bonus": {
+    "str": 15
+   },
+   "value": 1950,
+   "drop_table": "gear_t6"
+  },
+  {
+   "id": "ring_power_t7",
+   "name": "Ring of Power VII",
+   "slot": "accessory",
+   "tier": 7,
+   "stat_bonus": {
+    "str": 17
+   },
+   "value": 3608,
+   "drop_table": "gear_t7"
+  },
+  {
+   "id": "ring_power_t8",
+   "name": "Ring of Power VIII",
+   "slot": "accessory",
+   "tier": 8,
+   "stat_bonus": {
+    "str": 20
+   },
+   "value": 6675,
+   "drop_table": "gear_t8"
+  },
+  {
+   "id": "ring_focus_t1",
+   "name": "Ring of Focus I",
+   "slot": "accessory",
+   "tier": 1,
+   "stat_bonus": {
+    "mag": 4
+   },
+   "value": 90,
+   "drop_table": "gear_t1"
+  },
+  {
+   "id": "ring_focus_t2",
+   "name": "Ring of Focus II",
+   "slot": "accessory",
+   "tier": 2,
+   "stat_bonus": {
+    "mag": 6
+   },
+   "value": 166,
+   "drop_table": "gear_t2"
+  },
+  {
+   "id": "ring_focus_t3",
+   "name": "Ring of Focus III",
+   "slot": "accessory",
+   "tier": 3,
+   "stat_bonus": {
+    "mag": 9
+   },
+   "value": 308,
+   "drop_table": "gear_t3"
+  },
+  {
+   "id": "ring_focus_t4",
+   "name": "Ring of Focus IV",
+   "slot": "accessory",
+   "tier": 4,
+   "stat_bonus": {
+    "mag": 11
+   },
+   "value": 570,
+   "drop_table": "gear_t4"
+  },
+  {
+   "id": "ring_focus_t5",
+   "name": "Ring of Focus V",
+   "slot": "accessory",
+   "tier": 5,
+   "stat_bonus": {
+    "mag": 13
+   },
+   "value": 1054,
+   "drop_table": "gear_t5"
+  },
+  {
+   "id": "ring_focus_t6",
+   "name": "Ring of Focus VI",
+   "slot": "accessory",
+   "tier": 6,
+   "stat_bonus": {
+    "mag": 15
+   },
+   "value": 1950,
+   "drop_table": "gear_t6"
+  },
+  {
+   "id": "ring_focus_t7",
+   "name": "Ring of Focus VII",
+   "slot": "accessory",
+   "tier": 7,
+   "stat_bonus": {
+    "mag": 17
+   },
+   "value": 3608,
+   "drop_table": "gear_t7"
+  },
+  {
+   "id": "ring_focus_t8",
+   "name": "Ring of Focus VIII",
+   "slot": "accessory",
+   "tier": 8,
+   "stat_bonus": {
+    "mag": 20
+   },
+   "value": 6675,
+   "drop_table": "gear_t8"
+  },
+  {
+   "id": "ring_vigor_t1",
+   "name": "Ring of Vigor I",
+   "slot": "accessory",
+   "tier": 1,
+   "stat_bonus": {
+    "vit": 4
+   },
+   "value": 90,
+   "drop_table": "gear_t1"
+  },
+  {
+   "id": "ring_vigor_t2",
+   "name": "Ring of Vigor II",
+   "slot": "accessory",
+   "tier": 2,
+   "stat_bonus": {
+    "vit": 6
+   },
+   "value": 166,
+   "drop_table": "gear_t2"
+  },
+  {
+   "id": "ring_vigor_t3",
+   "name": "Ring of Vigor III",
+   "slot": "accessory",
+   "tier": 3,
+   "stat_bonus": {
+    "vit": 9
+   },
+   "value": 308,
+   "drop_table": "gear_t3"
+  },
+  {
+   "id": "ring_vigor_t4",
+   "name": "Ring of Vigor IV",
+   "slot": "accessory",
+   "tier": 4,
+   "stat_bonus": {
+    "vit": 11
+   },
+   "value": 570,
+   "drop_table": "gear_t4"
+  },
+  {
+   "id": "ring_vigor_t5",
+   "name": "Ring of Vigor V",
+   "slot": "accessory",
+   "tier": 5,
+   "stat_bonus": {
+    "vit": 13
+   },
+   "value": 1054,
+   "drop_table": "gear_t5"
+  },
+  {
+   "id": "ring_vigor_t6",
+   "name": "Ring of Vigor VI",
+   "slot": "accessory",
+   "tier": 6,
+   "stat_bonus": {
+    "vit": 15
+   },
+   "value": 1950,
+   "drop_table": "gear_t6"
+  },
+  {
+   "id": "ring_vigor_t7",
+   "name": "Ring of Vigor VII",
+   "slot": "accessory",
+   "tier": 7,
+   "stat_bonus": {
+    "vit": 17
+   },
+   "value": 3608,
+   "drop_table": "gear_t7"
+  },
+  {
+   "id": "ring_vigor_t8",
+   "name": "Ring of Vigor VIII",
+   "slot": "accessory",
+   "tier": 8,
+   "stat_bonus": {
+    "vit": 20
+   },
+   "value": 6675,
+   "drop_table": "gear_t8"
+  },
+  {
+   "id": "ring_spirit_t1",
+   "name": "Ring of Spirit I",
+   "slot": "accessory",
+   "tier": 1,
+   "stat_bonus": {
+    "spr": 4
+   },
+   "value": 90,
+   "drop_table": "gear_t1"
+  },
+  {
+   "id": "ring_spirit_t2",
+   "name": "Ring of Spirit II",
+   "slot": "accessory",
+   "tier": 2,
+   "stat_bonus": {
+    "spr": 6
+   },
+   "value": 166,
+   "drop_table": "gear_t2"
+  },
+  {
+   "id": "ring_spirit_t3",
+   "name": "Ring of Spirit III",
+   "slot": "accessory",
+   "tier": 3,
+   "stat_bonus": {
+    "spr": 9
+   },
+   "value": 308,
+   "drop_table": "gear_t3"
+  },
+  {
+   "id": "ring_spirit_t4",
+   "name": "Ring of Spirit IV",
+   "slot": "accessory",
+   "tier": 4,
+   "stat_bonus": {
+    "spr": 11
+   },
+   "value": 570,
+   "drop_table": "gear_t4"
+  },
+  {
+   "id": "ring_spirit_t5",
+   "name": "Ring of Spirit V",
+   "slot": "accessory",
+   "tier": 5,
+   "stat_bonus": {
+    "spr": 13
+   },
+   "value": 1054,
+   "drop_table": "gear_t5"
+  },
+  {
+   "id": "ring_spirit_t6",
+   "name": "Ring of Spirit VI",
+   "slot": "accessory",
+   "tier": 6,
+   "stat_bonus": {
+    "spr": 15
+   },
+   "value": 1950,
+   "drop_table": "gear_t6"
+  },
+  {
+   "id": "ring_spirit_t7",
+   "name": "Ring of Spirit VII",
+   "slot": "accessory",
+   "tier": 7,
+   "stat_bonus": {
+    "spr": 17
+   },
+   "value": 3608,
+   "drop_table": "gear_t7"
+  },
+  {
+   "id": "ring_spirit_t8",
+   "name": "Ring of Spirit VIII",
+   "slot": "accessory",
+   "tier": 8,
+   "stat_bonus": {
+    "spr": 20
+   },
+   "value": 6675,
+   "drop_table": "gear_t8"
+  },
+  {
+   "id": "ring_swiftness_t1",
+   "name": "Ring of Swiftness I",
+   "slot": "accessory",
+   "tier": 1,
+   "stat_bonus": {
+    "agi": 4
+   },
+   "value": 90,
+   "drop_table": "gear_t1"
+  },
+  {
+   "id": "ring_swiftness_t2",
+   "name": "Ring of Swiftness II",
+   "slot": "accessory",
+   "tier": 2,
+   "stat_bonus": {
+    "agi": 6
+   },
+   "value": 166,
+   "drop_table": "gear_t2"
+  },
+  {
+   "id": "ring_swiftness_t3",
+   "name": "Ring of Swiftness III",
+   "slot": "accessory",
+   "tier": 3,
+   "stat_bonus": {
+    "agi": 9
+   },
+   "value": 308,
+   "drop_table": "gear_t3"
+  },
+  {
+   "id": "ring_swiftness_t4",
+   "name": "Ring of Swiftness IV",
+   "slot": "accessory",
+   "tier": 4,
+   "stat_bonus": {
+    "agi": 11
+   },
+   "value": 570,
+   "drop_table": "gear_t4"
+  },
+  {
+   "id": "ring_swiftness_t5",
+   "name": "Ring of Swiftness V",
+   "slot": "accessory",
+   "tier": 5,
+   "stat_bonus": {
+    "agi": 13
+   },
+   "value": 1054,
+   "drop_table": "gear_t5"
+  },
+  {
+   "id": "ring_swiftness_t6",
+   "name": "Ring of Swiftness VI",
+   "slot": "accessory",
+   "tier": 6,
+   "stat_bonus": {
+    "agi": 15
+   },
+   "value": 1950,
+   "drop_table": "gear_t6"
+  },
+  {
+   "id": "ring_swiftness_t7",
+   "name": "Ring of Swiftness VII",
+   "slot": "accessory",
+   "tier": 7,
+   "stat_bonus": {
+    "agi": 17
+   },
+   "value": 3608,
+   "drop_table": "gear_t7"
+  },
+  {
+   "id": "ring_swiftness_t8",
+   "name": "Ring of Swiftness VIII",
+   "slot": "accessory",
+   "tier": 8,
+   "stat_bonus": {
+    "agi": 20
+   },
+   "value": 6675,
+   "drop_table": "gear_t8"
+  },
+  {
+   "id": "charm_fortune_t1",
+   "name": "Charm of Fortune I",
+   "slot": "accessory",
+   "tier": 1,
+   "stat_bonus": {
+    "lck": 4
+   },
+   "value": 90,
+   "drop_table": "gear_t1"
+  },
+  {
+   "id": "charm_fortune_t2",
+   "name": "Charm of Fortune II",
+   "slot": "accessory",
+   "tier": 2,
+   "stat_bonus": {
+    "lck": 6
+   },
+   "value": 166,
+   "drop_table": "gear_t2"
+  },
+  {
+   "id": "charm_fortune_t3",
+   "name": "Charm of Fortune III",
+   "slot": "accessory",
+   "tier": 3,
+   "stat_bonus": {
+    "lck": 9
+   },
+   "value": 308,
+   "drop_table": "gear_t3"
+  },
+  {
+   "id": "charm_fortune_t4",
+   "name": "Charm of Fortune IV",
+   "slot": "accessory",
+   "tier": 4,
+   "stat_bonus": {
+    "lck": 11
+   },
+   "value": 570,
+   "drop_table": "gear_t4"
+  },
+  {
+   "id": "charm_fortune_t5",
+   "name": "Charm of Fortune V",
+   "slot": "accessory",
+   "tier": 5,
+   "stat_bonus": {
+    "lck": 13
+   },
+   "value": 1054,
+   "drop_table": "gear_t5"
+  },
+  {
+   "id": "charm_fortune_t6",
+   "name": "Charm of Fortune VI",
+   "slot": "accessory",
+   "tier": 6,
+   "stat_bonus": {
+    "lck": 15
+   },
+   "value": 1950,
+   "drop_table": "gear_t6"
+  },
+  {
+   "id": "charm_fortune_t7",
+   "name": "Charm of Fortune VII",
+   "slot": "accessory",
+   "tier": 7,
+   "stat_bonus": {
+    "lck": 17
+   },
+   "value": 3608,
+   "drop_table": "gear_t7"
+  },
+  {
+   "id": "charm_fortune_t8",
+   "name": "Charm of Fortune VIII",
+   "slot": "accessory",
+   "tier": 8,
+   "stat_bonus": {
+    "lck": 20
+   },
+   "value": 6675,
+   "drop_table": "gear_t8"
+  },
+  {
+   "id": "potion_t1",
+   "name": "Potion",
+   "slot": "consumable",
+   "effect": "heal_pct",
+   "magnitude": 30,
+   "value": 40,
+   "stackable": true
+  },
+  {
+   "id": "potion_t2",
+   "name": "Hi-Potion",
+   "slot": "consumable",
+   "effect": "heal_pct",
+   "magnitude": 50,
+   "value": 180,
+   "stackable": true
+  },
+  {
+   "id": "potion_t3",
+   "name": "Mega Potion",
+   "slot": "consumable",
+   "effect": "heal_pct",
+   "magnitude": 75,
+   "value": 600,
+   "stackable": true
+  },
+  {
+   "id": "potion_t4",
+   "name": "Elixir",
+   "slot": "consumable",
+   "effect": "heal_full",
+   "magnitude": 100,
+   "value": 2400,
+   "stackable": true
+  },
+  {
+   "id": "ether_t1",
+   "name": "Ether",
+   "slot": "consumable",
+   "effect": "mp_pct",
+   "magnitude": 30,
+   "value": 120,
+   "stackable": true
+  },
+  {
+   "id": "ether_t2",
+   "name": "Hi-Ether",
+   "slot": "consumable",
+   "effect": "mp_pct",
+   "magnitude": 60,
+   "value": 420,
+   "stackable": true
+  },
+  {
+   "id": "ether_t3",
+   "name": "Mega Ether",
+   "slot": "consumable",
+   "effect": "mp_pct",
+   "magnitude": 100,
+   "value": 1100,
+   "stackable": true
+  },
+  {
+   "id": "antidote",
+   "name": "Antidote",
+   "slot": "consumable",
+   "effect": "cure:poison",
+   "magnitude": 0,
+   "value": 50,
+   "stackable": true
+  },
+  {
+   "id": "eye_drops",
+   "name": "Eye Drops",
+   "slot": "consumable",
+   "effect": "cure:blind",
+   "magnitude": 0,
+   "value": 50,
+   "stackable": true
+  },
+  {
+   "id": "echo_herb",
+   "name": "Echo Herb",
+   "slot": "consumable",
+   "effect": "cure:silence",
+   "magnitude": 0,
+   "value": 60,
+   "stackable": true
+  },
+  {
+   "id": "soft",
+   "name": "Gold Needle",
+   "slot": "consumable",
+   "effect": "cure:petrify",
+   "magnitude": 0,
+   "value": 150,
+   "stackable": true
+  },
+  {
+   "id": "revive_charm",
+   "name": "Revive Charm",
+   "slot": "consumable",
+   "effect": "revive",
+   "magnitude": 50,
+   "value": 800,
+   "stackable": true
+  },
+  {
+   "id": "smoke_flask",
+   "name": "Smoke Flask",
+   "slot": "consumable",
+   "effect": "flee_guaranteed",
+   "magnitude": 0,
+   "value": 90,
+   "stackable": true
+  },
+  {
+   "id": "fire_flask",
+   "name": "Fire Flask",
+   "slot": "consumable",
+   "effect": "damage:fire",
+   "magnitude": 120,
+   "value": 150,
+   "stackable": true
+  },
+  {
+   "id": "frost_flask",
+   "name": "Frost Flask",
+   "slot": "consumable",
+   "effect": "damage:ice",
+   "magnitude": 120,
+   "value": 150,
+   "stackable": true
+  },
+  {
+   "id": "bolt_flask",
+   "name": "Bolt Flask",
+   "slot": "consumable",
+   "effect": "damage:lightning",
+   "magnitude": 120,
+   "value": 150,
+   "stackable": true
+  },
+  {
+   "id": "camp_ration",
+   "name": "Camp Ration",
+   "slot": "consumable",
+   "effect": "stamina",
+   "magnitude": 5,
+   "value": 300,
+   "stackable": true
+  },
+  {
+   "id": "crude_pelt",
+   "name": "Crude Pelt",
+   "slot": "material",
+   "tier": 1,
+   "value": 12,
+   "stackable": true
+  },
+  {
+   "id": "crude_chitin",
+   "name": "Crude Chitin",
+   "slot": "material",
+   "tier": 1,
+   "value": 12,
+   "stackable": true
+  },
+  {
+   "id": "crude_seed",
+   "name": "Crude Seed",
+   "slot": "material",
+   "tier": 1,
+   "value": 12,
+   "stackable": true
+  },
+  {
+   "id": "crude_bone_shard",
+   "name": "Crude Bone Shard",
+   "slot": "material",
+   "tier": 1,
+   "value": 12,
+   "stackable": true
+  },
+  {
+   "id": "crude_demon_horn",
+   "name": "Crude Demon Horn",
+   "slot": "material",
+   "tier": 1,
+   "value": 12,
+   "stackable": true
+  },
+  {
+   "id": "crude_dragon_scale",
+   "name": "Crude Dragon Scale",
+   "slot": "material",
+   "tier": 1,
+   "value": 12,
+   "stackable": true
+  },
+  {
+   "id": "crude_mote",
+   "name": "Crude Mote",
+   "slot": "material",
+   "tier": 1,
+   "value": 12,
+   "stackable": true
+  },
+  {
+   "id": "crude_scrap_plate",
+   "name": "Crude Scrap Plate",
+   "slot": "material",
+   "tier": 1,
+   "value": 12,
+   "stackable": true
+  },
+  {
+   "id": "crude_tattered_cloth",
+   "name": "Crude Tattered Cloth",
+   "slot": "material",
+   "tier": 1,
+   "value": 12,
+   "stackable": true
+  },
+  {
+   "id": "crude_strange_eye",
+   "name": "Crude Strange Eye",
+   "slot": "material",
+   "tier": 1,
+   "value": 12,
+   "stackable": true
+  },
+  {
+   "id": "crude_gel",
+   "name": "Crude Gel",
+   "slot": "material",
+   "tier": 1,
+   "value": 12,
+   "stackable": true
+  },
+  {
+   "id": "crude_feather",
+   "name": "Crude Feather",
+   "slot": "material",
+   "tier": 1,
+   "value": 12,
+   "stackable": true
+  },
+  {
+   "id": "crude_fin",
+   "name": "Crude Fin",
+   "slot": "material",
+   "tier": 1,
+   "value": 12,
+   "stackable": true
+  },
+  {
+   "id": "crude_giant_sinew",
+   "name": "Crude Giant Sinew",
+   "slot": "material",
+   "tier": 1,
+   "value": 12,
+   "stackable": true
+  },
+  {
+   "id": "crude_fae_dust",
+   "name": "Crude Fae Dust",
+   "slot": "material",
+   "tier": 1,
+   "value": 12,
+   "stackable": true
+  },
+  {
+   "id": "common_pelt",
+   "name": "Common Pelt",
+   "slot": "material",
+   "tier": 2,
+   "value": 21,
+   "stackable": true
+  },
+  {
+   "id": "common_chitin",
+   "name": "Common Chitin",
+   "slot": "material",
+   "tier": 2,
+   "value": 21,
+   "stackable": true
+  },
+  {
+   "id": "common_seed",
+   "name": "Common Seed",
+   "slot": "material",
+   "tier": 2,
+   "value": 21,
+   "stackable": true
+  },
+  {
+   "id": "common_bone_shard",
+   "name": "Common Bone Shard",
+   "slot": "material",
+   "tier": 2,
+   "value": 21,
+   "stackable": true
+  },
+  {
+   "id": "common_demon_horn",
+   "name": "Common Demon Horn",
+   "slot": "material",
+   "tier": 2,
+   "value": 21,
+   "stackable": true
+  },
+  {
+   "id": "common_dragon_scale",
+   "name": "Common Dragon Scale",
+   "slot": "material",
+   "tier": 2,
+   "value": 21,
+   "stackable": true
+  },
+  {
+   "id": "common_mote",
+   "name": "Common Mote",
+   "slot": "material",
+   "tier": 2,
+   "value": 21,
+   "stackable": true
+  },
+  {
+   "id": "common_scrap_plate",
+   "name": "Common Scrap Plate",
+   "slot": "material",
+   "tier": 2,
+   "value": 21,
+   "stackable": true
+  },
+  {
+   "id": "common_tattered_cloth",
+   "name": "Common Tattered Cloth",
+   "slot": "material",
+   "tier": 2,
+   "value": 21,
+   "stackable": true
+  },
+  {
+   "id": "common_strange_eye",
+   "name": "Common Strange Eye",
+   "slot": "material",
+   "tier": 2,
+   "value": 21,
+   "stackable": true
+  },
+  {
+   "id": "common_gel",
+   "name": "Common Gel",
+   "slot": "material",
+   "tier": 2,
+   "value": 21,
+   "stackable": true
+  },
+  {
+   "id": "common_feather",
+   "name": "Common Feather",
+   "slot": "material",
+   "tier": 2,
+   "value": 21,
+   "stackable": true
+  },
+  {
+   "id": "common_fin",
+   "name": "Common Fin",
+   "slot": "material",
+   "tier": 2,
+   "value": 21,
+   "stackable": true
+  },
+  {
+   "id": "common_giant_sinew",
+   "name": "Common Giant Sinew",
+   "slot": "material",
+   "tier": 2,
+   "value": 21,
+   "stackable": true
+  },
+  {
+   "id": "common_fae_dust",
+   "name": "Common Fae Dust",
+   "slot": "material",
+   "tier": 2,
+   "value": 21,
+   "stackable": true
+  },
+  {
+   "id": "fine_pelt",
+   "name": "Fine Pelt",
+   "slot": "material",
+   "tier": 3,
+   "value": 37,
+   "stackable": true
+  },
+  {
+   "id": "fine_chitin",
+   "name": "Fine Chitin",
+   "slot": "material",
+   "tier": 3,
+   "value": 37,
+   "stackable": true
+  },
+  {
+   "id": "fine_seed",
+   "name": "Fine Seed",
+   "slot": "material",
+   "tier": 3,
+   "value": 37,
+   "stackable": true
+  },
+  {
+   "id": "fine_bone_shard",
+   "name": "Fine Bone Shard",
+   "slot": "material",
+   "tier": 3,
+   "value": 37,
+   "stackable": true
+  },
+  {
+   "id": "fine_demon_horn",
+   "name": "Fine Demon Horn",
+   "slot": "material",
+   "tier": 3,
+   "value": 37,
+   "stackable": true
+  },
+  {
+   "id": "fine_dragon_scale",
+   "name": "Fine Dragon Scale",
+   "slot": "material",
+   "tier": 3,
+   "value": 37,
+   "stackable": true
+  },
+  {
+   "id": "fine_mote",
+   "name": "Fine Mote",
+   "slot": "material",
+   "tier": 3,
+   "value": 37,
+   "stackable": true
+  },
+  {
+   "id": "fine_scrap_plate",
+   "name": "Fine Scrap Plate",
+   "slot": "material",
+   "tier": 3,
+   "value": 37,
+   "stackable": true
+  },
+  {
+   "id": "fine_tattered_cloth",
+   "name": "Fine Tattered Cloth",
+   "slot": "material",
+   "tier": 3,
+   "value": 37,
+   "stackable": true
+  },
+  {
+   "id": "fine_strange_eye",
+   "name": "Fine Strange Eye",
+   "slot": "material",
+   "tier": 3,
+   "value": 37,
+   "stackable": true
+  },
+  {
+   "id": "fine_gel",
+   "name": "Fine Gel",
+   "slot": "material",
+   "tier": 3,
+   "value": 37,
+   "stackable": true
+  },
+  {
+   "id": "fine_feather",
+   "name": "Fine Feather",
+   "slot": "material",
+   "tier": 3,
+   "value": 37,
+   "stackable": true
+  },
+  {
+   "id": "fine_fin",
+   "name": "Fine Fin",
+   "slot": "material",
+   "tier": 3,
+   "value": 37,
+   "stackable": true
+  },
+  {
+   "id": "fine_giant_sinew",
+   "name": "Fine Giant Sinew",
+   "slot": "material",
+   "tier": 3,
+   "value": 37,
+   "stackable": true
+  },
+  {
+   "id": "fine_fae_dust",
+   "name": "Fine Fae Dust",
+   "slot": "material",
+   "tier": 3,
+   "value": 37,
+   "stackable": true
+  },
+  {
+   "id": "superior_pelt",
+   "name": "Superior Pelt",
+   "slot": "material",
+   "tier": 4,
+   "value": 64,
+   "stackable": true
+  },
+  {
+   "id": "superior_chitin",
+   "name": "Superior Chitin",
+   "slot": "material",
+   "tier": 4,
+   "value": 64,
+   "stackable": true
+  },
+  {
+   "id": "superior_seed",
+   "name": "Superior Seed",
+   "slot": "material",
+   "tier": 4,
+   "value": 64,
+   "stackable": true
+  },
+  {
+   "id": "superior_bone_shard",
+   "name": "Superior Bone Shard",
+   "slot": "material",
+   "tier": 4,
+   "value": 64,
+   "stackable": true
+  },
+  {
+   "id": "superior_demon_horn",
+   "name": "Superior Demon Horn",
+   "slot": "material",
+   "tier": 4,
+   "value": 64,
+   "stackable": true
+  },
+  {
+   "id": "superior_dragon_scale",
+   "name": "Superior Dragon Scale",
+   "slot": "material",
+   "tier": 4,
+   "value": 64,
+   "stackable": true
+  },
+  {
+   "id": "superior_mote",
+   "name": "Superior Mote",
+   "slot": "material",
+   "tier": 4,
+   "value": 64,
+   "stackable": true
+  },
+  {
+   "id": "superior_scrap_plate",
+   "name": "Superior Scrap Plate",
+   "slot": "material",
+   "tier": 4,
+   "value": 64,
+   "stackable": true
+  },
+  {
+   "id": "superior_tattered_cloth",
+   "name": "Superior Tattered Cloth",
+   "slot": "material",
+   "tier": 4,
+   "value": 64,
+   "stackable": true
+  },
+  {
+   "id": "superior_strange_eye",
+   "name": "Superior Strange Eye",
+   "slot": "material",
+   "tier": 4,
+   "value": 64,
+   "stackable": true
+  },
+  {
+   "id": "superior_gel",
+   "name": "Superior Gel",
+   "slot": "material",
+   "tier": 4,
+   "value": 64,
+   "stackable": true
+  },
+  {
+   "id": "superior_feather",
+   "name": "Superior Feather",
+   "slot": "material",
+   "tier": 4,
+   "value": 64,
+   "stackable": true
+  },
+  {
+   "id": "superior_fin",
+   "name": "Superior Fin",
+   "slot": "material",
+   "tier": 4,
+   "value": 64,
+   "stackable": true
+  },
+  {
+   "id": "superior_giant_sinew",
+   "name": "Superior Giant Sinew",
+   "slot": "material",
+   "tier": 4,
+   "value": 64,
+   "stackable": true
+  },
+  {
+   "id": "superior_fae_dust",
+   "name": "Superior Fae Dust",
+   "slot": "material",
+   "tier": 4,
+   "value": 64,
+   "stackable": true
+  },
+  {
+   "id": "pristine_pelt",
+   "name": "Pristine Pelt",
+   "slot": "material",
+   "tier": 5,
+   "value": 113,
+   "stackable": true
+  },
+  {
+   "id": "pristine_chitin",
+   "name": "Pristine Chitin",
+   "slot": "material",
+   "tier": 5,
+   "value": 113,
+   "stackable": true
+  },
+  {
+   "id": "pristine_seed",
+   "name": "Pristine Seed",
+   "slot": "material",
+   "tier": 5,
+   "value": 113,
+   "stackable": true
+  },
+  {
+   "id": "pristine_bone_shard",
+   "name": "Pristine Bone Shard",
+   "slot": "material",
+   "tier": 5,
+   "value": 113,
+   "stackable": true
+  },
+  {
+   "id": "pristine_demon_horn",
+   "name": "Pristine Demon Horn",
+   "slot": "material",
+   "tier": 5,
+   "value": 113,
+   "stackable": true
+  },
+  {
+   "id": "pristine_dragon_scale",
+   "name": "Pristine Dragon Scale",
+   "slot": "material",
+   "tier": 5,
+   "value": 113,
+   "stackable": true
+  },
+  {
+   "id": "pristine_mote",
+   "name": "Pristine Mote",
+   "slot": "material",
+   "tier": 5,
+   "value": 113,
+   "stackable": true
+  },
+  {
+   "id": "pristine_scrap_plate",
+   "name": "Pristine Scrap Plate",
+   "slot": "material",
+   "tier": 5,
+   "value": 113,
+   "stackable": true
+  },
+  {
+   "id": "pristine_tattered_cloth",
+   "name": "Pristine Tattered Cloth",
+   "slot": "material",
+   "tier": 5,
+   "value": 113,
+   "stackable": true
+  },
+  {
+   "id": "pristine_strange_eye",
+   "name": "Pristine Strange Eye",
+   "slot": "material",
+   "tier": 5,
+   "value": 113,
+   "stackable": true
+  },
+  {
+   "id": "pristine_gel",
+   "name": "Pristine Gel",
+   "slot": "material",
+   "tier": 5,
+   "value": 113,
+   "stackable": true
+  },
+  {
+   "id": "pristine_feather",
+   "name": "Pristine Feather",
+   "slot": "material",
+   "tier": 5,
+   "value": 113,
+   "stackable": true
+  },
+  {
+   "id": "pristine_fin",
+   "name": "Pristine Fin",
+   "slot": "material",
+   "tier": 5,
+   "value": 113,
+   "stackable": true
+  },
+  {
+   "id": "pristine_giant_sinew",
+   "name": "Pristine Giant Sinew",
+   "slot": "material",
+   "tier": 5,
+   "value": 113,
+   "stackable": true
+  },
+  {
+   "id": "pristine_fae_dust",
+   "name": "Pristine Fae Dust",
+   "slot": "material",
+   "tier": 5,
+   "value": 113,
+   "stackable": true
+  },
+  {
+   "id": "radiant_pelt",
+   "name": "Radiant Pelt",
+   "slot": "material",
+   "tier": 6,
+   "value": 197,
+   "stackable": true
+  },
+  {
+   "id": "radiant_chitin",
+   "name": "Radiant Chitin",
+   "slot": "material",
+   "tier": 6,
+   "value": 197,
+   "stackable": true
+  },
+  {
+   "id": "radiant_seed",
+   "name": "Radiant Seed",
+   "slot": "material",
+   "tier": 6,
+   "value": 197,
+   "stackable": true
+  },
+  {
+   "id": "radiant_bone_shard",
+   "name": "Radiant Bone Shard",
+   "slot": "material",
+   "tier": 6,
+   "value": 197,
+   "stackable": true
+  },
+  {
+   "id": "radiant_demon_horn",
+   "name": "Radiant Demon Horn",
+   "slot": "material",
+   "tier": 6,
+   "value": 197,
+   "stackable": true
+  },
+  {
+   "id": "radiant_dragon_scale",
+   "name": "Radiant Dragon Scale",
+   "slot": "material",
+   "tier": 6,
+   "value": 197,
+   "stackable": true
+  },
+  {
+   "id": "radiant_mote",
+   "name": "Radiant Mote",
+   "slot": "material",
+   "tier": 6,
+   "value": 197,
+   "stackable": true
+  },
+  {
+   "id": "radiant_scrap_plate",
+   "name": "Radiant Scrap Plate",
+   "slot": "material",
+   "tier": 6,
+   "value": 197,
+   "stackable": true
+  },
+  {
+   "id": "radiant_tattered_cloth",
+   "name": "Radiant Tattered Cloth",
+   "slot": "material",
+   "tier": 6,
+   "value": 197,
+   "stackable": true
+  },
+  {
+   "id": "radiant_strange_eye",
+   "name": "Radiant Strange Eye",
+   "slot": "material",
+   "tier": 6,
+   "value": 197,
+   "stackable": true
+  },
+  {
+   "id": "radiant_gel",
+   "name": "Radiant Gel",
+   "slot": "material",
+   "tier": 6,
+   "value": 197,
+   "stackable": true
+  },
+  {
+   "id": "radiant_feather",
+   "name": "Radiant Feather",
+   "slot": "material",
+   "tier": 6,
+   "value": 197,
+   "stackable": true
+  },
+  {
+   "id": "radiant_fin",
+   "name": "Radiant Fin",
+   "slot": "material",
+   "tier": 6,
+   "value": 197,
+   "stackable": true
+  },
+  {
+   "id": "radiant_giant_sinew",
+   "name": "Radiant Giant Sinew",
+   "slot": "material",
+   "tier": 6,
+   "value": 197,
+   "stackable": true
+  },
+  {
+   "id": "radiant_fae_dust",
+   "name": "Radiant Fae Dust",
+   "slot": "material",
+   "tier": 6,
+   "value": 197,
+   "stackable": true
+  },
+  {
+   "id": "mythic_pelt",
+   "name": "Mythic Pelt",
+   "slot": "material",
+   "tier": 7,
+   "value": 345,
+   "stackable": true
+  },
+  {
+   "id": "mythic_chitin",
+   "name": "Mythic Chitin",
+   "slot": "material",
+   "tier": 7,
+   "value": 345,
+   "stackable": true
+  },
+  {
+   "id": "mythic_seed",
+   "name": "Mythic Seed",
+   "slot": "material",
+   "tier": 7,
+   "value": 345,
+   "stackable": true
+  },
+  {
+   "id": "mythic_bone_shard",
+   "name": "Mythic Bone Shard",
+   "slot": "material",
+   "tier": 7,
+   "value": 345,
+   "stackable": true
+  },
+  {
+   "id": "mythic_demon_horn",
+   "name": "Mythic Demon Horn",
+   "slot": "material",
+   "tier": 7,
+   "value": 345,
+   "stackable": true
+  },
+  {
+   "id": "mythic_dragon_scale",
+   "name": "Mythic Dragon Scale",
+   "slot": "material",
+   "tier": 7,
+   "value": 345,
+   "stackable": true
+  },
+  {
+   "id": "mythic_mote",
+   "name": "Mythic Mote",
+   "slot": "material",
+   "tier": 7,
+   "value": 345,
+   "stackable": true
+  },
+  {
+   "id": "mythic_scrap_plate",
+   "name": "Mythic Scrap Plate",
+   "slot": "material",
+   "tier": 7,
+   "value": 345,
+   "stackable": true
+  },
+  {
+   "id": "mythic_tattered_cloth",
+   "name": "Mythic Tattered Cloth",
+   "slot": "material",
+   "tier": 7,
+   "value": 345,
+   "stackable": true
+  },
+  {
+   "id": "mythic_strange_eye",
+   "name": "Mythic Strange Eye",
+   "slot": "material",
+   "tier": 7,
+   "value": 345,
+   "stackable": true
+  },
+  {
+   "id": "mythic_gel",
+   "name": "Mythic Gel",
+   "slot": "material",
+   "tier": 7,
+   "value": 345,
+   "stackable": true
+  },
+  {
+   "id": "mythic_feather",
+   "name": "Mythic Feather",
+   "slot": "material",
+   "tier": 7,
+   "value": 345,
+   "stackable": true
+  },
+  {
+   "id": "mythic_fin",
+   "name": "Mythic Fin",
+   "slot": "material",
+   "tier": 7,
+   "value": 345,
+   "stackable": true
+  },
+  {
+   "id": "mythic_giant_sinew",
+   "name": "Mythic Giant Sinew",
+   "slot": "material",
+   "tier": 7,
+   "value": 345,
+   "stackable": true
+  },
+  {
+   "id": "mythic_fae_dust",
+   "name": "Mythic Fae Dust",
+   "slot": "material",
+   "tier": 7,
+   "value": 345,
+   "stackable": true
+  },
+  {
+   "id": "divine_pelt",
+   "name": "Divine Pelt",
+   "slot": "material",
+   "tier": 8,
+   "value": 603,
+   "stackable": true
+  },
+  {
+   "id": "divine_chitin",
+   "name": "Divine Chitin",
+   "slot": "material",
+   "tier": 8,
+   "value": 603,
+   "stackable": true
+  },
+  {
+   "id": "divine_seed",
+   "name": "Divine Seed",
+   "slot": "material",
+   "tier": 8,
+   "value": 603,
+   "stackable": true
+  },
+  {
+   "id": "divine_bone_shard",
+   "name": "Divine Bone Shard",
+   "slot": "material",
+   "tier": 8,
+   "value": 603,
+   "stackable": true
+  },
+  {
+   "id": "divine_demon_horn",
+   "name": "Divine Demon Horn",
+   "slot": "material",
+   "tier": 8,
+   "value": 603,
+   "stackable": true
+  },
+  {
+   "id": "divine_dragon_scale",
+   "name": "Divine Dragon Scale",
+   "slot": "material",
+   "tier": 8,
+   "value": 603,
+   "stackable": true
+  },
+  {
+   "id": "divine_mote",
+   "name": "Divine Mote",
+   "slot": "material",
+   "tier": 8,
+   "value": 603,
+   "stackable": true
+  },
+  {
+   "id": "divine_scrap_plate",
+   "name": "Divine Scrap Plate",
+   "slot": "material",
+   "tier": 8,
+   "value": 603,
+   "stackable": true
+  },
+  {
+   "id": "divine_tattered_cloth",
+   "name": "Divine Tattered Cloth",
+   "slot": "material",
+   "tier": 8,
+   "value": 603,
+   "stackable": true
+  },
+  {
+   "id": "divine_strange_eye",
+   "name": "Divine Strange Eye",
+   "slot": "material",
+   "tier": 8,
+   "value": 603,
+   "stackable": true
+  },
+  {
+   "id": "divine_gel",
+   "name": "Divine Gel",
+   "slot": "material",
+   "tier": 8,
+   "value": 603,
+   "stackable": true
+  },
+  {
+   "id": "divine_feather",
+   "name": "Divine Feather",
+   "slot": "material",
+   "tier": 8,
+   "value": 603,
+   "stackable": true
+  },
+  {
+   "id": "divine_fin",
+   "name": "Divine Fin",
+   "slot": "material",
+   "tier": 8,
+   "value": 603,
+   "stackable": true
+  },
+  {
+   "id": "divine_giant_sinew",
+   "name": "Divine Giant Sinew",
+   "slot": "material",
+   "tier": 8,
+   "value": 603,
+   "stackable": true
+  },
+  {
+   "id": "divine_fae_dust",
+   "name": "Divine Fae Dust",
+   "slot": "material",
+   "tier": 8,
+   "value": 603,
+   "stackable": true
+  }
+ ],
+ "zones": [
+  {
+   "id": "greenfields",
+   "name": "The Greenfields",
+   "description": "Rolling farmland with more teeth than it looks.",
+   "tier": 1,
+   "level_required": 1,
+   "stamina_cost": 1,
+   "gear_table": "gear_t1",
+   "encounters": [
+    {
+     "monster": "giant_rat",
+     "weight": 10
+    },
+    {
+     "monster": "cave_bat",
+     "weight": 10
+    },
+    {
+     "monster": "blue_slime",
+     "weight": 10
+    },
+    {
+     "monster": "goblin_scrapper",
+     "weight": 10
+    },
+    {
+     "monster": "kobold_digger",
+     "weight": 10
+    },
+    {
+     "monster": "rattling_skeleton",
+     "weight": 10
+    },
+    {
+     "monster": "dracky",
+     "weight": 10
+    },
+    {
+     "monster": "mandragora",
+     "weight": 10
+    },
+    {
+     "monster": "bog_toad",
+     "weight": 10
+    },
+    {
+     "monster": "rhino_beetle",
+     "weight": 10
+    },
+    {
+     "monster": "crawling_hand",
+     "weight": 10
+    },
+    {
+     "monster": "will_o_wisp",
+     "weight": 10
+    },
+    {
+     "monster": "pixie_cutpurse",
+     "weight": 10
+    },
+    {
+     "monster": "hollow_soldier",
+     "weight": 10
+    },
+    {
+     "monster": "rock_lizard",
+     "weight": 10
+    },
+    {
+     "monster": "dust_mephit",
+     "weight": 10
+    },
+    {
+     "monster": "she_slime",
+     "weight": 10
+    },
+    {
+     "monster": "twig_sprite",
+     "weight": 10
+    },
+    {
+     "monster": "antlion_grub",
+     "weight": 10
+    },
+    {
+     "monster": "rat_swarm",
+     "weight": 10
+    },
+    {
+     "monster": "gremlin",
+     "weight": 10
+    },
+    {
+     "monster": "bandit_cutthroat",
+     "weight": 10
+    },
+    {
+     "monster": "king_slime_runt",
+     "weight": 10
+    },
+    {
+     "monster": "stray_hound",
+     "weight": 10
+    },
+    {
+     "monster": "goblin_boss_grukk",
+     "weight": 10
+    },
+    {
+     "monster": "dire_wolf",
+     "weight": 4
+    },
+    {
+     "monster": "hobgoblin",
+     "weight": 4
+    },
+    {
+     "monster": "bomb",
+     "weight": 4
+    },
+    {
+     "monster": "giant_spider",
+     "weight": 4
+    },
+    {
+     "monster": "zombie",
+     "weight": 4
+    },
+    {
+     "monster": "drackmage",
+     "weight": 4
+    },
+    {
+     "monster": "harpy",
+     "weight": 4
+    },
+    {
+     "monster": "mimic",
+     "weight": 4
+    },
+    {
+     "monster": "cactuar",
+     "weight": 4
+    },
+    {
+     "monster": "ice_slime",
+     "weight": 4
+    },
+    {
+     "monster": "gargoyle_lesser",
+     "weight": 4
+    },
+    {
+     "monster": "ghoul",
+     "weight": 4
+    },
+    {
+     "monster": "bandit_archer",
+     "weight": 4
+    },
+    {
+     "monster": "crazed_pilgrim",
+     "weight": 4
+    },
+    {
+     "monster": "wild_boar",
+     "weight": 4
+    },
+    {
+     "monster": "magma_pup",
+     "weight": 4
+    },
+    {
+     "monster": "shadow_wisp",
+     "weight": 4
+    },
+    {
+     "monster": "sahagin",
+     "weight": 4
+    },
+    {
+     "monster": "stirge",
+     "weight": 4
+    },
+    {
+     "monster": "living_armor_rust",
+     "weight": 4
+    },
+    {
+     "monster": "hill_ogre",
+     "weight": 4
+    },
+    {
+     "monster": "goblin_shaman",
+     "weight": 4
+    },
+    {
+     "monster": "bell_gargoyle",
+     "weight": 4
+    }
+   ],
+   "boss": "goblin_boss_grukk",
+   "group_size": [
+    1,
+    2
+   ],
+   "gold_mult": 1.0
+  },
+  {
+   "id": "mossgrave",
+   "name": "Mossgrave Barrow",
+   "description": "A hill full of doors that only open outward.",
+   "tier": 2,
+   "level_required": 4,
+   "stamina_cost": 1,
+   "gear_table": "gear_t2",
+   "encounters": [
+    {
+     "monster": "dire_wolf",
+     "weight": 10
+    },
+    {
+     "monster": "hobgoblin",
+     "weight": 10
+    },
+    {
+     "monster": "bomb",
+     "weight": 10
+    },
+    {
+     "monster": "giant_spider",
+     "weight": 10
+    },
+    {
+     "monster": "zombie",
+     "weight": 10
+    },
+    {
+     "monster": "drackmage",
+     "weight": 10
+    },
+    {
+     "monster": "harpy",
+     "weight": 10
+    },
+    {
+     "monster": "mimic",
+     "weight": 10
+    },
+    {
+     "monster": "cactuar",
+     "weight": 10
+    },
+    {
+     "monster": "ice_slime",
+     "weight": 10
+    },
+    {
+     "monster": "gargoyle_lesser",
+     "weight": 10
+    },
+    {
+     "monster": "ghoul",
+     "weight": 10
+    },
+    {
+     "monster": "bandit_archer",
+     "weight": 10
+    },
+    {
+     "monster": "crazed_pilgrim",
+     "weight": 10
+    },
+    {
+     "monster": "wild_boar",
+     "weight": 10
+    },
+    {
+     "monster": "magma_pup",
+     "weight": 10
+    },
+    {
+     "monster": "shadow_wisp",
+     "weight": 10
+    },
+    {
+     "monster": "sahagin",
+     "weight": 10
+    },
+    {
+     "monster": "stirge",
+     "weight": 10
+    },
+    {
+     "monster": "living_armor_rust",
+     "weight": 10
+    },
+    {
+     "monster": "hill_ogre",
+     "weight": 10
+    },
+    {
+     "monster": "goblin_shaman",
+     "weight": 10
+    },
+    {
+     "monster": "bell_gargoyle",
+     "weight": 10
+    },
+    {
+     "monster": "owlbear",
+     "weight": 4
+    },
+    {
+     "monster": "basilisk_young",
+     "weight": 4
+    },
+    {
+     "monster": "wight",
+     "weight": 4
+    },
+    {
+     "monster": "wraith_lesser",
+     "weight": 4
+    },
+    {
+     "monster": "gelatinous_cube",
+     "weight": 4
+    },
+    {
+     "monster": "healslime",
+     "weight": 4
+    },
+    {
+     "monster": "bugbear",
+     "weight": 4
+    },
+    {
+     "monster": "coeurl",
+     "weight": 4
+    },
+    {
+     "monster": "flan",
+     "weight": 4
+    },
+    {
+     "monster": "ochu",
+     "weight": 4
+    },
+    {
+     "monster": "skeleton_knight",
+     "weight": 4
+    },
+    {
+     "monster": "kill_machine",
+     "weight": 4
+    },
+    {
+     "monster": "hell_dog",
+     "weight": 4
+    },
+    {
+     "monster": "ice_golem_small",
+     "weight": 4
+    },
+    {
+     "monster": "centaur_raider",
+     "weight": 4
+    },
+    {
+     "monster": "swamp_hag",
+     "weight": 4
+    },
+    {
+     "monster": "giant_scorpion",
+     "weight": 4
+    },
+    {
+     "monster": "crystal_lizard",
+     "weight": 4
+    },
+    {
+     "monster": "sandworm_juvenile",
+     "weight": 4
+    },
+    {
+     "monster": "wyvern_hatchling",
+     "weight": 4
+    },
+    {
+     "monster": "blood_hawk",
+     "weight": 4
+    },
+    {
+     "monster": "cursed_doll",
+     "weight": 4
+    },
+    {
+     "monster": "night_stalker",
+     "weight": 4
+    },
+    {
+     "monster": "restless_knight",
+     "weight": 4
+    },
+    {
+     "monster": "cockatrice",
+     "weight": 4
+    },
+    {
+     "monster": "hydra_three",
+     "weight": 4
+    },
+    {
+     "monster": "giant_rat",
+     "weight": 3
+    },
+    {
+     "monster": "cave_bat",
+     "weight": 3
+    },
+    {
+     "monster": "blue_slime",
+     "weight": 3
+    },
+    {
+     "monster": "goblin_scrapper",
+     "weight": 3
+    },
+    {
+     "monster": "kobold_digger",
+     "weight": 3
+    },
+    {
+     "monster": "rattling_skeleton",
+     "weight": 3
+    },
+    {
+     "monster": "dracky",
+     "weight": 3
+    },
+    {
+     "monster": "mandragora",
+     "weight": 3
+    },
+    {
+     "monster": "bog_toad",
+     "weight": 3
+    },
+    {
+     "monster": "rhino_beetle",
+     "weight": 3
+    },
+    {
+     "monster": "crawling_hand",
+     "weight": 3
+    },
+    {
+     "monster": "will_o_wisp",
+     "weight": 3
+    },
+    {
+     "monster": "pixie_cutpurse",
+     "weight": 3
+    },
+    {
+     "monster": "hollow_soldier",
+     "weight": 3
+    },
+    {
+     "monster": "rock_lizard",
+     "weight": 3
+    },
+    {
+     "monster": "dust_mephit",
+     "weight": 3
+    },
+    {
+     "monster": "she_slime",
+     "weight": 3
+    },
+    {
+     "monster": "twig_sprite",
+     "weight": 3
+    },
+    {
+     "monster": "antlion_grub",
+     "weight": 3
+    },
+    {
+     "monster": "rat_swarm",
+     "weight": 3
+    },
+    {
+     "monster": "gremlin",
+     "weight": 3
+    },
+    {
+     "monster": "bandit_cutthroat",
+     "weight": 3
+    },
+    {
+     "monster": "king_slime_runt",
+     "weight": 3
+    },
+    {
+     "monster": "stray_hound",
+     "weight": 3
+    },
+    {
+     "monster": "goblin_boss_grukk",
+     "weight": 3
+    }
+   ],
+   "boss": "bell_gargoyle",
+   "group_size": [
+    1,
+    2
+   ],
+   "gold_mult": 1.12
+  },
+  {
+   "id": "kestrel_pass",
+   "name": "Kestrel Pass",
+   "description": "Wind, switchbacks, and things that nest in the rocks.",
+   "tier": 3,
+   "level_required": 9,
+   "stamina_cost": 2,
+   "gear_table": "gear_t3",
+   "encounters": [
+    {
+     "monster": "owlbear",
+     "weight": 10
+    },
+    {
+     "monster": "basilisk_young",
+     "weight": 10
+    },
+    {
+     "monster": "wight",
+     "weight": 10
+    },
+    {
+     "monster": "wraith_lesser",
+     "weight": 10
+    },
+    {
+     "monster": "gelatinous_cube",
+     "weight": 10
+    },
+    {
+     "monster": "healslime",
+     "weight": 10
+    },
+    {
+     "monster": "bugbear",
+     "weight": 10
+    },
+    {
+     "monster": "coeurl",
+     "weight": 10
+    },
+    {
+     "monster": "flan",
+     "weight": 10
+    },
+    {
+     "monster": "ochu",
+     "weight": 10
+    },
+    {
+     "monster": "skeleton_knight",
+     "weight": 10
+    },
+    {
+     "monster": "kill_machine",
+     "weight": 10
+    },
+    {
+     "monster": "hell_dog",
+     "weight": 10
+    },
+    {
+     "monster": "ice_golem_small",
+     "weight": 10
+    },
+    {
+     "monster": "centaur_raider",
+     "weight": 10
+    },
+    {
+     "monster": "swamp_hag",
+     "weight": 10
+    },
+    {
+     "monster": "giant_scorpion",
+     "weight": 10
+    },
+    {
+     "monster": "crystal_lizard",
+     "weight": 10
+    },
+    {
+     "monster": "sandworm_juvenile",
+     "weight": 10
+    },
+    {
+     "monster": "wyvern_hatchling",
+     "weight": 10
+    },
+    {
+     "monster": "blood_hawk",
+     "weight": 10
+    },
+    {
+     "monster": "cursed_doll",
+     "weight": 10
+    },
+    {
+     "monster": "night_stalker",
+     "weight": 10
+    },
+    {
+     "monster": "restless_knight",
+     "weight": 10
+    },
+    {
+     "monster": "cockatrice",
+     "weight": 10
+    },
+    {
+     "monster": "hydra_three",
+     "weight": 10
+    },
+    {
+     "monster": "minotaur",
+     "weight": 4
+    },
+    {
+     "monster": "displacer_beast",
+     "weight": 4
+    },
+    {
+     "monster": "malboro",
+     "weight": 4
+    },
+    {
+     "monster": "tonberry",
+     "weight": 4
+    },
+    {
+     "monster": "iron_golem_small",
+     "weight": 4
+    },
+    {
+     "monster": "mummy_lord_lesser",
+     "weight": 4
+    },
+    {
+     "monster": "air_elemental",
+     "weight": 4
+    },
+    {
+     "monster": "fire_elemental",
+     "weight": 4
+    },
+    {
+     "monster": "water_elemental",
+     "weight": 4
+    },
+    {
+     "monster": "earth_elemental",
+     "weight": 4
+    },
+    {
+     "monster": "succubus",
+     "weight": 4
+    },
+    {
+     "monster": "chimera",
+     "weight": 4
+    },
+    {
+     "monster": "liquid_metal_slime",
+     "weight": 4
+    },
+    {
+     "monster": "great_troll",
+     "weight": 4
+    },
+    {
+     "monster": "dark_knight_fallen",
+     "weight": 4
+    },
+    {
+     "monster": "banshee",
+     "weight": 4
+    },
+    {
+     "monster": "giant_crab",
+     "weight": 4
+    },
+    {
+     "monster": "behemoth_calf",
+     "weight": 4
+    },
+    {
+     "monster": "wererat_alpha",
+     "weight": 4
+    },
+    {
+     "monster": "stone_gargoyle",
+     "weight": 4
+    },
+    {
+     "monster": "nue",
+     "weight": 4
+    },
+    {
+     "monster": "dryad_queen",
+     "weight": 4
+    },
+    {
+     "monster": "vampire_spawn",
+     "weight": 4
+    },
+    {
+     "monster": "iron_giant",
+     "weight": 4
+    },
+    {
+     "monster": "moonlight_butterfly",
+     "weight": 4
+    },
+    {
+     "monster": "dire_wolf",
+     "weight": 3
+    },
+    {
+     "monster": "hobgoblin",
+     "weight": 3
+    },
+    {
+     "monster": "bomb",
+     "weight": 3
+    },
+    {
+     "monster": "giant_spider",
+     "weight": 3
+    },
+    {
+     "monster": "zombie",
+     "weight": 3
+    },
+    {
+     "monster": "drackmage",
+     "weight": 3
+    },
+    {
+     "monster": "harpy",
+     "weight": 3
+    },
+    {
+     "monster": "mimic",
+     "weight": 3
+    },
+    {
+     "monster": "cactuar",
+     "weight": 3
+    },
+    {
+     "monster": "ice_slime",
+     "weight": 3
+    },
+    {
+     "monster": "gargoyle_lesser",
+     "weight": 3
+    },
+    {
+     "monster": "ghoul",
+     "weight": 3
+    },
+    {
+     "monster": "bandit_archer",
+     "weight": 3
+    },
+    {
+     "monster": "crazed_pilgrim",
+     "weight": 3
+    },
+    {
+     "monster": "wild_boar",
+     "weight": 3
+    },
+    {
+     "monster": "magma_pup",
+     "weight": 3
+    },
+    {
+     "monster": "shadow_wisp",
+     "weight": 3
+    },
+    {
+     "monster": "sahagin",
+     "weight": 3
+    },
+    {
+     "monster": "stirge",
+     "weight": 3
+    },
+    {
+     "monster": "living_armor_rust",
+     "weight": 3
+    },
+    {
+     "monster": "hill_ogre",
+     "weight": 3
+    },
+    {
+     "monster": "goblin_shaman",
+     "weight": 3
+    },
+    {
+     "monster": "bell_gargoyle",
+     "weight": 3
+    }
+   ],
+   "boss": "hydra_three",
+   "group_size": [
+    1,
+    3
+   ],
+   "gold_mult": 1.24
+  },
+  {
+   "id": "sunken_chapel",
+   "name": "The Sunken Chapel",
+   "description": "It was holy once. The water disagreed.",
+   "tier": 4,
+   "level_required": 15,
+   "stamina_cost": 2,
+   "gear_table": "gear_t4",
+   "encounters": [
+    {
+     "monster": "minotaur",
+     "weight": 10
+    },
+    {
+     "monster": "displacer_beast",
+     "weight": 10
+    },
+    {
+     "monster": "malboro",
+     "weight": 10
+    },
+    {
+     "monster": "tonberry",
+     "weight": 10
+    },
+    {
+     "monster": "iron_golem_small",
+     "weight": 10
+    },
+    {
+     "monster": "mummy_lord_lesser",
+     "weight": 10
+    },
+    {
+     "monster": "air_elemental",
+     "weight": 10
+    },
+    {
+     "monster": "fire_elemental",
+     "weight": 10
+    },
+    {
+     "monster": "water_elemental",
+     "weight": 10
+    },
+    {
+     "monster": "earth_elemental",
+     "weight": 10
+    },
+    {
+     "monster": "succubus",
+     "weight": 10
+    },
+    {
+     "monster": "chimera",
+     "weight": 10
+    },
+    {
+     "monster": "liquid_metal_slime",
+     "weight": 10
+    },
+    {
+     "monster": "great_troll",
+     "weight": 10
+    },
+    {
+     "monster": "dark_knight_fallen",
+     "weight": 10
+    },
+    {
+     "monster": "banshee",
+     "weight": 10
+    },
+    {
+     "monster": "giant_crab",
+     "weight": 10
+    },
+    {
+     "monster": "behemoth_calf",
+     "weight": 10
+    },
+    {
+     "monster": "wererat_alpha",
+     "weight": 10
+    },
+    {
+     "monster": "stone_gargoyle",
+     "weight": 10
+    },
+    {
+     "monster": "nue",
+     "weight": 10
+    },
+    {
+     "monster": "dryad_queen",
+     "weight": 10
+    },
+    {
+     "monster": "vampire_spawn",
+     "weight": 10
+    },
+    {
+     "monster": "iron_giant",
+     "weight": 10
+    },
+    {
+     "monster": "moonlight_butterfly",
+     "weight": 10
+    },
+    {
+     "monster": "beholder",
+     "weight": 4
+    },
+    {
+     "monster": "mind_flayer",
+     "weight": 4
+    },
+    {
+     "monster": "lich_apprentice",
+     "weight": 4
+    },
+    {
+     "monster": "marilith",
+     "weight": 4
+    },
+    {
+     "monster": "dragon_zombie",
+     "weight": 4
+    },
+    {
+     "monster": "great_malboro",
+     "weight": 4
+    },
+    {
+     "monster": "behemoth",
+     "weight": 4
+    },
+    {
+     "monster": "king_slime",
+     "weight": 4
+    },
+    {
+     "monster": "gigantes",
+     "weight": 4
+    },
+    {
+     "monster": "red_dragon_young",
+     "weight": 4
+    },
+    {
+     "monster": "blue_dragon_young",
+     "weight": 4
+    },
+    {
+     "monster": "white_dragon_young",
+     "weight": 4
+    },
+    {
+     "monster": "black_dragon_young",
+     "weight": 4
+    },
+    {
+     "monster": "green_dragon_young",
+     "weight": 4
+    },
+    {
+     "monster": "balrog_lesser",
+     "weight": 4
+    },
+    {
+     "monster": "mimic_treasure",
+     "weight": 4
+    },
+    {
+     "monster": "black_knight",
+     "weight": 4
+    },
+    {
+     "monster": "silver_knight",
+     "weight": 4
+    },
+    {
+     "monster": "armored_boar",
+     "weight": 4
+    },
+    {
+     "monster": "kraken_spawn",
+     "weight": 4
+    },
+    {
+     "monster": "thunder_bird",
+     "weight": 4
+    },
+    {
+     "monster": "hell_gladiator",
+     "weight": 4
+    },
+    {
+     "monster": "dark_slime_knight",
+     "weight": 4
+    },
+    {
+     "monster": "phase_spider_queen",
+     "weight": 4
+    },
+    {
+     "monster": "wraith_lord",
+     "weight": 4
+    },
+    {
+     "monster": "ancient_wyvern",
+     "weight": 4
+    },
+    {
+     "monster": "iron_golem_boss",
+     "weight": 4
+    },
+    {
+     "monster": "owlbear",
+     "weight": 3
+    },
+    {
+     "monster": "basilisk_young",
+     "weight": 3
+    },
+    {
+     "monster": "wight",
+     "weight": 3
+    },
+    {
+     "monster": "wraith_lesser",
+     "weight": 3
+    },
+    {
+     "monster": "gelatinous_cube",
+     "weight": 3
+    },
+    {
+     "monster": "healslime",
+     "weight": 3
+    },
+    {
+     "monster": "bugbear",
+     "weight": 3
+    },
+    {
+     "monster": "coeurl",
+     "weight": 3
+    },
+    {
+     "monster": "flan",
+     "weight": 3
+    },
+    {
+     "monster": "ochu",
+     "weight": 3
+    },
+    {
+     "monster": "skeleton_knight",
+     "weight": 3
+    },
+    {
+     "monster": "kill_machine",
+     "weight": 3
+    },
+    {
+     "monster": "hell_dog",
+     "weight": 3
+    },
+    {
+     "monster": "ice_golem_small",
+     "weight": 3
+    },
+    {
+     "monster": "centaur_raider",
+     "weight": 3
+    },
+    {
+     "monster": "swamp_hag",
+     "weight": 3
+    },
+    {
+     "monster": "giant_scorpion",
+     "weight": 3
+    },
+    {
+     "monster": "crystal_lizard",
+     "weight": 3
+    },
+    {
+     "monster": "sandworm_juvenile",
+     "weight": 3
+    },
+    {
+     "monster": "wyvern_hatchling",
+     "weight": 3
+    },
+    {
+     "monster": "blood_hawk",
+     "weight": 3
+    },
+    {
+     "monster": "cursed_doll",
+     "weight": 3
+    },
+    {
+     "monster": "night_stalker",
+     "weight": 3
+    },
+    {
+     "monster": "restless_knight",
+     "weight": 3
+    },
+    {
+     "monster": "cockatrice",
+     "weight": 3
+    },
+    {
+     "monster": "hydra_three",
+     "weight": 3
+    }
+   ],
+   "boss": "moonlight_butterfly",
+   "group_size": [
+    1,
+    3
+   ],
+   "gold_mult": 1.36
+  },
+  {
+   "id": "emberdeep",
+   "name": "Emberdeep Mines",
+   "description": "Hot enough to melt the ore and the miners.",
+   "tier": 5,
+   "level_required": 22,
+   "stamina_cost": 3,
+   "gear_table": "gear_t5",
+   "encounters": [
+    {
+     "monster": "beholder",
+     "weight": 10
+    },
+    {
+     "monster": "mind_flayer",
+     "weight": 10
+    },
+    {
+     "monster": "lich_apprentice",
+     "weight": 10
+    },
+    {
+     "monster": "marilith",
+     "weight": 10
+    },
+    {
+     "monster": "dragon_zombie",
+     "weight": 10
+    },
+    {
+     "monster": "great_malboro",
+     "weight": 10
+    },
+    {
+     "monster": "behemoth",
+     "weight": 10
+    },
+    {
+     "monster": "king_slime",
+     "weight": 10
+    },
+    {
+     "monster": "gigantes",
+     "weight": 10
+    },
+    {
+     "monster": "red_dragon_young",
+     "weight": 10
+    },
+    {
+     "monster": "blue_dragon_young",
+     "weight": 10
+    },
+    {
+     "monster": "white_dragon_young",
+     "weight": 10
+    },
+    {
+     "monster": "black_dragon_young",
+     "weight": 10
+    },
+    {
+     "monster": "green_dragon_young",
+     "weight": 10
+    },
+    {
+     "monster": "balrog_lesser",
+     "weight": 10
+    },
+    {
+     "monster": "mimic_treasure",
+     "weight": 10
+    },
+    {
+     "monster": "black_knight",
+     "weight": 10
+    },
+    {
+     "monster": "silver_knight",
+     "weight": 10
+    },
+    {
+     "monster": "armored_boar",
+     "weight": 10
+    },
+    {
+     "monster": "kraken_spawn",
+     "weight": 10
+    },
+    {
+     "monster": "thunder_bird",
+     "weight": 10
+    },
+    {
+     "monster": "hell_gladiator",
+     "weight": 10
+    },
+    {
+     "monster": "dark_slime_knight",
+     "weight": 10
+    },
+    {
+     "monster": "phase_spider_queen",
+     "weight": 10
+    },
+    {
+     "monster": "wraith_lord",
+     "weight": 10
+    },
+    {
+     "monster": "ancient_wyvern",
+     "weight": 10
+    },
+    {
+     "monster": "iron_golem_boss",
+     "weight": 10
+    },
+    {
+     "monster": "lich",
+     "weight": 4
+    },
+    {
+     "monster": "adult_red_dragon",
+     "weight": 4
+    },
+    {
+     "monster": "adult_blue_dragon",
+     "weight": 4
+    },
+    {
+     "monster": "adult_silver_dragon",
+     "weight": 4
+    },
+    {
+     "monster": "adamantoise",
+     "weight": 4
+    },
+    {
+     "monster": "omega_lesser",
+     "weight": 4
+    },
+    {
+     "monster": "ruby_weapon_shard",
+     "weight": 4
+    },
+    {
+     "monster": "estark_herald",
+     "weight": 4
+    },
+    {
+     "monster": "metal_king_slime",
+     "weight": 4
+    },
+    {
+     "monster": "abyss_watcher",
+     "weight": 4
+    },
+    {
+     "monster": "darkwraith",
+     "weight": 4
+    },
+    {
+     "monster": "chaos_witch",
+     "weight": 4
+    },
+    {
+     "monster": "titan_lesser",
+     "weight": 4
+    },
+    {
+     "monster": "purple_worm",
+     "weight": 4
+    },
+    {
+     "monster": "death_knight",
+     "weight": 4
+    },
+    {
+     "monster": "nightwalker",
+     "weight": 4
+    },
+    {
+     "monster": "storm_giant",
+     "weight": 4
+    },
+    {
+     "monster": "fire_giant",
+     "weight": 4
+    },
+    {
+     "monster": "frost_giant",
+     "weight": 4
+    },
+    {
+     "monster": "archdemon_lesser",
+     "weight": 4
+    },
+    {
+     "monster": "phoenix_wild",
+     "weight": 4
+    },
+    {
+     "monster": "leviathan_spawn",
+     "weight": 4
+    },
+    {
+     "monster": "nameless_king",
+     "weight": 4
+    },
+    {
+     "monster": "minotaur",
+     "weight": 3
+    },
+    {
+     "monster": "displacer_beast",
+     "weight": 3
+    },
+    {
+     "monster": "malboro",
+     "weight": 3
+    },
+    {
+     "monster": "tonberry",
+     "weight": 3
+    },
+    {
+     "monster": "iron_golem_small",
+     "weight": 3
+    },
+    {
+     "monster": "mummy_lord_lesser",
+     "weight": 3
+    },
+    {
+     "monster": "air_elemental",
+     "weight": 3
+    },
+    {
+     "monster": "fire_elemental",
+     "weight": 3
+    },
+    {
+     "monster": "water_elemental",
+     "weight": 3
+    },
+    {
+     "monster": "earth_elemental",
+     "weight": 3
+    },
+    {
+     "monster": "succubus",
+     "weight": 3
+    },
+    {
+     "monster": "chimera",
+     "weight": 3
+    },
+    {
+     "monster": "liquid_metal_slime",
+     "weight": 3
+    },
+    {
+     "monster": "great_troll",
+     "weight": 3
+    },
+    {
+     "monster": "dark_knight_fallen",
+     "weight": 3
+    },
+    {
+     "monster": "banshee",
+     "weight": 3
+    },
+    {
+     "monster": "giant_crab",
+     "weight": 3
+    },
+    {
+     "monster": "behemoth_calf",
+     "weight": 3
+    },
+    {
+     "monster": "wererat_alpha",
+     "weight": 3
+    },
+    {
+     "monster": "stone_gargoyle",
+     "weight": 3
+    },
+    {
+     "monster": "nue",
+     "weight": 3
+    },
+    {
+     "monster": "dryad_queen",
+     "weight": 3
+    },
+    {
+     "monster": "vampire_spawn",
+     "weight": 3
+    },
+    {
+     "monster": "iron_giant",
+     "weight": 3
+    },
+    {
+     "monster": "moonlight_butterfly",
+     "weight": 3
+    }
+   ],
+   "boss": "iron_golem_boss",
+   "group_size": [
+    1,
+    3
+   ],
+   "gold_mult": 1.48
+  },
+  {
+   "id": "hollow_march",
+   "name": "The Hollow March",
+   "description": "A battlefield that never finished the battle.",
+   "tier": 6,
+   "level_required": 30,
+   "stamina_cost": 3,
+   "gear_table": "gear_t6",
+   "encounters": [
+    {
+     "monster": "lich",
+     "weight": 10
+    },
+    {
+     "monster": "adult_red_dragon",
+     "weight": 10
+    },
+    {
+     "monster": "adult_blue_dragon",
+     "weight": 10
+    },
+    {
+     "monster": "adult_silver_dragon",
+     "weight": 10
+    },
+    {
+     "monster": "adamantoise",
+     "weight": 10
+    },
+    {
+     "monster": "omega_lesser",
+     "weight": 10
+    },
+    {
+     "monster": "ruby_weapon_shard",
+     "weight": 10
+    },
+    {
+     "monster": "estark_herald",
+     "weight": 10
+    },
+    {
+     "monster": "metal_king_slime",
+     "weight": 10
+    },
+    {
+     "monster": "abyss_watcher",
+     "weight": 10
+    },
+    {
+     "monster": "darkwraith",
+     "weight": 10
+    },
+    {
+     "monster": "chaos_witch",
+     "weight": 10
+    },
+    {
+     "monster": "titan_lesser",
+     "weight": 10
+    },
+    {
+     "monster": "purple_worm",
+     "weight": 10
+    },
+    {
+     "monster": "death_knight",
+     "weight": 10
+    },
+    {
+     "monster": "nightwalker",
+     "weight": 10
+    },
+    {
+     "monster": "storm_giant",
+     "weight": 10
+    },
+    {
+     "monster": "fire_giant",
+     "weight": 10
+    },
+    {
+     "monster": "frost_giant",
+     "weight": 10
+    },
+    {
+     "monster": "archdemon_lesser",
+     "weight": 10
+    },
+    {
+     "monster": "phoenix_wild",
+     "weight": 10
+    },
+    {
+     "monster": "leviathan_spawn",
+     "weight": 10
+    },
+    {
+     "monster": "nameless_king",
+     "weight": 10
+    },
+    {
+     "monster": "abyssal_horror",
+     "weight": 4
+    },
+    {
+     "monster": "elder_treant",
+     "weight": 4
+    },
+    {
+     "monster": "bone_colossus",
+     "weight": 4
+    },
+    {
+     "monster": "void_stalker",
+     "weight": 4
+    },
+    {
+     "monster": "pit_fiend",
+     "weight": 4
+    },
+    {
+     "monster": "roc",
+     "weight": 4
+    },
+    {
+     "monster": "iron_maiden",
+     "weight": 4
+    },
+    {
+     "monster": "grim_reaper_dq",
+     "weight": 4
+    },
+    {
+     "monster": "hollow_champion",
+     "weight": 4
+    },
+    {
+     "monster": "chaos_bug",
+     "weight": 4
+    },
+    {
+     "monster": "mist_dragon",
+     "weight": 4
+    },
+    {
+     "monster": "iron_lucavi",
+     "weight": 4
+    },
+    {
+     "monster": "ancient_red_dragon",
+     "weight": 4
+    },
+    {
+     "monster": "ancient_gold_dragon",
+     "weight": 4
+    },
+    {
+     "monster": "tarrasque",
+     "weight": 4
+    },
+    {
+     "monster": "demogorgon",
+     "weight": 4
+    },
+    {
+     "monster": "orcus",
+     "weight": 4
+    },
+    {
+     "monster": "omega_weapon",
+     "weight": 4
+    },
+    {
+     "monster": "shinryu",
+     "weight": 4
+    },
+    {
+     "monster": "ultima_weapon",
+     "weight": 4
+    },
+    {
+     "monster": "estark",
+     "weight": 4
+    },
+    {
+     "monster": "nokturnus",
+     "weight": 4
+    },
+    {
+     "monster": "gnasher_serpent",
+     "weight": 4
+    },
+    {
+     "monster": "gwyn_knight",
+     "weight": 4
+    },
+    {
+     "monster": "malenia_blade",
+     "weight": 4
+    },
+    {
+     "monster": "radahn_starscourge",
+     "weight": 4
+    },
+    {
+     "monster": "ancient_leviathan",
+     "weight": 4
+    },
+    {
+     "monster": "bahamut_lesser",
+     "weight": 4
+    },
+    {
+     "monster": "ifrit_avatar",
+     "weight": 4
+    },
+    {
+     "monster": "shiva_avatar",
+     "weight": 4
+    },
+    {
+     "monster": "ramuh_avatar",
+     "weight": 4
+    },
+    {
+     "monster": "titan_avatar",
+     "weight": 4
+    },
+    {
+     "monster": "beholder",
+     "weight": 3
+    },
+    {
+     "monster": "mind_flayer",
+     "weight": 3
+    },
+    {
+     "monster": "lich_apprentice",
+     "weight": 3
+    },
+    {
+     "monster": "marilith",
+     "weight": 3
+    },
+    {
+     "monster": "dragon_zombie",
+     "weight": 3
+    },
+    {
+     "monster": "great_malboro",
+     "weight": 3
+    },
+    {
+     "monster": "behemoth",
+     "weight": 3
+    },
+    {
+     "monster": "king_slime",
+     "weight": 3
+    },
+    {
+     "monster": "gigantes",
+     "weight": 3
+    },
+    {
+     "monster": "red_dragon_young",
+     "weight": 3
+    },
+    {
+     "monster": "blue_dragon_young",
+     "weight": 3
+    },
+    {
+     "monster": "white_dragon_young",
+     "weight": 3
+    },
+    {
+     "monster": "black_dragon_young",
+     "weight": 3
+    },
+    {
+     "monster": "green_dragon_young",
+     "weight": 3
+    },
+    {
+     "monster": "balrog_lesser",
+     "weight": 3
+    },
+    {
+     "monster": "mimic_treasure",
+     "weight": 3
+    },
+    {
+     "monster": "black_knight",
+     "weight": 3
+    },
+    {
+     "monster": "silver_knight",
+     "weight": 3
+    },
+    {
+     "monster": "armored_boar",
+     "weight": 3
+    },
+    {
+     "monster": "kraken_spawn",
+     "weight": 3
+    },
+    {
+     "monster": "thunder_bird",
+     "weight": 3
+    },
+    {
+     "monster": "hell_gladiator",
+     "weight": 3
+    },
+    {
+     "monster": "dark_slime_knight",
+     "weight": 3
+    },
+    {
+     "monster": "phase_spider_queen",
+     "weight": 3
+    },
+    {
+     "monster": "wraith_lord",
+     "weight": 3
+    },
+    {
+     "monster": "ancient_wyvern",
+     "weight": 3
+    },
+    {
+     "monster": "iron_golem_boss",
+     "weight": 3
+    }
+   ],
+   "boss": "nameless_king",
+   "group_size": [
+    1,
+    3
+   ],
+   "gold_mult": 1.6
+  },
+  {
+   "id": "shattered_spire",
+   "name": "The Shattered Spire",
+   "description": "A wizard's tower, mid-fall, for two hundred years.",
+   "tier": 7,
+   "level_required": 38,
+   "stamina_cost": 4,
+   "gear_table": "gear_t7",
+   "encounters": [
+    {
+     "monster": "abyssal_horror",
+     "weight": 10
+    },
+    {
+     "monster": "elder_treant",
+     "weight": 10
+    },
+    {
+     "monster": "bone_colossus",
+     "weight": 10
+    },
+    {
+     "monster": "void_stalker",
+     "weight": 10
+    },
+    {
+     "monster": "pit_fiend",
+     "weight": 10
+    },
+    {
+     "monster": "roc",
+     "weight": 10
+    },
+    {
+     "monster": "iron_maiden",
+     "weight": 10
+    },
+    {
+     "monster": "grim_reaper_dq",
+     "weight": 10
+    },
+    {
+     "monster": "hollow_champion",
+     "weight": 10
+    },
+    {
+     "monster": "chaos_bug",
+     "weight": 10
+    },
+    {
+     "monster": "mist_dragon",
+     "weight": 10
+    },
+    {
+     "monster": "iron_lucavi",
+     "weight": 10
+    },
+    {
+     "monster": "ancient_red_dragon",
+     "weight": 10
+    },
+    {
+     "monster": "ancient_gold_dragon",
+     "weight": 10
+    },
+    {
+     "monster": "tarrasque",
+     "weight": 10
+    },
+    {
+     "monster": "demogorgon",
+     "weight": 10
+    },
+    {
+     "monster": "orcus",
+     "weight": 10
+    },
+    {
+     "monster": "omega_weapon",
+     "weight": 10
+    },
+    {
+     "monster": "shinryu",
+     "weight": 10
+    },
+    {
+     "monster": "ultima_weapon",
+     "weight": 10
+    },
+    {
+     "monster": "estark",
+     "weight": 10
+    },
+    {
+     "monster": "nokturnus",
+     "weight": 10
+    },
+    {
+     "monster": "gnasher_serpent",
+     "weight": 10
+    },
+    {
+     "monster": "gwyn_knight",
+     "weight": 10
+    },
+    {
+     "monster": "malenia_blade",
+     "weight": 10
+    },
+    {
+     "monster": "radahn_starscourge",
+     "weight": 10
+    },
+    {
+     "monster": "ancient_leviathan",
+     "weight": 10
+    },
+    {
+     "monster": "bahamut_lesser",
+     "weight": 10
+    },
+    {
+     "monster": "ifrit_avatar",
+     "weight": 10
+    },
+    {
+     "monster": "shiva_avatar",
+     "weight": 10
+    },
+    {
+     "monster": "ramuh_avatar",
+     "weight": 10
+    },
+    {
+     "monster": "titan_avatar",
+     "weight": 10
+    },
+    {
+     "monster": "void_reaver",
+     "weight": 4
+    },
+    {
+     "monster": "astral_wyrm",
+     "weight": 4
+    },
+    {
+     "monster": "balor",
+     "weight": 4
+    },
+    {
+     "monster": "solar_exarch",
+     "weight": 4
+    },
+    {
+     "monster": "empyrean_golem",
+     "weight": 4
+    },
+    {
+     "monster": "iron_maiden_dq",
+     "weight": 4
+    },
+    {
+     "monster": "platinum_king_slime",
+     "weight": 4
+    },
+    {
+     "monster": "black_dragon_souls",
+     "weight": 4
+    },
+    {
+     "monster": "crucible_knight",
+     "weight": 4
+    },
+    {
+     "monster": "ancient_behemoth",
+     "weight": 4
+    },
+    {
+     "monster": "greater_lucavi",
+     "weight": 4
+    },
+    {
+     "monster": "titan_primordial",
+     "weight": 4
+    },
+    {
+     "monster": "archlich",
+     "weight": 4
+    },
+    {
+     "monster": "great_wyrm_of_ash",
+     "weight": 4
+    },
+    {
+     "monster": "bahamut_zero",
+     "weight": 4
+    },
+    {
+     "monster": "altima_echo",
+     "weight": 4
+    },
+    {
+     "monster": "zaromus",
+     "weight": 4
+    },
+    {
+     "monster": "gwyn_lord",
+     "weight": 4
+    },
+    {
+     "monster": "elden_beast",
+     "weight": 4
+    },
+    {
+     "monster": "tiamat",
+     "weight": 4
+    },
+    {
+     "monster": "asmodeus",
+     "weight": 4
+    },
+    {
+     "monster": "worldeater",
+     "weight": 4
+    },
+    {
+     "monster": "lich",
+     "weight": 3
+    },
+    {
+     "monster": "adult_red_dragon",
+     "weight": 3
+    },
+    {
+     "monster": "adult_blue_dragon",
+     "weight": 3
+    },
+    {
+     "monster": "adult_silver_dragon",
+     "weight": 3
+    },
+    {
+     "monster": "adamantoise",
+     "weight": 3
+    },
+    {
+     "monster": "omega_lesser",
+     "weight": 3
+    },
+    {
+     "monster": "ruby_weapon_shard",
+     "weight": 3
+    },
+    {
+     "monster": "estark_herald",
+     "weight": 3
+    },
+    {
+     "monster": "metal_king_slime",
+     "weight": 3
+    },
+    {
+     "monster": "abyss_watcher",
+     "weight": 3
+    },
+    {
+     "monster": "darkwraith",
+     "weight": 3
+    },
+    {
+     "monster": "chaos_witch",
+     "weight": 3
+    },
+    {
+     "monster": "titan_lesser",
+     "weight": 3
+    },
+    {
+     "monster": "purple_worm",
+     "weight": 3
+    },
+    {
+     "monster": "death_knight",
+     "weight": 3
+    },
+    {
+     "monster": "nightwalker",
+     "weight": 3
+    },
+    {
+     "monster": "storm_giant",
+     "weight": 3
+    },
+    {
+     "monster": "fire_giant",
+     "weight": 3
+    },
+    {
+     "monster": "frost_giant",
+     "weight": 3
+    },
+    {
+     "monster": "archdemon_lesser",
+     "weight": 3
+    },
+    {
+     "monster": "phoenix_wild",
+     "weight": 3
+    },
+    {
+     "monster": "leviathan_spawn",
+     "weight": 3
+    },
+    {
+     "monster": "nameless_king",
+     "weight": 3
+    }
+   ],
+   "boss": null,
+   "group_size": [
+    1,
+    3
+   ],
+   "gold_mult": 1.72
+  },
+  {
+   "id": "the_maw",
+   "name": "The Maw",
+   "description": "Where the world runs out.",
+   "tier": 8,
+   "level_required": 46,
+   "stamina_cost": 5,
+   "gear_table": "gear_t8",
+   "encounters": [
+    {
+     "monster": "void_reaver",
+     "weight": 10
+    },
+    {
+     "monster": "astral_wyrm",
+     "weight": 10
+    },
+    {
+     "monster": "balor",
+     "weight": 10
+    },
+    {
+     "monster": "solar_exarch",
+     "weight": 10
+    },
+    {
+     "monster": "empyrean_golem",
+     "weight": 10
+    },
+    {
+     "monster": "iron_maiden_dq",
+     "weight": 10
+    },
+    {
+     "monster": "platinum_king_slime",
+     "weight": 10
+    },
+    {
+     "monster": "black_dragon_souls",
+     "weight": 10
+    },
+    {
+     "monster": "crucible_knight",
+     "weight": 10
+    },
+    {
+     "monster": "ancient_behemoth",
+     "weight": 10
+    },
+    {
+     "monster": "greater_lucavi",
+     "weight": 10
+    },
+    {
+     "monster": "titan_primordial",
+     "weight": 10
+    },
+    {
+     "monster": "archlich",
+     "weight": 10
+    },
+    {
+     "monster": "great_wyrm_of_ash",
+     "weight": 10
+    },
+    {
+     "monster": "bahamut_zero",
+     "weight": 10
+    },
+    {
+     "monster": "altima_echo",
+     "weight": 10
+    },
+    {
+     "monster": "zaromus",
+     "weight": 10
+    },
+    {
+     "monster": "gwyn_lord",
+     "weight": 10
+    },
+    {
+     "monster": "elden_beast",
+     "weight": 10
+    },
+    {
+     "monster": "tiamat",
+     "weight": 10
+    },
+    {
+     "monster": "asmodeus",
+     "weight": 10
+    },
+    {
+     "monster": "worldeater",
+     "weight": 10
+    },
+    {
+     "monster": "abyssal_horror",
+     "weight": 3
+    },
+    {
+     "monster": "elder_treant",
+     "weight": 3
+    },
+    {
+     "monster": "bone_colossus",
+     "weight": 3
+    },
+    {
+     "monster": "void_stalker",
+     "weight": 3
+    },
+    {
+     "monster": "pit_fiend",
+     "weight": 3
+    },
+    {
+     "monster": "roc",
+     "weight": 3
+    },
+    {
+     "monster": "iron_maiden",
+     "weight": 3
+    },
+    {
+     "monster": "grim_reaper_dq",
+     "weight": 3
+    },
+    {
+     "monster": "hollow_champion",
+     "weight": 3
+    },
+    {
+     "monster": "chaos_bug",
+     "weight": 3
+    },
+    {
+     "monster": "mist_dragon",
+     "weight": 3
+    },
+    {
+     "monster": "iron_lucavi",
+     "weight": 3
+    },
+    {
+     "monster": "ancient_red_dragon",
+     "weight": 3
+    },
+    {
+     "monster": "ancient_gold_dragon",
+     "weight": 3
+    },
+    {
+     "monster": "tarrasque",
+     "weight": 3
+    },
+    {
+     "monster": "demogorgon",
+     "weight": 3
+    },
+    {
+     "monster": "orcus",
+     "weight": 3
+    },
+    {
+     "monster": "omega_weapon",
+     "weight": 3
+    },
+    {
+     "monster": "shinryu",
+     "weight": 3
+    },
+    {
+     "monster": "ultima_weapon",
+     "weight": 3
+    },
+    {
+     "monster": "estark",
+     "weight": 3
+    },
+    {
+     "monster": "nokturnus",
+     "weight": 3
+    },
+    {
+     "monster": "gnasher_serpent",
+     "weight": 3
+    },
+    {
+     "monster": "gwyn_knight",
+     "weight": 3
+    },
+    {
+     "monster": "malenia_blade",
+     "weight": 3
+    },
+    {
+     "monster": "radahn_starscourge",
+     "weight": 3
+    },
+    {
+     "monster": "ancient_leviathan",
+     "weight": 3
+    },
+    {
+     "monster": "bahamut_lesser",
+     "weight": 3
+    },
+    {
+     "monster": "ifrit_avatar",
+     "weight": 3
+    },
+    {
+     "monster": "shiva_avatar",
+     "weight": 3
+    },
+    {
+     "monster": "ramuh_avatar",
+     "weight": 3
+    },
+    {
+     "monster": "titan_avatar",
+     "weight": 3
+    }
+   ],
+   "boss": "bahamut_zero",
+   "group_size": [
+    1,
+    3
+   ],
+   "gold_mult": 1.84
+  }
+ ]
+}

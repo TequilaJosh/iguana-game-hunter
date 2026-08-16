@@ -4,6 +4,7 @@ import { createClient } from './client.js';
 import { commandMap } from './commands.js';
 import { onMemberJoin } from './features/welcome.js';
 import { startIngestServer } from './ingest.js';
+import { isRpgCommand, handleRpg } from './game/rpg.js';
 import { log } from './logger.js';
 
 assertCoreConfig();
@@ -31,6 +32,12 @@ client.on(Events.GuildCreate, (guild) => {
 
 // Community: welcome new members (+ optional auto-role), per server.
 client.on(Events.GuildMemberAdd, (member) => onMemberJoin(member));
+
+// Tavern Tales text RPG — "!" commands (needs the Message Content intent).
+client.on(Events.MessageCreate, (msg) => {
+  if (msg.author.bot || !msg.content || !isRpgCommand(msg.content)) return;
+  handleRpg(msg).catch((e) => log.error('rpg command failed:', e));
+});
 
 // Slash commands.
 client.on(Events.InteractionCreate, async (interaction) => {

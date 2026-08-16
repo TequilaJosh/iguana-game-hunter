@@ -1,0 +1,12146 @@
+{
+ "version": 1,
+ "count": 203,
+ "monsters": [
+  {
+   "id": "giant_rat",
+   "name": "Giant Rat",
+   "alt_name": "Giant Rat",
+   "family": "beast",
+   "source": "classic",
+   "tier": 1,
+   "level_min": 1,
+   "level_max": 4,
+   "rank": "trash",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 118,
+    "atk": 9,
+    "def": 8,
+    "mag": 4,
+    "res": 6,
+    "agi": 10
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "rend",
+    "howl"
+   ],
+   "rewards": {
+    "xp": 18,
+    "gold": 12
+   },
+   "drops": [
+    {
+     "item": "crude_pelt",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t1",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "cave_bat",
+   "name": "Cave Bat",
+   "alt_name": "Cave Bat",
+   "family": "avian",
+   "source": "classic",
+   "tier": 1,
+   "level_min": 1,
+   "level_max": 4,
+   "rank": "trash",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 82,
+    "atk": 8,
+    "def": 6,
+    "mag": 7,
+    "res": 7,
+    "agi": 13
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "dive_bomb",
+    "gale_screech"
+   ],
+   "rewards": {
+    "xp": 18,
+    "gold": 12
+   },
+   "drops": [
+    {
+     "item": "crude_feather",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t1",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "blue_slime",
+   "name": "Blue Slime",
+   "alt_name": "Azure Ooze",
+   "family": "slime",
+   "source": "dq",
+   "tier": 1,
+   "level_min": 1,
+   "level_max": 4,
+   "rank": "trash",
+   "element": "water",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 129,
+    "atk": 7,
+    "def": 9,
+    "mag": 7,
+    "res": 8,
+    "agi": 6
+   },
+   "affinity": {
+    "weak": [
+     "lightning"
+    ],
+    "resist": [
+     "water"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "engulf",
+    "split"
+   ],
+   "rewards": {
+    "xp": 18,
+    "gold": 12
+   },
+   "drops": [
+    {
+     "item": "crude_gel",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t1",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "goblin_scrapper",
+   "name": "Goblin Scrapper",
+   "alt_name": "Goblin Scrapper",
+   "family": "humanoid",
+   "source": "dnd",
+   "tier": 1,
+   "level_min": 1,
+   "level_max": 4,
+   "rank": "trash",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 103,
+    "atk": 8,
+    "def": 8,
+    "mag": 7,
+    "res": 8,
+    "agi": 10
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "power_strike",
+    "guard_break"
+   ],
+   "rewards": {
+    "xp": 18,
+    "gold": 12
+   },
+   "drops": [
+    {
+     "item": "crude_tattered_cloth",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t1",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "kobold_digger",
+   "name": "Kobold Digger",
+   "alt_name": "Kobold Digger",
+   "family": "humanoid",
+   "source": "dnd",
+   "tier": 1,
+   "level_min": 1,
+   "level_max": 4,
+   "rank": "trash",
+   "element": "earth",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 103,
+    "atk": 8,
+    "def": 8,
+    "mag": 7,
+    "res": 8,
+    "agi": 10
+   },
+   "affinity": {
+    "weak": [
+     "wind"
+    ],
+    "resist": [
+     "earth"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "power_strike",
+    "guard_break"
+   ],
+   "rewards": {
+    "xp": 18,
+    "gold": 12
+   },
+   "drops": [
+    {
+     "item": "crude_tattered_cloth",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t1",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "rattling_skeleton",
+   "name": "Rattling Skeleton",
+   "alt_name": "Rattling Skeleton",
+   "family": "undead",
+   "source": "classic",
+   "tier": 1,
+   "level_min": 1,
+   "level_max": 4,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 98,
+    "atk": 8,
+    "def": 8,
+    "mag": 8,
+    "res": 7,
+    "agi": 8
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "life_leech",
+    "curse_touch"
+   ],
+   "rewards": {
+    "xp": 18,
+    "gold": 12
+   },
+   "drops": [
+    {
+     "item": "crude_bone_shard",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t1",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "dracky",
+   "name": "Dracky",
+   "alt_name": "Nightwing",
+   "family": "avian",
+   "source": "dq",
+   "tier": 1,
+   "level_min": 1,
+   "level_max": 4,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 82,
+    "atk": 8,
+    "def": 6,
+    "mag": 7,
+    "res": 7,
+    "agi": 13
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "dive_bomb",
+    "gale_screech"
+   ],
+   "rewards": {
+    "xp": 18,
+    "gold": 12
+   },
+   "drops": [
+    {
+     "item": "crude_feather",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t1",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "mandragora",
+   "name": "Mandragora",
+   "alt_name": "Screaming Root",
+   "family": "plant",
+   "source": "ff",
+   "tier": 1,
+   "level_min": 1,
+   "level_max": 4,
+   "rank": "trash",
+   "element": "earth",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 113,
+    "atk": 7,
+    "def": 8,
+    "mag": 8,
+    "res": 8,
+    "agi": 6
+   },
+   "affinity": {
+    "weak": [
+     "wind"
+    ],
+    "resist": [
+     "earth"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "entangle",
+    "spore_cloud"
+   ],
+   "rewards": {
+    "xp": 18,
+    "gold": 12
+   },
+   "drops": [
+    {
+     "item": "crude_seed",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t1",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "bog_toad",
+   "name": "Bog Toad",
+   "alt_name": "Bog Toad",
+   "family": "aquatic",
+   "source": "classic",
+   "tier": 1,
+   "level_min": 1,
+   "level_max": 4,
+   "rank": "trash",
+   "element": "water",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 113,
+    "atk": 8,
+    "def": 8,
+    "mag": 8,
+    "res": 8,
+    "agi": 8
+   },
+   "affinity": {
+    "weak": [
+     "lightning"
+    ],
+    "resist": [
+     "water"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "tidal_crash",
+    "undertow"
+   ],
+   "rewards": {
+    "xp": 18,
+    "gold": 12
+   },
+   "drops": [
+    {
+     "item": "crude_fin",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t1",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "rhino_beetle",
+   "name": "Rhinoceros Beetle",
+   "alt_name": "Rhinoceros Beetle",
+   "family": "insect",
+   "source": "classic",
+   "tier": 1,
+   "level_min": 1,
+   "level_max": 4,
+   "rank": "trash",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 82,
+    "atk": 8,
+    "def": 7,
+    "mag": 5,
+    "res": 7,
+    "agi": 12
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "venom_sting",
+    "web_snare"
+   ],
+   "rewards": {
+    "xp": 18,
+    "gold": 12
+   },
+   "drops": [
+    {
+     "item": "crude_chitin",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t1",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "crawling_hand",
+   "name": "Crawling Hand",
+   "alt_name": "Crawling Hand",
+   "family": "undead",
+   "source": "dnd",
+   "tier": 1,
+   "level_min": 1,
+   "level_max": 4,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 98,
+    "atk": 8,
+    "def": 8,
+    "mag": 8,
+    "res": 7,
+    "agi": 8
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "life_leech",
+    "curse_touch"
+   ],
+   "rewards": {
+    "xp": 18,
+    "gold": 12
+   },
+   "drops": [
+    {
+     "item": "crude_bone_shard",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t1",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "will_o_wisp",
+   "name": "Will-o-Wisp",
+   "alt_name": "Will-o-Wisp",
+   "family": "elemental",
+   "source": "classic",
+   "tier": 1,
+   "level_min": 1,
+   "level_max": 4,
+   "rank": "trash",
+   "element": "fire",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 88,
+    "atk": 8,
+    "def": 7,
+    "mag": 11,
+    "res": 10,
+    "agi": 10
+   },
+   "affinity": {
+    "weak": [
+     "water"
+    ],
+    "resist": [
+     "fire"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "elemental_blast",
+    "aura_shift"
+   ],
+   "rewards": {
+    "xp": 18,
+    "gold": 12
+   },
+   "drops": [
+    {
+     "item": "crude_mote",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t1",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "pixie_cutpurse",
+   "name": "Pixie Cutpurse",
+   "alt_name": "Pixie Cutpurse",
+   "family": "fae",
+   "source": "classic",
+   "tier": 1,
+   "level_min": 1,
+   "level_max": 4,
+   "rank": "trash",
+   "element": "wind",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 77,
+    "atk": 7,
+    "def": 6,
+    "mag": 10,
+    "res": 10,
+    "agi": 12
+   },
+   "affinity": {
+    "weak": [
+     "ice"
+    ],
+    "resist": [
+     "wind"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "hex",
+    "glamour"
+   ],
+   "rewards": {
+    "xp": 18,
+    "gold": 12
+   },
+   "drops": [
+    {
+     "item": "crude_fae_dust",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t1",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "hollow_soldier",
+   "name": "Hollow Soldier",
+   "alt_name": "Husk Soldier",
+   "family": "undead",
+   "source": "souls",
+   "tier": 1,
+   "level_min": 1,
+   "level_max": 4,
+   "rank": "trash",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 98,
+    "atk": 8,
+    "def": 8,
+    "mag": 8,
+    "res": 7,
+    "agi": 8
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "life_leech",
+    "curse_touch"
+   ],
+   "rewards": {
+    "xp": 18,
+    "gold": 12
+   },
+   "drops": [
+    {
+     "item": "crude_bone_shard",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t1",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "rock_lizard",
+   "name": "Rock Lizard",
+   "alt_name": "Rock Lizard",
+   "family": "beast",
+   "source": "classic",
+   "tier": 1,
+   "level_min": 1,
+   "level_max": 4,
+   "rank": "trash",
+   "element": "earth",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 118,
+    "atk": 9,
+    "def": 8,
+    "mag": 4,
+    "res": 6,
+    "agi": 10
+   },
+   "affinity": {
+    "weak": [
+     "wind"
+    ],
+    "resist": [
+     "earth"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "rend",
+    "howl"
+   ],
+   "rewards": {
+    "xp": 18,
+    "gold": 12
+   },
+   "drops": [
+    {
+     "item": "crude_pelt",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t1",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "dust_mephit",
+   "name": "Dust Mephit",
+   "alt_name": "Dust Mephit",
+   "family": "elemental",
+   "source": "dnd",
+   "tier": 1,
+   "level_min": 1,
+   "level_max": 4,
+   "rank": "trash",
+   "element": "earth",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 88,
+    "atk": 8,
+    "def": 7,
+    "mag": 11,
+    "res": 10,
+    "agi": 10
+   },
+   "affinity": {
+    "weak": [
+     "wind"
+    ],
+    "resist": [
+     "earth"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "elemental_blast",
+    "aura_shift"
+   ],
+   "rewards": {
+    "xp": 18,
+    "gold": 12
+   },
+   "drops": [
+    {
+     "item": "crude_mote",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t1",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "she_slime",
+   "name": "She-Slime",
+   "alt_name": "Rose Ooze",
+   "family": "slime",
+   "source": "dq",
+   "tier": 1,
+   "level_min": 1,
+   "level_max": 4,
+   "rank": "trash",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 129,
+    "atk": 7,
+    "def": 9,
+    "mag": 7,
+    "res": 8,
+    "agi": 6
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "engulf",
+    "split"
+   ],
+   "rewards": {
+    "xp": 18,
+    "gold": 12
+   },
+   "drops": [
+    {
+     "item": "crude_gel",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t1",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "twig_sprite",
+   "name": "Twig Sprite",
+   "alt_name": "Twig Sprite",
+   "family": "plant",
+   "source": "classic",
+   "tier": 1,
+   "level_min": 1,
+   "level_max": 4,
+   "rank": "trash",
+   "element": "wind",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 113,
+    "atk": 7,
+    "def": 8,
+    "mag": 8,
+    "res": 8,
+    "agi": 6
+   },
+   "affinity": {
+    "weak": [
+     "ice"
+    ],
+    "resist": [
+     "wind"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "entangle",
+    "spore_cloud"
+   ],
+   "rewards": {
+    "xp": 18,
+    "gold": 12
+   },
+   "drops": [
+    {
+     "item": "crude_seed",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t1",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "antlion_grub",
+   "name": "Antlion Grub",
+   "alt_name": "Antlion Grub",
+   "family": "insect",
+   "source": "ff",
+   "tier": 1,
+   "level_min": 1,
+   "level_max": 4,
+   "rank": "trash",
+   "element": "earth",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 82,
+    "atk": 8,
+    "def": 7,
+    "mag": 5,
+    "res": 7,
+    "agi": 12
+   },
+   "affinity": {
+    "weak": [
+     "wind"
+    ],
+    "resist": [
+     "earth"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "venom_sting",
+    "web_snare"
+   ],
+   "rewards": {
+    "xp": 18,
+    "gold": 12
+   },
+   "drops": [
+    {
+     "item": "crude_chitin",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t1",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "rat_swarm",
+   "name": "Rat Swarm",
+   "alt_name": "Rat Swarm",
+   "family": "beast",
+   "source": "dnd",
+   "tier": 1,
+   "level_min": 1,
+   "level_max": 4,
+   "rank": "trash",
+   "element": "poison",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 118,
+    "atk": 9,
+    "def": 8,
+    "mag": 4,
+    "res": 6,
+    "agi": 10
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "rend",
+    "howl"
+   ],
+   "rewards": {
+    "xp": 18,
+    "gold": 12
+   },
+   "drops": [
+    {
+     "item": "crude_pelt",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t1",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "gremlin",
+   "name": "Gremlin",
+   "alt_name": "Gremlin",
+   "family": "fae",
+   "source": "classic",
+   "tier": 1,
+   "level_min": 1,
+   "level_max": 4,
+   "rank": "trash",
+   "element": "lightning",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 77,
+    "atk": 7,
+    "def": 6,
+    "mag": 10,
+    "res": 10,
+    "agi": 12
+   },
+   "affinity": {
+    "weak": [
+     "earth"
+    ],
+    "resist": [
+     "lightning"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "hex",
+    "glamour"
+   ],
+   "rewards": {
+    "xp": 18,
+    "gold": 12
+   },
+   "drops": [
+    {
+     "item": "crude_fae_dust",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t1",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "bandit_cutthroat",
+   "name": "Bandit Cutthroat",
+   "alt_name": "Bandit Cutthroat",
+   "family": "humanoid",
+   "source": "classic",
+   "tier": 1,
+   "level_min": 1,
+   "level_max": 4,
+   "rank": "trash",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 103,
+    "atk": 8,
+    "def": 8,
+    "mag": 7,
+    "res": 8,
+    "agi": 10
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "power_strike",
+    "guard_break"
+   ],
+   "rewards": {
+    "xp": 18,
+    "gold": 12
+   },
+   "drops": [
+    {
+     "item": "crude_tattered_cloth",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t1",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "king_slime_runt",
+   "name": "Slime Runt",
+   "alt_name": "Slime Runt",
+   "family": "slime",
+   "source": "dq",
+   "tier": 1,
+   "level_min": 1,
+   "level_max": 4,
+   "rank": "trash",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 129,
+    "atk": 7,
+    "def": 9,
+    "mag": 7,
+    "res": 8,
+    "agi": 6
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "engulf",
+    "split"
+   ],
+   "rewards": {
+    "xp": 18,
+    "gold": 12
+   },
+   "drops": [
+    {
+     "item": "crude_gel",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t1",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "stray_hound",
+   "name": "Stray Hound",
+   "alt_name": "Stray Hound",
+   "family": "beast",
+   "source": "classic",
+   "tier": 1,
+   "level_min": 1,
+   "level_max": 4,
+   "rank": "trash",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 118,
+    "atk": 9,
+    "def": 8,
+    "mag": 4,
+    "res": 6,
+    "agi": 10
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "rend",
+    "howl"
+   ],
+   "rewards": {
+    "xp": 18,
+    "gold": 12
+   },
+   "drops": [
+    {
+     "item": "crude_pelt",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t1",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "goblin_boss_grukk",
+   "name": "Grukk the Loud",
+   "alt_name": "Grukk the Loud",
+   "family": "humanoid",
+   "source": "dnd",
+   "tier": 1,
+   "level_min": 1,
+   "level_max": 4,
+   "rank": "boss",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 288,
+    "atk": 8,
+    "def": 8,
+    "mag": 6,
+    "res": 8,
+    "agi": 10
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "power_strike",
+    "guard_break",
+    "battle_cry"
+   ],
+   "rewards": {
+    "xp": 125,
+    "gold": 83
+   },
+   "drops": [
+    {
+     "item": "crude_tattered_cloth",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t1",
+     "chance": 1.0
+    }
+   ]
+  },
+  {
+   "id": "dire_wolf",
+   "name": "Dire Wolf",
+   "alt_name": "Dire Wolf",
+   "family": "beast",
+   "source": "dnd",
+   "tier": 2,
+   "level_min": 5,
+   "level_max": 9,
+   "rank": "trash",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 256,
+    "atk": 23,
+    "def": 15,
+    "mag": 11,
+    "res": 12,
+    "agi": 14
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "rend",
+    "howl"
+   ],
+   "rewards": {
+    "xp": 97,
+    "gold": 57
+   },
+   "drops": [
+    {
+     "item": "common_pelt",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t2",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "hobgoblin",
+   "name": "Hobgoblin",
+   "alt_name": "Hobgoblin",
+   "family": "humanoid",
+   "source": "dnd",
+   "tier": 2,
+   "level_min": 5,
+   "level_max": 9,
+   "rank": "trash",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 223,
+    "atk": 22,
+    "def": 16,
+    "mag": 18,
+    "res": 15,
+    "agi": 14
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "power_strike",
+    "guard_break"
+   ],
+   "rewards": {
+    "xp": 97,
+    "gold": 57
+   },
+   "drops": [
+    {
+     "item": "common_tattered_cloth",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t2",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "bomb",
+   "name": "Bomb",
+   "alt_name": "Blast Cinder",
+   "family": "demon",
+   "source": "ff",
+   "tier": 2,
+   "level_min": 5,
+   "level_max": 9,
+   "rank": "trash",
+   "element": "fire",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 234,
+    "atk": 24,
+    "def": 16,
+    "mag": 24,
+    "res": 17,
+    "agi": 13
+   },
+   "affinity": {
+    "weak": [
+     "water"
+    ],
+    "resist": [
+     "fire"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "hellfire",
+    "dread_gaze"
+   ],
+   "rewards": {
+    "xp": 97,
+    "gold": 57
+   },
+   "drops": [
+    {
+     "item": "common_demon_horn",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t2",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "giant_spider",
+   "name": "Giant Spider",
+   "alt_name": "Giant Spider",
+   "family": "insect",
+   "source": "dnd",
+   "tier": 2,
+   "level_min": 5,
+   "level_max": 9,
+   "rank": "trash",
+   "element": "poison",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 178,
+    "atk": 20,
+    "def": 14,
+    "mag": 11,
+    "res": 13,
+    "agi": 16
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "venom_sting",
+    "web_snare"
+   ],
+   "rewards": {
+    "xp": 97,
+    "gold": 57
+   },
+   "drops": [
+    {
+     "item": "common_chitin",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t2",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "zombie",
+   "name": "Zombie",
+   "alt_name": "Zombie",
+   "family": "undead",
+   "source": "classic",
+   "tier": 2,
+   "level_min": 5,
+   "level_max": 9,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 212,
+    "atk": 20,
+    "def": 15,
+    "mag": 21,
+    "res": 14,
+    "agi": 12
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "life_leech",
+    "curse_touch"
+   ],
+   "rewards": {
+    "xp": 97,
+    "gold": 57
+   },
+   "drops": [
+    {
+     "item": "common_bone_shard",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t2",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "drackmage",
+   "name": "Drackmage",
+   "alt_name": "Duskwing Adept",
+   "family": "avian",
+   "source": "dq",
+   "tier": 2,
+   "level_min": 5,
+   "level_max": 9,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 178,
+    "atk": 20,
+    "def": 12,
+    "mag": 18,
+    "res": 13,
+    "agi": 18
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "dive_bomb",
+    "gale_screech"
+   ],
+   "rewards": {
+    "xp": 97,
+    "gold": 57
+   },
+   "drops": [
+    {
+     "item": "common_feather",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t2",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "harpy",
+   "name": "Harpy",
+   "alt_name": "Harpy",
+   "family": "avian",
+   "source": "classic",
+   "tier": 2,
+   "level_min": 5,
+   "level_max": 9,
+   "rank": "trash",
+   "element": "wind",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 178,
+    "atk": 20,
+    "def": 12,
+    "mag": 18,
+    "res": 13,
+    "agi": 18
+   },
+   "affinity": {
+    "weak": [
+     "ice"
+    ],
+    "resist": [
+     "wind"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "dive_bomb",
+    "gale_screech"
+   ],
+   "rewards": {
+    "xp": 97,
+    "gold": 57
+   },
+   "drops": [
+    {
+     "item": "common_feather",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t2",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "mimic",
+   "name": "Mimic",
+   "alt_name": "Mimic",
+   "family": "construct",
+   "source": "dnd",
+   "tier": 2,
+   "level_min": 5,
+   "level_max": 9,
+   "rank": "trash",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 268,
+    "atk": 22,
+    "def": 22,
+    "mag": 11,
+    "res": 19,
+    "agi": 9
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "slam",
+    "overload_beam"
+   ],
+   "rewards": {
+    "xp": 97,
+    "gold": 57
+   },
+   "drops": [
+    {
+     "item": "common_scrap_plate",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t2",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "cactuar",
+   "name": "Cactuar",
+   "alt_name": "Needle Cactoid",
+   "family": "plant",
+   "source": "ff",
+   "tier": 2,
+   "level_min": 5,
+   "level_max": 9,
+   "rank": "trash",
+   "element": "earth",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 245,
+    "atk": 18,
+    "def": 16,
+    "mag": 19,
+    "res": 16,
+    "agi": 8
+   },
+   "affinity": {
+    "weak": [
+     "wind"
+    ],
+    "resist": [
+     "earth"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "entangle",
+    "spore_cloud"
+   ],
+   "rewards": {
+    "xp": 97,
+    "gold": 57
+   },
+   "drops": [
+    {
+     "item": "common_seed",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t2",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "ice_slime",
+   "name": "Frost Slime",
+   "alt_name": "Frost Slime",
+   "family": "slime",
+   "source": "dq",
+   "tier": 2,
+   "level_min": 5,
+   "level_max": 9,
+   "rank": "trash",
+   "element": "ice",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 279,
+    "atk": 17,
+    "def": 17,
+    "mag": 17,
+    "res": 16,
+    "agi": 8
+   },
+   "affinity": {
+    "weak": [
+     "fire"
+    ],
+    "resist": [
+     "ice"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "engulf",
+    "split"
+   ],
+   "rewards": {
+    "xp": 97,
+    "gold": 57
+   },
+   "drops": [
+    {
+     "item": "common_gel",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t2",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "gargoyle_lesser",
+   "name": "Lesser Gargoyle",
+   "alt_name": "Lesser Gargoyle",
+   "family": "construct",
+   "source": "classic",
+   "tier": 2,
+   "level_min": 5,
+   "level_max": 9,
+   "rank": "trash",
+   "element": "earth",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 268,
+    "atk": 22,
+    "def": 22,
+    "mag": 11,
+    "res": 19,
+    "agi": 9
+   },
+   "affinity": {
+    "weak": [
+     "wind"
+    ],
+    "resist": [
+     "dark",
+     "earth",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "slam",
+    "overload_beam"
+   ],
+   "rewards": {
+    "xp": 97,
+    "gold": 57
+   },
+   "drops": [
+    {
+     "item": "common_scrap_plate",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t2",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "ghoul",
+   "name": "Ghoul",
+   "alt_name": "Ghoul",
+   "family": "undead",
+   "source": "dnd",
+   "tier": 2,
+   "level_min": 5,
+   "level_max": 9,
+   "rank": "trash",
+   "element": "poison",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 212,
+    "atk": 20,
+    "def": 15,
+    "mag": 21,
+    "res": 14,
+    "agi": 12
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "life_leech",
+    "curse_touch"
+   ],
+   "rewards": {
+    "xp": 97,
+    "gold": 57
+   },
+   "drops": [
+    {
+     "item": "common_bone_shard",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t2",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "bandit_archer",
+   "name": "Bandit Archer",
+   "alt_name": "Bandit Archer",
+   "family": "humanoid",
+   "source": "classic",
+   "tier": 2,
+   "level_min": 5,
+   "level_max": 9,
+   "rank": "trash",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 223,
+    "atk": 22,
+    "def": 16,
+    "mag": 18,
+    "res": 15,
+    "agi": 14
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "power_strike",
+    "guard_break"
+   ],
+   "rewards": {
+    "xp": 97,
+    "gold": 57
+   },
+   "drops": [
+    {
+     "item": "common_tattered_cloth",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t2",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "crazed_pilgrim",
+   "name": "Crazed Pilgrim",
+   "alt_name": "Mad Wanderer",
+   "family": "humanoid",
+   "source": "souls",
+   "tier": 2,
+   "level_min": 5,
+   "level_max": 9,
+   "rank": "trash",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 223,
+    "atk": 22,
+    "def": 16,
+    "mag": 18,
+    "res": 15,
+    "agi": 14
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "power_strike",
+    "guard_break"
+   ],
+   "rewards": {
+    "xp": 97,
+    "gold": 57
+   },
+   "drops": [
+    {
+     "item": "common_tattered_cloth",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t2",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "wild_boar",
+   "name": "Tusked Boar",
+   "alt_name": "Tusked Boar",
+   "family": "beast",
+   "source": "classic",
+   "tier": 2,
+   "level_min": 5,
+   "level_max": 9,
+   "rank": "trash",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 256,
+    "atk": 23,
+    "def": 15,
+    "mag": 11,
+    "res": 12,
+    "agi": 14
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "rend",
+    "howl"
+   ],
+   "rewards": {
+    "xp": 97,
+    "gold": 57
+   },
+   "drops": [
+    {
+     "item": "common_pelt",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t2",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "magma_pup",
+   "name": "Magma Pup",
+   "alt_name": "Magma Pup",
+   "family": "dragon",
+   "source": "classic",
+   "tier": 2,
+   "level_min": 5,
+   "level_max": 9,
+   "rank": "trash",
+   "element": "fire",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 301,
+    "atk": 26,
+    "def": 19,
+    "mag": 21,
+    "res": 17,
+    "agi": 12
+   },
+   "affinity": {
+    "weak": [
+     "water"
+    ],
+    "resist": [
+     "fire"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "dragon_breath",
+    "tail_sweep"
+   ],
+   "rewards": {
+    "xp": 97,
+    "gold": 57
+   },
+   "drops": [
+    {
+     "item": "common_dragon_scale",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t2",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "shadow_wisp",
+   "name": "Shade",
+   "alt_name": "Shade",
+   "family": "undead",
+   "source": "classic",
+   "tier": 2,
+   "level_min": 5,
+   "level_max": 9,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 212,
+    "atk": 20,
+    "def": 15,
+    "mag": 21,
+    "res": 14,
+    "agi": 12
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "life_leech",
+    "curse_touch"
+   ],
+   "rewards": {
+    "xp": 97,
+    "gold": 57
+   },
+   "drops": [
+    {
+     "item": "common_bone_shard",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t2",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "sahagin",
+   "name": "Sahagin",
+   "alt_name": "Reef Stalker",
+   "family": "aquatic",
+   "source": "ff",
+   "tier": 2,
+   "level_min": 5,
+   "level_max": 9,
+   "rank": "trash",
+   "element": "water",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 245,
+    "atk": 20,
+    "def": 16,
+    "mag": 20,
+    "res": 16,
+    "agi": 12
+   },
+   "affinity": {
+    "weak": [
+     "lightning"
+    ],
+    "resist": [
+     "water"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "tidal_crash",
+    "undertow"
+   ],
+   "rewards": {
+    "xp": 97,
+    "gold": 57
+   },
+   "drops": [
+    {
+     "item": "common_fin",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t2",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "stirge",
+   "name": "Stirge",
+   "alt_name": "Stirge",
+   "family": "insect",
+   "source": "dnd",
+   "tier": 2,
+   "level_min": 5,
+   "level_max": 9,
+   "rank": "trash",
+   "element": "poison",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 178,
+    "atk": 20,
+    "def": 14,
+    "mag": 11,
+    "res": 13,
+    "agi": 16
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "venom_sting",
+    "web_snare"
+   ],
+   "rewards": {
+    "xp": 97,
+    "gold": 57
+   },
+   "drops": [
+    {
+     "item": "common_chitin",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t2",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "living_armor_rust",
+   "name": "Rusted Armor",
+   "alt_name": "Rusted Armor",
+   "family": "construct",
+   "source": "dq",
+   "tier": 2,
+   "level_min": 5,
+   "level_max": 9,
+   "rank": "trash",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 268,
+    "atk": 22,
+    "def": 22,
+    "mag": 11,
+    "res": 19,
+    "agi": 9
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "slam",
+    "overload_beam"
+   ],
+   "rewards": {
+    "xp": 97,
+    "gold": 57
+   },
+   "drops": [
+    {
+     "item": "common_scrap_plate",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t2",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "hill_ogre",
+   "name": "Hill Ogre",
+   "alt_name": "Hill Ogre",
+   "family": "giant",
+   "source": "classic",
+   "tier": 2,
+   "level_min": 5,
+   "level_max": 9,
+   "rank": "elite",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 614,
+    "atk": 31,
+    "def": 17,
+    "mag": 11,
+    "res": 12,
+    "agi": 9
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "boulder_toss",
+    "earthshaker",
+    "brutal_swing"
+   ],
+   "rewards": {
+    "xp": 290,
+    "gold": 171
+   },
+   "drops": [
+    {
+     "item": "common_giant_sinew",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t2",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "goblin_shaman",
+   "name": "Goblin Shaman",
+   "alt_name": "Goblin Shaman",
+   "family": "humanoid",
+   "source": "dnd",
+   "tier": 2,
+   "level_min": 5,
+   "level_max": 9,
+   "rank": "elite",
+   "element": "fire",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 424,
+    "atk": 25,
+    "def": 16,
+    "mag": 21,
+    "res": 15,
+    "agi": 14
+   },
+   "affinity": {
+    "weak": [
+     "water"
+    ],
+    "resist": [
+     "fire"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "power_strike",
+    "guard_break",
+    "battle_cry"
+   ],
+   "rewards": {
+    "xp": 290,
+    "gold": 171
+   },
+   "drops": [
+    {
+     "item": "common_tattered_cloth",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t2",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "bell_gargoyle",
+   "name": "Bell Gargoyle",
+   "alt_name": "Toll Sentinel",
+   "family": "construct",
+   "source": "souls",
+   "tier": 2,
+   "level_min": 5,
+   "level_max": 9,
+   "rank": "boss",
+   "element": "fire",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 749,
+    "atk": 19,
+    "def": 22,
+    "mag": 10,
+    "res": 19,
+    "agi": 9
+   },
+   "affinity": {
+    "weak": [
+     "water"
+    ],
+    "resist": [
+     "dark",
+     "fire",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "slam",
+    "overload_beam",
+    "fortify"
+   ],
+   "rewards": {
+    "xp": 678,
+    "gold": 399
+   },
+   "drops": [
+    {
+     "item": "common_scrap_plate",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t1",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t2",
+     "chance": 1.0
+    }
+   ]
+  },
+  {
+   "id": "owlbear",
+   "name": "Owlbear",
+   "alt_name": "Owlbear",
+   "family": "beast",
+   "source": "dnd",
+   "tier": 3,
+   "level_min": 10,
+   "level_max": 15,
+   "rank": "trash",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 394,
+    "atk": 36,
+    "def": 22,
+    "mag": 17,
+    "res": 18,
+    "agi": 17
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "rend",
+    "howl"
+   ],
+   "rewards": {
+    "xp": 200,
+    "gold": 112
+   },
+   "drops": [
+    {
+     "item": "fine_pelt",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t3",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "basilisk_young",
+   "name": "Young Basilisk",
+   "alt_name": "Young Basilisk",
+   "family": "beast",
+   "source": "classic",
+   "tier": 3,
+   "level_min": 10,
+   "level_max": 15,
+   "rank": "trash",
+   "element": "earth",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 394,
+    "atk": 36,
+    "def": 22,
+    "mag": 17,
+    "res": 18,
+    "agi": 17
+   },
+   "affinity": {
+    "weak": [
+     "wind"
+    ],
+    "resist": [
+     "earth"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "rend",
+    "howl"
+   ],
+   "rewards": {
+    "xp": 200,
+    "gold": 112
+   },
+   "drops": [
+    {
+     "item": "fine_pelt",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t3",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "wight",
+   "name": "Wight",
+   "alt_name": "Wight",
+   "family": "undead",
+   "source": "dnd",
+   "tier": 3,
+   "level_min": 10,
+   "level_max": 15,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 326,
+    "atk": 33,
+    "def": 22,
+    "mag": 34,
+    "res": 21,
+    "agi": 15
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "life_leech",
+    "curse_touch"
+   ],
+   "rewards": {
+    "xp": 200,
+    "gold": 112
+   },
+   "drops": [
+    {
+     "item": "fine_bone_shard",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t3",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "wraith_lesser",
+   "name": "Lesser Wraith",
+   "alt_name": "Lesser Wraith",
+   "family": "undead",
+   "source": "classic",
+   "tier": 3,
+   "level_min": 10,
+   "level_max": 15,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 326,
+    "atk": 33,
+    "def": 22,
+    "mag": 34,
+    "res": 21,
+    "agi": 15
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "life_leech",
+    "curse_touch"
+   ],
+   "rewards": {
+    "xp": 200,
+    "gold": 112
+   },
+   "drops": [
+    {
+     "item": "fine_bone_shard",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t3",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "gelatinous_cube",
+   "name": "Gelatinous Cube",
+   "alt_name": "Gelatinous Cube",
+   "family": "slime",
+   "source": "dnd",
+   "tier": 3,
+   "level_min": 10,
+   "level_max": 15,
+   "rank": "trash",
+   "element": "poison",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 429,
+    "atk": 28,
+    "def": 25,
+    "mag": 28,
+    "res": 24,
+    "agi": 10
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "engulf",
+    "split"
+   ],
+   "rewards": {
+    "xp": 200,
+    "gold": 112
+   },
+   "drops": [
+    {
+     "item": "fine_gel",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t3",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "healslime",
+   "name": "Healslime",
+   "alt_name": "Mender Ooze",
+   "family": "slime",
+   "source": "dq",
+   "tier": 3,
+   "level_min": 10,
+   "level_max": 15,
+   "rank": "trash",
+   "element": "water",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 429,
+    "atk": 28,
+    "def": 25,
+    "mag": 28,
+    "res": 24,
+    "agi": 10
+   },
+   "affinity": {
+    "weak": [
+     "lightning"
+    ],
+    "resist": [
+     "water"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "engulf",
+    "split"
+   ],
+   "rewards": {
+    "xp": 200,
+    "gold": 112
+   },
+   "drops": [
+    {
+     "item": "fine_gel",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t3",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "bugbear",
+   "name": "Bugbear",
+   "alt_name": "Bugbear",
+   "family": "humanoid",
+   "source": "dnd",
+   "tier": 3,
+   "level_min": 10,
+   "level_max": 15,
+   "rank": "trash",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 343,
+    "atk": 35,
+    "def": 24,
+    "mag": 29,
+    "res": 22,
+    "agi": 17
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "power_strike",
+    "guard_break"
+   ],
+   "rewards": {
+    "xp": 200,
+    "gold": 112
+   },
+   "drops": [
+    {
+     "item": "fine_tattered_cloth",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t3",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "coeurl",
+   "name": "Coeurl",
+   "alt_name": "Whisker Panther",
+   "family": "beast",
+   "source": "ff",
+   "tier": 3,
+   "level_min": 10,
+   "level_max": 15,
+   "rank": "trash",
+   "element": "lightning",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 394,
+    "atk": 36,
+    "def": 22,
+    "mag": 17,
+    "res": 18,
+    "agi": 17
+   },
+   "affinity": {
+    "weak": [
+     "earth"
+    ],
+    "resist": [
+     "lightning"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "rend",
+    "howl"
+   ],
+   "rewards": {
+    "xp": 200,
+    "gold": 112
+   },
+   "drops": [
+    {
+     "item": "fine_pelt",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t3",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "flan",
+   "name": "Flan",
+   "alt_name": "Wobbling Jelly",
+   "family": "slime",
+   "source": "ff",
+   "tier": 3,
+   "level_min": 10,
+   "level_max": 15,
+   "rank": "trash",
+   "element": "water",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 429,
+    "atk": 28,
+    "def": 25,
+    "mag": 28,
+    "res": 24,
+    "agi": 10
+   },
+   "affinity": {
+    "weak": [
+     "lightning"
+    ],
+    "resist": [
+     "water"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "engulf",
+    "split"
+   ],
+   "rewards": {
+    "xp": 200,
+    "gold": 112
+   },
+   "drops": [
+    {
+     "item": "fine_gel",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t3",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "ochu",
+   "name": "Ochu",
+   "alt_name": "Lashvine",
+   "family": "plant",
+   "source": "ff",
+   "tier": 3,
+   "level_min": 10,
+   "level_max": 15,
+   "rank": "trash",
+   "element": "earth",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 377,
+    "atk": 30,
+    "def": 23,
+    "mag": 31,
+    "res": 23,
+    "agi": 11
+   },
+   "affinity": {
+    "weak": [
+     "wind"
+    ],
+    "resist": [
+     "earth"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "entangle",
+    "spore_cloud"
+   ],
+   "rewards": {
+    "xp": 200,
+    "gold": 112
+   },
+   "drops": [
+    {
+     "item": "fine_seed",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t3",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "skeleton_knight",
+   "name": "Skeleton Knight",
+   "alt_name": "Skeleton Knight",
+   "family": "undead",
+   "source": "classic",
+   "tier": 3,
+   "level_min": 10,
+   "level_max": 15,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 326,
+    "atk": 33,
+    "def": 22,
+    "mag": 34,
+    "res": 21,
+    "agi": 15
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "life_leech",
+    "curse_touch"
+   ],
+   "rewards": {
+    "xp": 200,
+    "gold": 112
+   },
+   "drops": [
+    {
+     "item": "fine_bone_shard",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t3",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "kill_machine",
+   "name": "Killing Machine",
+   "alt_name": "War Automaton",
+   "family": "construct",
+   "source": "dq",
+   "tier": 3,
+   "level_min": 10,
+   "level_max": 15,
+   "rank": "trash",
+   "element": "lightning",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 412,
+    "atk": 35,
+    "def": 33,
+    "mag": 18,
+    "res": 28,
+    "agi": 11
+   },
+   "affinity": {
+    "weak": [
+     "earth"
+    ],
+    "resist": [
+     "dark",
+     "lightning",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "slam",
+    "overload_beam"
+   ],
+   "rewards": {
+    "xp": 200,
+    "gold": 112
+   },
+   "drops": [
+    {
+     "item": "fine_scrap_plate",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t3",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "hell_dog",
+   "name": "Hellhound",
+   "alt_name": "Hellhound",
+   "family": "demon",
+   "source": "classic",
+   "tier": 3,
+   "level_min": 10,
+   "level_max": 15,
+   "rank": "trash",
+   "element": "fire",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 360,
+    "atk": 38,
+    "def": 23,
+    "mag": 38,
+    "res": 25,
+    "agi": 16
+   },
+   "affinity": {
+    "weak": [
+     "water"
+    ],
+    "resist": [
+     "fire"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "hellfire",
+    "dread_gaze"
+   ],
+   "rewards": {
+    "xp": 200,
+    "gold": 112
+   },
+   "drops": [
+    {
+     "item": "fine_demon_horn",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t3",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "ice_golem_small",
+   "name": "Frost Golem",
+   "alt_name": "Frost Golem",
+   "family": "elemental",
+   "source": "classic",
+   "tier": 3,
+   "level_min": 10,
+   "level_max": 15,
+   "rank": "trash",
+   "element": "ice",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 292,
+    "atk": 31,
+    "def": 20,
+    "mag": 43,
+    "res": 29,
+    "agi": 18
+   },
+   "affinity": {
+    "weak": [
+     "fire"
+    ],
+    "resist": [
+     "ice"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "elemental_blast",
+    "aura_shift"
+   ],
+   "rewards": {
+    "xp": 200,
+    "gold": 112
+   },
+   "drops": [
+    {
+     "item": "fine_mote",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t3",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "centaur_raider",
+   "name": "Centaur Raider",
+   "alt_name": "Centaur Raider",
+   "family": "humanoid",
+   "source": "classic",
+   "tier": 3,
+   "level_min": 10,
+   "level_max": 15,
+   "rank": "trash",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 343,
+    "atk": 35,
+    "def": 24,
+    "mag": 29,
+    "res": 22,
+    "agi": 17
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "power_strike",
+    "guard_break"
+   ],
+   "rewards": {
+    "xp": 200,
+    "gold": 112
+   },
+   "drops": [
+    {
+     "item": "fine_tattered_cloth",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t3",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "swamp_hag",
+   "name": "Swamp Hag",
+   "alt_name": "Swamp Hag",
+   "family": "fae",
+   "source": "dnd",
+   "tier": 3,
+   "level_min": 10,
+   "level_max": 15,
+   "rank": "trash",
+   "element": "poison",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 257,
+    "atk": 28,
+    "def": 18,
+    "mag": 40,
+    "res": 28,
+    "agi": 21
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "hex",
+    "glamour"
+   ],
+   "rewards": {
+    "xp": 200,
+    "gold": 112
+   },
+   "drops": [
+    {
+     "item": "fine_fae_dust",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t3",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "giant_scorpion",
+   "name": "Giant Scorpion",
+   "alt_name": "Giant Scorpion",
+   "family": "insect",
+   "source": "dnd",
+   "tier": 3,
+   "level_min": 10,
+   "level_max": 15,
+   "rank": "trash",
+   "element": "poison",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 274,
+    "atk": 33,
+    "def": 21,
+    "mag": 18,
+    "res": 20,
+    "agi": 20
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "venom_sting",
+    "web_snare"
+   ],
+   "rewards": {
+    "xp": 200,
+    "gold": 112
+   },
+   "drops": [
+    {
+     "item": "fine_chitin",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t3",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "crystal_lizard",
+   "name": "Crystal Lizard",
+   "alt_name": "Crystal Lizard",
+   "family": "beast",
+   "source": "souls",
+   "tier": 3,
+   "level_min": 10,
+   "level_max": 15,
+   "rank": "trash",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 394,
+    "atk": 36,
+    "def": 22,
+    "mag": 17,
+    "res": 18,
+    "agi": 17
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "rend",
+    "howl"
+   ],
+   "rewards": {
+    "xp": 200,
+    "gold": 112
+   },
+   "drops": [
+    {
+     "item": "fine_pelt",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t3",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "sandworm_juvenile",
+   "name": "Juvenile Sandworm",
+   "alt_name": "Juvenile Sandworm",
+   "family": "beast",
+   "source": "classic",
+   "tier": 3,
+   "level_min": 10,
+   "level_max": 15,
+   "rank": "trash",
+   "element": "earth",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 394,
+    "atk": 36,
+    "def": 22,
+    "mag": 17,
+    "res": 18,
+    "agi": 17
+   },
+   "affinity": {
+    "weak": [
+     "wind"
+    ],
+    "resist": [
+     "earth"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "rend",
+    "howl"
+   ],
+   "rewards": {
+    "xp": 200,
+    "gold": 112
+   },
+   "drops": [
+    {
+     "item": "fine_pelt",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t3",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "wyvern_hatchling",
+   "name": "Wyvern Hatchling",
+   "alt_name": "Wyvern Hatchling",
+   "family": "dragon",
+   "source": "classic",
+   "tier": 3,
+   "level_min": 10,
+   "level_max": 15,
+   "rank": "trash",
+   "element": "wind",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 463,
+    "atk": 41,
+    "def": 28,
+    "mag": 34,
+    "res": 25,
+    "agi": 16
+   },
+   "affinity": {
+    "weak": [
+     "ice"
+    ],
+    "resist": [
+     "wind"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "dragon_breath",
+    "tail_sweep"
+   ],
+   "rewards": {
+    "xp": 200,
+    "gold": 112
+   },
+   "drops": [
+    {
+     "item": "fine_dragon_scale",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t3",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "blood_hawk",
+   "name": "Blood Hawk",
+   "alt_name": "Blood Hawk",
+   "family": "avian",
+   "source": "dnd",
+   "tier": 3,
+   "level_min": 10,
+   "level_max": 15,
+   "rank": "trash",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 274,
+    "atk": 33,
+    "def": 18,
+    "mag": 29,
+    "res": 20,
+    "agi": 23
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "dive_bomb",
+    "gale_screech"
+   ],
+   "rewards": {
+    "xp": 200,
+    "gold": 112
+   },
+   "drops": [
+    {
+     "item": "fine_feather",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t3",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "cursed_doll",
+   "name": "Cursed Doll",
+   "alt_name": "Cursed Doll",
+   "family": "construct",
+   "source": "classic",
+   "tier": 3,
+   "level_min": 10,
+   "level_max": 15,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 412,
+    "atk": 35,
+    "def": 33,
+    "mag": 18,
+    "res": 28,
+    "agi": 11
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "slam",
+    "overload_beam"
+   ],
+   "rewards": {
+    "xp": 200,
+    "gold": 112
+   },
+   "drops": [
+    {
+     "item": "fine_scrap_plate",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t3",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "night_stalker",
+   "name": "Night Stalker",
+   "alt_name": "Night Stalker",
+   "family": "aberration",
+   "source": "classic",
+   "tier": 3,
+   "level_min": 10,
+   "level_max": 15,
+   "rank": "elite",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 652,
+    "atk": 36,
+    "def": 21,
+    "mag": 48,
+    "res": 26,
+    "agi": 16
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "mind_spike",
+    "warp_gaze",
+    "tentacle_lash"
+   ],
+   "rewards": {
+    "xp": 601,
+    "gold": 335
+   },
+   "drops": [
+    {
+     "item": "fine_strange_eye",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t3",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "restless_knight",
+   "name": "Restless Knight",
+   "alt_name": "Restless Knight",
+   "family": "undead",
+   "source": "souls",
+   "tier": 3,
+   "level_min": 10,
+   "level_max": 15,
+   "rank": "elite",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 619,
+    "atk": 38,
+    "def": 22,
+    "mag": 39,
+    "res": 21,
+    "agi": 15
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "life_leech",
+    "curse_touch",
+    "grave_chill"
+   ],
+   "rewards": {
+    "xp": 601,
+    "gold": 335
+   },
+   "drops": [
+    {
+     "item": "fine_bone_shard",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t3",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "cockatrice",
+   "name": "Cockatrice",
+   "alt_name": "Cockatrice",
+   "family": "avian",
+   "source": "ff",
+   "tier": 3,
+   "level_min": 10,
+   "level_max": 15,
+   "rank": "elite",
+   "element": "earth",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 521,
+    "atk": 38,
+    "def": 18,
+    "mag": 33,
+    "res": 20,
+    "agi": 23
+   },
+   "affinity": {
+    "weak": [
+     "wind"
+    ],
+    "resist": [
+     "earth"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "dive_bomb",
+    "gale_screech",
+    "talon_rake"
+   ],
+   "rewards": {
+    "xp": 601,
+    "gold": 335
+   },
+   "drops": [
+    {
+     "item": "fine_feather",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t3",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "hydra_three",
+   "name": "Three-Headed Hydra",
+   "alt_name": "Three-Headed Hydra",
+   "family": "dragon",
+   "source": "classic",
+   "tier": 3,
+   "level_min": 10,
+   "level_max": 15,
+   "rank": "boss",
+   "element": "poison",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1297,
+    "atk": 37,
+    "def": 28,
+    "mag": 30,
+    "res": 25,
+    "agi": 16
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "dragon_breath",
+    "tail_sweep",
+    "wing_buffet"
+   ],
+   "rewards": {
+    "xp": 1403,
+    "gold": 782
+   },
+   "drops": [
+    {
+     "item": "fine_dragon_scale",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t3",
+     "chance": 1.0
+    }
+   ]
+  },
+  {
+   "id": "minotaur",
+   "name": "Minotaur",
+   "alt_name": "Minotaur",
+   "family": "giant",
+   "source": "classic",
+   "tier": 4,
+   "level_min": 16,
+   "level_max": 22,
+   "rank": "trash",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 741,
+    "atk": 66,
+    "def": 37,
+    "mag": 23,
+    "res": 25,
+    "agi": 15
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "boulder_toss",
+    "earthshaker"
+   ],
+   "rewards": {
+    "xp": 373,
+    "gold": 198
+   },
+   "drops": [
+    {
+     "item": "superior_giant_sinew",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t4",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "displacer_beast",
+   "name": "Displacer Beast",
+   "alt_name": "Displacer Beast",
+   "family": "aberration",
+   "source": "dnd",
+   "tier": 4,
+   "level_min": 16,
+   "level_max": 22,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 511,
+    "atk": 48,
+    "def": 30,
+    "mag": 63,
+    "res": 39,
+    "agi": 20
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "mind_spike",
+    "warp_gaze"
+   ],
+   "rewards": {
+    "xp": 373,
+    "gold": 198
+   },
+   "drops": [
+    {
+     "item": "superior_strange_eye",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t4",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "malboro",
+   "name": "Malboro",
+   "alt_name": "Fetid Bloom",
+   "family": "plant",
+   "source": "ff",
+   "tier": 4,
+   "level_min": 16,
+   "level_max": 22,
+   "rank": "trash",
+   "element": "poison",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 562,
+    "atk": 45,
+    "def": 34,
+    "mag": 47,
+    "res": 34,
+    "agi": 14
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "entangle",
+    "spore_cloud"
+   ],
+   "rewards": {
+    "xp": 373,
+    "gold": 198
+   },
+   "drops": [
+    {
+     "item": "superior_seed",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t4",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "tonberry",
+   "name": "Tonberry",
+   "alt_name": "Lantern Cook",
+   "family": "aberration",
+   "source": "ff",
+   "tier": 4,
+   "level_min": 16,
+   "level_max": 22,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 511,
+    "atk": 48,
+    "def": 30,
+    "mag": 63,
+    "res": 39,
+    "agi": 20
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "mind_spike",
+    "warp_gaze"
+   ],
+   "rewards": {
+    "xp": 373,
+    "gold": 198
+   },
+   "drops": [
+    {
+     "item": "superior_strange_eye",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t4",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "iron_golem_small",
+   "name": "Iron Golem",
+   "alt_name": "Iron Golem",
+   "family": "construct",
+   "source": "classic",
+   "tier": 4,
+   "level_min": 16,
+   "level_max": 22,
+   "rank": "trash",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 613,
+    "atk": 53,
+    "def": 49,
+    "mag": 28,
+    "res": 40,
+    "agi": 15
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "slam",
+    "overload_beam"
+   ],
+   "rewards": {
+    "xp": 373,
+    "gold": 198
+   },
+   "drops": [
+    {
+     "item": "superior_scrap_plate",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t4",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "mummy_lord_lesser",
+   "name": "Bandaged Mummy",
+   "alt_name": "Bandaged Mummy",
+   "family": "undead",
+   "source": "classic",
+   "tier": 4,
+   "level_min": 16,
+   "level_max": 22,
+   "rank": "trash",
+   "element": "fire",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 485,
+    "atk": 50,
+    "def": 32,
+    "mag": 51,
+    "res": 30,
+    "agi": 19
+   },
+   "affinity": {
+    "weak": [
+     "holy",
+     "water"
+    ],
+    "resist": [
+     "dark",
+     "fire",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "life_leech",
+    "curse_touch"
+   ],
+   "rewards": {
+    "xp": 373,
+    "gold": 198
+   },
+   "drops": [
+    {
+     "item": "superior_bone_shard",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t4",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "air_elemental",
+   "name": "Air Elemental",
+   "alt_name": "Air Elemental",
+   "family": "elemental",
+   "source": "dnd",
+   "tier": 4,
+   "level_min": 16,
+   "level_max": 22,
+   "rank": "trash",
+   "element": "wind",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 434,
+    "atk": 48,
+    "def": 28,
+    "mag": 65,
+    "res": 42,
+    "agi": 23
+   },
+   "affinity": {
+    "weak": [
+     "ice"
+    ],
+    "resist": [
+     "wind"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "elemental_blast",
+    "aura_shift"
+   ],
+   "rewards": {
+    "xp": 373,
+    "gold": 198
+   },
+   "drops": [
+    {
+     "item": "superior_mote",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t4",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "fire_elemental",
+   "name": "Fire Elemental",
+   "alt_name": "Fire Elemental",
+   "family": "elemental",
+   "source": "dnd",
+   "tier": 4,
+   "level_min": 16,
+   "level_max": 22,
+   "rank": "trash",
+   "element": "fire",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 434,
+    "atk": 48,
+    "def": 28,
+    "mag": 65,
+    "res": 42,
+    "agi": 23
+   },
+   "affinity": {
+    "weak": [
+     "water"
+    ],
+    "resist": [
+     "fire"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "elemental_blast",
+    "aura_shift"
+   ],
+   "rewards": {
+    "xp": 373,
+    "gold": 198
+   },
+   "drops": [
+    {
+     "item": "superior_mote",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t4",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "water_elemental",
+   "name": "Water Elemental",
+   "alt_name": "Water Elemental",
+   "family": "elemental",
+   "source": "dnd",
+   "tier": 4,
+   "level_min": 16,
+   "level_max": 22,
+   "rank": "trash",
+   "element": "water",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 434,
+    "atk": 48,
+    "def": 28,
+    "mag": 65,
+    "res": 42,
+    "agi": 23
+   },
+   "affinity": {
+    "weak": [
+     "lightning"
+    ],
+    "resist": [
+     "water"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "elemental_blast",
+    "aura_shift"
+   ],
+   "rewards": {
+    "xp": 373,
+    "gold": 198
+   },
+   "drops": [
+    {
+     "item": "superior_mote",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t4",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "earth_elemental",
+   "name": "Earth Elemental",
+   "alt_name": "Earth Elemental",
+   "family": "elemental",
+   "source": "dnd",
+   "tier": 4,
+   "level_min": 16,
+   "level_max": 22,
+   "rank": "trash",
+   "element": "earth",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 434,
+    "atk": 48,
+    "def": 28,
+    "mag": 65,
+    "res": 42,
+    "agi": 23
+   },
+   "affinity": {
+    "weak": [
+     "wind"
+    ],
+    "resist": [
+     "earth"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "elemental_blast",
+    "aura_shift"
+   ],
+   "rewards": {
+    "xp": 373,
+    "gold": 198
+   },
+   "drops": [
+    {
+     "item": "superior_mote",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t4",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "succubus",
+   "name": "Succubus",
+   "alt_name": "Succubus",
+   "family": "demon",
+   "source": "dnd",
+   "tier": 4,
+   "level_min": 16,
+   "level_max": 22,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 537,
+    "atk": 58,
+    "def": 34,
+    "mag": 58,
+    "res": 37,
+    "agi": 21
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "hellfire",
+    "dread_gaze"
+   ],
+   "rewards": {
+    "xp": 373,
+    "gold": 198
+   },
+   "drops": [
+    {
+     "item": "superior_demon_horn",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t4",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "chimera",
+   "name": "Chimera",
+   "alt_name": "Chimera",
+   "family": "beast",
+   "source": "classic",
+   "tier": 4,
+   "level_min": 16,
+   "level_max": 22,
+   "rank": "trash",
+   "element": "fire",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 588,
+    "atk": 56,
+    "def": 32,
+    "mag": 26,
+    "res": 27,
+    "agi": 22
+   },
+   "affinity": {
+    "weak": [
+     "water"
+    ],
+    "resist": [
+     "fire"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "rend",
+    "howl"
+   ],
+   "rewards": {
+    "xp": 373,
+    "gold": 198
+   },
+   "drops": [
+    {
+     "item": "superior_pelt",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t4",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "liquid_metal_slime",
+   "name": "Metal Slime",
+   "alt_name": "Quicksilver Ooze",
+   "family": "slime",
+   "source": "dq",
+   "tier": 4,
+   "level_min": 16,
+   "level_max": 22,
+   "rank": "trash",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 639,
+    "atk": 43,
+    "def": 37,
+    "mag": 42,
+    "res": 35,
+    "agi": 13
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "engulf",
+    "split"
+   ],
+   "rewards": {
+    "xp": 373,
+    "gold": 198
+   },
+   "drops": [
+    {
+     "item": "superior_gel",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t4",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "great_troll",
+   "name": "Great Troll",
+   "alt_name": "Great Troll",
+   "family": "giant",
+   "source": "classic",
+   "tier": 4,
+   "level_min": 16,
+   "level_max": 22,
+   "rank": "trash",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 741,
+    "atk": 66,
+    "def": 37,
+    "mag": 23,
+    "res": 25,
+    "agi": 15
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "boulder_toss",
+    "earthshaker"
+   ],
+   "rewards": {
+    "xp": 373,
+    "gold": 198
+   },
+   "drops": [
+    {
+     "item": "superior_giant_sinew",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t4",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "dark_knight_fallen",
+   "name": "Fallen Knight",
+   "alt_name": "Fallen Knight",
+   "family": "humanoid",
+   "source": "souls",
+   "tier": 4,
+   "level_min": 16,
+   "level_max": 22,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 511,
+    "atk": 53,
+    "def": 35,
+    "mag": 44,
+    "res": 32,
+    "agi": 22
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "power_strike",
+    "guard_break"
+   ],
+   "rewards": {
+    "xp": 373,
+    "gold": 198
+   },
+   "drops": [
+    {
+     "item": "superior_tattered_cloth",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t4",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "banshee",
+   "name": "Banshee",
+   "alt_name": "Banshee",
+   "family": "undead",
+   "source": "classic",
+   "tier": 4,
+   "level_min": 16,
+   "level_max": 22,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 485,
+    "atk": 50,
+    "def": 32,
+    "mag": 51,
+    "res": 30,
+    "agi": 19
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "life_leech",
+    "curse_touch"
+   ],
+   "rewards": {
+    "xp": 373,
+    "gold": 198
+   },
+   "drops": [
+    {
+     "item": "superior_bone_shard",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t4",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "giant_crab",
+   "name": "Rock Crab",
+   "alt_name": "Rock Crab",
+   "family": "aquatic",
+   "source": "souls",
+   "tier": 4,
+   "level_min": 16,
+   "level_max": 22,
+   "rank": "trash",
+   "element": "water",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 562,
+    "atk": 50,
+    "def": 35,
+    "mag": 49,
+    "res": 34,
+    "agi": 19
+   },
+   "affinity": {
+    "weak": [
+     "lightning"
+    ],
+    "resist": [
+     "water"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "tidal_crash",
+    "undertow"
+   ],
+   "rewards": {
+    "xp": 373,
+    "gold": 198
+   },
+   "drops": [
+    {
+     "item": "superior_fin",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t4",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "behemoth_calf",
+   "name": "Behemoth Calf",
+   "alt_name": "Behemoth Calf",
+   "family": "beast",
+   "source": "ff",
+   "tier": 4,
+   "level_min": 16,
+   "level_max": 22,
+   "rank": "trash",
+   "element": "lightning",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 588,
+    "atk": 56,
+    "def": 32,
+    "mag": 26,
+    "res": 27,
+    "agi": 22
+   },
+   "affinity": {
+    "weak": [
+     "earth"
+    ],
+    "resist": [
+     "lightning"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "rend",
+    "howl"
+   ],
+   "rewards": {
+    "xp": 373,
+    "gold": 198
+   },
+   "drops": [
+    {
+     "item": "superior_pelt",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t4",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "wererat_alpha",
+   "name": "Wererat Alpha",
+   "alt_name": "Wererat Alpha",
+   "family": "beast",
+   "source": "dnd",
+   "tier": 4,
+   "level_min": 16,
+   "level_max": 22,
+   "rank": "trash",
+   "element": "poison",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 588,
+    "atk": 56,
+    "def": 32,
+    "mag": 26,
+    "res": 27,
+    "agi": 22
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "rend",
+    "howl"
+   ],
+   "rewards": {
+    "xp": 373,
+    "gold": 198
+   },
+   "drops": [
+    {
+     "item": "superior_pelt",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t4",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "stone_gargoyle",
+   "name": "Stone Gargoyle",
+   "alt_name": "Stone Gargoyle",
+   "family": "construct",
+   "source": "classic",
+   "tier": 4,
+   "level_min": 16,
+   "level_max": 22,
+   "rank": "trash",
+   "element": "earth",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 613,
+    "atk": 53,
+    "def": 49,
+    "mag": 28,
+    "res": 40,
+    "agi": 15
+   },
+   "affinity": {
+    "weak": [
+     "wind"
+    ],
+    "resist": [
+     "dark",
+     "earth",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "slam",
+    "overload_beam"
+   ],
+   "rewards": {
+    "xp": 373,
+    "gold": 198
+   },
+   "drops": [
+    {
+     "item": "superior_scrap_plate",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t4",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "nue",
+   "name": "Nue",
+   "alt_name": "Nue",
+   "family": "beast",
+   "source": "classic",
+   "tier": 4,
+   "level_min": 16,
+   "level_max": 22,
+   "rank": "trash",
+   "element": "lightning",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 588,
+    "atk": 56,
+    "def": 32,
+    "mag": 26,
+    "res": 27,
+    "agi": 22
+   },
+   "affinity": {
+    "weak": [
+     "earth"
+    ],
+    "resist": [
+     "lightning"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "rend",
+    "howl"
+   ],
+   "rewards": {
+    "xp": 373,
+    "gold": 198
+   },
+   "drops": [
+    {
+     "item": "superior_pelt",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t4",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "dryad_queen",
+   "name": "Dryad",
+   "alt_name": "Dryad",
+   "family": "fae",
+   "source": "classic",
+   "tier": 4,
+   "level_min": 16,
+   "level_max": 22,
+   "rank": "elite",
+   "element": "earth",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 728,
+    "atk": 49,
+    "def": 27,
+    "mag": 70,
+    "res": 40,
+    "agi": 28
+   },
+   "affinity": {
+    "weak": [
+     "wind"
+    ],
+    "resist": [
+     "earth"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "hex",
+    "glamour",
+    "mirror_step"
+   ],
+   "rewards": {
+    "xp": 1118,
+    "gold": 595
+   },
+   "drops": [
+    {
+     "item": "superior_fae_dust",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t4",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "vampire_spawn",
+   "name": "Vampire Spawn",
+   "alt_name": "Vampire Spawn",
+   "family": "undead",
+   "source": "dnd",
+   "tier": 4,
+   "level_min": 16,
+   "level_max": 22,
+   "rank": "elite",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 922,
+    "atk": 58,
+    "def": 32,
+    "mag": 59,
+    "res": 30,
+    "agi": 19
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "life_leech",
+    "curse_touch",
+    "grave_chill"
+   ],
+   "rewards": {
+    "xp": 1118,
+    "gold": 595
+   },
+   "drops": [
+    {
+     "item": "superior_bone_shard",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t4",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "iron_giant",
+   "name": "Iron Giant",
+   "alt_name": "Iron Giant",
+   "family": "construct",
+   "source": "ff",
+   "tier": 4,
+   "level_min": 16,
+   "level_max": 22,
+   "rank": "elite",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1165,
+    "atk": 61,
+    "def": 49,
+    "mag": 32,
+    "res": 40,
+    "agi": 15
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "slam",
+    "overload_beam",
+    "fortify"
+   ],
+   "rewards": {
+    "xp": 1118,
+    "gold": 595
+   },
+   "drops": [
+    {
+     "item": "superior_scrap_plate",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t4",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "moonlight_butterfly",
+   "name": "Moonlight Butterfly",
+   "alt_name": "Lunar Wing",
+   "family": "insect",
+   "source": "souls",
+   "tier": 4,
+   "level_min": 16,
+   "level_max": 22,
+   "rank": "boss",
+   "element": "holy",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1145,
+    "atk": 45,
+    "def": 30,
+    "mag": 25,
+    "res": 28,
+    "agi": 27
+   },
+   "affinity": {
+    "weak": [
+     "dark"
+    ],
+    "resist": [
+     "holy"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "venom_sting",
+    "web_snare",
+    "chitin_guard"
+   ],
+   "rewards": {
+    "xp": 2609,
+    "gold": 1388
+   },
+   "drops": [
+    {
+     "item": "superior_chitin",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t2",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t4",
+     "chance": 1.0
+    }
+   ]
+  },
+  {
+   "id": "beholder",
+   "name": "Beholder",
+   "alt_name": "Eye Tyrant",
+   "family": "aberration",
+   "source": "dnd",
+   "tier": 5,
+   "level_min": 23,
+   "level_max": 30,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 679,
+    "atk": 65,
+    "def": 40,
+    "mag": 85,
+    "res": 51,
+    "agi": 25
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "mind_spike",
+    "warp_gaze"
+   ],
+   "rewards": {
+    "xp": 569,
+    "gold": 294
+   },
+   "drops": [
+    {
+     "item": "pristine_strange_eye",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t5",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "mind_flayer",
+   "name": "Mind Flayer",
+   "alt_name": "Brain Eater",
+   "family": "aberration",
+   "source": "dnd",
+   "tier": 5,
+   "level_min": 23,
+   "level_max": 30,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 679,
+    "atk": 65,
+    "def": 40,
+    "mag": 85,
+    "res": 51,
+    "agi": 25
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "mind_spike",
+    "warp_gaze"
+   ],
+   "rewards": {
+    "xp": 569,
+    "gold": 294
+   },
+   "drops": [
+    {
+     "item": "pristine_strange_eye",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t5",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "lich_apprentice",
+   "name": "Lich Apprentice",
+   "alt_name": "Lich Apprentice",
+   "family": "undead",
+   "source": "dnd",
+   "tier": 5,
+   "level_min": 23,
+   "level_max": 30,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 645,
+    "atk": 68,
+    "def": 42,
+    "mag": 69,
+    "res": 40,
+    "agi": 24
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "life_leech",
+    "curse_touch"
+   ],
+   "rewards": {
+    "xp": 569,
+    "gold": 294
+   },
+   "drops": [
+    {
+     "item": "pristine_bone_shard",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t5",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "marilith",
+   "name": "Marilith",
+   "alt_name": "Six-Blade Serpent",
+   "family": "demon",
+   "source": "dnd",
+   "tier": 5,
+   "level_min": 23,
+   "level_max": 30,
+   "rank": "trash",
+   "element": "fire",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 713,
+    "atk": 78,
+    "def": 44,
+    "mag": 78,
+    "res": 48,
+    "agi": 26
+   },
+   "affinity": {
+    "weak": [
+     "water"
+    ],
+    "resist": [
+     "fire"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "hellfire",
+    "dread_gaze"
+   ],
+   "rewards": {
+    "xp": 569,
+    "gold": 294
+   },
+   "drops": [
+    {
+     "item": "pristine_demon_horn",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t5",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "dragon_zombie",
+   "name": "Dragon Zombie",
+   "alt_name": "Dragon Zombie",
+   "family": "undead",
+   "source": "ff",
+   "tier": 5,
+   "level_min": 23,
+   "level_max": 30,
+   "rank": "trash",
+   "element": "poison",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 645,
+    "atk": 68,
+    "def": 42,
+    "mag": 69,
+    "res": 40,
+    "agi": 24
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "life_leech",
+    "curse_touch"
+   ],
+   "rewards": {
+    "xp": 569,
+    "gold": 294
+   },
+   "drops": [
+    {
+     "item": "pristine_bone_shard",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t5",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "great_malboro",
+   "name": "Great Malboro",
+   "alt_name": "Elder Bloom",
+   "family": "plant",
+   "source": "ff",
+   "tier": 5,
+   "level_min": 23,
+   "level_max": 30,
+   "rank": "trash",
+   "element": "poison",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 747,
+    "atk": 61,
+    "def": 44,
+    "mag": 63,
+    "res": 44,
+    "agi": 17
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "entangle",
+    "spore_cloud"
+   ],
+   "rewards": {
+    "xp": 569,
+    "gold": 294
+   },
+   "drops": [
+    {
+     "item": "pristine_seed",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t5",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "behemoth",
+   "name": "Behemoth",
+   "alt_name": "Behemoth",
+   "family": "beast",
+   "source": "ff",
+   "tier": 5,
+   "level_min": 23,
+   "level_max": 30,
+   "rank": "trash",
+   "element": "lightning",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 781,
+    "atk": 75,
+    "def": 42,
+    "mag": 35,
+    "res": 35,
+    "agi": 28
+   },
+   "affinity": {
+    "weak": [
+     "earth"
+    ],
+    "resist": [
+     "lightning"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "rend",
+    "howl"
+   ],
+   "rewards": {
+    "xp": 569,
+    "gold": 294
+   },
+   "drops": [
+    {
+     "item": "pristine_pelt",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t5",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "king_slime",
+   "name": "King Slime",
+   "alt_name": "Slime Monarch",
+   "family": "slime",
+   "source": "dq",
+   "tier": 5,
+   "level_min": 23,
+   "level_max": 30,
+   "rank": "trash",
+   "element": "water",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 849,
+    "atk": 58,
+    "def": 48,
+    "mag": 57,
+    "res": 46,
+    "agi": 16
+   },
+   "affinity": {
+    "weak": [
+     "lightning"
+    ],
+    "resist": [
+     "water"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "engulf",
+    "split"
+   ],
+   "rewards": {
+    "xp": 569,
+    "gold": 294
+   },
+   "drops": [
+    {
+     "item": "pristine_gel",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t5",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "gigantes",
+   "name": "Gigantes",
+   "alt_name": "Gigantes",
+   "family": "giant",
+   "source": "classic",
+   "tier": 5,
+   "level_min": 23,
+   "level_max": 30,
+   "rank": "trash",
+   "element": "earth",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 985,
+    "atk": 88,
+    "def": 48,
+    "mag": 31,
+    "res": 33,
+    "agi": 18
+   },
+   "affinity": {
+    "weak": [
+     "wind"
+    ],
+    "resist": [
+     "earth"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "boulder_toss",
+    "earthshaker"
+   ],
+   "rewards": {
+    "xp": 569,
+    "gold": 294
+   },
+   "drops": [
+    {
+     "item": "pristine_giant_sinew",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t5",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "red_dragon_young",
+   "name": "Young Red Dragon",
+   "alt_name": "Young Red Dragon",
+   "family": "dragon",
+   "source": "dnd",
+   "tier": 5,
+   "level_min": 23,
+   "level_max": 30,
+   "rank": "trash",
+   "element": "fire",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 917,
+    "atk": 85,
+    "def": 53,
+    "mag": 69,
+    "res": 48,
+    "agi": 25
+   },
+   "affinity": {
+    "weak": [
+     "water"
+    ],
+    "resist": [
+     "fire"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "dragon_breath",
+    "tail_sweep"
+   ],
+   "rewards": {
+    "xp": 569,
+    "gold": 294
+   },
+   "drops": [
+    {
+     "item": "pristine_dragon_scale",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t5",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "blue_dragon_young",
+   "name": "Young Blue Dragon",
+   "alt_name": "Young Blue Dragon",
+   "family": "dragon",
+   "source": "dnd",
+   "tier": 5,
+   "level_min": 23,
+   "level_max": 30,
+   "rank": "trash",
+   "element": "lightning",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 917,
+    "atk": 85,
+    "def": 53,
+    "mag": 69,
+    "res": 48,
+    "agi": 25
+   },
+   "affinity": {
+    "weak": [
+     "earth"
+    ],
+    "resist": [
+     "lightning"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "dragon_breath",
+    "tail_sweep"
+   ],
+   "rewards": {
+    "xp": 569,
+    "gold": 294
+   },
+   "drops": [
+    {
+     "item": "pristine_dragon_scale",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t5",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "white_dragon_young",
+   "name": "Young White Dragon",
+   "alt_name": "Young White Dragon",
+   "family": "dragon",
+   "source": "dnd",
+   "tier": 5,
+   "level_min": 23,
+   "level_max": 30,
+   "rank": "trash",
+   "element": "ice",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 917,
+    "atk": 85,
+    "def": 53,
+    "mag": 69,
+    "res": 48,
+    "agi": 25
+   },
+   "affinity": {
+    "weak": [
+     "fire"
+    ],
+    "resist": [
+     "ice"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "dragon_breath",
+    "tail_sweep"
+   ],
+   "rewards": {
+    "xp": 569,
+    "gold": 294
+   },
+   "drops": [
+    {
+     "item": "pristine_dragon_scale",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t5",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "black_dragon_young",
+   "name": "Young Black Dragon",
+   "alt_name": "Young Black Dragon",
+   "family": "dragon",
+   "source": "dnd",
+   "tier": 5,
+   "level_min": 23,
+   "level_max": 30,
+   "rank": "trash",
+   "element": "poison",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 917,
+    "atk": 85,
+    "def": 53,
+    "mag": 69,
+    "res": 48,
+    "agi": 25
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "dragon_breath",
+    "tail_sweep"
+   ],
+   "rewards": {
+    "xp": 569,
+    "gold": 294
+   },
+   "drops": [
+    {
+     "item": "pristine_dragon_scale",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t5",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "green_dragon_young",
+   "name": "Young Green Dragon",
+   "alt_name": "Young Green Dragon",
+   "family": "dragon",
+   "source": "dnd",
+   "tier": 5,
+   "level_min": 23,
+   "level_max": 30,
+   "rank": "trash",
+   "element": "wind",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 917,
+    "atk": 85,
+    "def": 53,
+    "mag": 69,
+    "res": 48,
+    "agi": 25
+   },
+   "affinity": {
+    "weak": [
+     "ice"
+    ],
+    "resist": [
+     "wind"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "dragon_breath",
+    "tail_sweep"
+   ],
+   "rewards": {
+    "xp": 569,
+    "gold": 294
+   },
+   "drops": [
+    {
+     "item": "pristine_dragon_scale",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t5",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "balrog_lesser",
+   "name": "Lesser Balor",
+   "alt_name": "Lesser Balor",
+   "family": "demon",
+   "source": "dnd",
+   "tier": 5,
+   "level_min": 23,
+   "level_max": 30,
+   "rank": "trash",
+   "element": "fire",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 713,
+    "atk": 78,
+    "def": 44,
+    "mag": 78,
+    "res": 48,
+    "agi": 26
+   },
+   "affinity": {
+    "weak": [
+     "water"
+    ],
+    "resist": [
+     "fire"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "hellfire",
+    "dread_gaze"
+   ],
+   "rewards": {
+    "xp": 569,
+    "gold": 294
+   },
+   "drops": [
+    {
+     "item": "pristine_demon_horn",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t5",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "mimic_treasure",
+   "name": "Greater Mimic",
+   "alt_name": "Greater Mimic",
+   "family": "construct",
+   "source": "souls",
+   "tier": 5,
+   "level_min": 23,
+   "level_max": 30,
+   "rank": "trash",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 815,
+    "atk": 71,
+    "def": 64,
+    "mag": 38,
+    "res": 53,
+    "agi": 18
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "slam",
+    "overload_beam"
+   ],
+   "rewards": {
+    "xp": 569,
+    "gold": 294
+   },
+   "drops": [
+    {
+     "item": "pristine_scrap_plate",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t5",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "black_knight",
+   "name": "Black Knight",
+   "alt_name": "Black Knight",
+   "family": "humanoid",
+   "source": "souls",
+   "tier": 5,
+   "level_min": 23,
+   "level_max": 30,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 679,
+    "atk": 71,
+    "def": 46,
+    "mag": 60,
+    "res": 42,
+    "agi": 28
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "power_strike",
+    "guard_break"
+   ],
+   "rewards": {
+    "xp": 569,
+    "gold": 294
+   },
+   "drops": [
+    {
+     "item": "pristine_tattered_cloth",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t5",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "silver_knight",
+   "name": "Silver Knight",
+   "alt_name": "Silver Knight",
+   "family": "humanoid",
+   "source": "souls",
+   "tier": 5,
+   "level_min": 23,
+   "level_max": 30,
+   "rank": "trash",
+   "element": "holy",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 679,
+    "atk": 71,
+    "def": 46,
+    "mag": 60,
+    "res": 42,
+    "agi": 28
+   },
+   "affinity": {
+    "weak": [
+     "dark"
+    ],
+    "resist": [
+     "holy"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "power_strike",
+    "guard_break"
+   ],
+   "rewards": {
+    "xp": 569,
+    "gold": 294
+   },
+   "drops": [
+    {
+     "item": "pristine_tattered_cloth",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t5",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "armored_boar",
+   "name": "Armored Tusk",
+   "alt_name": "Armored Tusk",
+   "family": "beast",
+   "source": "souls",
+   "tier": 5,
+   "level_min": 23,
+   "level_max": 30,
+   "rank": "trash",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 781,
+    "atk": 75,
+    "def": 42,
+    "mag": 35,
+    "res": 35,
+    "agi": 28
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "rend",
+    "howl"
+   ],
+   "rewards": {
+    "xp": 569,
+    "gold": 294
+   },
+   "drops": [
+    {
+     "item": "pristine_pelt",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t5",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "kraken_spawn",
+   "name": "Kraken Spawn",
+   "alt_name": "Kraken Spawn",
+   "family": "aquatic",
+   "source": "classic",
+   "tier": 5,
+   "level_min": 23,
+   "level_max": 30,
+   "rank": "trash",
+   "element": "water",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 747,
+    "atk": 68,
+    "def": 46,
+    "mag": 66,
+    "res": 44,
+    "agi": 24
+   },
+   "affinity": {
+    "weak": [
+     "lightning"
+    ],
+    "resist": [
+     "water"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "tidal_crash",
+    "undertow"
+   ],
+   "rewards": {
+    "xp": 569,
+    "gold": 294
+   },
+   "drops": [
+    {
+     "item": "pristine_fin",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t5",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "thunder_bird",
+   "name": "Thunderbird",
+   "alt_name": "Thunderbird",
+   "family": "avian",
+   "source": "classic",
+   "tier": 5,
+   "level_min": 23,
+   "level_max": 30,
+   "rank": "trash",
+   "element": "lightning",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 543,
+    "atk": 68,
+    "def": 35,
+    "mag": 60,
+    "res": 37,
+    "agi": 37
+   },
+   "affinity": {
+    "weak": [
+     "earth"
+    ],
+    "resist": [
+     "lightning"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "dive_bomb",
+    "gale_screech"
+   ],
+   "rewards": {
+    "xp": 569,
+    "gold": 294
+   },
+   "drops": [
+    {
+     "item": "pristine_feather",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t5",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "hell_gladiator",
+   "name": "Hell Gladiator",
+   "alt_name": "Hell Gladiator",
+   "family": "demon",
+   "source": "dq",
+   "tier": 5,
+   "level_min": 23,
+   "level_max": 30,
+   "rank": "trash",
+   "element": "fire",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 713,
+    "atk": 78,
+    "def": 44,
+    "mag": 78,
+    "res": 48,
+    "agi": 26
+   },
+   "affinity": {
+    "weak": [
+     "water"
+    ],
+    "resist": [
+     "fire"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "hellfire",
+    "dread_gaze"
+   ],
+   "rewards": {
+    "xp": 569,
+    "gold": 294
+   },
+   "drops": [
+    {
+     "item": "pristine_demon_horn",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t5",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "dark_slime_knight",
+   "name": "Dark Slime Knight",
+   "alt_name": "Dark Slime Knight",
+   "family": "slime",
+   "source": "dq",
+   "tier": 5,
+   "level_min": 23,
+   "level_max": 30,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 849,
+    "atk": 58,
+    "def": 48,
+    "mag": 57,
+    "res": 46,
+    "agi": 16
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "engulf",
+    "split"
+   ],
+   "rewards": {
+    "xp": 569,
+    "gold": 294
+   },
+   "drops": [
+    {
+     "item": "pristine_gel",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t5",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "phase_spider_queen",
+   "name": "Phase Spider Queen",
+   "alt_name": "Phase Spider Queen",
+   "family": "insect",
+   "source": "dnd",
+   "tier": 5,
+   "level_min": 23,
+   "level_max": 30,
+   "rank": "elite",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1032,
+    "atk": 78,
+    "def": 40,
+    "mag": 43,
+    "res": 37,
+    "agi": 33
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "venom_sting",
+    "web_snare",
+    "chitin_guard"
+   ],
+   "rewards": {
+    "xp": 1708,
+    "gold": 881
+   },
+   "drops": [
+    {
+     "item": "pristine_chitin",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t5",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "wraith_lord",
+   "name": "Wraith Lord",
+   "alt_name": "Wraith Lord",
+   "family": "undead",
+   "source": "classic",
+   "tier": 5,
+   "level_min": 23,
+   "level_max": 30,
+   "rank": "elite",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1226,
+    "atk": 78,
+    "def": 42,
+    "mag": 79,
+    "res": 40,
+    "agi": 24
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "life_leech",
+    "curse_touch",
+    "grave_chill"
+   ],
+   "rewards": {
+    "xp": 1708,
+    "gold": 881
+   },
+   "drops": [
+    {
+     "item": "pristine_bone_shard",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t5",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "ancient_wyvern",
+   "name": "Ancient Wyvern",
+   "alt_name": "Ancient Wyvern",
+   "family": "dragon",
+   "source": "classic",
+   "tier": 5,
+   "level_min": 23,
+   "level_max": 30,
+   "rank": "elite",
+   "element": "wind",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1742,
+    "atk": 98,
+    "def": 53,
+    "mag": 79,
+    "res": 48,
+    "agi": 25
+   },
+   "affinity": {
+    "weak": [
+     "ice"
+    ],
+    "resist": [
+     "wind"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "dragon_breath",
+    "tail_sweep",
+    "wing_buffet"
+   ],
+   "rewards": {
+    "xp": 1708,
+    "gold": 881
+   },
+   "drops": [
+    {
+     "item": "pristine_dragon_scale",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t5",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "iron_golem_boss",
+   "name": "Iron Golem, Sentinel of the Vault",
+   "alt_name": "Iron Golem, Sentinel of the Vault",
+   "family": "construct",
+   "source": "souls",
+   "tier": 5,
+   "level_min": 23,
+   "level_max": 30,
+   "rank": "boss",
+   "element": "none",
+   "actions_per_turn": 2,
+   "stats": {
+    "hp": 2281,
+    "atk": 64,
+    "def": 64,
+    "mag": 34,
+    "res": 53,
+    "agi": 18
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "slam",
+    "overload_beam",
+    "fortify"
+   ],
+   "rewards": {
+    "xp": 3985,
+    "gold": 2055
+   },
+   "drops": [
+    {
+     "item": "pristine_scrap_plate",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t5",
+     "chance": 1.0
+    }
+   ]
+  },
+  {
+   "id": "lich",
+   "name": "Lich",
+   "alt_name": "Lich",
+   "family": "undead",
+   "source": "dnd",
+   "tier": 6,
+   "level_min": 31,
+   "level_max": 38,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 827,
+    "atk": 88,
+    "def": 53,
+    "mag": 89,
+    "res": 50,
+    "agi": 29
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "life_leech",
+    "curse_touch"
+   ],
+   "rewards": {
+    "xp": 818,
+    "gold": 411
+   },
+   "drops": [
+    {
+     "item": "radiant_bone_shard",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t6",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "adult_red_dragon",
+   "name": "Adult Red Dragon",
+   "alt_name": "Adult Red Dragon",
+   "family": "dragon",
+   "source": "dnd",
+   "tier": 6,
+   "level_min": 31,
+   "level_max": 38,
+   "rank": "trash",
+   "element": "fire",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1176,
+    "atk": 110,
+    "def": 67,
+    "mag": 89,
+    "res": 62,
+    "agi": 30
+   },
+   "affinity": {
+    "weak": [
+     "water"
+    ],
+    "resist": [
+     "fire"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "dragon_breath",
+    "tail_sweep"
+   ],
+   "rewards": {
+    "xp": 818,
+    "gold": 411
+   },
+   "drops": [
+    {
+     "item": "radiant_dragon_scale",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t6",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "adult_blue_dragon",
+   "name": "Adult Blue Dragon",
+   "alt_name": "Adult Blue Dragon",
+   "family": "dragon",
+   "source": "dnd",
+   "tier": 6,
+   "level_min": 31,
+   "level_max": 38,
+   "rank": "trash",
+   "element": "lightning",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1176,
+    "atk": 110,
+    "def": 67,
+    "mag": 89,
+    "res": 62,
+    "agi": 30
+   },
+   "affinity": {
+    "weak": [
+     "earth"
+    ],
+    "resist": [
+     "lightning"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "dragon_breath",
+    "tail_sweep"
+   ],
+   "rewards": {
+    "xp": 818,
+    "gold": 411
+   },
+   "drops": [
+    {
+     "item": "radiant_dragon_scale",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t6",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "adult_silver_dragon",
+   "name": "Adult Silver Dragon",
+   "alt_name": "Adult Silver Dragon",
+   "family": "dragon",
+   "source": "dnd",
+   "tier": 6,
+   "level_min": 31,
+   "level_max": 38,
+   "rank": "trash",
+   "element": "ice",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1176,
+    "atk": 110,
+    "def": 67,
+    "mag": 89,
+    "res": 62,
+    "agi": 30
+   },
+   "affinity": {
+    "weak": [
+     "fire"
+    ],
+    "resist": [
+     "ice"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "dragon_breath",
+    "tail_sweep"
+   ],
+   "rewards": {
+    "xp": 818,
+    "gold": 411
+   },
+   "drops": [
+    {
+     "item": "radiant_dragon_scale",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t6",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "adamantoise",
+   "name": "Adamantoise",
+   "alt_name": "Adamant Shell",
+   "family": "beast",
+   "source": "ff",
+   "tier": 6,
+   "level_min": 31,
+   "level_max": 38,
+   "rank": "trash",
+   "element": "earth",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1002,
+    "atk": 97,
+    "def": 53,
+    "mag": 45,
+    "res": 45,
+    "agi": 33
+   },
+   "affinity": {
+    "weak": [
+     "wind"
+    ],
+    "resist": [
+     "earth"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "rend",
+    "howl"
+   ],
+   "rewards": {
+    "xp": 818,
+    "gold": 411
+   },
+   "drops": [
+    {
+     "item": "radiant_pelt",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t6",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "omega_lesser",
+   "name": "Omega Prototype",
+   "alt_name": "Prototype Sigma",
+   "family": "construct",
+   "source": "ff",
+   "tier": 6,
+   "level_min": 31,
+   "level_max": 38,
+   "rank": "trash",
+   "element": "lightning",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1045,
+    "atk": 92,
+    "def": 81,
+    "mag": 49,
+    "res": 67,
+    "agi": 22
+   },
+   "affinity": {
+    "weak": [
+     "earth"
+    ],
+    "resist": [
+     "dark",
+     "lightning",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "slam",
+    "overload_beam"
+   ],
+   "rewards": {
+    "xp": 818,
+    "gold": 411
+   },
+   "drops": [
+    {
+     "item": "radiant_scrap_plate",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t6",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "ruby_weapon_shard",
+   "name": "Ruby Shard",
+   "alt_name": "Crimson Warmachine",
+   "family": "construct",
+   "source": "ff",
+   "tier": 6,
+   "level_min": 31,
+   "level_max": 38,
+   "rank": "trash",
+   "element": "fire",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1045,
+    "atk": 92,
+    "def": 81,
+    "mag": 49,
+    "res": 67,
+    "agi": 22
+   },
+   "affinity": {
+    "weak": [
+     "water"
+    ],
+    "resist": [
+     "dark",
+     "fire",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "slam",
+    "overload_beam"
+   ],
+   "rewards": {
+    "xp": 818,
+    "gold": 411
+   },
+   "drops": [
+    {
+     "item": "radiant_scrap_plate",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t6",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "estark_herald",
+   "name": "Herald of Estark",
+   "alt_name": "Dread Herald",
+   "family": "demon",
+   "source": "dq",
+   "tier": 6,
+   "level_min": 31,
+   "level_max": 38,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 915,
+    "atk": 101,
+    "def": 56,
+    "mag": 101,
+    "res": 62,
+    "agi": 32
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "hellfire",
+    "dread_gaze"
+   ],
+   "rewards": {
+    "xp": 818,
+    "gold": 411
+   },
+   "drops": [
+    {
+     "item": "radiant_demon_horn",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t6",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "metal_king_slime",
+   "name": "Metal King Slime",
+   "alt_name": "Regal Quicksilver",
+   "family": "slime",
+   "source": "dq",
+   "tier": 6,
+   "level_min": 31,
+   "level_max": 38,
+   "rank": "trash",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1089,
+    "atk": 75,
+    "def": 62,
+    "mag": 73,
+    "res": 59,
+    "agi": 19
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "engulf",
+    "split"
+   ],
+   "rewards": {
+    "xp": 818,
+    "gold": 411
+   },
+   "drops": [
+    {
+     "item": "radiant_gel",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t6",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "abyss_watcher",
+   "name": "Abyss Watcher",
+   "alt_name": "Deep Sentinel",
+   "family": "humanoid",
+   "source": "souls",
+   "tier": 6,
+   "level_min": 31,
+   "level_max": 38,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 871,
+    "atk": 92,
+    "def": 59,
+    "mag": 77,
+    "res": 53,
+    "agi": 33
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "power_strike",
+    "guard_break"
+   ],
+   "rewards": {
+    "xp": 818,
+    "gold": 411
+   },
+   "drops": [
+    {
+     "item": "radiant_tattered_cloth",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t6",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "darkwraith",
+   "name": "Darkwraith",
+   "alt_name": "Darkwraith",
+   "family": "undead",
+   "source": "souls",
+   "tier": 6,
+   "level_min": 31,
+   "level_max": 38,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 827,
+    "atk": 88,
+    "def": 53,
+    "mag": 89,
+    "res": 50,
+    "agi": 29
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "life_leech",
+    "curse_touch"
+   ],
+   "rewards": {
+    "xp": 818,
+    "gold": 411
+   },
+   "drops": [
+    {
+     "item": "radiant_bone_shard",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t6",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "chaos_witch",
+   "name": "Chaos Witch",
+   "alt_name": "Chaos Witch",
+   "family": "demon",
+   "source": "souls",
+   "tier": 6,
+   "level_min": 31,
+   "level_max": 38,
+   "rank": "trash",
+   "element": "fire",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 915,
+    "atk": 101,
+    "def": 56,
+    "mag": 101,
+    "res": 62,
+    "agi": 32
+   },
+   "affinity": {
+    "weak": [
+     "water"
+    ],
+    "resist": [
+     "fire"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "hellfire",
+    "dread_gaze"
+   ],
+   "rewards": {
+    "xp": 818,
+    "gold": 411
+   },
+   "drops": [
+    {
+     "item": "radiant_demon_horn",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t6",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "titan_lesser",
+   "name": "Lesser Titan",
+   "alt_name": "Lesser Titan",
+   "family": "giant",
+   "source": "classic",
+   "tier": 6,
+   "level_min": 31,
+   "level_max": 38,
+   "rank": "trash",
+   "element": "earth",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1263,
+    "atk": 114,
+    "def": 62,
+    "mag": 41,
+    "res": 42,
+    "agi": 22
+   },
+   "affinity": {
+    "weak": [
+     "wind"
+    ],
+    "resist": [
+     "earth"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "boulder_toss",
+    "earthshaker"
+   ],
+   "rewards": {
+    "xp": 818,
+    "gold": 411
+   },
+   "drops": [
+    {
+     "item": "radiant_giant_sinew",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t6",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "purple_worm",
+   "name": "Purple Worm",
+   "alt_name": "Purple Worm",
+   "family": "beast",
+   "source": "dnd",
+   "tier": 6,
+   "level_min": 31,
+   "level_max": 38,
+   "rank": "trash",
+   "element": "poison",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1002,
+    "atk": 97,
+    "def": 53,
+    "mag": 45,
+    "res": 45,
+    "agi": 33
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "rend",
+    "howl"
+   ],
+   "rewards": {
+    "xp": 818,
+    "gold": 411
+   },
+   "drops": [
+    {
+     "item": "radiant_pelt",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t6",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "death_knight",
+   "name": "Death Knight",
+   "alt_name": "Death Knight",
+   "family": "undead",
+   "source": "dnd",
+   "tier": 6,
+   "level_min": 31,
+   "level_max": 38,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 827,
+    "atk": 88,
+    "def": 53,
+    "mag": 89,
+    "res": 50,
+    "agi": 29
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "life_leech",
+    "curse_touch"
+   ],
+   "rewards": {
+    "xp": 818,
+    "gold": 411
+   },
+   "drops": [
+    {
+     "item": "radiant_bone_shard",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t6",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "nightwalker",
+   "name": "Nightwalker",
+   "alt_name": "Nightwalker",
+   "family": "undead",
+   "source": "dnd",
+   "tier": 6,
+   "level_min": 31,
+   "level_max": 38,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 827,
+    "atk": 88,
+    "def": 53,
+    "mag": 89,
+    "res": 50,
+    "agi": 29
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "life_leech",
+    "curse_touch"
+   ],
+   "rewards": {
+    "xp": 818,
+    "gold": 411
+   },
+   "drops": [
+    {
+     "item": "radiant_bone_shard",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t6",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "storm_giant",
+   "name": "Storm Giant",
+   "alt_name": "Storm Giant",
+   "family": "giant",
+   "source": "dnd",
+   "tier": 6,
+   "level_min": 31,
+   "level_max": 38,
+   "rank": "trash",
+   "element": "lightning",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1263,
+    "atk": 114,
+    "def": 62,
+    "mag": 41,
+    "res": 42,
+    "agi": 22
+   },
+   "affinity": {
+    "weak": [
+     "earth"
+    ],
+    "resist": [
+     "lightning"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "boulder_toss",
+    "earthshaker"
+   ],
+   "rewards": {
+    "xp": 818,
+    "gold": 411
+   },
+   "drops": [
+    {
+     "item": "radiant_giant_sinew",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t6",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "fire_giant",
+   "name": "Fire Giant",
+   "alt_name": "Fire Giant",
+   "family": "giant",
+   "source": "dnd",
+   "tier": 6,
+   "level_min": 31,
+   "level_max": 38,
+   "rank": "trash",
+   "element": "fire",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1263,
+    "atk": 114,
+    "def": 62,
+    "mag": 41,
+    "res": 42,
+    "agi": 22
+   },
+   "affinity": {
+    "weak": [
+     "water"
+    ],
+    "resist": [
+     "fire"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "boulder_toss",
+    "earthshaker"
+   ],
+   "rewards": {
+    "xp": 818,
+    "gold": 411
+   },
+   "drops": [
+    {
+     "item": "radiant_giant_sinew",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t6",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "frost_giant",
+   "name": "Frost Giant",
+   "alt_name": "Frost Giant",
+   "family": "giant",
+   "source": "dnd",
+   "tier": 6,
+   "level_min": 31,
+   "level_max": 38,
+   "rank": "trash",
+   "element": "ice",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1263,
+    "atk": 114,
+    "def": 62,
+    "mag": 41,
+    "res": 42,
+    "agi": 22
+   },
+   "affinity": {
+    "weak": [
+     "fire"
+    ],
+    "resist": [
+     "ice"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "boulder_toss",
+    "earthshaker"
+   ],
+   "rewards": {
+    "xp": 818,
+    "gold": 411
+   },
+   "drops": [
+    {
+     "item": "radiant_giant_sinew",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t6",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "archdemon_lesser",
+   "name": "Lesser Archdemon",
+   "alt_name": "Lesser Archdemon",
+   "family": "demon",
+   "source": "classic",
+   "tier": 6,
+   "level_min": 31,
+   "level_max": 38,
+   "rank": "elite",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1738,
+    "atk": 116,
+    "def": 56,
+    "mag": 117,
+    "res": 62,
+    "agi": 32
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "hellfire",
+    "dread_gaze",
+    "soul_burn"
+   ],
+   "rewards": {
+    "xp": 2453,
+    "gold": 1232
+   },
+   "drops": [
+    {
+     "item": "radiant_demon_horn",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t6",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "phoenix_wild",
+   "name": "Wild Phoenix",
+   "alt_name": "Wild Phoenix",
+   "family": "avian",
+   "source": "classic",
+   "tier": 6,
+   "level_min": 31,
+   "level_max": 38,
+   "rank": "elite",
+   "element": "fire",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1324,
+    "atk": 101,
+    "def": 45,
+    "mag": 89,
+    "res": 48,
+    "agi": 45
+   },
+   "affinity": {
+    "weak": [
+     "water"
+    ],
+    "resist": [
+     "fire"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "dive_bomb",
+    "gale_screech",
+    "talon_rake"
+   ],
+   "rewards": {
+    "xp": 2453,
+    "gold": 1232
+   },
+   "drops": [
+    {
+     "item": "radiant_feather",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t6",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "leviathan_spawn",
+   "name": "Leviathan Spawn",
+   "alt_name": "Leviathan Spawn",
+   "family": "aquatic",
+   "source": "ff",
+   "tier": 6,
+   "level_min": 31,
+   "level_max": 38,
+   "rank": "elite",
+   "element": "water",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1820,
+    "atk": 101,
+    "def": 59,
+    "mag": 98,
+    "res": 56,
+    "agi": 29
+   },
+   "affinity": {
+    "weak": [
+     "lightning"
+    ],
+    "resist": [
+     "water"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "tidal_crash",
+    "undertow",
+    "ink_spray"
+   ],
+   "rewards": {
+    "xp": 2453,
+    "gold": 1232
+   },
+   "drops": [
+    {
+     "item": "radiant_fin",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t6",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "nameless_king",
+   "name": "The Nameless King",
+   "alt_name": "The Forgotten Sovereign",
+   "family": "humanoid",
+   "source": "souls",
+   "tier": 6,
+   "level_min": 31,
+   "level_max": 38,
+   "rank": "boss",
+   "element": "lightning",
+   "actions_per_turn": 2,
+   "stats": {
+    "hp": 2439,
+    "atk": 83,
+    "def": 59,
+    "mag": 69,
+    "res": 53,
+    "agi": 33
+   },
+   "affinity": {
+    "weak": [
+     "earth"
+    ],
+    "resist": [
+     "lightning"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "power_strike",
+    "guard_break",
+    "battle_cry"
+   ],
+   "rewards": {
+    "xp": 5724,
+    "gold": 2874
+   },
+   "drops": [
+    {
+     "item": "radiant_tattered_cloth",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t3",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t6",
+     "chance": 1.0
+    }
+   ]
+  },
+  {
+   "id": "abyssal_horror",
+   "name": "Abyssal Horror",
+   "alt_name": "Abyssal Horror",
+   "family": "aberration",
+   "source": "classic",
+   "tier": 7,
+   "level_min": 39,
+   "level_max": 46,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1063,
+    "atk": 103,
+    "def": 61,
+    "mag": 134,
+    "res": 78,
+    "agi": 36
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "mind_spike",
+    "warp_gaze"
+   ],
+   "rewards": {
+    "xp": 1088,
+    "gold": 535
+   },
+   "drops": [
+    {
+     "item": "mythic_strange_eye",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t7",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "elder_treant",
+   "name": "Elder Treant",
+   "alt_name": "Elder Treant",
+   "family": "plant",
+   "source": "classic",
+   "tier": 7,
+   "level_min": 39,
+   "level_max": 46,
+   "rank": "trash",
+   "element": "earth",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1169,
+    "atk": 97,
+    "def": 68,
+    "mag": 100,
+    "res": 68,
+    "agi": 24
+   },
+   "affinity": {
+    "weak": [
+     "wind"
+    ],
+    "resist": [
+     "earth"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "entangle",
+    "spore_cloud"
+   ],
+   "rewards": {
+    "xp": 1088,
+    "gold": 535
+   },
+   "drops": [
+    {
+     "item": "mythic_seed",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t7",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "bone_colossus",
+   "name": "Bone Colossus",
+   "alt_name": "Bone Colossus",
+   "family": "undead",
+   "source": "classic",
+   "tier": 7,
+   "level_min": 39,
+   "level_max": 46,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1010,
+    "atk": 108,
+    "def": 65,
+    "mag": 110,
+    "res": 61,
+    "agi": 34
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "life_leech",
+    "curse_touch"
+   ],
+   "rewards": {
+    "xp": 1088,
+    "gold": 535
+   },
+   "drops": [
+    {
+     "item": "mythic_bone_shard",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t7",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "void_stalker",
+   "name": "Void Stalker",
+   "alt_name": "Void Stalker",
+   "family": "aberration",
+   "source": "dnd",
+   "tier": 7,
+   "level_min": 39,
+   "level_max": 46,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1063,
+    "atk": 103,
+    "def": 61,
+    "mag": 134,
+    "res": 78,
+    "agi": 36
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "mind_spike",
+    "warp_gaze"
+   ],
+   "rewards": {
+    "xp": 1088,
+    "gold": 535
+   },
+   "drops": [
+    {
+     "item": "mythic_strange_eye",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t7",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "pit_fiend",
+   "name": "Pit Fiend",
+   "alt_name": "Pit Fiend",
+   "family": "demon",
+   "source": "dnd",
+   "tier": 7,
+   "level_min": 39,
+   "level_max": 46,
+   "rank": "trash",
+   "element": "fire",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1116,
+    "atk": 124,
+    "def": 68,
+    "mag": 124,
+    "res": 75,
+    "agi": 37
+   },
+   "affinity": {
+    "weak": [
+     "water"
+    ],
+    "resist": [
+     "fire"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "hellfire",
+    "dread_gaze"
+   ],
+   "rewards": {
+    "xp": 1088,
+    "gold": 535
+   },
+   "drops": [
+    {
+     "item": "mythic_demon_horn",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t7",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "roc",
+   "name": "Roc",
+   "alt_name": "Roc",
+   "family": "avian",
+   "source": "dnd",
+   "tier": 7,
+   "level_min": 39,
+   "level_max": 46,
+   "rank": "trash",
+   "element": "wind",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 850,
+    "atk": 108,
+    "def": 54,
+    "mag": 95,
+    "res": 58,
+    "agi": 52
+   },
+   "affinity": {
+    "weak": [
+     "ice"
+    ],
+    "resist": [
+     "wind"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "dive_bomb",
+    "gale_screech"
+   ],
+   "rewards": {
+    "xp": 1088,
+    "gold": 535
+   },
+   "drops": [
+    {
+     "item": "mythic_feather",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t7",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "iron_maiden",
+   "name": "Iron Maiden",
+   "alt_name": "Iron Maiden",
+   "family": "construct",
+   "source": "dq",
+   "tier": 7,
+   "level_min": 39,
+   "level_max": 46,
+   "rank": "trash",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1276,
+    "atk": 113,
+    "def": 99,
+    "mag": 60,
+    "res": 82,
+    "agi": 26
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "slam",
+    "overload_beam"
+   ],
+   "rewards": {
+    "xp": 1088,
+    "gold": 535
+   },
+   "drops": [
+    {
+     "item": "mythic_scrap_plate",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t7",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "grim_reaper_dq",
+   "name": "Grim Reaper",
+   "alt_name": "Grim Reaper",
+   "family": "undead",
+   "source": "dq",
+   "tier": 7,
+   "level_min": 39,
+   "level_max": 46,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1010,
+    "atk": 108,
+    "def": 65,
+    "mag": 110,
+    "res": 61,
+    "agi": 34
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "life_leech",
+    "curse_touch"
+   ],
+   "rewards": {
+    "xp": 1088,
+    "gold": 535
+   },
+   "drops": [
+    {
+     "item": "mythic_bone_shard",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t7",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "hollow_champion",
+   "name": "Hollow Champion",
+   "alt_name": "Hollow Champion",
+   "family": "humanoid",
+   "source": "souls",
+   "tier": 7,
+   "level_min": 39,
+   "level_max": 46,
+   "rank": "trash",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1063,
+    "atk": 113,
+    "def": 71,
+    "mag": 95,
+    "res": 65,
+    "agi": 39
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "power_strike",
+    "guard_break"
+   ],
+   "rewards": {
+    "xp": 1088,
+    "gold": 535
+   },
+   "drops": [
+    {
+     "item": "mythic_tattered_cloth",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t7",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "chaos_bug",
+   "name": "Chaos Blight",
+   "alt_name": "Chaos Blight",
+   "family": "insect",
+   "source": "souls",
+   "tier": 7,
+   "level_min": 39,
+   "level_max": 46,
+   "rank": "trash",
+   "element": "poison",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 850,
+    "atk": 108,
+    "def": 61,
+    "mag": 60,
+    "res": 58,
+    "agi": 47
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "venom_sting",
+    "web_snare"
+   ],
+   "rewards": {
+    "xp": 1088,
+    "gold": 535
+   },
+   "drops": [
+    {
+     "item": "mythic_chitin",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t7",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "mist_dragon",
+   "name": "Mist Dragon",
+   "alt_name": "Mist Dragon",
+   "family": "dragon",
+   "source": "ff",
+   "tier": 7,
+   "level_min": 39,
+   "level_max": 46,
+   "rank": "trash",
+   "element": "water",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1435,
+    "atk": 135,
+    "def": 82,
+    "mag": 110,
+    "res": 75,
+    "agi": 36
+   },
+   "affinity": {
+    "weak": [
+     "lightning"
+    ],
+    "resist": [
+     "water"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "dragon_breath",
+    "tail_sweep"
+   ],
+   "rewards": {
+    "xp": 1088,
+    "gold": 535
+   },
+   "drops": [
+    {
+     "item": "mythic_dragon_scale",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t7",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "iron_lucavi",
+   "name": "Lesser Lucavi",
+   "alt_name": "Lesser Fiend",
+   "family": "demon",
+   "source": "ff",
+   "tier": 7,
+   "level_min": 39,
+   "level_max": 46,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1116,
+    "atk": 124,
+    "def": 68,
+    "mag": 124,
+    "res": 75,
+    "agi": 37
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "hellfire",
+    "dread_gaze"
+   ],
+   "rewards": {
+    "xp": 1088,
+    "gold": 535
+   },
+   "drops": [
+    {
+     "item": "mythic_demon_horn",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t7",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "ancient_red_dragon",
+   "name": "Ancient Red Dragon",
+   "alt_name": "Ancient Red Dragon",
+   "family": "dragon",
+   "source": "dnd",
+   "tier": 7,
+   "level_min": 39,
+   "level_max": 46,
+   "rank": "elite",
+   "element": "fire",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 2727,
+    "atk": 155,
+    "def": 82,
+    "mag": 126,
+    "res": 75,
+    "agi": 36
+   },
+   "affinity": {
+    "weak": [
+     "water"
+    ],
+    "resist": [
+     "fire"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "dragon_breath",
+    "tail_sweep",
+    "wing_buffet"
+   ],
+   "rewards": {
+    "xp": 3263,
+    "gold": 1604
+   },
+   "drops": [
+    {
+     "item": "mythic_dragon_scale",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t7",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "ancient_gold_dragon",
+   "name": "Ancient Gold Dragon",
+   "alt_name": "Ancient Gold Dragon",
+   "family": "dragon",
+   "source": "dnd",
+   "tier": 7,
+   "level_min": 39,
+   "level_max": 46,
+   "rank": "elite",
+   "element": "holy",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 2727,
+    "atk": 155,
+    "def": 82,
+    "mag": 126,
+    "res": 75,
+    "agi": 36
+   },
+   "affinity": {
+    "weak": [
+     "dark"
+    ],
+    "resist": [
+     "holy"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "dragon_breath",
+    "tail_sweep",
+    "wing_buffet"
+   ],
+   "rewards": {
+    "xp": 3263,
+    "gold": 1604
+   },
+   "drops": [
+    {
+     "item": "mythic_dragon_scale",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t7",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "tarrasque",
+   "name": "Tarrasque",
+   "alt_name": "Tarrasque",
+   "family": "beast",
+   "source": "dnd",
+   "tier": 7,
+   "level_min": 39,
+   "level_max": 46,
+   "rank": "elite",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 2323,
+    "atk": 137,
+    "def": 65,
+    "mag": 63,
+    "res": 54,
+    "agi": 39
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "rend",
+    "howl",
+    "pounce"
+   ],
+   "rewards": {
+    "xp": 3263,
+    "gold": 1604
+   },
+   "drops": [
+    {
+     "item": "mythic_pelt",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t7",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "demogorgon",
+   "name": "Demogorgon",
+   "alt_name": "The Two-Headed Prince",
+   "family": "demon",
+   "source": "dnd",
+   "tier": 7,
+   "level_min": 39,
+   "level_max": 46,
+   "rank": "elite",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 2121,
+    "atk": 143,
+    "def": 68,
+    "mag": 143,
+    "res": 75,
+    "agi": 37
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "hellfire",
+    "dread_gaze",
+    "soul_burn"
+   ],
+   "rewards": {
+    "xp": 3263,
+    "gold": 1604
+   },
+   "drops": [
+    {
+     "item": "mythic_demon_horn",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t7",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "orcus",
+   "name": "Orcus",
+   "alt_name": "The Boneless Prince",
+   "family": "demon",
+   "source": "dnd",
+   "tier": 7,
+   "level_min": 39,
+   "level_max": 46,
+   "rank": "elite",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 2121,
+    "atk": 143,
+    "def": 68,
+    "mag": 143,
+    "res": 75,
+    "agi": 37
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "hellfire",
+    "dread_gaze",
+    "soul_burn"
+   ],
+   "rewards": {
+    "xp": 3263,
+    "gold": 1604
+   },
+   "drops": [
+    {
+     "item": "mythic_demon_horn",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t7",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "omega_weapon",
+   "name": "Omega Weapon",
+   "alt_name": "Omega Warmachine",
+   "family": "construct",
+   "source": "ff",
+   "tier": 7,
+   "level_min": 39,
+   "level_max": 46,
+   "rank": "elite",
+   "element": "lightning",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 2424,
+    "atk": 130,
+    "def": 99,
+    "mag": 69,
+    "res": 82,
+    "agi": 26
+   },
+   "affinity": {
+    "weak": [
+     "earth"
+    ],
+    "resist": [
+     "dark",
+     "lightning",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "slam",
+    "overload_beam",
+    "fortify"
+   ],
+   "rewards": {
+    "xp": 3263,
+    "gold": 1604
+   },
+   "drops": [
+    {
+     "item": "mythic_scrap_plate",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t7",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "shinryu",
+   "name": "Shinryu",
+   "alt_name": "Astral Wyrm",
+   "family": "dragon",
+   "source": "ff",
+   "tier": 7,
+   "level_min": 39,
+   "level_max": 46,
+   "rank": "elite",
+   "element": "holy",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 2727,
+    "atk": 155,
+    "def": 82,
+    "mag": 126,
+    "res": 75,
+    "agi": 36
+   },
+   "affinity": {
+    "weak": [
+     "dark"
+    ],
+    "resist": [
+     "holy"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "dragon_breath",
+    "tail_sweep",
+    "wing_buffet"
+   ],
+   "rewards": {
+    "xp": 3263,
+    "gold": 1604
+   },
+   "drops": [
+    {
+     "item": "mythic_dragon_scale",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t7",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "ultima_weapon",
+   "name": "Ultima Weapon",
+   "alt_name": "Ultima Warmachine",
+   "family": "construct",
+   "source": "ff",
+   "tier": 7,
+   "level_min": 39,
+   "level_max": 46,
+   "rank": "elite",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 2424,
+    "atk": 130,
+    "def": 99,
+    "mag": 69,
+    "res": 82,
+    "agi": 26
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "slam",
+    "overload_beam",
+    "fortify"
+   ],
+   "rewards": {
+    "xp": 3263,
+    "gold": 1604
+   },
+   "drops": [
+    {
+     "item": "mythic_scrap_plate",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t7",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "estark",
+   "name": "Estark",
+   "alt_name": "Lord of the Underworld",
+   "family": "demon",
+   "source": "dq",
+   "tier": 7,
+   "level_min": 39,
+   "level_max": 46,
+   "rank": "elite",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 2121,
+    "atk": 143,
+    "def": 68,
+    "mag": 143,
+    "res": 75,
+    "agi": 37
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "hellfire",
+    "dread_gaze",
+    "soul_burn"
+   ],
+   "rewards": {
+    "xp": 3263,
+    "gold": 1604
+   },
+   "drops": [
+    {
+     "item": "mythic_demon_horn",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t7",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "nokturnus",
+   "name": "Nokturnus",
+   "alt_name": "Nightlord",
+   "family": "demon",
+   "source": "dq",
+   "tier": 7,
+   "level_min": 39,
+   "level_max": 46,
+   "rank": "elite",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 2121,
+    "atk": 143,
+    "def": 68,
+    "mag": 143,
+    "res": 75,
+    "agi": 37
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "hellfire",
+    "dread_gaze",
+    "soul_burn"
+   ],
+   "rewards": {
+    "xp": 3263,
+    "gold": 1604
+   },
+   "drops": [
+    {
+     "item": "mythic_demon_horn",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t7",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "gnasher_serpent",
+   "name": "Great Serpent",
+   "alt_name": "Great Serpent",
+   "family": "dragon",
+   "source": "souls",
+   "tier": 7,
+   "level_min": 39,
+   "level_max": 46,
+   "rank": "elite",
+   "element": "poison",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 2727,
+    "atk": 155,
+    "def": 82,
+    "mag": 126,
+    "res": 75,
+    "agi": 36
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "dragon_breath",
+    "tail_sweep",
+    "wing_buffet"
+   ],
+   "rewards": {
+    "xp": 3263,
+    "gold": 1604
+   },
+   "drops": [
+    {
+     "item": "mythic_dragon_scale",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t7",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "gwyn_knight",
+   "name": "Knight of the First Flame",
+   "alt_name": "Knight of the First Flame",
+   "family": "humanoid",
+   "source": "souls",
+   "tier": 7,
+   "level_min": 39,
+   "level_max": 46,
+   "rank": "elite",
+   "element": "fire",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 2020,
+    "atk": 130,
+    "def": 71,
+    "mag": 109,
+    "res": 65,
+    "agi": 39
+   },
+   "affinity": {
+    "weak": [
+     "water"
+    ],
+    "resist": [
+     "fire"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "power_strike",
+    "guard_break",
+    "battle_cry"
+   ],
+   "rewards": {
+    "xp": 3263,
+    "gold": 1604
+   },
+   "drops": [
+    {
+     "item": "mythic_tattered_cloth",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t7",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "malenia_blade",
+   "name": "Blade of the Rot",
+   "alt_name": "Rotblade Champion",
+   "family": "humanoid",
+   "source": "souls",
+   "tier": 7,
+   "level_min": 39,
+   "level_max": 46,
+   "rank": "elite",
+   "element": "poison",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 2020,
+    "atk": 130,
+    "def": 71,
+    "mag": 109,
+    "res": 65,
+    "agi": 39
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "power_strike",
+    "guard_break",
+    "battle_cry"
+   ],
+   "rewards": {
+    "xp": 3263,
+    "gold": 1604
+   },
+   "drops": [
+    {
+     "item": "mythic_tattered_cloth",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t7",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "radahn_starscourge",
+   "name": "Starscourge Champion",
+   "alt_name": "Starscourge Champion",
+   "family": "humanoid",
+   "source": "souls",
+   "tier": 7,
+   "level_min": 39,
+   "level_max": 46,
+   "rank": "elite",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 2020,
+    "atk": 130,
+    "def": 71,
+    "mag": 109,
+    "res": 65,
+    "agi": 39
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "power_strike",
+    "guard_break",
+    "battle_cry"
+   ],
+   "rewards": {
+    "xp": 3263,
+    "gold": 1604
+   },
+   "drops": [
+    {
+     "item": "mythic_tattered_cloth",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t7",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "ancient_leviathan",
+   "name": "Leviathan",
+   "alt_name": "Tidewyrm",
+   "family": "aquatic",
+   "source": "classic",
+   "tier": 7,
+   "level_min": 39,
+   "level_max": 46,
+   "rank": "elite",
+   "element": "water",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 2222,
+    "atk": 124,
+    "def": 71,
+    "mag": 120,
+    "res": 68,
+    "agi": 34
+   },
+   "affinity": {
+    "weak": [
+     "lightning"
+    ],
+    "resist": [
+     "water"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "tidal_crash",
+    "undertow",
+    "ink_spray"
+   ],
+   "rewards": {
+    "xp": 3263,
+    "gold": 1604
+   },
+   "drops": [
+    {
+     "item": "mythic_fin",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t7",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "bahamut_lesser",
+   "name": "Dragon King",
+   "alt_name": "Wyrmsire",
+   "family": "dragon",
+   "source": "ff",
+   "tier": 7,
+   "level_min": 39,
+   "level_max": 46,
+   "rank": "elite",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 2727,
+    "atk": 155,
+    "def": 82,
+    "mag": 126,
+    "res": 75,
+    "agi": 36
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "dragon_breath",
+    "tail_sweep",
+    "wing_buffet"
+   ],
+   "rewards": {
+    "xp": 3263,
+    "gold": 1604
+   },
+   "drops": [
+    {
+     "item": "mythic_dragon_scale",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t7",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "ifrit_avatar",
+   "name": "Avatar of Flame",
+   "alt_name": "Avatar of Flame",
+   "family": "elemental",
+   "source": "ff",
+   "tier": 7,
+   "level_min": 39,
+   "level_max": 46,
+   "rank": "elite",
+   "element": "fire",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1717,
+    "atk": 118,
+    "def": 58,
+    "mag": 160,
+    "res": 85,
+    "agi": 41
+   },
+   "affinity": {
+    "weak": [
+     "water"
+    ],
+    "resist": [
+     "fire"
+    ],
+    "absorb": [
+     "fire"
+    ]
+   },
+   "skills": [
+    "elemental_blast",
+    "aura_shift",
+    "surge"
+   ],
+   "rewards": {
+    "xp": 3263,
+    "gold": 1604
+   },
+   "drops": [
+    {
+     "item": "mythic_mote",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t7",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "shiva_avatar",
+   "name": "Avatar of Frost",
+   "alt_name": "Avatar of Frost",
+   "family": "elemental",
+   "source": "ff",
+   "tier": 7,
+   "level_min": 39,
+   "level_max": 46,
+   "rank": "elite",
+   "element": "ice",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1717,
+    "atk": 118,
+    "def": 58,
+    "mag": 160,
+    "res": 85,
+    "agi": 41
+   },
+   "affinity": {
+    "weak": [
+     "fire"
+    ],
+    "resist": [
+     "ice"
+    ],
+    "absorb": [
+     "ice"
+    ]
+   },
+   "skills": [
+    "elemental_blast",
+    "aura_shift",
+    "surge"
+   ],
+   "rewards": {
+    "xp": 3263,
+    "gold": 1604
+   },
+   "drops": [
+    {
+     "item": "mythic_mote",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t7",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "ramuh_avatar",
+   "name": "Avatar of Storms",
+   "alt_name": "Avatar of Storms",
+   "family": "elemental",
+   "source": "ff",
+   "tier": 7,
+   "level_min": 39,
+   "level_max": 46,
+   "rank": "elite",
+   "element": "lightning",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1717,
+    "atk": 118,
+    "def": 58,
+    "mag": 160,
+    "res": 85,
+    "agi": 41
+   },
+   "affinity": {
+    "weak": [
+     "earth"
+    ],
+    "resist": [
+     "lightning"
+    ],
+    "absorb": [
+     "lightning"
+    ]
+   },
+   "skills": [
+    "elemental_blast",
+    "aura_shift",
+    "surge"
+   ],
+   "rewards": {
+    "xp": 3263,
+    "gold": 1604
+   },
+   "drops": [
+    {
+     "item": "mythic_mote",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t7",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "titan_avatar",
+   "name": "Avatar of Stone",
+   "alt_name": "Avatar of Stone",
+   "family": "elemental",
+   "source": "ff",
+   "tier": 7,
+   "level_min": 39,
+   "level_max": 46,
+   "rank": "elite",
+   "element": "earth",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1717,
+    "atk": 118,
+    "def": 58,
+    "mag": 160,
+    "res": 85,
+    "agi": 41
+   },
+   "affinity": {
+    "weak": [
+     "wind"
+    ],
+    "resist": [
+     "earth"
+    ],
+    "absorb": [
+     "earth"
+    ]
+   },
+   "skills": [
+    "elemental_blast",
+    "aura_shift",
+    "surge"
+   ],
+   "rewards": {
+    "xp": 3263,
+    "gold": 1604
+   },
+   "drops": [
+    {
+     "item": "mythic_mote",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t7",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "void_reaver",
+   "name": "Void Reaver",
+   "alt_name": "Void Reaver",
+   "family": "aberration",
+   "source": "classic",
+   "tier": 8,
+   "level_min": 47,
+   "level_max": 50,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1207,
+    "atk": 117,
+    "def": 69,
+    "mag": 153,
+    "res": 89,
+    "agi": 40
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "mind_spike",
+    "warp_gaze"
+   ],
+   "rewards": {
+    "xp": 1302,
+    "gold": 632
+   },
+   "drops": [
+    {
+     "item": "divine_strange_eye",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t8",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "astral_wyrm",
+   "name": "Astral Wyrm",
+   "alt_name": "Astral Wyrm",
+   "family": "dragon",
+   "source": "classic",
+   "tier": 8,
+   "level_min": 47,
+   "level_max": 50,
+   "rank": "trash",
+   "element": "holy",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1629,
+    "atk": 154,
+    "def": 92,
+    "mag": 125,
+    "res": 85,
+    "agi": 40
+   },
+   "affinity": {
+    "weak": [
+     "dark"
+    ],
+    "resist": [
+     "holy"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "dragon_breath",
+    "tail_sweep"
+   ],
+   "rewards": {
+    "xp": 1302,
+    "gold": 632
+   },
+   "drops": [
+    {
+     "item": "divine_dragon_scale",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t8",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "balor",
+   "name": "Balor",
+   "alt_name": "Balor",
+   "family": "demon",
+   "source": "dnd",
+   "tier": 8,
+   "level_min": 47,
+   "level_max": 50,
+   "rank": "trash",
+   "element": "fire",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1267,
+    "atk": 141,
+    "def": 77,
+    "mag": 142,
+    "res": 85,
+    "agi": 42
+   },
+   "affinity": {
+    "weak": [
+     "water"
+    ],
+    "resist": [
+     "fire"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "hellfire",
+    "dread_gaze"
+   ],
+   "rewards": {
+    "xp": 1302,
+    "gold": 632
+   },
+   "drops": [
+    {
+     "item": "divine_demon_horn",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t8",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "solar_exarch",
+   "name": "Fallen Solar",
+   "alt_name": "Fallen Solar",
+   "family": "demon",
+   "source": "dnd",
+   "tier": 8,
+   "level_min": 47,
+   "level_max": 50,
+   "rank": "trash",
+   "element": "holy",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1267,
+    "atk": 141,
+    "def": 77,
+    "mag": 142,
+    "res": 85,
+    "agi": 42
+   },
+   "affinity": {
+    "weak": [
+     "dark"
+    ],
+    "resist": [
+     "holy"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "hellfire",
+    "dread_gaze"
+   ],
+   "rewards": {
+    "xp": 1302,
+    "gold": 632
+   },
+   "drops": [
+    {
+     "item": "divine_demon_horn",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t8",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "empyrean_golem",
+   "name": "Empyrean Golem",
+   "alt_name": "Empyrean Golem",
+   "family": "construct",
+   "source": "classic",
+   "tier": 8,
+   "level_min": 47,
+   "level_max": 50,
+   "rank": "trash",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1448,
+    "atk": 129,
+    "def": 112,
+    "mag": 68,
+    "res": 92,
+    "agi": 29
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "slam",
+    "overload_beam"
+   ],
+   "rewards": {
+    "xp": 1302,
+    "gold": 632
+   },
+   "drops": [
+    {
+     "item": "divine_scrap_plate",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t8",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "iron_maiden_dq",
+   "name": "Dread Golem",
+   "alt_name": "Dread Golem",
+   "family": "construct",
+   "source": "dq",
+   "tier": 8,
+   "level_min": 47,
+   "level_max": 50,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1448,
+    "atk": 129,
+    "def": 112,
+    "mag": 68,
+    "res": 92,
+    "agi": 29
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "slam",
+    "overload_beam"
+   ],
+   "rewards": {
+    "xp": 1302,
+    "gold": 632
+   },
+   "drops": [
+    {
+     "item": "divine_scrap_plate",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t8",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "platinum_king_slime",
+   "name": "Platinum King Slime",
+   "alt_name": "Argent Sovereign",
+   "family": "slime",
+   "source": "dq",
+   "tier": 8,
+   "level_min": 47,
+   "level_max": 50,
+   "rank": "trash",
+   "element": "none",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1509,
+    "atk": 105,
+    "def": 85,
+    "mag": 102,
+    "res": 81,
+    "agi": 25
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "engulf",
+    "split"
+   ],
+   "rewards": {
+    "xp": 1302,
+    "gold": 632
+   },
+   "drops": [
+    {
+     "item": "divine_gel",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t8",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "black_dragon_souls",
+   "name": "Everdark Drake",
+   "alt_name": "Everdark Drake",
+   "family": "dragon",
+   "source": "souls",
+   "tier": 8,
+   "level_min": 47,
+   "level_max": 50,
+   "rank": "trash",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1629,
+    "atk": 154,
+    "def": 92,
+    "mag": 125,
+    "res": 85,
+    "agi": 40
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "dragon_breath",
+    "tail_sweep"
+   ],
+   "rewards": {
+    "xp": 1302,
+    "gold": 632
+   },
+   "drops": [
+    {
+     "item": "divine_dragon_scale",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t8",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "crucible_knight",
+   "name": "Crucible Knight",
+   "alt_name": "Crucible Knight",
+   "family": "humanoid",
+   "source": "souls",
+   "tier": 8,
+   "level_min": 47,
+   "level_max": 50,
+   "rank": "trash",
+   "element": "holy",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1207,
+    "atk": 129,
+    "def": 81,
+    "mag": 108,
+    "res": 73,
+    "agi": 44
+   },
+   "affinity": {
+    "weak": [
+     "dark"
+    ],
+    "resist": [
+     "holy"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "power_strike",
+    "guard_break"
+   ],
+   "rewards": {
+    "xp": 1302,
+    "gold": 632
+   },
+   "drops": [
+    {
+     "item": "divine_tattered_cloth",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t8",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "ancient_behemoth",
+   "name": "Behemoth King",
+   "alt_name": "Behemoth King",
+   "family": "beast",
+   "source": "ff",
+   "tier": 8,
+   "level_min": 47,
+   "level_max": 50,
+   "rank": "trash",
+   "element": "lightning",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 1388,
+    "atk": 135,
+    "def": 73,
+    "mag": 62,
+    "res": 62,
+    "agi": 44
+   },
+   "affinity": {
+    "weak": [
+     "earth"
+    ],
+    "resist": [
+     "lightning"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "rend",
+    "howl"
+   ],
+   "rewards": {
+    "xp": 1302,
+    "gold": 632
+   },
+   "drops": [
+    {
+     "item": "divine_pelt",
+     "chance": 0.6,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t8",
+     "chance": 0.1
+    }
+   ]
+  },
+  {
+   "id": "greater_lucavi",
+   "name": "Greater Lucavi",
+   "alt_name": "Elder Fiend",
+   "family": "demon",
+   "source": "ff",
+   "tier": 8,
+   "level_min": 47,
+   "level_max": 50,
+   "rank": "elite",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 2408,
+    "atk": 163,
+    "def": 77,
+    "mag": 163,
+    "res": 85,
+    "agi": 42
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "hellfire",
+    "dread_gaze",
+    "soul_burn"
+   ],
+   "rewards": {
+    "xp": 3907,
+    "gold": 1895
+   },
+   "drops": [
+    {
+     "item": "divine_demon_horn",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t8",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "titan_primordial",
+   "name": "Primordial Titan",
+   "alt_name": "Primordial Titan",
+   "family": "giant",
+   "source": "classic",
+   "tier": 8,
+   "level_min": 47,
+   "level_max": 50,
+   "rank": "elite",
+   "element": "earth",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 3325,
+    "atk": 184,
+    "def": 85,
+    "mag": 65,
+    "res": 58,
+    "agi": 29
+   },
+   "affinity": {
+    "weak": [
+     "wind"
+    ],
+    "resist": [
+     "earth"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "boulder_toss",
+    "earthshaker",
+    "brutal_swing"
+   ],
+   "rewards": {
+    "xp": 3907,
+    "gold": 1895
+   },
+   "drops": [
+    {
+     "item": "divine_giant_sinew",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t8",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "archlich",
+   "name": "Archlich",
+   "alt_name": "Archlich",
+   "family": "undead",
+   "source": "dnd",
+   "tier": 8,
+   "level_min": 47,
+   "level_max": 50,
+   "rank": "elite",
+   "element": "dark",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 2179,
+    "atk": 141,
+    "def": 73,
+    "mag": 143,
+    "res": 69,
+    "agi": 37
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark",
+     "poison"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "life_leech",
+    "curse_touch",
+    "grave_chill"
+   ],
+   "rewards": {
+    "xp": 3907,
+    "gold": 1895
+   },
+   "drops": [
+    {
+     "item": "divine_bone_shard",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t8",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "great_wyrm_of_ash",
+   "name": "Great Wyrm of Ash",
+   "alt_name": "Great Wyrm of Ash",
+   "family": "dragon",
+   "source": "souls",
+   "tier": 8,
+   "level_min": 47,
+   "level_max": 50,
+   "rank": "elite",
+   "element": "fire",
+   "actions_per_turn": 1,
+   "stats": {
+    "hp": 3096,
+    "atk": 177,
+    "def": 92,
+    "mag": 143,
+    "res": 85,
+    "agi": 40
+   },
+   "affinity": {
+    "weak": [
+     "water"
+    ],
+    "resist": [
+     "fire"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "dragon_breath",
+    "tail_sweep",
+    "wing_buffet"
+   ],
+   "rewards": {
+    "xp": 3907,
+    "gold": 1895
+   },
+   "drops": [
+    {
+     "item": "divine_dragon_scale",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t8",
+     "chance": 0.35
+    }
+   ]
+  },
+  {
+   "id": "bahamut_zero",
+   "name": "Bahamut",
+   "alt_name": "The Dragon King",
+   "family": "dragon",
+   "source": "ff",
+   "tier": 8,
+   "level_min": 47,
+   "level_max": 50,
+   "rank": "boss",
+   "element": "none",
+   "actions_per_turn": 2,
+   "stats": {
+    "hp": 4562,
+    "atk": 138,
+    "def": 92,
+    "mag": 112,
+    "res": 85,
+    "agi": 40
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "dragon_breath",
+    "tail_sweep",
+    "wing_buffet"
+   ],
+   "rewards": {
+    "xp": 9117,
+    "gold": 4422
+   },
+   "drops": [
+    {
+     "item": "divine_dragon_scale",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t8",
+     "chance": 1.0
+    }
+   ]
+  },
+  {
+   "id": "altima_echo",
+   "name": "Echo of the Angel",
+   "alt_name": "The Hollow Seraph",
+   "family": "demon",
+   "source": "ff",
+   "tier": 8,
+   "level_min": 47,
+   "level_max": 50,
+   "rank": "boss",
+   "element": "holy",
+   "actions_per_turn": 2,
+   "stats": {
+    "hp": 3549,
+    "atk": 127,
+    "def": 77,
+    "mag": 128,
+    "res": 85,
+    "agi": 42
+   },
+   "affinity": {
+    "weak": [
+     "dark"
+    ],
+    "resist": [
+     "holy"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "hellfire",
+    "dread_gaze",
+    "soul_burn"
+   ],
+   "rewards": {
+    "xp": 9117,
+    "gold": 4422
+   },
+   "drops": [
+    {
+     "item": "divine_demon_horn",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t8",
+     "chance": 1.0
+    }
+   ]
+  },
+  {
+   "id": "zaromus",
+   "name": "Zaromus",
+   "alt_name": "The Devouring Dark",
+   "family": "demon",
+   "source": "dq",
+   "tier": 8,
+   "level_min": 47,
+   "level_max": 50,
+   "rank": "boss",
+   "element": "dark",
+   "actions_per_turn": 2,
+   "stats": {
+    "hp": 3549,
+    "atk": 127,
+    "def": 77,
+    "mag": 128,
+    "res": 85,
+    "agi": 42
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "hellfire",
+    "dread_gaze",
+    "soul_burn"
+   ],
+   "rewards": {
+    "xp": 9117,
+    "gold": 4422
+   },
+   "drops": [
+    {
+     "item": "divine_demon_horn",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t8",
+     "chance": 1.0
+    }
+   ]
+  },
+  {
+   "id": "gwyn_lord",
+   "name": "Lord of Cinder",
+   "alt_name": "The Last Flame",
+   "family": "humanoid",
+   "source": "souls",
+   "tier": 8,
+   "level_min": 47,
+   "level_max": 50,
+   "rank": "boss",
+   "element": "fire",
+   "actions_per_turn": 2,
+   "stats": {
+    "hp": 3380,
+    "atk": 116,
+    "def": 81,
+    "mag": 97,
+    "res": 73,
+    "agi": 44
+   },
+   "affinity": {
+    "weak": [
+     "water"
+    ],
+    "resist": [
+     "fire"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "power_strike",
+    "guard_break",
+    "battle_cry"
+   ],
+   "rewards": {
+    "xp": 9117,
+    "gold": 4422
+   },
+   "drops": [
+    {
+     "item": "divine_tattered_cloth",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t8",
+     "chance": 1.0
+    }
+   ]
+  },
+  {
+   "id": "elden_beast",
+   "name": "The Elden Beast",
+   "alt_name": "The Golden Order",
+   "family": "aberration",
+   "source": "souls",
+   "tier": 8,
+   "level_min": 47,
+   "level_max": 50,
+   "rank": "boss",
+   "element": "holy",
+   "actions_per_turn": 2,
+   "stats": {
+    "hp": 3380,
+    "atk": 105,
+    "def": 69,
+    "mag": 138,
+    "res": 89,
+    "agi": 40
+   },
+   "affinity": {
+    "weak": [
+     "dark"
+    ],
+    "resist": [
+     "holy"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "mind_spike",
+    "warp_gaze",
+    "tentacle_lash"
+   ],
+   "rewards": {
+    "xp": 9117,
+    "gold": 4422
+   },
+   "drops": [
+    {
+     "item": "divine_strange_eye",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t8",
+     "chance": 1.0
+    }
+   ]
+  },
+  {
+   "id": "tiamat",
+   "name": "Tiamat",
+   "alt_name": "Queen of Chromatics",
+   "family": "dragon",
+   "source": "dnd",
+   "tier": 8,
+   "level_min": 47,
+   "level_max": 50,
+   "rank": "boss",
+   "element": "none",
+   "actions_per_turn": 2,
+   "stats": {
+    "hp": 4562,
+    "atk": 138,
+    "def": 92,
+    "mag": 112,
+    "res": 85,
+    "agi": 40
+   },
+   "affinity": {
+    "weak": [],
+    "resist": [],
+    "absorb": []
+   },
+   "skills": [
+    "dragon_breath",
+    "tail_sweep",
+    "wing_buffet"
+   ],
+   "rewards": {
+    "xp": 9117,
+    "gold": 4422
+   },
+   "drops": [
+    {
+     "item": "divine_dragon_scale",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t8",
+     "chance": 1.0
+    }
+   ]
+  },
+  {
+   "id": "asmodeus",
+   "name": "Asmodeus",
+   "alt_name": "The Iron Archduke",
+   "family": "demon",
+   "source": "dnd",
+   "tier": 8,
+   "level_min": 47,
+   "level_max": 50,
+   "rank": "boss",
+   "element": "fire",
+   "actions_per_turn": 2,
+   "stats": {
+    "hp": 3549,
+    "atk": 127,
+    "def": 77,
+    "mag": 128,
+    "res": 85,
+    "agi": 42
+   },
+   "affinity": {
+    "weak": [
+     "water"
+    ],
+    "resist": [
+     "fire"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "hellfire",
+    "dread_gaze",
+    "soul_burn"
+   ],
+   "rewards": {
+    "xp": 9117,
+    "gold": 4422
+   },
+   "drops": [
+    {
+     "item": "divine_demon_horn",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t8",
+     "chance": 1.0
+    }
+   ]
+  },
+  {
+   "id": "worldeater",
+   "name": "The Worldeater",
+   "alt_name": "The Worldeater",
+   "family": "aberration",
+   "source": "classic",
+   "tier": 8,
+   "level_min": 47,
+   "level_max": 50,
+   "rank": "boss",
+   "element": "dark",
+   "actions_per_turn": 2,
+   "stats": {
+    "hp": 3380,
+    "atk": 105,
+    "def": 69,
+    "mag": 138,
+    "res": 89,
+    "agi": 40
+   },
+   "affinity": {
+    "weak": [
+     "holy"
+    ],
+    "resist": [
+     "dark"
+    ],
+    "absorb": []
+   },
+   "skills": [
+    "mind_spike",
+    "warp_gaze",
+    "tentacle_lash"
+   ],
+   "rewards": {
+    "xp": 9117,
+    "gold": 4422
+   },
+   "drops": [
+    {
+     "item": "divine_strange_eye",
+     "chance": 1.0,
+     "qty": [
+      1,
+      3
+     ]
+    },
+    {
+     "item": "potion_t4",
+     "chance": 0.2,
+     "qty": [
+      1,
+      1
+     ]
+    },
+    {
+     "table": "gear_t8",
+     "chance": 1.0
+    }
+   ]
+  }
+ ]
+}

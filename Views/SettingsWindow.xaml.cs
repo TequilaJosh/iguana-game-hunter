@@ -378,13 +378,14 @@ namespace GameTracker.Views
             Step(3, "Great for reinstalls or moving to a new PC.");
 
             Section("Tavern Tales — the chat RPG (needs the companion bot)");
-            Body("A text RPG your community plays with ! commands — in Discord and in your stream chat, sharing one character. It runs on the LazerGuanas Discord bot; Game Hunter forwards chat commands to it.");
+            Body("A text RPG your community plays by typing \"tt <command>\" — in Discord and in your stream chat, sharing one character. It runs on the LazerGuanas Discord bot; Game Hunter forwards chat commands to it.");
             Step(1, "Set up the bot (see its README) and, in Settings → Chat → ⚙ Features → Discord, paste the Bot ingest URL + token, then tick \"Let chatters play Tavern Tales from chat\".");
-            Step(2, "Discord players just start: !create <class> <race> [name], then !adventure. Everyone in the channel sees the fights — great for drawing a crowd.");
-            Step(3, "Stream-chat viewers link first: !play <their Discord @username> → the bot DMs them a code → they type !confirm <code> in chat. Now their chat and Discord share the same hero.");
-            Step(4, "Play commands: !help (menu) · !char · !skills · !zones · !adventure · in combat !attack / !skill <name> / !use / !flee · !inv · !equip <#> · !shop / !buy / !sell · !rest · !leaderboard.");
-            Step(5, "Progression & raids: beat a zone's boss with !boss to unlock the next zone. Raids (a shared boss) are announced every 1–3 hours — viewers !raid join, then it auto-battles and everyone who joins shares the loot (fall in a raid and you revive after, with reduced rewards).");
-            Step(6, "Tavern Tales chat is auto-ignored by TTS (both commands and the bot's replies), so it won't spam your text-to-speech.");
+            Step(2, "Every command starts with tt. Discord players just start: tt create <class> <race> [name], then tt adventure. Everyone in the channel sees the fights — great for drawing a crowd. Want a fresh start? tt new <class> <race> [name].");
+            Step(3, "Stream-chat viewers link first: tt play <their Discord @username> → the bot DMs them a code → they type tt confirm <code> in chat. Now their chat and Discord share the same hero.");
+            Step(4, "Play commands: tt help (menu) · tt char · tt skills · tt zones · tt adventure · in combat tt attack / tt skill <#> / tt use / tt flee · tt inv · tt equip <#> · tt shop / tt buy / tt sell · tt rest · tt leaderboard.");
+            Step(5, "Gather & craft: tt chop / mine / fish / forage / dig / scavenge for materials, then tt recipes · tt craft <#> · tt brew <#> · tt enchant <#> to make and upgrade gear. Sell surplus with tt sell junk.");
+            Step(6, "Progression & raids: beat a zone's boss with tt boss to unlock the next zone. Raids (a shared boss) are announced every 6–12 hours — viewers tt raid join, then it auto-battles and everyone who joins shares the loot (fall in a raid and you revive after, with reduced rewards).");
+            Step(7, "Tavern Tales chat is auto-ignored by TTS (both commands and the bot's replies), so it won't spam your text-to-speech.");
 
             Section("Updates");
             Step(1, "The app checks for updates at launch and installs them silently — windows you had open reopen afterward, and your data is untouched.");

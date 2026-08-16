@@ -51,7 +51,7 @@ function sheetEmbed(char) {
       { name: 'Stats', value: stats },
       { name: 'Equipped', value: gear },
     )
-    .setFooter({ text: 'Adventure with !adventure · gear up with !inv / !equip' });
+    .setFooter({ text: 'Adventure with tt adventure · gear up with tt inv / tt equip' });
 }
 
 function fightEmbed(fight, extraLog = []) {
@@ -66,7 +66,7 @@ function fightEmbed(fight, extraLog = []) {
       `**You**  ❤️ ${fight.php}/${fight.pd.maxhp}  ·  💧 ${fight.pmp}/${fight.pd.maxmp}\n${bar(fight.php, fight.pd.maxhp)}\n\n` +
       `${log}`
     )
-    .setFooter({ text: '!attack · !skill <name> · !use · !flee' });
+    .setFooter({ text: 'tt attack · tt skill <name> · tt use · tt flee' });
 }
 
 // ── command handlers ──────────────────────────────────────────────────────────
@@ -76,24 +76,26 @@ async function cmdHelp(msg) {
     .setTitle('🍺 Tavern Tales — commands')
     .setDescription(
       '**Getting started**\n' +
-      '`!classes` `!races` — see your options\n' +
-      '`!create <class> <race> [name]` — roll a hero\n' +
-      '`!char` — your character sheet · `!skills` — your abilities\n\n' +
+      '`tt classes` `tt races` — see your options\n' +
+      '`tt create <class> <race> [name]` — roll a hero\n' +
+      '`tt char` — your character sheet · `tt skills` — your abilities\n' +
+      '`tt new <class> <race> [name]` — start over with a fresh hero\n\n' +
       '**Adventuring**\n' +
-      '`!zones` — where you can go\n' +
-      '`!adventure [zone]` — find a fight (costs ⚡ stamina)\n' +
-      '`!boss` — challenge your zone’s boss to unlock the next zone\n' +
-      'In combat: `!attack` starts auto-battle · `!skill <name>` · `!use` · `!flee`\n\n' +
+      '`tt zones` — where you can go\n' +
+      '`tt adventure [zone]` — find a fight (costs ⚡ stamina)\n' +
+      '`tt boss` — challenge your zone’s boss to unlock the next zone\n' +
+      'In combat: `tt attack` starts auto-battle · `tt skill <name>` · `tt use` · `tt flee`\n\n' +
       '**Raids** (a boss appears now and then — team up!)\n' +
-      '`!raid join` · `!raid skill <name>` · `!raid use` · `!raid revive`\n\n' +
-      '**Gathering** (no `!` needed — just type the word)\n' +
-      '`chop` `mine` `fish` `forage` `dig` `scavenge` — gather materials + Worker XP (3-min cooldown each)\n\n' +
+      '`tt raid join` · `tt raid skill <name>` · `tt raid use` · `tt raid revive`\n\n' +
+      '**Gathering & crafting**\n' +
+      '`tt chop` `tt mine` `tt fish` `tt forage` `tt dig` `tt scavenge` — gather materials + Worker XP (3-min cooldown each)\n' +
+      '`tt recipes` · `tt craft <#>` · `tt brew <#>` · `tt enchant <#>` — make & upgrade gear\n\n' +
       '**Gear & town**\n' +
-      '`!inv` — bag & gold · `!equip <#>` — wear gear\n' +
-      '`!shop` — buy gear/potions · `!buy <name>` · `!sell <#>`\n' +
-      '`!rest` — recover HP/MP · `!leaderboard` — top heroes\n\n' +
+      '`tt inv` — bag & gold · `tt equip <#>` — wear gear\n' +
+      '`tt shop` — buy gear/potions · `tt buy <name>` · `tt sell <#>`\n' +
+      '`tt rest` — recover HP/MP · `tt leaderboard` — top heroes\n\n' +
       '**Playing from stream chat**\n' +
-      '`!play <your Discord @username>` then `!confirm <code>` — link your chat account to your Discord hero so your progress follows you everywhere.'
+      '`tt play <your Discord @username>` then `tt confirm <code>` — link your chat account to your Discord hero so your progress follows you everywhere.'
     );
   return msg.reply({ embeds: [e] });
 }
@@ -109,14 +111,14 @@ function cmdRaces(msg) {
 }
 
 function cmdCreate(msg, args) {
-  if (getPlayer(msg.author.id)) return msg.reply('You already have a hero — see `!char`. (Start over with `!deletechar`.)');
+  if (getPlayer(msg.author.id)) return msg.reply('You already have a hero — see `tt char`. Want to start over? `tt new <class> <race> [name]`.');
   const clsQ = (args[0] || '').toLowerCase();
   const raceQ = (args[1] || '').toLowerCase();
   const cls = CLASS_LIST.find((c) => c.id === clsQ || c.name.toLowerCase() === clsQ);
   const race = RACE_LIST.find((r) => r.id === raceQ || r.name.toLowerCase() === raceQ);
   if (!cls || !race) {
     return msg.reply(
-      'Usage: `!create <class> <race> [name]`\n' +
+      'Usage: `tt create <class> <race> [name]`\n' +
       `Classes: ${CLASS_LIST.map((c) => c.id).join(', ')}\n` +
       `Races: ${RACE_LIST.map((r) => r.id).join(', ')}`
     );
@@ -133,17 +135,17 @@ function cmdCreate(msg, args) {
 
 function cmdChar(msg) {
   const char = getPlayer(msg.author.id);
-  if (!char) return msg.reply('No hero yet — make one with `!create <class> <race> [name]`.');
+  if (!char) return msg.reply('No hero yet — make one with `tt create <class> <race> [name]`.');
   return msg.reply({ embeds: [sheetEmbed(char)] });
 }
 
 function cmdSkills(msg) {
   const char = getPlayer(msg.author.id);
-  if (!char) return msg.reply('No hero yet — `!create` first.');
+  if (!char) return msg.reply('No hero yet — `tt create` first.');
   const skills = skillsForClass(char.cls, char.level);
   const locked = skillsForClass(char.cls, 99).filter((s) => s.unlock_level > char.level);
   const lines = skills.map((s, i) => `\`${i + 1}\` **${s.name}** — ${s.mp} MP · ${s.type}${s.power ? ` · pow ${s.power}` : ''}`);
-  let out = `✨ **${CLASSES[char.cls].name} skills (Lvl ${char.level})** — cast with \`skill <#>\`\n` + (lines.join('\n') || '_none yet_');
+  let out = `✨ **${CLASSES[char.cls].name} skills (Lvl ${char.level})** — cast with \`tt skill <#>\`\n` + (lines.join('\n') || '_none yet_');
   if (locked.length) out += `\n\n🔒 Next: ${locked.slice(0, 3).map((s) => `${s.name} (Lv${s.unlock_level})`).join(', ')}`;
   return msg.reply(out);
 }
@@ -155,7 +157,7 @@ function cmdZones(msg) {
     const ok = lvl >= z.level_required;
     return `${ok ? '✅' : '🔒'} **${z.name}** — Lv ${z.level_required}+ · ${z.stamina_cost}⚡ · T${z.tier}\n    _${z.description}_`;
   });
-  return msg.reply('🗺️ **Zones**\n' + lines.join('\n') + (char ? '\n\nTravel with `!adventure <zone>` (or just `!adventure` for the best one you can enter).' : '\n\nMake a hero first with `!create`.'));
+  return msg.reply('🗺️ **Zones**\n' + lines.join('\n') + (char ? '\n\nTravel with `tt adventure <zone>` (or just `tt adventure` for the best one you can enter).' : '\n\nMake a hero first with `tt create`.'));
 }
 
 function bestZoneFor(level) {
@@ -165,15 +167,15 @@ function bestZoneFor(level) {
 
 async function cmdAdventure(msg, args) {
   const char = getPlayer(msg.author.id);
-  if (!char) return msg.reply('No hero yet — `!create` first.');
-  if (hasFight(msg.author.id)) return msg.reply('You’re already in a fight! `!attack`, `!skill`, `!use`, or `!flee`.');
+  if (!char) return msg.reply('No hero yet — `tt create` first.');
+  if (hasFight(msg.author.id)) return msg.reply('You’re already in a fight! `tt attack`, `tt skill`, `tt use`, or `tt flee`.');
 
   let zone;
   if (args[0]) {
     const q = args.join(' ').toLowerCase();
     zone = ZONE_LIST.find((z) => z.id === q || z.name.toLowerCase() === q || z.name.toLowerCase().includes(q));
-    if (!zone) return msg.reply('No such zone. See `!zones`.');
-    if (!isZoneUnlocked(char, zone)) return msg.reply(`🔒 **${zone.name}** is locked — beat the previous zone's boss (\`!boss\`) to unlock it.`);
+    if (!zone) return msg.reply('No such zone. See `tt zones`.');
+    if (!isZoneUnlocked(char, zone)) return msg.reply(`🔒 **${zone.name}** is locked — beat the previous zone's boss (\`tt boss\`) to unlock it.`);
   } else {
     zone = highestUnlockedZone(char);
   }
@@ -193,13 +195,13 @@ async function cmdAdventure(msg, args) {
   const fight = startFight(msg.author.id, char, monsterId, zone.id);
   fight.log.push(`You venture into **${zone.name}** and a **${fight.monster.name}** appears!`);
 
-  // Stream chat can't edit messages, so it stays manual (type !attack each turn).
+  // Stream chat can't edit messages, so it stays manual (type "tt attack" each turn).
   if (msg._chat) return msg.reply({ embeds: [fightEmbed(fight)] });
 
   // Discord: show the encounter and WAIT. The live auto-battle starts on their first
   // action (registered but not armed yet).
   const sent = await msg.reply({
-    content: '⚔️ **Type `!attack` to begin!** (or `!skill <name>` · `!flee`)',
+    content: '⚔️ **Type `tt attack` to begin!** (or `tt skill <name>` · `tt flee`)',
     embeds: [fightEmbed(fight)],
   });
   autos.set(msg.author.id, { message: sent, char, timer: null });
@@ -207,14 +209,14 @@ async function cmdAdventure(msg, args) {
 
 async function cmdBoss(msg, args) {
   const char = getPlayer(msg.author.id);
-  if (!char) return msg.reply('No hero yet — `!create` first.');
+  if (!char) return msg.reply('No hero yet — `tt create` first.');
   if (hasFight(msg.author.id)) return msg.reply('Finish your current fight first!');
 
   let zone;
   if (args[0]) {
     const q = args.join(' ').toLowerCase();
     zone = ZONE_LIST.find((z) => z.id === q || z.name.toLowerCase() === q || z.name.toLowerCase().includes(q));
-    if (!zone) return msg.reply('No such zone. See `!zones`.');
+    if (!zone) return msg.reply('No such zone. See `tt zones`.');
   } else {
     zone = currentBossZone(char);
   }
@@ -224,7 +226,7 @@ async function cmdBoss(msg, args) {
   fight.bossZone = zone.id;
   fight.log.push(`⚔️ You challenge **${fight.monster.name}**, the boss of **${zone.name}**!`);
   if (msg._chat) return msg.reply({ embeds: [fightEmbed(fight)] });
-  const sent = await msg.reply({ content: '👑 **BOSS FIGHT!** Type `!attack` to begin!', embeds: [fightEmbed(fight)] });
+  const sent = await msg.reply({ content: '👑 **BOSS FIGHT!** Type `tt attack` to begin!', embeds: [fightEmbed(fight)] });
   autos.set(msg.author.id, { message: sent, char, timer: null });
 }
 
@@ -248,10 +250,10 @@ async function cmdRaid(msg, args) {
 
   if (sub === 'join') {
     const r = joinRaid(gid, msg.author.id);
-    return msg.reply(r.error || `⚔️ **${char?.name || 'You'}** joined the raid! Your hero auto-attacks — interject with \`!raid skill <name>\`, \`!raid use\`, or \`!raid revive\`.`);
+    return msg.reply(r.error || `⚔️ **${char?.name || 'You'}** joined the raid! Your hero auto-attacks — interject with \`tt raid skill <name>\`, \`tt raid use\`, or \`tt raid revive\`.`);
   }
   if (sub === 'skill' || sub === 'cast') {
-    if (!char) return msg.reply('Make a hero first with `!create`.');
+    if (!char) return msg.reply('Make a hero first with `tt create`.');
     if (!raid) return msg.reply('No active raid.');
     const q = args.slice(1).join(' ').toLowerCase().trim();
     const list = skillsForClass(char.cls, char.level);
@@ -269,14 +271,14 @@ async function cmdRaid(msg, args) {
     return msg.reply(r.error || '💚 You’re back on your feet — rejoining the fight!');
   }
   if (sub === 'start') {
-    if (!char) return msg.reply('Make a hero first with `!create`.');
+    if (!char) return msg.reply('Make a hero first with `tt create`.');
     if (raid) return msg.reply({ embeds: [raidEmbed(raid)] });
     const r = startRaid(gid, char, msg.author.id, await raidChannel(msg, gid));
     if (r.error) return msg.reply(r.error);
-    return msg.reply(`🐉 **You summoned a raid** on **${r.raid.boss.name}** (T${r.zone.tier} · ${r.zone.name})! \`!raid join\` to fight — it auto-battles for up to 1 hour.`);
+    return msg.reply(`🐉 **You summoned a raid** on **${r.raid.boss.name}** (T${r.zone.tier} · ${r.zone.name})! \`tt raid join\` to fight — it auto-battles for up to 1 hour.`);
   }
 
-  if (!raid) return msg.reply('No active raid right now. They pop up every 1–3 hours — or start one with `!raid start`.');
+  if (!raid) return msg.reply('No active raid right now. They pop up every 6–12 hours — team up when one does!');
   return msg.reply({ embeds: [raidEmbed(raid)] });
 }
 
@@ -288,16 +290,16 @@ function victoryEmbed(fight, reward, char) {
   if (reward.clearedBoss) desc += reward.unlocked
     ? `\n\n🗺️ **BOSS DEFEATED!** New zone unlocked: **${reward.unlocked}**!`
     : `\n\n👑 **BOSS DEFEATED!** You've conquered the final zone!`;
-  const next = ['`!adventure`'];
-  if (reward.levels.length) next.push('`!skills`');
-  if (reward.items.length) next.push('`!inv`');
-  next.push('`!char`', '`!shop`', '`!rest`');
+  const next = ['`tt adventure`'];
+  if (reward.levels.length) next.push('`tt skills`');
+  if (reward.items.length) next.push('`tt inv`');
+  next.push('`tt char`', '`tt shop`', '`tt rest`');
   desc += `\n\n▶️ **Next:** ${next.join(' · ')}`;
   return new EmbedBuilder().setColor(0x3fa34d).setTitle(`🏆 ${fight.monster.name} defeated!`).setDescription(desc);
 }
 function defeatEmbed(fight, lost) {
   return new EmbedBuilder().setColor(0xd64f4f).setTitle('💀 You have fallen…')
-    .setDescription(fight.log.slice(-6).join('\n') + `\n\nYou wake at the tavern, down **${lost}** 🪙 but alive. Rest with \`!rest\`.`);
+    .setDescription(fight.log.slice(-6).join('\n') + `\n\nYou wake at the tavern, down **${lost}** 🪙 but alive. Rest with \`tt rest\`.`);
 }
 
 // ── Discord auto-battle loop (edits one message in place) ─────────────────────
@@ -323,7 +325,7 @@ async function settleAuto(uid, fight, res, resume) {
   if (res.win) { stopAuto(uid); const reward = resolveWin(fight, char); endFight(uid); savePlayer(uid, char); await a.message.edit({ content: '', embeds: [victoryEmbed(fight, reward, char)] }).catch(() => {}); return; }
   if (res.lose) { stopAuto(uid); const { lost } = resolveLoss(char); endFight(uid); savePlayer(uid, char); await a.message.edit({ content: '', embeds: [defeatEmbed(fight, lost)] }).catch(() => {}); return; }
   if (res.fled) { stopAuto(uid); char.hp = fight.php; char.mp = fight.pmp; endFight(uid); savePlayer(uid, char); await a.message.edit({ content: '🏃 You fled the fight.', embeds: [] }).catch(() => {}); return; }
-  const foot = resume ? '' : '\n⏸️ Paused — type `!attack` to resume auto-attacking.';
+  const foot = resume ? '' : '\n⏸️ Paused — type `tt attack` to resume auto-attacking.';
   await a.message.edit({ content: foot, embeds: [fightEmbed(fight)] }).catch(() => {});
   if (resume) arm(uid);
 }
@@ -356,16 +358,16 @@ async function afterTurn(msg, char, res) {
 function cmdAttack(msg) {
   const char = getPlayer(msg.author.id);
   const fight = getFight(msg.author.id);
-  if (!char || !fight) return msg.reply('You’re not in a fight. `!adventure` to find one.');
+  if (!char || !fight) return msg.reply('You’re not in a fight. `tt adventure` to find one.');
   return act(msg, char, takeTurn(fight, 'attack'), true); // attack (re)starts the auto-loop
 }
 
 function cmdSkill(msg, args) {
   const char = getPlayer(msg.author.id);
   const fight = getFight(msg.author.id);
-  if (!char || !fight) return msg.reply('You’re not in a fight. `!adventure` to find one.');
+  if (!char || !fight) return msg.reply('You’re not in a fight. `tt adventure` to find one.');
   const q = args.join(' ').toLowerCase().trim();
-  if (!q) return msg.reply('Which skill? `skill <name>` or `skill 1` — see `!skills`.');
+  if (!q) return msg.reply('Which skill? `skill <name>` or `skill 1` — see `tt skills`.');
   const list = skillsForClass(char.cls, char.level);
   const skill = /^\d+$/.test(q)
     ? list[parseInt(q, 10) - 1]
@@ -377,7 +379,7 @@ function cmdSkill(msg, args) {
 function cmdUse(msg) {
   const char = getPlayer(msg.author.id);
   const fight = getFight(msg.author.id);
-  if (!char || !fight) return msg.reply('You can only quaff potions in a fight right now. `!rest` to heal in town.');
+  if (!char || !fight) return msg.reply('You can only quaff potions in a fight right now. `tt rest` to heal in town.');
   const pot = (char.inventory || []).find((i) => i.effect === 'heal_pct' && (i.qty || 0) > 0);
   if (!pot) return msg.reply('No potions in your bag.');
   const heal = Math.round(fight.pd.maxhp * (pot.magnitude || 30) / 100);
@@ -395,28 +397,28 @@ function cmdFlee(msg) {
 
 function cmdStatus(msg) {
   const fight = getFight(msg.author.id);
-  if (!fight) return msg.reply('You’re not in a fight. `!adventure` to find one.');
+  if (!fight) return msg.reply('You’re not in a fight. `tt adventure` to find one.');
   return msg.reply({ embeds: [fightEmbed(fight)] });
 }
 
 function cmdInv(msg) {
   const char = getPlayer(msg.author.id);
-  if (!char) return msg.reply('No hero yet — `!create` first.');
+  if (!char) return msg.reply('No hero yet — `tt create` first.');
   const inv = char.inventory || [];
   const gear = inv.filter((i) => GEAR_SLOTS.includes(i.slot));
   const other = inv.filter((i) => !GEAR_SLOTS.includes(i.slot));
   const junkValue = other.filter((i) => i.slot === 'material').reduce((s, m) => s + (m.value || 1) * (m.qty || 1), 0);
   let out = `🎒 **${char.name}'s bag** — ${char.gold || 0} 🪙\n`;
-  if (gear.length) out += '\n**Gear** (equip with `!equip <#>`, sell with `!sell <#>`)\n' + gear.map((i, n) => `\`${n + 1}\` ${RARITY_EMOJI[i.rarity] || '•'} ${i.name} — ${i.slot}`).join('\n');
+  if (gear.length) out += '\n**Gear** (equip with `tt equip <#>`, sell with `tt sell <#>`)\n' + gear.map((i, n) => `\`${n + 1}\` ${RARITY_EMOJI[i.rarity] || '•'} ${i.name} — ${i.slot}`).join('\n');
   if (other.length) out += '\n\n**Items**\n' + other.map((i) => `• ${i.name}${i.qty > 1 ? ` x${i.qty}` : ''}${i.slot === 'material' ? ` (${(i.value || 1) * (i.qty || 1)} 🪙)` : ''}`).join('\n');
-  if (junkValue > 0) out += `\n\n_Sell all materials with \`!sell junk\` (+${junkValue} 🪙)_`;
+  if (junkValue > 0) out += `\n\n_Sell all materials with \`tt sell junk\` (+${junkValue} 🪙)_`;
   if (!gear.length && !other.length) out += '\n_Empty. Go adventuring!_';
   return msg.reply(out);
 }
 
 function cmdShop(msg) {
   const char = getPlayer(msg.author.id);
-  if (!char) return msg.reply('No hero yet — `!create` first.');
+  if (!char) return msg.reply('No hero yet — `tt create` first.');
   const shop = shopInventory(char);
   const eq = char.equipped || {};
   const lines = shop.map((s, n) => {
@@ -435,13 +437,13 @@ function cmdShop(msg) {
     return `\`${n + 1}\` ${s.name} — **${s.price}** 🪙 · ${parts.join(' ')} · vs equipped ${cmp}`;
   });
   return msg.reply(`🏪 **Shop** (you have ${char.gold || 0} 🪙)\n` + lines.join('\n') +
-    '\n\nBuy with `!buy <name>` · sell gear with `!sell <#>` (from `!inv`).');
+    '\n\nBuy with `tt buy <name>` · sell gear with `tt sell <#>` (from `tt inv`).');
 }
 
 function cmdBuy(msg, args) {
   const char = getPlayer(msg.author.id);
-  if (!char) return msg.reply('No hero yet — `!create` first.');
-  if (!args.length) return msg.reply('Buy what? `!buy <#>` (from `!shop`), with an optional quantity: `!buy 2 5`.');
+  if (!char) return msg.reply('No hero yet — `tt create` first.');
+  if (!args.length) return msg.reply('Buy what? `tt buy <#>` (from `tt shop`), with an optional quantity: `tt buy 2 5`.');
   const shop = shopInventory(char);
 
   let pick, qty = 1;
@@ -454,7 +456,7 @@ function cmdBuy(msg, args) {
     const q = nameArgs.join(' ').toLowerCase();
     pick = shop.find((s) => s.name.toLowerCase() === q || s.id === q) || shop.find((s) => s.name.toLowerCase().includes(q));
   }
-  if (!pick) return msg.reply(`Not in the shop. See \`!shop\` (buy by number, e.g. \`!buy 1\`).`);
+  if (!pick) return msg.reply(`Not in the shop. See \`tt shop\` (buy by number, e.g. \`tt buy 1\`).`);
 
   const base = ITEMS[pick.id];
   const isGear = GEAR_SLOTS.includes(base.slot);
@@ -489,7 +491,7 @@ function cmdBuy(msg, args) {
 
 function cmdSell(msg, args) {
   const char = getPlayer(msg.author.id);
-  if (!char) return msg.reply('No hero yet — `!create` first.');
+  if (!char) return msg.reply('No hero yet — `tt create` first.');
   const inv = char.inventory || [];
   const arg = args.join(' ').toLowerCase().trim();
 
@@ -540,16 +542,16 @@ function cmdSell(msg, args) {
     }
   }
 
-  return msg.reply('Sell what? `!sell <#>` (gear from `!inv`) · `!sell junk` (all materials) · `!sell <name>`.');
+  return msg.reply('Sell what? `tt sell <#>` (gear from `tt inv`) · `tt sell junk` (all materials) · `tt sell <name>`.');
 }
 
 function cmdEquip(msg, args) {
   const char = getPlayer(msg.author.id);
-  if (!char) return msg.reply('No hero yet — `!create` first.');
+  if (!char) return msg.reply('No hero yet — `tt create` first.');
   const gear = (char.inventory || []).filter((i) => GEAR_SLOTS.includes(i.slot));
   const idx = parseInt(args[0], 10) - 1;
   const item = Number.isInteger(idx) ? gear[idx] : gear.find((i) => i.name.toLowerCase().includes(args.join(' ').toLowerCase()));
-  if (!item) return msg.reply('Which item? `!equip <#>` — numbers from `!inv`.');
+  if (!item) return msg.reply('Which item? `tt equip <#>` — numbers from `tt inv`.');
   char.equipped = char.equipped || {};
   const old = char.equipped[item.slot];
   char.equipped[item.slot] = item;
@@ -562,7 +564,7 @@ function cmdEquip(msg, args) {
 
 function cmdRest(msg) {
   const char = getPlayer(msg.author.id);
-  if (!char) return msg.reply('No hero yet — `!create` first.');
+  if (!char) return msg.reply('No hero yet — `tt create` first.');
   if (hasFight(msg.author.id)) return msg.reply('You can’t rest mid-fight!');
   const pd = derive(char);
   char.hp = pd.maxhp; char.mp = pd.maxmp;
@@ -575,11 +577,27 @@ function cmdDelete(msg, args) {
   const char = getPlayer(msg.author.id);
   if (!char) return msg.reply('No hero to delete.');
   if ((args[0] || '').toLowerCase() !== 'confirm') {
-    return msg.reply(`⚠️ This permanently deletes **${char.name}** (Lvl ${char.level}). Type \`!deletechar confirm\` to proceed.`);
+    return msg.reply(`⚠️ This permanently deletes **${char.name}** (Lvl ${char.level}). Type \`tt deletechar confirm\` to proceed.`);
   }
   endFight(msg.author.id);
   deletePlayer(msg.author.id);
-  return msg.reply('🪦 Character deleted. `!create` to begin anew.');
+  return msg.reply('🪦 Character deleted. `tt create` to begin anew.');
+}
+
+// Start over: wipe the existing hero and roll a fresh one in a single command.
+function cmdNew(msg, args) {
+  const existing = getPlayer(msg.author.id);
+  if (!existing) return cmdCreate(msg, args);          // no hero yet → just create
+  if ((args[0] || '').toLowerCase() !== 'confirm') {
+    return msg.reply(
+      `⚠️ You already have **${existing.name}** (Lvl ${existing.level}). Starting over deletes them for good.\n` +
+      `To reroll, resend with **confirm**: \`tt new confirm <class> <race> [name]\`\n` +
+      `e.g. \`tt new confirm ${existing.cls} ${existing.race} ${existing.name}\``
+    );
+  }
+  endFight(msg.author.id);
+  deletePlayer(msg.author.id);
+  return cmdCreate(msg, args.slice(1));                // drop the "confirm" token
 }
 
 // ── gathering (Worker profession) ────────────────────────────────────────────
@@ -587,7 +605,7 @@ const GATHER_EMOJI = { chop: '🪓', mine: '⛏️', fish: '🎣', forage: '🌿
 
 function cmdGather(msg, args, command) {
   const char = getPlayer(msg.author.id);
-  if (!char) return msg.reply('No hero yet — `!create` first.');
+  if (!char) return msg.reply('No hero yet — `tt create` first.');
   const res = gather(char, command);
   if (res.status === 'cooldown') {
     const s = Math.ceil(res.remaining / 1000);
@@ -598,13 +616,13 @@ function cmdGather(msg, args, command) {
   const e = GATHER_EMOJI[command] || '⛏️';
   let out = `${e} You ${command} and gather **${res.qty}× ${res.material}**! +${res.xp} Worker XP (Worker Lv ${res.workerLevel}).`;
   if (res.levelsGained) out += ' 🎉 **Worker level up!**';
-  out += ' Ready again in 3m — sell mats with `!sell junk`.';
+  out += ' Ready again in 3m — sell mats with `tt sell junk`.';
   return msg.reply(out);
 }
 
 function cmdLeaderboard(msg) {
   const all = Object.values(allPlayers()).filter(Boolean);
-  if (!all.length) return msg.reply('No heroes yet. Be the first with `!create`!');
+  if (!all.length) return msg.reply('No heroes yet. Be the first with `tt create`!');
   const top = all.sort((a, b) => (b.level - a.level) || ((b.xp || 0) - (a.xp || 0))).slice(0, 10);
   const lines = top.map((c, i) => `${['🥇', '🥈', '🥉'][i] || `\`${i + 1}\``} **${c.name}** — Lv ${c.level} ${CLASSES[c.cls]?.name || ''}`);
   return msg.reply('🏆 **Top heroes**\n' + lines.join('\n'));
@@ -631,34 +649,33 @@ const COMMANDS = {
   equip: cmdEquip, rest: cmdRest,
   leaderboard: cmdLeaderboard, lb: cmdLeaderboard,
   deletechar: cmdDelete,
+  new: cmdNew, restart: cmdNew, reroll: cmdNew, startover: cmdNew,
 };
 
-// These commands also work WITHOUT the "!" prefix (just type the word).
-const BARE_COMMANDS = new Set([
-  'chop', 'mine', 'fish', 'forage', 'dig', 'scavenge',
-  'attack', 'a', 'skill', 'cast', 'use', 'potion', 'flee', 'run',
-]);
+// Every Tavern Tales command is "tt <command> [args]". The legacy "!command"
+// still works so nothing breaks for people used to it.
+const TT = 'tt';
 
 export function isRpgCommand(content) {
-  content = (content || '').trim();
-  const bare = !content.startsWith(PREFIX);
-  const word = (bare ? content : content.slice(PREFIX.length)).trim().split(/\s+/)[0]?.toLowerCase();
-  if (!word || !COMMANDS[word]) return false;
-  return bare ? BARE_COMMANDS.has(word) : true;
+  const low = (content || '').trim().toLowerCase();
+  if (low === TT || low.startsWith(TT + ' ')) return true;          // claim all "tt ..."
+  if (low.startsWith(PREFIX)) return !!COMMANDS[low.slice(PREFIX.length).split(/\s+/)[0]];
+  return false;
 }
 
 export async function handleRpg(msg) {
   const raw = (msg.content || '').trim();
-  const bare = !raw.startsWith(PREFIX);
-  const body = bare ? raw : raw.slice(PREFIX.length);
-  const parts = body.trim().split(/\s+/);
+  const low = raw.toLowerCase();
+  let body, viaTt = false;
+  if (low === TT) { body = 'help'; viaTt = true; }
+  else if (low.startsWith(TT + ' ')) { body = raw.slice(3).trim(); viaTt = true; }
+  else if (raw.startsWith(PREFIX)) { body = raw.slice(PREFIX.length).trim(); }
+  else return;
+
+  const parts = body.split(/\s+/);
   const name = (parts.shift() || '').toLowerCase();
   const fn = COMMANDS[name];
-  if (!fn) return;
-  if (bare) {
-    if (!BARE_COMMANDS.has(name)) return;   // only certain words work bare
-    if (!getPlayer(msg.author.id)) return;  // silent for non-players (avoid triggering on normal chat)
-  }
+  if (!fn) { if (viaTt) await msg.reply('Unknown command — try `tt help`.'); return; }
   await fn(msg, parts);
 }
 

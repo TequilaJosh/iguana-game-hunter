@@ -202,7 +202,8 @@ namespace GameTracker.Views
             if (cmd.Length == 0) return;
 
             // Tavern Tales: forward RPG commands to the Discord bot and relay its reply.
-            if (_features.RpgEnabled && (IsGameCommand(cmd) || IsBareGameCommand(cmd)) &&
+            // Everything is "tt <command>"; legacy "!command" still forwards too.
+            if (_features.RpgEnabled && (IsTavernCommand(cmd) || IsGameCommand(cmd)) &&
                 !string.IsNullOrWhiteSpace(_features.BotIngestUrl) &&
                 !string.IsNullOrWhiteSpace(_features.BotIngestToken))
             {
@@ -468,7 +469,7 @@ namespace GameTracker.Views
             if (_features.RpgEnabled)
             {
                 var w0 = text.Split(' ')[0];
-                if (IsGameCommand(w0) || IsBareGameCommand(w0)) return;
+                if (IsTavernCommand(w0) || IsGameCommand(w0)) return;
                 if (_recentGameReplies.Contains(text)) return;
             }
 
@@ -717,14 +718,8 @@ namespace GameTracker.Views
 
         private static bool IsGameCommand(string cmd) => GameCommands.Contains(cmd.Trim());
 
-        // Game words that also work WITHOUT the "!" prefix (gathering + in-the-moment combat).
-        private static readonly HashSet<string> BareGameCommands = new(StringComparer.OrdinalIgnoreCase)
-        {
-            "chop", "mine", "fish", "forage", "dig", "scavenge",
-            "attack", "potion", "use", "flee", "skill", "cast",
-        };
-
-        private static bool IsBareGameCommand(string cmd) => BareGameCommands.Contains(cmd.Trim());
+        // The unified Tavern Tales prefix: every command is "tt <command>".
+        private static bool IsTavernCommand(string cmd) => string.Equals(cmd?.Trim(), "tt", StringComparison.OrdinalIgnoreCase);
 
         // Recently-sent game replies — so when SSN echoes them back into chat, TTS skips them.
         private readonly HashSet<string> _recentGameReplies = new();

@@ -17,7 +17,10 @@ let reconnectTimer = null;
 let pollTimer = null;
 let buffer = '';
 const joined = new Set();          // channels we're currently in (lowercase, no #)
+const announced = new Set();       // channels we've greeted this session (announce once)
 let chanToGuild = {};              // channel -> guildId (rebuilt each reconcile)
+
+const ANNOUNCE = "🍺 Tavern Tales is now playable right here in chat! Type tt help to make a hero and play — fight, craft, quest & climb the leaderboard. Link your account with tt play <your Discord @username>.";
 
 // app-token cache for Helix live polling
 let appToken = null;
@@ -37,7 +40,16 @@ function send(line) {
 function say(channel, message) {
   send(`PRIVMSG #${channel} :${message.slice(0, 480)}`);
 }
-function join(channel) { if (!joined.has(channel)) { send(`JOIN #${channel}`); joined.add(channel); log.info(`Twitch: joined #${channel}`); } }
+function join(channel) {
+  if (joined.has(channel)) return;
+  send(`JOIN #${channel}`);
+  joined.add(channel);
+  log.info(`Twitch: joined #${channel}`);
+  if (!announced.has(channel)) {           // greet the chat once per session
+    announced.add(channel);
+    setTimeout(() => say(channel, ANNOUNCE), 2000);
+  }
+}
 function part(channel) { if (joined.has(channel)) { send(`PART #${channel}`); joined.delete(channel); log.info(`Twitch: left #${channel}`); } }
 
 // Channels configured across all servers the bot is in: { channel: guildId }

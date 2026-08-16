@@ -710,6 +710,7 @@ namespace GameTracker.Views
             "!zones", "!classes", "!races", "!adventure", "!explore", "!hunt",
             "!attack", "!skill", "!cast", "!use", "!potion", "!flee", "!run",
             "!status", "!inv", "!inventory", "!bag", "!equip", "!rest",
+            "!shop", "!store", "!buy", "!sell",
             "!leaderboard", "!rpg", "!tavern", "!deletechar", "!help", "!commands",
         };
 

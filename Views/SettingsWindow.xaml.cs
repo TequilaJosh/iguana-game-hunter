@@ -377,6 +377,14 @@ namespace GameTracker.Views
             Step(2, "\"Import backup…\" restores a zip — your current data is saved to a safety backup first, then the app restarts with the imported data.");
             Step(3, "Great for reinstalls or moving to a new PC.");
 
+            Section("Tavern Tales — the chat RPG (needs the companion bot)");
+            Body("A text RPG your community plays with ! commands — in Discord and in your stream chat, sharing one character. It runs on the LazerGuanas Discord bot; Game Hunter forwards chat commands to it.");
+            Step(1, "Set up the bot (see its README) and, in Settings → Chat → ⚙ Features → Discord, paste the Bot ingest URL + token, then tick \"Let chatters play Tavern Tales from chat\".");
+            Step(2, "Discord players just start: !create <class> <race> [name], then !adventure. Everyone in the channel sees the fights — great for drawing a crowd.");
+            Step(3, "Stream-chat viewers link first: !play <their Discord @username> → the bot DMs them a code → they type !confirm <code> in chat. Now their chat and Discord share the same hero.");
+            Step(4, "Play commands: !help (menu) · !char · !skills · !zones · !adventure · in combat !attack / !skill <name> / !use / !flee · !inv · !equip <#> · !shop / !buy / !sell · !rest · !leaderboard.");
+            Step(5, "Tavern Tales chat is auto-ignored by TTS (both commands and the bot's replies), so it won't spam your text-to-speech.");
+
             Section("Updates");
             Step(1, "The app checks for updates at launch and installs them silently — windows you had open reopen afterward, and your data is untouched.");
             Step(2, "The ↻ button in the top bar checks manually any time.");

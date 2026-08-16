@@ -1,9 +1,9 @@
 import { EmbedBuilder } from 'discord.js';
 import {
-  RACE_LIST, CLASS_LIST, ZONE_LIST, RACES, CLASSES, ZONES, RARITIES, STAT_KEYS,
+  RACE_LIST, CLASS_LIST, ZONE_LIST, RACES, CLASSES, ZONES, RARITIES, STAT_KEYS, ITEMS,
   skillsForClass,
 } from './content.js';
-import { derive, xpToNext, startingKit, gearScore, clamp } from './engine.js';
+import { derive, xpToNext, startingKit, gearScore, clamp, shopInventory, sellValue, makeGear } from './engine.js';
 import { getPlayer, savePlayer, deletePlayer, allPlayers, nextStaminaMs, MAX_STAMINA } from './store.js';
 import {
   getFight, hasFight, endFight, startFight, takeTurn, resolveWin, resolveLoss,
@@ -78,6 +78,7 @@ async function cmdHelp(msg) {
       'In combat: `!attack` · `!skill <name>` · `!use` (potion) · `!flee`\n\n' +
       '**Gear & town**\n' +
       '`!inv` — bag & gold · `!equip <#>` — wear gear\n' +
+      '`!shop` — buy gear/potions · `!buy <name>` · `!sell <#>`\n' +
       '`!rest` — recover HP/MP · `!leaderboard` — top heroes\n\n' +
       '**Playing from stream chat**\n' +
       '`!play <your Discord @username>` then `!confirm <code>` — link your chat account to your Discord hero so your progress follows you everywhere.'
@@ -272,6 +273,46 @@ function cmdInv(msg) {
   return msg.reply(out);
 }
 
+function cmdShop(msg) {
+  const char = getPlayer(msg.author.id);
+  if (!char) return msg.reply('No hero yet — `!create` first.');
+  const shop = shopInventory(char);
+  const lines = shop.map((s, n) => `\`${n + 1}\` ${s.name} — **${s.price}** 🪙 (${s.slot})`);
+  return msg.reply(`🏪 **Shop** (you have ${char.gold || 0} 🪙)\n` + lines.join('\n') +
+    '\n\nBuy with `!buy <name>` · sell gear with `!sell <#>` (from `!inv`).');
+}
+
+function cmdBuy(msg, args) {
+  const char = getPlayer(msg.author.id);
+  if (!char) return msg.reply('No hero yet — `!create` first.');
+  const q = args.join(' ').toLowerCase().trim();
+  if (!q) return msg.reply('Buy what? `!buy <name>` — see `!shop`.');
+  const shop = shopInventory(char);
+  const pick = shop.find((s) => s.name.toLowerCase() === q || s.id === q) || shop.find((s) => s.name.toLowerCase().includes(q));
+  if (!pick) return msg.reply(`"${args.join(' ')}" isn't in the shop. See \`!shop\`.`);
+  if ((char.gold || 0) < pick.price) return msg.reply(`Not enough gold — ${pick.name} costs ${pick.price} 🪙, you have ${char.gold || 0}.`);
+  char.gold -= pick.price;
+  const base = ITEMS[pick.id];
+  if (GEAR_SLOTS.includes(base.slot)) addItem(char, makeGear(base.id, RARITIES[0]));
+  else addItem(char, { base: base.id, slot: base.slot, name: base.name, qty: 1, stackable: !!base.stackable, effect: base.effect, magnitude: base.magnitude, value: base.value });
+  savePlayer(msg.author.id, char);
+  return msg.reply(`🛒 Bought **${pick.name}** for ${pick.price} 🪙. (${char.gold} left)${GEAR_SLOTS.includes(base.slot) ? ' Equip it with `!inv` → `!equip <#>`.' : ''}`);
+}
+
+function cmdSell(msg, args) {
+  const char = getPlayer(msg.author.id);
+  if (!char) return msg.reply('No hero yet — `!create` first.');
+  const gear = (char.inventory || []).filter((i) => GEAR_SLOTS.includes(i.slot));
+  const idx = parseInt(args[0], 10) - 1;
+  const item = gear[idx];
+  if (!item) return msg.reply('Sell which? `!sell <#>` — numbers from `!inv`.');
+  const price = sellValue(item);
+  char.gold = (char.gold || 0) + price;
+  char.inventory = char.inventory.filter((i) => i !== item);
+  savePlayer(msg.author.id, char);
+  return msg.reply(`💰 Sold **${item.name}** for ${price} 🪙. (${char.gold} total)`);
+}
+
 function cmdEquip(msg, args) {
   const char = getPlayer(msg.author.id);
   if (!char) return msg.reply('No hero yet — `!create` first.');
@@ -331,6 +372,7 @@ const COMMANDS = {
   flee: cmdFlee, run: cmdFlee,
   status: cmdStatus, fight: cmdStatus,
   inv: cmdInv, inventory: cmdInv, bag: cmdInv,
+  shop: cmdShop, store: cmdShop, buy: cmdBuy, sell: cmdSell,
   equip: cmdEquip, rest: cmdRest,
   leaderboard: cmdLeaderboard, lb: cmdLeaderboard,
   deletechar: cmdDelete,

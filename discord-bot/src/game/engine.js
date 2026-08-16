@@ -1,5 +1,5 @@
 import {
-  RACES, CLASSES, ITEMS, RARITIES, AFFIXES, STAT_KEYS, gearInTable, skillsForClass,
+  RACES, CLASSES, ITEMS, RARITIES, AFFIXES, STAT_KEYS, ZONE_LIST, gearInTable, skillsForClass,
 } from './content.js';
 
 const EQUIP_SLOTS = ['weapon', 'head', 'body', 'shield', 'feet', 'accessory'];
@@ -167,6 +167,28 @@ export function gearScore(it) {
   for (const v of Object.values(it.stat_bonus || {})) s += v;
   return s;
 }
+
+// The tier a character shops at — the best zone tier they can currently enter.
+export function tierForLevel(level) {
+  let t = 1;
+  for (const z of ZONE_LIST) if (level >= z.level_required) t = z.tier;
+  return t;
+}
+
+// What's for sale for this character: a tier-appropriate potion, their class weapon,
+// and armor pieces (buy at item value; common rarity).
+export function shopInventory(char) {
+  const tier = tierForLevel(char.level);
+  const cls = CLASSES[char.cls];
+  const ids = [];
+  for (let t = tier; t >= 1; t--) { if (ITEMS[`potion_t${t}`]) { ids.push(`potion_t${t}`); break; } }
+  const wt = cls.weapons[0];
+  if (ITEMS[`${wt}_t${tier}`]) ids.push(`${wt}_t${tier}`);
+  for (const slot of ['head', 'body', 'shield', 'feet']) if (ITEMS[`${slot}_t${tier}`]) ids.push(`${slot}_t${tier}`);
+  return ids.map((id) => ({ id, name: ITEMS[id].name, price: ITEMS[id].value || 0, slot: ITEMS[id].slot }));
+}
+
+export const sellValue = (it) => Math.max(1, Math.round((it.value || 10) * 0.4));
 
 // Starting kit: tier-1 weapon (class's first weapon type) + basic armor + potions.
 export function startingKit(char) {

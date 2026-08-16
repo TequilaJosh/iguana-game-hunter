@@ -202,7 +202,7 @@ namespace GameTracker.Views
             if (cmd.Length == 0) return;
 
             // Tavern Tales: forward RPG commands to the Discord bot and relay its reply.
-            if (_features.RpgEnabled && IsGameCommand(cmd) &&
+            if (_features.RpgEnabled && (IsGameCommand(cmd) || IsBareGameCommand(cmd)) &&
                 !string.IsNullOrWhiteSpace(_features.BotIngestUrl) &&
                 !string.IsNullOrWhiteSpace(_features.BotIngestToken))
             {
@@ -467,7 +467,8 @@ namespace GameTracker.Views
             // Tavern Tales: never read game commands or the bot's echoed replies aloud.
             if (_features.RpgEnabled)
             {
-                if (IsGameCommand(text.Split(' ')[0])) return;
+                var w0 = text.Split(' ')[0];
+                if (IsGameCommand(w0) || IsBareGameCommand(w0)) return;
                 if (_recentGameReplies.Contains(text)) return;
             }
 
@@ -715,6 +716,15 @@ namespace GameTracker.Views
         };
 
         private static bool IsGameCommand(string cmd) => GameCommands.Contains(cmd.Trim());
+
+        // Game words that also work WITHOUT the "!" prefix (gathering + in-the-moment combat).
+        private static readonly HashSet<string> BareGameCommands = new(StringComparer.OrdinalIgnoreCase)
+        {
+            "chop", "mine", "fish", "forage", "dig", "scavenge",
+            "attack", "potion", "use", "flee", "skill", "cast",
+        };
+
+        private static bool IsBareGameCommand(string cmd) => BareGameCommands.Contains(cmd.Trim());
 
         // Recently-sent game replies — so when SSN echoes them back into chat, TTS skips them.
         private readonly HashSet<string> _recentGameReplies = new();

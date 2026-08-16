@@ -93,6 +93,7 @@ namespace GameTracker.Views
                     .Concat(new[] { "Dormant", "Hunting", "Devoured" })
                     .ToList();
                 FilterCombo.SelectedIndex = 0;
+                RefreshGamePresetCombo();
             }
 
             if (editable)
@@ -634,6 +635,65 @@ namespace GameTracker.Views
                 Services.SettingsService.SaveWheelPresets(presets);
                 RefreshPresetCombo();
                 PresetCombo.Text = string.Empty;
+                ResultText.Text = $"Deleted “{name}”";
+            }
+        }
+
+        // ----- saved game sets (backlog picker wheel) -----
+
+        private void RefreshGamePresetCombo()
+        {
+            var current = GamePresetCombo.Text;
+            var names = Services.SettingsService.LoadWheelGamePresets()
+                .Select(p => p.Name)
+                .OrderBy(n => n, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+            GamePresetCombo.ItemsSource = names;
+            GamePresetCombo.Text = current;
+        }
+
+        private void SaveGamePreset_Click(object sender, RoutedEventArgs e)
+        {
+            var name = (GamePresetCombo.Text ?? string.Empty).Trim();
+            if (name.Length == 0) { ResultText.Text = "Type a name to save this set"; return; }
+
+            var titles = _selected.Select(g => g.Title).ToList();
+            var presets = Services.SettingsService.LoadWheelGamePresets();
+            var existing = presets.FirstOrDefault(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            if (existing != null) existing.Items = titles;
+            else presets.Add(new Models.WheelPreset { Name = name, Items = titles });
+
+            Services.SettingsService.SaveWheelGamePresets(presets);
+            RefreshGamePresetCombo();
+            GamePresetCombo.Text = name;
+            ResultText.Text = $"Saved “{name}” ({titles.Count} games)";
+        }
+
+        private void LoadGamePreset_Click(object sender, RoutedEventArgs e)
+        {
+            var name = (GamePresetCombo.Text ?? string.Empty).Trim();
+            if (name.Length == 0) return;
+            var preset = Services.SettingsService.LoadWheelGamePresets()
+                .FirstOrDefault(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
+            if (preset == null) { ResultText.Text = $"No saved set named “{name}”"; return; }
+
+            var wanted = new HashSet<string>(preset.Items, StringComparer.OrdinalIgnoreCase);
+            _selected.Clear();
+            _selected.AddRange(_allGames.Where(g => wanted.Contains(g.Title)));
+            RebuildFromSelected();   // resets the wheel/result text
+            ResultText.Text = $"Loaded “{preset.Name}” ({_selected.Count} games)";
+        }
+
+        private void DeleteGamePreset_Click(object sender, RoutedEventArgs e)
+        {
+            var name = (GamePresetCombo.Text ?? string.Empty).Trim();
+            if (name.Length == 0) return;
+            var presets = Services.SettingsService.LoadWheelGamePresets();
+            if (presets.RemoveAll(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase)) > 0)
+            {
+                Services.SettingsService.SaveWheelGamePresets(presets);
+                RefreshGamePresetCombo();
+                GamePresetCombo.Text = string.Empty;
                 ResultText.Text = $"Deleted “{name}”";
             }
         }

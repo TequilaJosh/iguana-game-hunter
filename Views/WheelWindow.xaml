@@ -117,7 +117,23 @@
                 <Border x:Name="CustomizePanel" Grid.Column="1" Width="260" Margin="14,0,0,0"
                         Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1"
                         CornerRadius="6" Visibility="Collapsed">
-                    <Grid Margin="10">
+                    <DockPanel Margin="10">
+                        <!-- Saved sets of games (e.g. "RPG Night") — reusable on this wheel. -->
+                        <StackPanel DockPanel.Dock="Top" Margin="0,0,0,10">
+                            <TextBlock Text="SAVED LISTS" Foreground="{DynamicResource ThemeAccent}"
+                                       FontSize="11" FontWeight="Bold" Margin="0,0,0,3"/>
+                            <ComboBox x:Name="GamePresetCombo" IsEditable="True" Margin="0,0,0,4"
+                                      ToolTip="Type a name and Save to store the selected games; pick a saved set and Load to put them on the wheel."/>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="Load" Click="LoadGamePreset_Click" Style="{StaticResource WheelBtn}"
+                                        Padding="8,2" FontSize="11" Margin="0,0,4,0"/>
+                                <Button Content="Save" Click="SaveGamePreset_Click" Style="{StaticResource WheelBtn}"
+                                        Padding="8,2" FontSize="11" Margin="0,0,4,0"/>
+                                <Button Content="Delete" Click="DeleteGamePreset_Click" Style="{StaticResource WheelBtn}"
+                                        Padding="8,2" FontSize="11"/>
+                            </StackPanel>
+                        </StackPanel>
+                    <Grid>
                         <Grid.RowDefinitions>
                             <RowDefinition Height="Auto"/>
                             <RowDefinition Height="Auto"/>
@@ -177,6 +193,7 @@
                             </ScrollViewer>
                         </Border>
                     </Grid>
+                    </DockPanel>
                 </Border>
 
                 <!-- Items editor + rolled challenges (custom wheel only) -->

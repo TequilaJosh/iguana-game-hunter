@@ -14,6 +14,9 @@ import {
 } from './fights.js';
 import { getRaid, joinRaid, raidAction, startRaid, raidEmbed } from './raids.js';
 import { gather, getWorker, workerXpToNext } from './gather.js';
+import { PROFESSIONS, getProf, profXpToNext } from './professions.js';
+import { craft, listRecipes, recipeName, inputsLine } from './recipes.js';
+import { hasMats } from './invutil.js';
 import { getGuild } from '../guildStore.js';
 
 const PREFIX = '!';
@@ -25,6 +28,16 @@ function bar(cur, max, width = 12) {
   const p = clamp(max > 0 ? cur / max : 0, 0, 1);
   const f = Math.round(p * width);
   return '`' + '█'.repeat(f) + '░'.repeat(width - f) + '`';
+}
+
+// Compact one-line summary of the hero's professions (only ones they've started).
+function profsSummary(char) {
+  const parts = [];
+  for (const [key, meta] of Object.entries(PROFESSIONS)) {
+    const p = getProf(char, key);
+    if (key === 'worker' || p.level > 1 || p.xp > 0) parts.push(`${meta.emoji} ${p.level}`);
+  }
+  return parts.join(' · ') || '—';
 }
 
 // ── formatting ────────────────────────────────────────────────────────────────
@@ -46,7 +59,7 @@ function sheetEmbed(char) {
       { name: 'XP', value: `${char.xp || 0}/${xpToNext(char.level)}`, inline: true },
       { name: 'Gold', value: `${char.gold || 0} 🪙`, inline: true },
       { name: 'Stamina', value: `${stam}/${MAX_STAMINA} ⚡`, inline: true },
-      { name: 'Worker', value: `Lv ${getWorker(char).level} (${getWorker(char).xp}/${workerXpToNext(getWorker(char).level)})`, inline: true },
+      { name: 'Professions', value: profsSummary(char), inline: true },
       { name: 'Power', value: `ATK ~${Math.round(pd.st[pd.scales] * 1.3 + pd.wpow * 1.4)} · DEF ${pd.def} · RES ${pd.res}`, inline: true },
       { name: 'Stats', value: stats },
       { name: 'Equipped', value: gear },
@@ -620,6 +633,65 @@ function cmdGather(msg, args, command) {
   return msg.reply(out);
 }
 
+// ── crafting (Crafter) & brewing (Alchemist) ─────────────────────────────────
+function showRecipes(msg, char, prof, verb) {
+  const recipes = listRecipes(prof);
+  const lvl = getProf(char, prof).level;
+  const lines = recipes.map((r, i) => {
+    const locked = lvl < r.level;
+    const ready = !locked && hasMats(char, r.inputs);
+    const tag = locked ? ` 🔒Lv${r.level}` : ready ? ' ✅' : '';
+    return `\`${i + 1}\` ${recipeName(r)} — ${inputsLine(char, r)}${tag}`;
+  });
+  const meta = PROFESSIONS[prof];
+  return msg.reply(
+    `${meta.emoji} **${meta.name} recipes** (you're Lv ${lvl}) — make one with \`tt ${verb} <#>\`\n` +
+    lines.join('\n') +
+    '\n\n✅ = ready · 🔒 = higher level needed. Gather materials with `tt chop` `tt mine` `tt fish` `tt forage` `tt dig` `tt scavenge`.'
+  );
+}
+
+// Shared handler for `tt craft` (Crafter) and `tt brew` (Alchemist).
+function cmdMake(msg, args, prof, verb) {
+  const char = getPlayer(msg.author.id);
+  if (!char) return msg.reply('No hero yet — `tt create` first.');
+  const recipes = listRecipes(prof);
+  if (!args.length || !/^\d+$/.test(args[0])) return showRecipes(msg, char, prof, verb);
+
+  const recipe = recipes[parseInt(args[0], 10) - 1];
+  if (!recipe) return msg.reply(`No recipe #${args[0]}. See \`tt ${verb === 'brew' ? 'recipes brew' : 'recipes'}\`.`);
+
+  const res = craft(char, recipe);
+  if (!res.ok) {
+    if (res.reason === 'level') {
+      return msg.reply(`🔒 **${recipeName(recipe)}** needs ${PROFESSIONS[prof].name} Lv ${res.need} — you're Lv ${getProf(char, prof).level}.`);
+    }
+    return msg.reply(`Not enough materials for **${recipeName(recipe)}** — need ${inputsLine(char, recipe)}. Go gather more!`);
+  }
+  savePlayer(msg.author.id, char);
+
+  const meta = PROFESSIONS[prof];
+  let out;
+  if (res.gear) {
+    out = `${meta.emoji} You craft **${RARITY_EMOJI[res.rarity.id] || ''} ${res.gear.name}** (${res.gear.slot})! It's in your bag — \`tt equip <#>\` to wear it.`;
+  } else {
+    out = `${meta.emoji} You ${verb} **${res.qty}× ${res.item.name}**!`;
+  }
+  out += ` +${recipe.xp} ${meta.name} XP (Lv ${res.profLevel}).`;
+  if (res.levelsGained) out += ` 🎉 **${meta.name} level up!**`;
+  return msg.reply(out);
+}
+
+function cmdRecipes(msg, args) {
+  const char = getPlayer(msg.author.id);
+  if (!char) return msg.reply('No hero yet — `tt create` first.');
+  const prof = /^(brew|alch|alchemy|alchemist|potion)/i.test(args[0] || '') ? 'alchemist' : 'crafter';
+  return showRecipes(msg, char, prof, prof === 'alchemist' ? 'brew' : 'craft');
+}
+
+const cmdCraft = (msg, args) => cmdMake(msg, args, 'crafter', 'craft');
+const cmdBrew = (msg, args) => cmdMake(msg, args, 'alchemist', 'brew');
+
 function cmdLeaderboard(msg) {
   const all = Object.values(allPlayers()).filter(Boolean);
   if (!all.length) return msg.reply('No heroes yet. Be the first with `tt create`!');
@@ -639,6 +711,7 @@ const COMMANDS = {
   chop: (m, a) => cmdGather(m, a, 'chop'), mine: (m, a) => cmdGather(m, a, 'mine'),
   fish: (m, a) => cmdGather(m, a, 'fish'), forage: (m, a) => cmdGather(m, a, 'forage'),
   dig: (m, a) => cmdGather(m, a, 'dig'), scavenge: (m, a) => cmdGather(m, a, 'scavenge'),
+  recipes: cmdRecipes, craft: cmdCraft, brew: cmdBrew,
   attack: cmdAttack, a: cmdAttack,
   skill: cmdSkill, cast: cmdSkill,
   use: cmdUse, potion: cmdUse,

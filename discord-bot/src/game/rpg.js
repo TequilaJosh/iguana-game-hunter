@@ -285,7 +285,22 @@ function cmdShop(msg) {
   const char = getPlayer(msg.author.id);
   if (!char) return msg.reply('No hero yet — `!create` first.');
   const shop = shopInventory(char);
-  const lines = shop.map((s, n) => `\`${n + 1}\` ${s.name} — **${s.price}** 🪙 (${s.slot})`);
+  const eq = char.equipped || {};
+  const lines = shop.map((s, n) => {
+    const base = ITEMS[s.id];
+    if (!GEAR_SLOTS.includes(base.slot)) {
+      const heal = base.effect === 'heal_pct' ? ` · heals ${base.magnitude}% HP` : '';
+      return `\`${n + 1}\` ${s.name} — **${s.price}** 🪙${heal}`;
+    }
+    const parts = [];
+    if (base.power) parts.push(`PWR ${base.power}`);
+    if (base.defense) parts.push(`DEF ${base.defense}`);
+    if (base.resist) parts.push(`RES ${base.resist}`);
+    for (const [k, v] of Object.entries(base.stat_bonus || {})) parts.push(`${k.toUpperCase()}+${v}`);
+    const d = gearScore(base) - (eq[base.slot] ? gearScore(eq[base.slot]) : 0);
+    const cmp = d > 0 ? `▲ +${d}` : d < 0 ? `▼ ${d}` : '= same';
+    return `\`${n + 1}\` ${s.name} — **${s.price}** 🪙 · ${parts.join(' ')} · vs equipped ${cmp}`;
+  });
   return msg.reply(`🏪 **Shop** (you have ${char.gold || 0} 🪙)\n` + lines.join('\n') +
     '\n\nBuy with `!buy <name>` · sell gear with `!sell <#>` (from `!inv`).');
 }
@@ -344,8 +359,9 @@ function cmdRest(msg) {
   if (hasFight(msg.author.id)) return msg.reply('You can’t rest mid-fight!');
   const pd = derive(char);
   char.hp = pd.maxhp; char.mp = pd.maxmp;
+  char.stamina = MAX_STAMINA; char.stamTs = Date.now();
   savePlayer(msg.author.id, char);
-  return msg.reply(`🛌 You rest at the tavern. HP & MP fully restored (${pd.maxhp}/${pd.maxmp}).`);
+  return msg.reply(`🛌 You rest at the tavern. HP, MP & stamina fully restored (❤️ ${pd.maxhp} · 💧 ${pd.maxmp} · ⚡ ${MAX_STAMINA}).`);
 }
 
 function cmdDelete(msg, args) {

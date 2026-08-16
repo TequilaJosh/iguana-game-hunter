@@ -1,4 +1,4 @@
-import { MONSTERS, ZONES } from './content.js';
+import { MONSTERS, ZONES, ZONE_LIST } from './content.js';
 import {
   derive, playerAttack, monsterAttack, pHit, rollLoot, grantXp, clamp,
 } from './engine.js';
@@ -169,7 +169,17 @@ export function resolveWin(fight, char) {
   const pd = derive(char);
   if (levels.length) { char.hp = pd.maxhp; char.mp = pd.maxmp; } // heal on level up
   else { char.hp = clamp(fight.php, 1, pd.maxhp); char.mp = clamp(fight.pmp, 0, pd.maxmp); }
-  return { ...loot, levels };
+
+  // Boss fight: mark the zone cleared and note the newly-unlocked zone.
+  let clearedBoss = false, unlocked = null;
+  if (fight.bossZone && !(char.cleared && char.cleared[fight.bossZone])) {
+    char.cleared = char.cleared || {};
+    char.cleared[fight.bossZone] = true;
+    clearedBoss = true;
+    const idx = ZONE_LIST.findIndex((z) => z.id === fight.bossZone);
+    unlocked = idx >= 0 && ZONE_LIST[idx + 1] ? ZONE_LIST[idx + 1].name : null;
+  }
+  return { ...loot, levels, clearedBoss, unlocked };
 }
 
 // On defeat: revive at the tavern with a small gold loss (friendly — no XP loss).

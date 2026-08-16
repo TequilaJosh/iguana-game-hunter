@@ -3,12 +3,17 @@ import {
   RACE_LIST, CLASS_LIST, ZONE_LIST, RACES, CLASSES, ZONES, RARITIES, STAT_KEYS, ITEMS,
   skillsForClass,
 } from './content.js';
-import { derive, xpToNext, startingKit, gearScore, clamp, shopInventory, sellValue, makeGear } from './engine.js';
+import {
+  derive, xpToNext, startingKit, gearScore, clamp, shopInventory, sellValue, makeGear,
+  bossForZone, isZoneUnlocked, highestUnlockedZone, currentBossZone,
+} from './engine.js';
 import { getPlayer, savePlayer, deletePlayer, allPlayers, nextStaminaMs, MAX_STAMINA } from './store.js';
 import {
   getFight, hasFight, endFight, startFight, takeTurn, resolveWin, resolveLoss,
   pickEncounter, addItem,
 } from './fights.js';
+import { getRaid, joinRaid, raidAction, startRaid, raidEmbed } from './raids.js';
+import { getGuild } from '../guildStore.js';
 
 const PREFIX = '!';
 const GEAR_SLOTS = ['weapon', 'head', 'body', 'shield', 'feet', 'accessory'];
@@ -75,7 +80,10 @@ async function cmdHelp(msg) {
       '**Adventuring**\n' +
       '`!zones` — where you can go\n' +
       '`!adventure [zone]` — find a fight (costs ⚡ stamina)\n' +
-      'In combat: `!attack` · `!skill <name>` · `!use` (potion) · `!flee`\n\n' +
+      '`!boss` — challenge your zone’s boss to unlock the next zone\n' +
+      'In combat: `!attack` starts auto-battle · `!skill <name>` · `!use` · `!flee`\n\n' +
+      '**Raids** (a boss appears every 1–3h — team up!)\n' +
+      '`!raid join` · `!raid skill <name>` · `!raid use` · `!raid revive`\n\n' +
       '**Gear & town**\n' +
       '`!inv` — bag & gold · `!equip <#>` — wear gear\n' +
       '`!shop` — buy gear/potions · `!buy <name>` · `!sell <#>`\n' +
@@ -110,7 +118,7 @@ function cmdCreate(msg, args) {
     );
   }
   const name = args.slice(2).join(' ').trim().slice(0, 32) || msg.author.username;
-  const char = { name, cls: cls.id, race: race.id, level: 1, xp: 0, gold: 25 };
+  const char = { name, cls: cls.id, race: race.id, level: 1, xp: 0, gold: 25, cleared: {} };
   startingKit(char);
   const pd = derive(char);
   char.hp = pd.maxhp; char.mp = pd.maxmp;
@@ -161,9 +169,9 @@ async function cmdAdventure(msg, args) {
     const q = args.join(' ').toLowerCase();
     zone = ZONE_LIST.find((z) => z.id === q || z.name.toLowerCase() === q || z.name.toLowerCase().includes(q));
     if (!zone) return msg.reply('No such zone. See `!zones`.');
-    if (char.level < zone.level_required) return msg.reply(`🔒 **${zone.name}** needs level ${zone.level_required}. You’re ${char.level}.`);
+    if (!isZoneUnlocked(char, zone)) return msg.reply(`🔒 **${zone.name}** is locked — beat the previous zone's boss (\`!boss\`) to unlock it.`);
   } else {
-    zone = bestZoneFor(char.level);
+    zone = highestUnlockedZone(char);
   }
 
   const stam = char.stamina ?? MAX_STAMINA;
@@ -193,11 +201,88 @@ async function cmdAdventure(msg, args) {
   autos.set(msg.author.id, { message: sent, char, timer: null });
 }
 
+async function cmdBoss(msg, args) {
+  const char = getPlayer(msg.author.id);
+  if (!char) return msg.reply('No hero yet — `!create` first.');
+  if (hasFight(msg.author.id)) return msg.reply('Finish your current fight first!');
+
+  let zone;
+  if (args[0]) {
+    const q = args.join(' ').toLowerCase();
+    zone = ZONE_LIST.find((z) => z.id === q || z.name.toLowerCase() === q || z.name.toLowerCase().includes(q));
+    if (!zone) return msg.reply('No such zone. See `!zones`.');
+  } else {
+    zone = currentBossZone(char);
+  }
+  if (!isZoneUnlocked(char, zone)) return msg.reply(`🔒 **${zone.name}** is locked — clear the previous zone's boss first.`);
+
+  const fight = startFight(msg.author.id, char, bossForZone(zone), zone.id);
+  fight.bossZone = zone.id;
+  fight.log.push(`⚔️ You challenge **${fight.monster.name}**, the boss of **${zone.name}**!`);
+  if (msg._chat) return msg.reply({ embeds: [fightEmbed(fight)] });
+  const sent = await msg.reply({ content: '👑 **BOSS FIGHT!** Type `!attack` to begin!', embeds: [fightEmbed(fight)] });
+  autos.set(msg.author.id, { message: sent, char, timer: null });
+}
+
+// Resolve the channel a manual raid should announce/refresh in.
+async function raidChannel(msg, gid) {
+  if (!msg._chat && msg.channel) return msg.channel;
+  try {
+    const chanId = getGuild(gid).clipChannelId;
+    if (chanId && msg.client) { const ch = await msg.client.channels.fetch(chanId).catch(() => null); if (ch && ch.isTextBased()) return ch; }
+  } catch { /* ignore */ }
+  return null;
+}
+
+async function cmdRaid(msg, args) {
+  const gid = msg.guildId;
+  if (!gid) return msg.reply('Raids happen in a server.');
+  const char = getPlayer(msg.author.id);
+  const sub = (args[0] || '').toLowerCase();
+  const raid = getRaid(gid);
+
+  if (sub === 'join') {
+    const r = joinRaid(gid, msg.author.id);
+    return msg.reply(r.error || `⚔️ **${char?.name || 'You'}** joined the raid! Your hero auto-attacks — interject with \`!raid skill <name>\`, \`!raid use\`, or \`!raid revive\`.`);
+  }
+  if (sub === 'skill' || sub === 'cast') {
+    if (!char) return msg.reply('Make a hero first with `!create`.');
+    if (!raid) return msg.reply('No active raid.');
+    const q = args.slice(1).join(' ').toLowerCase().trim();
+    const list = skillsForClass(char.cls, char.level);
+    const skill = list.find((s) => s.id === q || s.name.toLowerCase() === q) || list.find((s) => s.name.toLowerCase().includes(q));
+    if (!skill) return msg.reply(`No skill "${args.slice(1).join(' ')}". Yours: ${list.map((s) => s.name).join(', ') || 'none'}.`);
+    raidAction(gid, msg.author.id, { kind: 'skill', skill });
+    return msg.reply(`✨ You’ll cast **${skill.name}** on the raid boss next tick.`);
+  }
+  if (sub === 'use' || sub === 'potion') {
+    const r = raidAction(gid, msg.author.id, { kind: 'use' });
+    return msg.reply(r.error || '🧪 You’ll quaff a potion next tick.');
+  }
+  if (sub === 'revive') {
+    const r = raidAction(gid, msg.author.id, { kind: 'revive' });
+    return msg.reply(r.error || '💚 You’re back on your feet — rejoining the fight!');
+  }
+  if (sub === 'start') {
+    if (!char) return msg.reply('Make a hero first with `!create`.');
+    if (raid) return msg.reply({ embeds: [raidEmbed(raid)] });
+    const r = startRaid(gid, char, msg.author.id, await raidChannel(msg, gid));
+    if (r.error) return msg.reply(r.error);
+    return msg.reply(`🐉 **You summoned a raid** on **${r.raid.boss.name}** (T${r.zone.tier} · ${r.zone.name})! \`!raid join\` to fight — it auto-battles for up to 1 hour.`);
+  }
+
+  if (!raid) return msg.reply('No active raid right now. They pop up every 1–3 hours — or start one with `!raid start`.');
+  return msg.reply({ embeds: [raidEmbed(raid)] });
+}
+
 // ── shared win/lose rendering ────────────────────────────────────────────────
 function victoryEmbed(fight, reward, char) {
   let desc = fight.log.slice(-6).join('\n') + `\n\n**+${reward.xp} XP · +${reward.gold} 🪙**`;
   if (reward.items.length) desc += '\n\n**Loot:**\n' + reward.items.map((i) => `${RARITY_EMOJI[i.rarity] || '•'} ${i.name}${i.qty > 1 ? ` x${i.qty}` : ''}`).join('\n');
   if (reward.levels.length) desc += `\n\n🎉 **LEVEL UP!** You’re now level **${char.level}** (fully healed).`;
+  if (reward.clearedBoss) desc += reward.unlocked
+    ? `\n\n🗺️ **BOSS DEFEATED!** New zone unlocked: **${reward.unlocked}**!`
+    : `\n\n👑 **BOSS DEFEATED!** You've conquered the final zone!`;
   const next = ['`!adventure`'];
   if (reward.levels.length) next.push('`!skills`');
   if (reward.items.length) next.push('`!inv`');
@@ -223,29 +308,31 @@ async function autoTick(uid) {
   const fight = getFight(uid); if (!fight) { stopAuto(uid); return; }
   const res = takeTurn(fight, 'attack');
   fight.log.push(...res.log);
-  await settleAuto(uid, fight, res);
+  await settleAuto(uid, fight, res, true); // auto keeps swinging
 }
 
-// Apply an outcome to the live message; re-arm the timer if the fight continues.
-async function settleAuto(uid, fight, res) {
+// Apply an outcome to the live message; re-arm the auto-loop only if `resume`.
+async function settleAuto(uid, fight, res, resume) {
   const a = autos.get(uid); if (!a) return;
   const char = a.char;
   if (res.win) { stopAuto(uid); const reward = resolveWin(fight, char); endFight(uid); savePlayer(uid, char); await a.message.edit({ content: '', embeds: [victoryEmbed(fight, reward, char)] }).catch(() => {}); return; }
   if (res.lose) { stopAuto(uid); const { lost } = resolveLoss(char); endFight(uid); savePlayer(uid, char); await a.message.edit({ content: '', embeds: [defeatEmbed(fight, lost)] }).catch(() => {}); return; }
   if (res.fled) { stopAuto(uid); char.hp = fight.php; char.mp = fight.pmp; endFight(uid); savePlayer(uid, char); await a.message.edit({ content: '🏃 You fled the fight.', embeds: [] }).catch(() => {}); return; }
-  await a.message.edit({ content: '', embeds: [fightEmbed(fight)] }).catch(() => {});
-  arm(uid);
+  const foot = resume ? '' : '\n⏸️ Paused — type `!attack` to resume auto-attacking.';
+  await a.message.edit({ content: foot, embeds: [fightEmbed(fight)] }).catch(() => {});
+  if (resume) arm(uid);
 }
 
 // Route a player action: Discord auto-fight edits the live message; chat replies.
-async function act(msg, char, res) {
+// resume=true (only for !attack) keeps the auto-loop going; other actions do one round.
+async function act(msg, char, res, resume) {
   const uid = msg.author.id;
   if (res.error) return msg.reply(`⚠️ ${res.error}`);
   if (autos.has(uid) && !msg._chat) {
     disarm(uid);
     const fight = getFight(uid);
     if (fight) fight.log.push(...res.log);
-    return settleAuto(uid, fight, res);
+    return settleAuto(uid, fight, res, resume);
   }
   return afterTurn(msg, char, res);
 }
@@ -265,7 +352,7 @@ function cmdAttack(msg) {
   const char = getPlayer(msg.author.id);
   const fight = getFight(msg.author.id);
   if (!char || !fight) return msg.reply('You’re not in a fight. `!adventure` to find one.');
-  return act(msg, char, takeTurn(fight, 'attack'));
+  return act(msg, char, takeTurn(fight, 'attack'), true); // attack (re)starts the auto-loop
 }
 
 function cmdSkill(msg, args) {
@@ -428,6 +515,7 @@ const COMMANDS = {
   create: cmdCreate, char: cmdChar, sheet: cmdChar, me: cmdChar,
   skills: cmdSkills, zones: cmdZones,
   adventure: cmdAdventure, explore: cmdAdventure, hunt: cmdAdventure,
+  boss: cmdBoss, raid: cmdRaid,
   attack: cmdAttack, a: cmdAttack,
   skill: cmdSkill, cast: cmdSkill,
   use: cmdUse, potion: cmdUse,
@@ -475,12 +563,14 @@ function toChatLine(t) {
  * Run a game command for a non-Discord chatter (already resolved to a Discord id),
  * reusing the exact same handlers, and return a one-line plain-text reply.
  */
-export async function runForChat({ discordId, username, content }) {
+export async function runForChat({ discordId, username, content, guildId, client }) {
   let captured = null;
   const msg = {
     author: { id: discordId, username, bot: false },
     content,
-    _chat: true, // stream chat: manual mode, no auto-battle loop / message editing
+    guildId,      // for raids (per-server)
+    client,       // for resolving the announce channel
+    _chat: true,  // stream chat: manual mode, no auto-battle loop / message editing
     reply: async (payload) => { captured = payload; return {}; },
   };
   await handleRpg(msg);

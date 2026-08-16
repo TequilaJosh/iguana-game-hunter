@@ -5,6 +5,7 @@ import { commandMap } from './commands.js';
 import { onMemberJoin } from './features/welcome.js';
 import { startIngestServer } from './ingest.js';
 import { isRpgCommand, handleRpg } from './game/rpg.js';
+import { startRaidScheduler } from './game/raids.js';
 import { log } from './logger.js';
 
 assertCoreConfig();
@@ -14,6 +15,7 @@ const client = createClient();
 client.once(Events.ClientReady, (c) => {
   log.info(`Logged in as ${c.user.tag} — serving ${c.guilds.cache.size} server(s)`);
   startIngestServer(client);
+  startRaidScheduler(client); // announces raids every 1–3h per server
 });
 
 // A new server added the bot: point their admins at /setup.

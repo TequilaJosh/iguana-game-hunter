@@ -1,5 +1,5 @@
 import {
-  RACES, CLASSES, ITEMS, RARITIES, AFFIXES, STAT_KEYS, ZONE_LIST, gearInTable, skillsForClass,
+  RACES, CLASSES, ITEMS, RARITIES, AFFIXES, STAT_KEYS, ZONE_LIST, MONSTERS, gearInTable, skillsForClass,
 } from './content.js';
 
 const EQUIP_SLOTS = ['weapon', 'head', 'body', 'shield', 'feet', 'accessory'];
@@ -189,6 +189,43 @@ export function shopInventory(char) {
 }
 
 export const sellValue = (it) => Math.max(1, Math.round((it.value || 10) * 0.4));
+
+// ── Bosses & zone progression ────────────────────────────────────────────────
+// The boss for a zone: a boss of its tier, else the toughest elite, else the
+// toughest monster of that tier.
+export function bossForZone(zone) {
+  const all = Object.values(MONSTERS);
+  const boss = all.find((m) => m.rank === 'boss' && m.tier === zone.tier);
+  if (boss) return boss.id;
+  const byHp = (a, b) => b.stats.hp - a.stats.hp;
+  const elite = all.filter((m) => m.rank === 'elite' && m.tier === zone.tier).sort(byHp)[0];
+  if (elite) return elite.id;
+  const tough = all.filter((m) => m.tier === zone.tier).sort(byHp)[0];
+  return (tough || all[0]).id;
+}
+
+export function isZoneUnlocked(char, zone) {
+  const idx = ZONE_LIST.findIndex((z) => z.id === zone.id);
+  if (idx <= 0) return true; // first zone always open
+  const prev = ZONE_LIST[idx - 1];
+  return !!(char.cleared && char.cleared[prev.id]);
+}
+
+// The furthest zone the player can currently enter.
+export function highestUnlockedZone(char) {
+  let z = ZONE_LIST[0];
+  for (const zone of ZONE_LIST) { if (isZoneUnlocked(char, zone)) z = zone; else break; }
+  return z;
+}
+
+// The boss the player needs to beat next (first unlocked, uncleared zone).
+export function currentBossZone(char) {
+  for (const zone of ZONE_LIST) {
+    if (!isZoneUnlocked(char, zone)) break;
+    if (!(char.cleared && char.cleared[zone.id])) return zone;
+  }
+  return ZONE_LIST[ZONE_LIST.length - 1]; // all cleared — allow farming the last
+}
 
 // Starting kit: tier-1 weapon (class's first weapon type) + basic armor + potions.
 export function startingKit(char) {

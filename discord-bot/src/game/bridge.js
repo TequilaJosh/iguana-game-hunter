@@ -55,7 +55,7 @@ export async function handleGameMessage(client, guildId, platform, user, text) {
       return 'Link your account first: type !play <your Discord @username> and I\'ll DM you a code.';
     }
     const runId = discordId || `unlinked:${platform}:${user}`;
-    const reply = await runForChat({ discordId: runId, username: user, content: '!' + body });
+    const reply = await runForChat({ discordId: runId, username: user, content: '!' + body, guildId, client });
     return reply || null;
   } catch (e) {
     log.error('handleGameMessage failed:', e);

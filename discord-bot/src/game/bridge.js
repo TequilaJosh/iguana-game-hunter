@@ -28,12 +28,25 @@ async function handleLink(client, guildId, platform, user, args) {
   return `Sent a code to ${member.displayName} on Discord. Check your DMs, then type tt confirm <code> here to link.`;
 }
 
-function handleConfirm(platform, user, args) {
+async function handleConfirm(client, platform, user, args) {
   const code = (args[0] || '').trim();
   if (!code) return 'Usage: tt confirm <code> — the 6-digit code I DM\'d you on Discord.';
   const r = confirmCode(platform, user, code);
   if (r.error) return `That didn't work: ${r.error}. Type tt play <Discord @username> to get a new code.`;
-  return "✅ Linked! Your chat account now shares your Discord hero. Try tt char or tt adventure.";
+
+  // DM the Discord user to confirm the link went through.
+  try {
+    const u = await client.users.fetch(r.discordId).catch(() => null);
+    if (u) {
+      await u.send(
+        `✅ **You're linked!** Your ${platform} account "**${user}**" now controls your Tavern Tales hero.\n` +
+        'Play from the stream chat **or** here in Discord — every command starts with **tt** ' +
+        '(try `tt char` or `tt adventure`). 🍺'
+      ).catch(() => {});
+    }
+  } catch { /* DM best-effort */ }
+
+  return "✅ Linked! Your chat account now shares your Discord hero — check your Discord DMs. Try tt char or tt adventure.";
 }
 
 /**
@@ -54,7 +67,7 @@ export async function handleGameMessage(client, guildId, platform, user, text) {
     const cmd = (cmdRaw || '').toLowerCase();
 
     if (cmd === 'play' || cmd === 'link') return await handleLink(client, guildId, platform, user, args);
-    if (cmd === 'confirm') return handleConfirm(platform, user, args);
+    if (cmd === 'confirm') return await handleConfirm(client, platform, user, args);
 
     // Info commands work before linking; everything else needs a linked hero.
     const discordId = getLinkedDiscordId(platform, user);

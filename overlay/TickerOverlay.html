@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>LazerGuanas Ticker</title>
+<style>
+  :root {
+    --accent: #7cc44a;
+    --bg: rgba(10, 20, 16, 0.86);
+    --border: #4a7c3a;
+    --label: #a8c488;
+    --value: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0; height: 100%;
+    background: transparent; overflow: hidden;
+    font-family: 'Segoe UI', 'Bebas Neue', Arial, sans-serif;
+  }
+  /* Bottom-centered ticker bar; the OBS source can be moved/cropped freely. */
+  #wrap {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    display: flex; justify-content: center; padding: 10px;
+  }
+  #bar {
+    display: flex; align-items: stretch; gap: 0;
+    background: var(--bg);
+    border: 2px solid var(--border); border-radius: 12px;
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.55);
+    overflow: hidden; max-width: 96vw;
+  }
+  .slot {
+    display: flex; align-items: center; gap: 9px;
+    padding: 10px 20px; white-space: nowrap;
+    position: relative;
+  }
+  .slot + .slot { border-left: 1px solid rgba(124, 196, 74, 0.28); }
+  .slot .ic { font-size: 22px; line-height: 1; }
+  .slot .txt { display: flex; flex-direction: column; line-height: 1.15; }
+  .slot .lab {
+    font-size: 11px; font-weight: 700; letter-spacing: 0.06em;
+    color: var(--label); text-transform: uppercase;
+  }
+  .slot .val {
+    font-size: 20px; font-weight: 700; color: var(--value);
+    max-width: 260px; overflow: hidden; text-overflow: ellipsis;
+  }
+  .slot .val .amt { color: var(--accent); font-size: 15px; margin-left: 6px; }
+  .slot .val.empty { color: #6f8560; font-weight: 600; }
+  /* Flash when a slot's value changes. */
+  @keyframes bump {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.14); color: var(--accent); }
+    100% { transform: scale(1); }
+  }
+  .slot.bump .val { animation: bump 0.6s ease; }
+  .slot.bump { box-shadow: inset 0 0 0 999px rgba(124, 196, 74, 0.10); }
+</style>
+</head>
+<body>
+  <div id="wrap"><div id="bar"></div></div>
+
+<script>
+(function () {
+  "use strict";
+  // Which slots to show and in what order — override with ?kinds=sub,gift,follow
+  var DEF = {
+    sub:    { icon: "⭐", label: "Newest Sub" },
+    gift:   { icon: "🎁", label: "Latest Gift" },
+    follow: { icon: "➕", label: "Newest Follower" },
+    raid:   { icon: "⚔️", label: "Latest Raid" },
+    redeem: { icon: "✨", label: "Last Redeem" },
+    clip:   { icon: "🎬", label: "Last Clip" }
+  };
+  var params = new URLSearchParams(location.search);
+  var kinds = (params.get("kinds") || "sub,gift,follow")
+    .split(",").map(function (k) { return k.trim().toLowerCase(); })
+    .filter(function (k) { return DEF[k]; });
+  if (!kinds.length) kinds = ["sub", "gift", "follow"];
+
+  var bar = document.getElementById("bar");
+  var slots = {};   // kind -> { el, val }
+  kinds.forEach(function (kind) {
+    var d = DEF[kind];
+    var slot = document.createElement("div");
+    slot.className = "slot";
+    var ic = document.createElement("span"); ic.className = "ic"; ic.textContent = d.icon;
+    var txt = document.createElement("span"); txt.className = "txt";
+    var lab = document.createElement("span"); lab.className = "lab"; lab.textContent = d.label;
+    var val = document.createElement("span"); val.className = "val empty"; val.textContent = "—";
+    txt.appendChild(lab); txt.appendChild(val);
+    slot.appendChild(ic); slot.appendChild(txt);
+    bar.appendChild(slot);
+    slots[kind] = { el: slot, val: val };
+  });
+
+  function setSlot(kind, item, animate) {
+    var s = slots[kind];
+    if (!s || !item) return;
+    var name = (item.user || "").toString().trim() || "Someone";
+    s.val.classList.remove("empty");
+    if (kind === "gift" && item.amount > 0) {
+      s.val.innerHTML = "";
+      s.val.appendChild(document.createTextNode(name));
+      var amt = document.createElement("span"); amt.className = "amt";
+      amt.textContent = item.amount + " 🪙";
+      s.val.appendChild(amt);
+    } else {
+      s.val.textContent = name;
+    }
+    if (animate) {
+      s.el.classList.remove("bump");
+      void s.el.offsetWidth;   // restart the animation
+      s.el.classList.add("bump");
+    }
+  }
+
+  function onFrame(raw) {
+    var d;
+    try { d = JSON.parse(raw); } catch (e) { return; }
+    if (!d || typeof d.type !== "string") return;
+    if (d.type === "snapshot") {
+      var latest = d.activityLatest || {};
+      // Fallback: derive latest-per-kind from the recent activity list.
+      if ((!latest || !Object.keys(latest).length) && Array.isArray(d.activity)) {
+        latest = {};
+        for (var i = 0; i < d.activity.length; i++) { var it = d.activity[i]; if (it && it.kind) latest[it.kind] = it; }
+      }
+      kinds.forEach(function (k) { if (latest[k]) setSlot(k, latest[k], false); });
+    } else if (d.type === "activity" && d.item && d.item.kind) {
+      setSlot(d.item.kind, d.item, true);
+    }
+  }
+
+  // ---- WebSocket (same server as the other overlays) ----
+  function wsUrl() {
+    if (location.protocol === "http:" || location.protocol === "https:") {
+      return (location.protocol === "https:" ? "wss:" : "ws:") + "//" + location.host + "/ws";
+    }
+    return "ws://localhost:3620/ws";   // opened via file:// during testing
+  }
+  var ws = null, retry = null;
+  function schedule() { if (!retry) retry = setTimeout(function () { retry = null; connect(); }, 1500); }
+  function connect() {
+    try { ws = new WebSocket(wsUrl()); } catch (e) { schedule(); return; }
+    ws.onopen = function () { try { ws.send(JSON.stringify({ type: "hello", client: "ticker" })); } catch (e) {} };
+    ws.onmessage = function (ev) { onFrame(ev.data); };
+    ws.onclose = function () { schedule(); };
+    ws.onerror = function () { try { ws.close(); } catch (e) {} };
+  }
+  connect();
+})();
+</script>
+</body>
+</html>

@@ -380,7 +380,7 @@ namespace GameTracker.Views
             Section("Gift alerts & the activity feed");
             Body("Gifts from your streams (TikTok Roses, etc.) can trigger tiered sound alerts, and a live Activity Feed can show gifts, follows, subs and redeems right on your overlay.");
             Step(1, "Settings → Chat → 🎁 Gift Alerts: add tiers by coin value. When a gift arrives, the highest tier its value reaches plays its sound (and optional confetti/fireworks/shake). Example: a small gift plays a chime, a 1000-coin gift sets off fireworks.");
-            Step(2, "Turn on the Activity Feed in the overlay layout editor (open the overlay with ?edit, tick \"Activity Feed\", drag it where you like). New gifts, follows, subs, raids and redeems slide in live.");
+            Step(2, "Two ways to show it. (a) Activity Feed — a live scrolling list: open the overlay with ?edit, tick \"Activity Feed\", drag it where you like; new gifts/follows/subs/raids/redeems slide in. (b) Activity Ticker — a separate banner (Settings → Overlay → \"Copy activity ticker URL\", /ticker) that stays static and shows the latest of each (Newest Sub, Latest Gift, Newest Follower), swapping the name in place when a new one happens. Add the ticker as its own thin OBS Browser source; pick slots with ?kinds=sub,gift,follow.");
             Step(3, "Gifts, follows and subs are also tallied in Stream Stats and included in the recap.");
             Step(4, "Share the recap to Discord: open Stream Stats → \"📤 Share to Discord\". It posts through the companion bot (into your recap/tavern/clips channel) or a webhook if that's all you've set. Admins can pick the recap channel in Discord with !gh setup recapchannel.");
             Step(5, "Gift/follow/sub detection reads Social Stream Ninja's event data; if a gift ever doesn't trigger, a diagnostic log at %AppData%\\LazerGuanas Game Hunter\\events-debug.log captures the raw event so mappings can be tuned.");
@@ -659,6 +659,13 @@ namespace GameTracker.Views
         {
             var url = OverlayUrl + "effects";
             try { Clipboard.SetText(url); OverlayStatus.Text = "Copied: " + url + " — add as a transparent OBS Browser source."; }
+            catch { /* clipboard can be momentarily locked */ }
+        }
+
+        private void CopyTickerUrl_Click(object sender, RoutedEventArgs e)
+        {
+            var url = OverlayUrl + "ticker";
+            try { Clipboard.SetText(url); OverlayStatus.Text = "Copied: " + url + " — add as its own OBS Browser source (a thin banner)."; }
             catch { /* clipboard can be momentarily locked */ }
         }
 

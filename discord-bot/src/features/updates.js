@@ -55,11 +55,34 @@ export async function handleGhCommand(msg) {
     return true;
   }
 
+  // Fire a sample update announcement into this server's update channel, to test the setup.
+  if (sub === 'test' && (arg === 'update' || arg === 'updates')) {
+    const cfg = getGuild(msg.guild.id);
+    if (!cfg.updateChannelId) {
+      await msg.reply('No update channel set. Run `!gh setup updatechannel` in the channel you want first.').catch(() => {});
+      return true;
+    }
+    const ch = await msg.client.channels.fetch(cfg.updateChannelId).catch(() => null);
+    if (!ch || !ch.isTextBased()) {
+      await msg.reply("I can't reach the configured update channel — set it again with `!gh setup updatechannel`.").catch(() => {});
+      return true;
+    }
+    try {
+      const rel = await fetchLatest();
+      await ch.send({ content: '🧪 *(test announcement)*', embeds: [releaseEmbed(rel)] });
+      await msg.reply(`✅ Sent a test update announcement to <#${cfg.updateChannelId}>.`).catch(() => {});
+    } catch (e) {
+      await msg.reply(`Could not fetch the latest release to announce: ${e.message}`).catch(() => {});
+    }
+    return true;
+  }
+
   await msg.reply(
     '**Game Hunter admin setup**\n' +
     '`!gh setup updatechannel` — announce new Game Hunter releases in this channel\n' +
     '`!gh setup updateoff` — stop update announcements\n' +
-    '`!gh setup recapchannel` — post shared stream recaps in this channel'
+    '`!gh setup recapchannel` — post shared stream recaps in this channel\n' +
+    '`!gh test update` — post a sample release announcement now (to test the channel)'
   ).catch(() => {});
   return true;
 }
@@ -72,17 +95,21 @@ async function fetchLatest() {
   return r.json();
 }
 
-async function announce(client, rel) {
+function releaseEmbed(rel) {
   const tag = rel.tag_name || rel.name || 'new version';
   const notes = String(rel.body || '').trim().slice(0, 1500);
   const url = rel.html_url || `https://github.com/${REPO}/releases`;
-  const embed = new EmbedBuilder()
+  return new EmbedBuilder()
     .setColor(0x7cc44a)
     .setTitle(`🦎 Game Hunter ${tag} is out`)
     .setURL(url)
     .setDescription(notes || 'A new version of Game Hunter is available.')
     .setFooter({ text: 'Game Hunter installs updates automatically on launch.' })
     .setTimestamp();
+}
+
+async function announce(client, rel) {
+  const embed = releaseEmbed(rel);
 
   let posted = 0;
   for (const guild of client.guilds.cache.values()) {

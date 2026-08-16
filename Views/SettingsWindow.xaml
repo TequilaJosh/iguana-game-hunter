@@ -380,6 +380,14 @@
                             <Button Content="&#128203; Copy effects overlay URL" Click="CopyEffectsUrl_Click"
                                     Style="{StaticResource Btn}" HorizontalAlignment="Left"
                                     ToolTip="Copy the /effects URL for a transparent redeem-playback Browser source"/>
+
+                            <TextBlock Text="ACTIVITY TICKER" Style="{StaticResource SecHdr}"/>
+                            <TextBlock Foreground="#7a9070" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,6"
+                                       Text="A separate banner overlay that shows the latest of each event — Newest Sub, Latest Gift, Newest Follower — and swaps the name in place when a new one happens. Add it as its own OBS Browser source (a thin lower-third strip). Customize which slots show with ?kinds=sub,gift,follow on the URL."/>
+                            <Button Content="&#128203; Copy activity ticker URL" Click="CopyTickerUrl_Click"
+                                    Style="{StaticResource Btn}" HorizontalAlignment="Left"
+                                    ToolTip="Copy the /ticker URL for a static 'latest events' banner Browser source"/>
+
                             <TextBlock x:Name="OverlayStatus" Foreground="#7a9070" FontSize="11" Margin="0,10,0,0"
                                        TextWrapping="Wrap"/>
                         </StackPanel>

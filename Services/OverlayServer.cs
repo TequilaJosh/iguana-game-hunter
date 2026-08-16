@@ -72,6 +72,7 @@ namespace GameTracker.Services
         private static object? _goals;    // goal bars (wire form)
         private static object? _poll;     // active poll (wire form; null = none)
         private static readonly List<object> _activity = new(); // live activity feed (gifts/follows/subs…)
+        private static readonly Dictionary<string, object> _latestByKind = new(); // newest item per kind (ticker)
         private const int ActivityMax = 25;
         private static string? _panelHtml; // PanelOverlay.html template (index injected per request)
 
@@ -219,6 +220,10 @@ namespace GameTracker.Services
                 else if (method == "GET" && (route == "/effects" || route == "/effects/"))
                 {
                     await ServeEmbeddedHtml(stream, "EffectsOverlay.html", ct);
+                }
+                else if (method == "GET" && (route == "/ticker" || route == "/ticker/"))
+                {
+                    await ServeEmbeddedHtml(stream, "TickerOverlay.html", ct);
                 }
                 else
                 {
@@ -644,6 +649,7 @@ namespace GameTracker.Services
                 layout = _layout, presets = _presets, style = _style, chatters = _chatters,
                 panels = _panels, morph = MorphSnapshot(), goals = _goals, poll = _poll,
                 activity = _activity.ToArray(),
+                activityLatest = new Dictionary<string, object>(_latestByKind),
             };
             await SendText(client, JsonConvert.SerializeObject(snapshot), ct);
 
@@ -925,6 +931,7 @@ namespace GameTracker.Services
             {
                 _activity.Add(item);
                 while (_activity.Count > ActivityMax) _activity.RemoveAt(0);
+                _latestByKind[item.kind] = item;   // for the ticker's "latest of each" slots
             }
             Broadcast(new { type = "activity", item });
         }

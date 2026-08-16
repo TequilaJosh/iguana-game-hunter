@@ -36,6 +36,8 @@
     <EmbeddedResource Include="overlay\PanelOverlay.html" />
     <!-- Transparent effects overlay (video/image redeems), served at /effects. -->
     <EmbeddedResource Include="overlay\EffectsOverlay.html" />
+    <!-- Activity ticker banner (latest sub/gift/follow), served at /ticker. -->
+    <EmbeddedResource Include="overlay\TickerOverlay.html" />
     <!-- How-to guide screenshots (regenerate with the capture-docs startup flag). -->
     <Resource Include="Docs\Screens\*.png" />
     <!-- Bundled bonus font, served at /font/saturn.ttf as "MR. Saturn". -->

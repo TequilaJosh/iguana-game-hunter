@@ -400,9 +400,11 @@ function cmdInv(msg) {
   const inv = char.inventory || [];
   const gear = inv.filter((i) => GEAR_SLOTS.includes(i.slot));
   const other = inv.filter((i) => !GEAR_SLOTS.includes(i.slot));
+  const junkValue = other.filter((i) => i.slot === 'material').reduce((s, m) => s + (m.value || 1) * (m.qty || 1), 0);
   let out = `🎒 **${char.name}'s bag** — ${char.gold || 0} 🪙\n`;
-  if (gear.length) out += '\n**Gear** (equip with `!equip <#>`)\n' + gear.map((i, n) => `\`${n + 1}\` ${RARITY_EMOJI[i.rarity] || '•'} ${i.name} — ${i.slot}`).join('\n');
-  if (other.length) out += '\n\n**Items**\n' + other.map((i) => `• ${i.name}${i.qty > 1 ? ` x${i.qty}` : ''}`).join('\n');
+  if (gear.length) out += '\n**Gear** (equip with `!equip <#>`, sell with `!sell <#>`)\n' + gear.map((i, n) => `\`${n + 1}\` ${RARITY_EMOJI[i.rarity] || '•'} ${i.name} — ${i.slot}`).join('\n');
+  if (other.length) out += '\n\n**Items**\n' + other.map((i) => `• ${i.name}${i.qty > 1 ? ` x${i.qty}` : ''}${i.slot === 'material' ? ` (${(i.value || 1) * (i.qty || 1)} 🪙)` : ''}`).join('\n');
+  if (junkValue > 0) out += `\n\n_Sell all materials with \`!sell junk\` (+${junkValue} 🪙)_`;
   if (!gear.length && !other.length) out += '\n_Empty. Go adventuring!_';
   return msg.reply(out);
 }
@@ -451,15 +453,46 @@ function cmdBuy(msg, args) {
 function cmdSell(msg, args) {
   const char = getPlayer(msg.author.id);
   if (!char) return msg.reply('No hero yet — `!create` first.');
-  const gear = (char.inventory || []).filter((i) => GEAR_SLOTS.includes(i.slot));
+  const inv = char.inventory || [];
+  const arg = args.join(' ').toLowerCase().trim();
+
+  // Sell all materials/junk at once.
+  if (['junk', 'all', 'mats', 'materials', 'trash'].includes(arg)) {
+    const junk = inv.filter((i) => i.slot === 'material');
+    if (!junk.length) return msg.reply('No materials to sell.');
+    const total = junk.reduce((s, m) => s + (m.value || 1) * (m.qty || 1), 0);
+    const count = junk.reduce((s, m) => s + (m.qty || 1), 0);
+    char.inventory = inv.filter((i) => i.slot !== 'material');
+    char.gold = (char.gold || 0) + total;
+    savePlayer(msg.author.id, char);
+    return msg.reply(`💰 Sold ${count} material(s) for **${total}** 🪙. (${char.gold} total)`);
+  }
+
+  // Sell a gear item by its !inv number.
+  const gear = inv.filter((i) => GEAR_SLOTS.includes(i.slot));
   const idx = parseInt(args[0], 10) - 1;
-  const item = gear[idx];
-  if (!item) return msg.reply('Sell which? `!sell <#>` — numbers from `!inv`.');
-  const price = sellValue(item);
-  char.gold = (char.gold || 0) + price;
-  char.inventory = char.inventory.filter((i) => i !== item);
-  savePlayer(msg.author.id, char);
-  return msg.reply(`💰 Sold **${item.name}** for ${price} 🪙. (${char.gold} total)`);
+  if (Number.isInteger(idx) && idx >= 0 && gear[idx]) {
+    const item = gear[idx];
+    const price = sellValue(item);
+    char.gold = (char.gold || 0) + price;
+    char.inventory = inv.filter((i) => i !== item);
+    savePlayer(msg.author.id, char);
+    return msg.reply(`💰 Sold **${item.name}** for ${price} 🪙. (${char.gold} total)`);
+  }
+
+  // Sell by name (materials, spare potions, or gear) — whole stack.
+  if (arg) {
+    const item = inv.find((i) => i.name.toLowerCase() === arg) || inv.find((i) => i.name.toLowerCase().includes(arg));
+    if (item) {
+      const price = item.slot === 'material' ? (item.value || 1) * (item.qty || 1) : sellValue(item) * (item.qty || 1);
+      char.gold = (char.gold || 0) + price;
+      char.inventory = inv.filter((i) => i !== item);
+      savePlayer(msg.author.id, char);
+      return msg.reply(`💰 Sold **${item.name}**${item.qty > 1 ? ` x${item.qty}` : ''} for ${price} 🪙. (${char.gold} total)`);
+    }
+  }
+
+  return msg.reply('Sell what? `!sell <#>` (gear from `!inv`) · `!sell junk` (all materials) · `!sell <name>`.');
 }
 
 function cmdEquip(msg, args) {

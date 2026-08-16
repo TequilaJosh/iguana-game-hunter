@@ -1,38 +1,37 @@
 import { EmbedBuilder } from 'discord.js';
-import { config } from '../config.js';
+import { getGuild } from '../guildStore.js';
 import { log } from '../logger.js';
 
-// Small in-memory ring of recent clips, powering the /latest command.
-const recent = [];
+// Recent clips per server, powering /latest.
+const recentByGuild = new Map();
 
-export function getRecentClips(n = 5) {
-  return recent.slice(-n).reverse();
+export function getRecentClips(guildId, n = 5) {
+  const arr = recentByGuild.get(guildId) || [];
+  return arr.slice(-n).reverse();
 }
 
 /**
- * Post a clip (or a note-only highlight) to the configured clips channel.
- * payload: { user, url?, note?, game?, type? }  (type: "clip" | "highlight")
+ * Post a clip (or note-only highlight) to a specific server's clips channel.
+ * payload: { user, url?, note?, game?, type? }
  */
-export async function postClip(client, payload) {
+export async function postClip(client, guildId, payload) {
   const { user, url, note, game, type } = payload || {};
-
-  if (!config.clipChannelId) {
-    log.warn('CLIP_CHANNEL_ID is not set — dropping clip.');
+  const cfg = getGuild(guildId);
+  if (!cfg.clipChannelId) {
+    log.warn(`Guild ${guildId} has no clips channel set (/setup clips).`);
     return false;
   }
-  const channel = await client.channels.fetch(config.clipChannelId).catch(() => null);
+  const channel = await client.channels.fetch(cfg.clipChannelId).catch(() => null);
   if (!channel || typeof channel.isTextBased !== 'function' || !channel.isTextBased()) {
-    log.warn('Clip channel not found or not a text channel.');
+    log.warn(`Guild ${guildId}: clips channel missing or not a text channel.`);
     return false;
   }
 
   let message;
   if (url) {
-    // Posting the raw URL lets Discord render its native clip preview.
     const who = user || 'Someone';
     const bits = [game ? `in ${game}` : '', note ? `— ${note}` : ''].filter(Boolean).join(' ');
-    const head = `🎬 **${who}** shared a clip${bits ? ' ' + bits : ''}`;
-    message = { content: `${head}\n${url}` };
+    message = { content: `🎬 **${who}** shared a clip${bits ? ' ' + bits : ''}\n${url}` };
   } else {
     const embed = new EmbedBuilder()
       .setColor(0x7cc44a)
@@ -48,8 +47,11 @@ export async function postClip(client, payload) {
 
   await channel.send(message);
 
-  recent.push({ user, url, note, game, type, at: new Date().toISOString() });
-  if (recent.length > 50) recent.shift();
-  log.info(`Posted ${url ? 'clip' : 'highlight'} from ${user || 'unknown'}`);
+  const arr = recentByGuild.get(guildId) || [];
+  arr.push({ user, url, note, game, type, at: new Date().toISOString() });
+  if (arr.length > 50) arr.shift();
+  recentByGuild.set(guildId, arr);
+
+  log.info(`Guild ${guildId}: posted ${url ? 'clip' : 'highlight'} from ${user || 'unknown'}`);
   return true;
 }

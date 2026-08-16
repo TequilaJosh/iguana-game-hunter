@@ -19,3 +19,4 @@ iguana-eye-preview.png
 discord-bot/node_modules/
 discord-bot/.env
 discord-bot/*.log
+discord-bot/data/

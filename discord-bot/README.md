@@ -1,88 +1,82 @@
 # LazerGuanas Bot
 
-Companion Discord bot for **LazerGuanas Game Hunter**. It reposts clips that Game
-Hunter sends it, and provides a foundation for community features (welcome
-messages, auto-role, moderation slash commands).
+A **multi-server** companion Discord bot for **LazerGuanas Game Hunter**. Any server can
+add it and configure itself with `/setup` — clips, welcome messages, auto-role, and its own
+Game Hunter clip-ingest token.
 
-- **Clip reposting** — Game Hunter POSTs clip events to the bot's `/clip` endpoint; the bot posts them in your clips channel.
-- **Welcome + auto-role** — greets new members, optionally assigns a starter role.
-- **Slash commands** — `/ping`, `/latest`, `/purge`, `/slowmode` (permission-gated). Add more in `src/commands.js`.
+- **Clip reposting** — each server gets its own ingest token; Game Hunter posts clips to `/clip` and they land in that server's clips channel.
+- **Welcome + auto-role** — per server, set with `/setup`.
+- **Slash commands** — `/setup`, `/ping`, `/latest`, `/purge`, `/slowmode`.
+
+You (the bot owner) run **one** instance. Server admins configure their own server in Discord —
+you don't touch their settings.
 
 ---
 
-## 1. Create the bot (once)
+## 1. Create the bot (once, by you)
 
-1. Go to the **[Discord Developer Portal](https://discord.com/developers/applications)** → **New Application**.
-2. **Bot** tab → **Reset Token** → copy it (this is your `DISCORD_TOKEN` — keep it secret).
-3. Still on the **Bot** tab, enable **Server Members Intent** (needed for welcome/auto-role).
-4. **General Information** → copy the **Application ID** (this is your `CLIENT_ID`).
-5. Invite the bot: **OAuth2 → URL Generator** → scopes **`bot`** + **`applications.commands`**, then bot permissions: *Send Messages, Embed Links, Manage Messages, Manage Channels, Manage Roles*. Open the generated URL and add it to your server.
+1. **[Discord Developer Portal](https://discord.com/developers/applications)** → **New Application**.
+2. **Bot** tab → **Reset Token** → copy (`DISCORD_TOKEN`, keep secret). Enable **Server Members Intent** (for welcome/auto-role).
+3. **General Information** → copy **Application ID** (`CLIENT_ID`).
+4. **Bot** tab → make sure **Public Bot** is **ON** so other servers can add it.
 
-Get IDs by enabling **Developer Mode** in Discord (Settings → Advanced), then right-click a
-server/channel/role → **Copy ID**.
-
-## 2. Configure
-
-```bash
-cp .env.example .env
+Invite link (share this with server owners; replace `CLIENT_ID`):
+```
+https://discord.com/oauth2/authorize?client_id=CLIENT_ID&permissions=268463120&scope=bot%20applications.commands
 ```
 
-Fill in `.env`: `DISCORD_TOKEN`, `CLIENT_ID`, `GUILD_ID`, `CLIP_CHANNEL_ID`,
-`WELCOME_CHANNEL_ID` (optional), `AUTOROLE_ID` (optional), and an `INGEST_TOKEN`
-(generate one: `node -e "console.log(require('crypto').randomBytes(24).toString('hex'))"`).
-
-## 3. Run
+## 2. Configure & run (you, once)
 
 ```bash
+cp .env.example .env      # fill in DISCORD_TOKEN, CLIENT_ID, and PUBLIC_URL (your host URL)
 npm install
-npm run register   # push slash commands to your server (run again after adding commands)
+npm run register          # global slash commands (first time can take ~1h to appear everywhere)
 npm start
 ```
 
-You should see `Logged in as …` and `Ingest server listening on :8080`.
+## 3. Deploy 24/7 (you)
 
-## 4. Connect Game Hunter
+Standard Node service with a `Dockerfile`.
 
-In Game Hunter → **Settings → Chat → ⚙ Features → Discord**:
+```bash
+docker build -t lazerguanas-bot .
+docker run -d --env-file .env -p 8080:8080 -v lg-bot-data:/app/data --name lazerguanas-bot lazerguanas-bot
+```
 
-- **Bot ingest URL**: `https://<your-host>/clip` (or `http://localhost:8080/clip` while testing locally).
-- **Ingest token**: the same `INGEST_TOKEN` from your `.env`.
+On **Railway / Render / Fly.io / a VPS**: set the env vars in the host dashboard, expose the web
+port, set `PUBLIC_URL` to the host's public URL, and — **important** — attach a **persistent
+volume** mounted at `DATA_DIR` (e.g. `/app/data`). That file holds every server's settings and
+ingest tokens; without a persistent volume they reset on each redeploy.
 
-When it's set, Game Hunter sends `!clip` and Twitch clip links to the bot instead of a
-webhook. (Leave it blank to keep using a plain webhook.)
+---
+
+## 4. How each server sets itself up (server admins)
+
+After an admin adds the bot with the invite link, in their server:
+
+1. `/setup clips #clips` — where clips get posted.
+2. `/setup welcome #general` — optional welcome messages.
+3. `/setup autorole @Member` — optional role for new members.
+4. `/setup ingest` — shows that server's **Bot ingest URL** + **Ingest token** (only the admin sees it).
+5. Paste those two into **Game Hunter → Settings → Chat → ⚙ Features → Discord**.
+
+`/setup view` shows the current settings anytime. Each server is independent — its token only
+posts to its own clips channel.
 
 ### Ingest API
 
-`POST /clip` — header `Authorization: Bearer <INGEST_TOKEN>`, JSON body:
+`POST /clip` — header `Authorization: Bearer <that server's token>`, JSON body:
 
 ```json
 { "user": "TequilaJosh", "url": "https://clips.twitch.tv/…", "note": "insane play", "type": "clip" }
 ```
 
-`type` is `"clip"` (has a `url`) or `"highlight"` (note-only). `GET /health` returns `{ ok: true }`.
+The token identifies the server, so the clip routes to the right place. `GET /health` returns `{ ok: true }`.
 
-## 5. Deploy 24/7
+---
 
-The bot is a standard Node service and ships with a `Dockerfile`.
+## Extending (roadmap)
 
-```bash
-docker build -t lazerguanas-bot .
-docker run -d --env-file .env -p 8080:8080 --name lazerguanas-bot lazerguanas-bot
-```
-
-On **Railway / Fly.io / Render / a VPS**: set the env vars from `.env` in the host's
-dashboard (don't commit `.env`), expose the web port, and make sure the host's public URL
-is what you put in Game Hunter's **Bot ingest URL** (with the `/clip` path). Most hosts set
-`PORT` for you — the bot honors it.
-
-## Extending (community-bot roadmap)
-
-Each feature is a small module under `src/features/` plus (optionally) a slash command in
-`src/commands.js`:
-
-- **Roles**: reaction/button role menus.
-- **Moderation**: `/kick`, `/ban`, `/timeout`, word filter, join logs to `LOG_CHANNEL_ID`.
-- **Engagement**: `/poll`, giveaways, stream go-live announcements.
-
-Add the module, wire its event in `src/index.js` (or command in `src/commands.js`), run
-`npm run register` if you added a command, and redeploy.
+Features live in `src/features/` (+ a command in `src/commands.js`). Per-server settings go
+through `src/guildStore.js`. Ideas: reaction/button roles, `/kick` `/ban` `/timeout`, join logs,
+go-live announcements, giveaways.

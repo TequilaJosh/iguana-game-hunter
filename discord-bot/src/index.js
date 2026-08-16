@@ -1,4 +1,4 @@
-import { Events } from 'discord.js';
+import { Events, PermissionFlagsBits } from 'discord.js';
 import { config, assertCoreConfig } from './config.js';
 import { createClient } from './client.js';
 import { commandMap } from './commands.js';
@@ -11,11 +11,25 @@ assertCoreConfig();
 const client = createClient();
 
 client.once(Events.ClientReady, (c) => {
-  log.info(`Logged in as ${c.user.tag}`);
-  startIngestServer(client); // start the Game Hunter → bot clip endpoint once connected
+  log.info(`Logged in as ${c.user.tag} — serving ${c.guilds.cache.size} server(s)`);
+  startIngestServer(client);
 });
 
-// Community: welcome new members (+ optional auto-role).
+// A new server added the bot: point their admins at /setup.
+client.on(Events.GuildCreate, (guild) => {
+  log.info(`Added to server "${guild.name}" (${guild.id})`);
+  const ch = guild.systemChannel;
+  const canSend = ch && guild.members.me && ch.permissionsFor(guild.members.me)?.has(PermissionFlagsBits.SendMessages);
+  if (canSend) {
+    ch.send(
+      '🦎 Thanks for adding me! An admin can run **/setup view** to configure things — ' +
+        'pick a clips channel (`/setup clips`), a welcome channel (`/setup welcome`), and get the ' +
+        'Game Hunter ingest token (`/setup ingest`).'
+    ).catch(() => {});
+  }
+});
+
+// Community: welcome new members (+ optional auto-role), per server.
 client.on(Events.GuildMemberAdd, (member) => onMemberJoin(member));
 
 // Slash commands.

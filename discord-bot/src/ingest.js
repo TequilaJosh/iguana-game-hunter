@@ -2,6 +2,7 @@ import express from 'express';
 import { config } from './config.js';
 import { findGuildByToken, getGuild } from './guildStore.js';
 import { postClip } from './features/clips.js';
+import { postRecap } from './features/recap.js';
 import { handleGameMessage } from './game/bridge.js';
 import { forceRaid } from './game/raids.js';
 import { log } from './logger.js';
@@ -49,6 +50,23 @@ export function startIngestServer(client) {
 
     const ok = await postClip(client, guildId, { user, url, note, game, type }).catch((e) => {
       log.error('postClip failed:', e);
+      return false;
+    });
+    res.status(ok ? 200 : 500).json({ ok });
+  });
+
+  // Stream recap sharing: Game Hunter posts its end-of-stream summary here.
+  app.post('/recap', async (req, res) => {
+    const header = req.get('authorization') || '';
+    const token = header.replace(/^Bearer\s+/i, '') || req.get('x-ingest-token') || '';
+    const guildId = findGuildByToken(token);
+    if (!guildId) return res.status(401).json({ ok: false, error: 'unknown ingest token' });
+
+    const { recap } = req.body || {};
+    if (!recap || !String(recap).trim()) return res.status(400).json({ ok: false, error: 'need "recap"' });
+
+    const ok = await postRecap(client, guildId, String(recap)).catch((e) => {
+      log.error('postRecap failed:', e);
       return false;
     });
     res.status(ok ? 200 : 500).json({ ok });

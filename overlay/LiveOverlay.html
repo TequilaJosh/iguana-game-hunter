@@ -142,6 +142,18 @@
   }
   .box[hidden] { display: none; }
 
+  /* ---- Activity feed ---- */
+  .feed { display: flex; flex-direction: column; gap: 5px; overflow: hidden; flex: 1; }
+  .feed-row {
+    display: flex; align-items: center; gap: 8px;
+    background: rgba(0, 0, 0, 0.28); border-radius: 8px;
+    padding: 5px 9px; line-height: 1.25;
+    transition: transform 0.32s ease, opacity 0.32s ease;
+  }
+  .feed-row.enter { transform: translateX(-14px); opacity: 0; }
+  .feed-ic { font-size: 1.05em; flex: 0 0 auto; }
+  .feed-tx { font-size: 0.62em; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
   /* ---- Edit mode ---- */
   body.editing .box { cursor: move; outline: 1px dashed rgba(124, 196, 74, 0.55); }
   body.editing .box.sel { outline: 2px solid #7cc44a; }
@@ -429,6 +441,12 @@
       <div id="pollQ" class="poll-q"></div>
       <div id="pollRows"></div>
       <div class="rz" data-el="poll"></div>
+    </section>
+
+    <section id="feed" class="box" hidden>
+      <div class="hd">📣 ACTIVITY</div>
+      <div id="feedRows" class="feed"></div>
+      <div class="rz" data-el="feed"></div>
     </section>
 
     <div id="status" class="status"></div>
@@ -746,6 +764,7 @@
         if (data.morph) showMorph(data.morph.name, data.morph.seconds);
         if (Array.isArray(data.goals)) renderGoals(data.goals);
         if (data.poll !== undefined) renderPoll(data.poll);
+        if (Array.isArray(data.activity)) renderActivity(data.activity);
         if (data.state) renderState(data.state);
         if (Array.isArray(data.chat)) {
           for (let i = 0; i < data.chat.length; i++) appendMessage(data.chat[i]);
@@ -769,6 +788,9 @@
         break;
       case "poll":
         renderPoll(data.poll);
+        break;
+      case "activity":
+        pushActivity(data.item);
         break;
       case "toast":
         showToast(data.text, !!data.confetti);
@@ -1108,6 +1130,51 @@
     } catch (e) { logErr("renderPoll failed: " + (e && e.message)); }
   }
 
+  // ---- Activity feed (gifts / follows / subs / redeems) ----
+  let lastActivity = [];
+  const FEED_ICONS = { gift: "🎁", follow: "➕", sub: "⭐", share: "🔗", raid: "⚔️",
+                       redeem: "✨", clip: "🎬", info: "📣" };
+  const FEED_COLORS = { gift: "#f0c86a", follow: "#8fd46a", sub: "#c4a8e8", share: "#6ac4d4",
+                        raid: "#d46a6a", redeem: "#7cc44a", clip: "#d4a437", info: "#a8c488" };
+
+  function feedRowEl(item, animate) {
+    const row = document.createElement("div");
+    row.className = "feed-row" + (animate ? " enter" : "");
+    const ic = document.createElement("span");
+    ic.className = "feed-ic";
+    ic.textContent = FEED_ICONS[item.kind] || FEED_ICONS.info;
+    const tx = document.createElement("span");
+    tx.className = "feed-tx";
+    tx.textContent = item.text || ((item.user || "Someone") + " " + (item.kind || ""));
+    tx.style.color = item.color || FEED_COLORS[item.kind] || "";
+    row.appendChild(ic); row.appendChild(tx);
+    return row;
+  }
+
+  function renderActivity(list) {
+    lastActivity = Array.isArray(list) ? list.slice(-25) : [];
+    const rows = document.getElementById("feedRows");
+    if (!rows) return;
+    while (rows.firstChild) rows.removeChild(rows.firstChild);
+    // Newest on top.
+    for (let i = lastActivity.length - 1; i >= 0; i--) rows.appendChild(feedRowEl(lastActivity[i], false));
+    applyElementVisibility();
+  }
+
+  function pushActivity(item) {
+    if (!item) return;
+    lastActivity.push(item);
+    while (lastActivity.length > 25) lastActivity.shift();
+    const feed = document.getElementById("feed");
+    const rows = document.getElementById("feedRows");
+    if (!rows) return;
+    if (feed && isOn("feed")) feed.hidden = false;
+    const row = feedRowEl(item, true);
+    rows.insertBefore(row, rows.firstChild);
+    while (rows.children.length > 25) rows.removeChild(rows.lastChild);
+    requestAnimationFrame(function () { row.classList.remove("enter"); });
+  }
+
   function barRow(label, value, pct, color) {
     const row = document.createElement("div");
     row.className = "bar-row";
@@ -1387,16 +1454,17 @@
   // =========================================================================
   //  Layout (per-element position / size / font) + in-browser editor (?edit)
   // =========================================================================
-  const ELEMENTS = ["np", "ch", "chat", "cl", "gl", "poll"];
+  const ELEMENTS = ["np", "ch", "chat", "cl", "gl", "poll", "feed"];
   const ELEMENT_NAMES = { np: "Now Playing", ch: "Challenges", chat: "Live Chat", cl: "Chatters",
-                          gl: "Goals", poll: "Poll" };
+                          gl: "Goals", poll: "Poll", feed: "Activity Feed" };
   const DEFAULT_LAYOUT = {
     np:   { x: 246, y: 48,  w: 618, h: 72,  font: "", size: 22, color: "#e8e0c4", bgo: 100 },
     ch:   { x: 246, y: 128, w: 294, h: 372, font: "", size: 18, color: "#e8e0c4", bgo: 100 },
     chat: { x: 548, y: 128, w: 316, h: 372, font: "", size: 24, color: "#ffffff", bgo: 100 },
     cl:   { x: 872, y: 128, w: 200, h: 372, font: "", size: 20, color: "#e8e0c4", bgo: 100 },
     gl:   { x: 246, y: 512, w: 294, h: 160, font: "", size: 18, color: "#e8e0c4", bgo: 100 },
-    poll: { x: 548, y: 512, w: 316, h: 160, font: "", size: 18, color: "#e8e0c4", bgo: 100 }
+    poll: { x: 548, y: 512, w: 316, h: 160, font: "", size: 18, color: "#e8e0c4", bgo: 100 },
+    feed: { x: 872, y: 512, w: 200, h: 160, font: "", size: 16, color: "#e8e0c4", bgo: 100, on: false }
   };
   const FONTS = ["", "MR. Saturn", "Segoe UI", "Arial", "Verdana", "Tahoma", "Trebuchet MS",
                  "Georgia", "Times New Roman", "Courier New", "Consolas",
@@ -1458,6 +1526,8 @@
     if (gl) gl.hidden = !(isOn("gl") && lastGoals.length);
     const pollEl = document.getElementById("poll");
     if (pollEl) pollEl.hidden = !(isOn("poll") && lastPoll);
+    const feedEl = document.getElementById("feed");
+    if (feedEl) feedEl.hidden = !(isOn("feed") && lastActivity.length);
     lastStateSig = "";   // let the next state frame re-fill content
   }
 

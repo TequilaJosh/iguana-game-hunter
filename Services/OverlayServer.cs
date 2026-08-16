@@ -71,6 +71,8 @@ namespace GameTracker.Services
         private static object? _panels;   // custom text-panel overlays (wire form)
         private static object? _goals;    // goal bars (wire form)
         private static object? _poll;     // active poll (wire form; null = none)
+        private static readonly List<object> _activity = new(); // live activity feed (gifts/follows/subs…)
+        private const int ActivityMax = 25;
         private static string? _panelHtml; // PanelOverlay.html template (index injected per request)
 
         // The overlay HTML (loaded once, from the embedded resource or disk).
@@ -641,6 +643,7 @@ namespace GameTracker.Services
                 type = "snapshot", state = _state, chat = _chat,
                 layout = _layout, presets = _presets, style = _style, chatters = _chatters,
                 panels = _panels, morph = MorphSnapshot(), goals = _goals, poll = _poll,
+                activity = _activity.ToArray(),
             };
             await SendText(client, JsonConvert.SerializeObject(snapshot), ct);
 
@@ -897,6 +900,33 @@ namespace GameTracker.Services
         {
             if (!_running) return;
             Broadcast(new { type = "toast", text = text ?? string.Empty, confetti });
+        }
+
+        /// <summary>
+        /// Push one item onto the live activity feed (new follower, sub, gift, alert…).
+        /// <paramref name="kind"/> drives the icon/colour; the item is remembered so it
+        /// survives overlay reconnects.
+        /// </summary>
+        public static void PushActivity(string kind, string user, string text,
+            string platform = "", int amount = 0, string color = "")
+        {
+            if (!_running) return;
+            var item = new
+            {
+                kind = kind ?? "info",
+                user = user ?? string.Empty,
+                text = text ?? string.Empty,
+                platform = platform ?? string.Empty,
+                amount,
+                color = color ?? string.Empty,
+                at = DateTimeOffset.Now.ToUnixTimeMilliseconds(),
+            };
+            lock (Gate)
+            {
+                _activity.Add(item);
+                while (_activity.Count > ActivityMax) _activity.RemoveAt(0);
+            }
+            Broadcast(new { type = "activity", item });
         }
 
         /// <summary>Fire a visual effect on the overlay (confetti / fireworks / shake / custom image).

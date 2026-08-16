@@ -157,6 +157,10 @@ namespace GameTracker.Views
         {
             Dispatcher.Invoke(() =>
             {
+                // Stream events (gifts, follows, subs…) are handled separately — no chat row,
+                // TTS, points or command parsing; they drive alerts, the feed and the recap.
+                if (m.IsEvent) { HandleEvent(m); return; }
+
                 bool atBottom = MsgScroll.VerticalOffset >= MsgScroll.ScrollableHeight - 4;
 
                 _rows.Add(ToRow(m));
@@ -220,6 +224,7 @@ namespace GameTracker.Views
                     PostClip(m.User ?? string.Empty, null, string.IsNullOrEmpty(note) ? null : note, "highlight");
                 StreamStatsService.CountClip();
                 OverlayServer.Toast($"🎬 {m.User} clipped it!", confetti: false);
+                OverlayServer.PushActivity("clip", m.User, $"{m.User} clipped it 🎬", m.Platform);
                 return;
             }
 
@@ -277,6 +282,7 @@ namespace GameTracker.Views
                     if (!string.IsNullOrWhiteSpace(r.VideoPath)) StreamStatsService.CountVideo();
                     if (!string.IsNullOrWhiteSpace(r.MorphPreset)) StreamStatsService.CountMorph();
                     OverlayServer.Toast($"{m.User} redeemed {r.Command.TrimStart('!')}!", confetti: false);
+                    OverlayServer.PushActivity("redeem", m.User, $"{m.User} redeemed {r.Command.TrimStart('!')}", m.Platform);
                     SendChatReply($"@{m.User} redeemed {r.Command.TrimStart('!')}!", m.Platform);
                 }
                 else
@@ -286,6 +292,69 @@ namespace GameTracker.Views
                     SendChatReply($"@{m.User} you need {missing} more {_features.PointsName} for {r.Command}", m.Platform);
                 }
             }
+        }
+
+        // ─── Stream events: gifts (tiered alerts), follows, subs → feed + toast + recap ───
+        private void HandleEvent(ChatMessage m)
+        {
+            var user = string.IsNullOrWhiteSpace(m.User) ? "Someone" : m.User;
+            switch (m.EventKind)
+            {
+                case ChatEventKind.Gift:
+                    StreamStatsService.CountGift(m.User, m.CoinValue);
+                    HandleGiftAlert(m, user);
+                    break;
+                case ChatEventKind.Follow:
+                    StreamStatsService.CountFollow();
+                    AnnounceEvent("follow", user, m.Platform, $"{user} followed 💚", 0, toast: false);
+                    break;
+                case ChatEventKind.Subscribe:
+                    StreamStatsService.CountSubscribe();
+                    AnnounceEvent("sub", user, m.Platform, $"{user} subscribed ⭐", 0, toast: true);
+                    break;
+                case ChatEventKind.Share:
+                    AnnounceEvent("share", user, m.Platform, $"{user} shared the stream 🔗", 0, toast: true);
+                    break;
+                case ChatEventKind.Raid:
+                    AnnounceEvent("raid", user, m.Platform, $"{user} raided ⚔️", 0, toast: true);
+                    break;
+                // Likes and unclassified events are too frequent/ambiguous to surface.
+            }
+        }
+
+        private void HandleGiftAlert(ChatMessage m, string user)
+        {
+            var tier = PickCoinTier(m.CoinValue);
+            if (_features.GiftAlertsEnabled && tier != null)
+            {
+                if (!_sound.Muted && !string.IsNullOrWhiteSpace(tier.SoundPath))
+                    _sound.Play(tier.SoundPath, tier.Volume);
+                if (!string.IsNullOrWhiteSpace(tier.Effect))
+                    OverlayServer.TriggerEffect(tier.Effect);
+            }
+            var label = string.IsNullOrWhiteSpace(m.GiftName) ? "a gift" : m.GiftName;
+            var combo = m.Repeat > 1 ? $"{m.Repeat}× " : "";
+            var coins = m.CoinValue > 0 ? $" ({m.CoinValue} 🪙)" : "";
+            AnnounceEvent("gift", user, m.Platform, $"{user} sent {combo}{label}{coins}", m.CoinValue,
+                toast: true, confetti: m.CoinValue >= 100);
+        }
+
+        // The highest-threshold tier a gift qualifies for (null if none configured/qualify).
+        private Models.CoinAlertTier? PickCoinTier(int coins)
+        {
+            var effective = Math.Max(coins, 1);
+            return _features.CoinTiers
+                .Where(t => t.MinCoins <= effective)
+                .OrderByDescending(t => t.MinCoins)
+                .FirstOrDefault();
+        }
+
+        private void AnnounceEvent(string kind, string user, string platform, string text, int amount,
+            bool toast, bool confetti = false)
+        {
+            if (!_features.EventFeedEnabled) return;
+            OverlayServer.PushActivity(kind, user, text, platform, amount);
+            if (toast) OverlayServer.Toast(text, confetti);
         }
 
         // First-chatter and daily-streak bonuses (need points enabled to mean anything).

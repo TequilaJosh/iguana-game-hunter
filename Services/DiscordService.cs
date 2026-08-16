@@ -71,6 +71,33 @@ namespace GameTracker.Services
             catch { return null; }
         }
 
+        /// <summary>
+        /// Post a stream recap to the companion bot's /recap endpoint. The bot renders it as an
+        /// embed in the server's tavern/clips channel. Returns false on any failure.
+        /// </summary>
+        public static async Task<bool> PostRecapToBotAsync(string? ingestUrl, string? token, string recap)
+        {
+            ingestUrl = (ingestUrl ?? string.Empty).Trim();
+            token = (token ?? string.Empty).Trim();
+            recap = (recap ?? string.Empty).Trim();
+            if (ingestUrl.Length == 0 || token.Length == 0 || recap.Length == 0) return false;
+            if (!ingestUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase)) return false;
+
+            try
+            {
+                var recapUrl = new Uri(new Uri(ingestUrl), "/recap");
+                var json = Newtonsoft.Json.JsonConvert.SerializeObject(new { recap });
+                using var req = new HttpRequestMessage(HttpMethod.Post, recapUrl)
+                {
+                    Content = new StringContent(json, Encoding.UTF8, "application/json"),
+                };
+                req.Headers.TryAddWithoutValidation("Authorization", "Bearer " + token);
+                var resp = await _http.SendAsync(req);
+                return resp.IsSuccessStatusCode;
+            }
+            catch { return false; }
+        }
+
         public enum BotTest { NotConfigured, Unreachable, BadToken, NoClipChannel, Ok }
 
         /// <summary>

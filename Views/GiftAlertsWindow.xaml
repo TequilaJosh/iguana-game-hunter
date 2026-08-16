@@ -1,0 +1,185 @@
+<Window x:Class="GameTracker.Views.GiftAlertsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        Title="Gift Alerts"
+        Width="780" Height="500"
+        MinWidth="680" MinHeight="380"
+        WindowStartupLocation="CenterOwner"
+        WindowStyle="None" ResizeMode="CanResize"
+        Icon="/iguana-eye.ico"
+        Background="{DynamicResource ScaleBrush}">
+
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="32" ResizeBorderThickness="6"
+                            GlassFrameThickness="0" CornerRadius="0"
+                            UseAeroCaptionButtons="False"/>
+    </shell:WindowChrome.WindowChrome>
+
+    <Window.Resources>
+        <Style x:Key="SmallBtn" TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource ThemeSurface2}"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeAccent}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="10,5"/>
+            <Setter Property="Margin" Value="0,0,6,0"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="FontWeight" Value="Bold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="3"
+                                Padding="{TemplateBinding Padding}" BorderBrush="{DynamicResource ThemeAccentDeep}" BorderThickness="1">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource ThemeAccentDeep}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource ThemeBg}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+        <Style x:Key="ActionBtn" TargetType="Button" BasedOn="{StaticResource SmallBtn}">
+            <Setter Property="Background" Value="{DynamicResource ThemeAccentDeep}"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeBg}"/>
+            <Setter Property="Padding" Value="18,5"/>
+            <Setter Property="Margin" Value="0"/>
+        </Style>
+        <Style x:Key="InputBox" TargetType="TextBox">
+            <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/>
+            <Setter Property="Foreground" Value="#e8e0c4"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorder}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CaretBrush" Value="#7cc44a"/>
+            <Setter Property="Padding" Value="6,4"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="Chk" TargetType="CheckBox">
+            <Setter Property="Foreground" Value="#c4d4a8"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+    </Window.Resources>
+
+    <Border BorderBrush="{DynamicResource ThemeAccentDeep}" BorderThickness="1">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="32"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Title bar -->
+            <Border Grid.Row="0" Background="{DynamicResource ThemeBg}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,0,0,1">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="12,0,0,0">
+                        <Image Source="/iguana-eye.ico" Width="16" Height="16" Margin="0,0,8,0"
+                               VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality"/>
+                        <TextBlock Text="GIFT ALERTS" Foreground="{DynamicResource ThemeAccent}" FontSize="11"
+                                   FontWeight="Bold" VerticalAlignment="Center"/>
+                    </StackPanel>
+                    <Button Grid.Column="1" Content="&#x2715;" Click="Cancel_Click"
+                            Style="{StaticResource WindowCloseButton}" Height="32"
+                            shell:WindowChrome.IsHitTestVisibleInChrome="True"/>
+                </Grid>
+            </Border>
+
+            <!-- Hint + toggles -->
+            <TextBlock Grid.Row="1" Margin="14,12,14,0" Foreground="#7a9070" FontSize="11" TextWrapping="Wrap"
+                       Text="When a viewer sends a gift (e.g. a TikTok Rose), the highest tier its coin value reaches plays its sound + effect. Tiers are matched by coin value — highest wins."/>
+            <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="14,10,14,0">
+                <CheckBox x:Name="EnabledChk" Content="Play gift sound alerts" Style="{StaticResource Chk}" Margin="0,0,20,0"/>
+                <CheckBox x:Name="FeedChk" Content="Show gifts/follows/subs on the overlay feed + recap" Style="{StaticResource Chk}"/>
+            </StackPanel>
+
+            <!-- Column headers -->
+            <Grid Grid.Row="3" Margin="12,12,12,2">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="150"/>
+                    <ColumnDefinition Width="90"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="110"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Grid.Column="0" Text="TIER NAME" Foreground="{DynamicResource ThemeAccent}" FontSize="10" FontWeight="Bold" Margin="2,0,6,0"/>
+                <TextBlock Grid.Column="1" Text="MIN COINS" Foreground="{DynamicResource ThemeAccent}" FontSize="10" FontWeight="Bold" Margin="2,0,6,0"/>
+                <TextBlock Grid.Column="2" Text="SOUND FILE" Foreground="{DynamicResource ThemeAccent}" FontSize="10" FontWeight="Bold" Margin="2,0,6,0"/>
+                <TextBlock Grid.Column="3" Text="EFFECT" Foreground="{DynamicResource ThemeAccent}" FontSize="10" FontWeight="Bold" Margin="2,0,6,0"/>
+            </Grid>
+
+            <!-- Rows -->
+            <ScrollViewer Grid.Row="4" Margin="12,0,12,0" VerticalScrollBarVisibility="Auto">
+                <ItemsControl x:Name="TierList">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Grid Margin="0,0,0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="150"/>
+                                    <ColumnDefinition Width="90"/>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="110"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                                         Style="{StaticResource InputBox}" Margin="0,0,6,0" ToolTip="Tier label, e.g. Big gift"/>
+                                <TextBox Grid.Column="1" Text="{Binding MinCoins, UpdateSourceTrigger=PropertyChanged}"
+                                         Style="{StaticResource InputBox}" Margin="0,0,6,0" ToolTip="Coin value needed to hit this tier"/>
+                                <TextBox Grid.Column="2" Text="{Binding SoundPath}" IsReadOnly="True"
+                                         Style="{StaticResource InputBox}" Margin="0,0,6,0" Foreground="#a8c488" ToolTip="{Binding SoundPath}"/>
+                                <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,6,0">
+                                    <TextBlock Text="&#128266;" FontSize="12" Foreground="#a8c488" VerticalAlignment="Center" Margin="0,0,3,0"/>
+                                    <Slider Width="56" Minimum="0" Maximum="1" SmallChange="0.05" LargeChange="0.1"
+                                            Value="{Binding Volume, Mode=TwoWay}" VerticalAlignment="Center"
+                                            Foreground="{DynamicResource ThemeAccent}" ToolTip="Alert volume"/>
+                                </StackPanel>
+                                <ComboBox Grid.Column="4" SelectedValue="{Binding Effect, Mode=TwoWay}" SelectedValuePath="Tag"
+                                          Margin="0,0,6,0" VerticalAlignment="Center" ToolTip="Optional overlay effect">
+                                    <ComboBoxItem Content="none" Tag=""/>
+                                    <ComboBoxItem Content="confetti" Tag="confetti"/>
+                                    <ComboBoxItem Content="fireworks" Tag="fireworks"/>
+                                    <ComboBoxItem Content="shake" Tag="shake"/>
+                                </ComboBox>
+                                <Button Grid.Column="5" Content="Browse" Tag="{Binding}" Click="Browse_Click" Style="{StaticResource SmallBtn}"/>
+                                <Button Grid.Column="6" Content="&#9654;" Tag="{Binding}" Click="Test_Click" Style="{StaticResource SmallBtn}" ToolTip="Test play"/>
+                                <Button Grid.Column="7" Content="&#x2715;" Tag="{Binding}" Click="Remove_Click" Style="{StaticResource SmallBtn}" Margin="0" ToolTip="Remove"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </ScrollViewer>
+
+            <!-- Add -->
+            <Button Grid.Row="5" Content="+ Add tier" Click="Add_Click" Style="{StaticResource SmallBtn}"
+                    HorizontalAlignment="Left" Margin="12,10,0,0"/>
+
+            <!-- Footer -->
+            <Grid Grid.Row="6" Margin="12,12,12,14">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="TestStatus" Grid.Column="0" Foreground="#7a9070" FontSize="11"
+                           VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="2,0,8,0"/>
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Content="Cancel" Click="Cancel_Click" Style="{StaticResource SmallBtn}"/>
+                    <Button Content="Save" Click="Save_Click" Style="{StaticResource ActionBtn}"/>
+                </StackPanel>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>

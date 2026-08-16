@@ -14,7 +14,9 @@ namespace GameTracker.Services
         private static readonly Dictionary<string, int> MessagesByUser = new();   // display name -> count
         private static readonly Dictionary<string, int> MessagesByPlatform = new();
         private static readonly HashSet<string> GamesPlayed = new();
+        private static readonly Dictionary<string, int> GiftCoinsByUser = new(); // gifter -> total coins
         private static int _redeems, _requests, _pointsGiven, _challenges, _morphs, _videos, _clips;
+        private static int _follows, _subs, _giftCount, _giftCoins;
         public static DateTime StartedAt { get; } = DateTime.Now;
 
         public static void CountMessage(string platform, string user)
@@ -35,6 +37,18 @@ namespace GameTracker.Services
         public static void CountMorph() { lock (Gate) _morphs++; }
         public static void CountVideo() { lock (Gate) _videos++; }
         public static void CountClip() { lock (Gate) _clips++; }
+        public static void CountFollow() { lock (Gate) _follows++; }
+        public static void CountSubscribe() { lock (Gate) _subs++; }
+        public static void CountGift(string user, int coins)
+        {
+            lock (Gate)
+            {
+                _giftCount++;
+                _giftCoins += Math.Max(0, coins);
+                var u = string.IsNullOrWhiteSpace(user) ? "?" : user;
+                GiftCoinsByUser[u] = (GiftCoinsByUser.TryGetValue(u, out var n) ? n : 0) + Math.Max(0, coins);
+            }
+        }
         public static void CountGame(string title)
         {
             if (string.IsNullOrWhiteSpace(title)) return;
@@ -46,7 +60,9 @@ namespace GameTracker.Services
             List<(string user, int count)> TopChatters,
             List<(string platform, int count)> ByPlatform,
             List<string> Games, int Redeems, int Requests, int PointsGiven, int Challenges,
-            int Morphs, int Videos, int Clips);
+            int Morphs, int Videos, int Clips,
+            int Follows, int Subs, int GiftCount, int GiftCoins,
+            List<(string user, int coins)> TopGifters);
 
         public static Snapshot Get()
         {
@@ -61,7 +77,10 @@ namespace GameTracker.Services
                     MessagesByPlatform.OrderByDescending(kv => kv.Value)
                                       .Select(kv => (kv.Key, kv.Value)).ToList(),
                     GamesPlayed.ToList(),
-                    _redeems, _requests, _pointsGiven, _challenges, _morphs, _videos, _clips);
+                    _redeems, _requests, _pointsGiven, _challenges, _morphs, _videos, _clips,
+                    _follows, _subs, _giftCount, _giftCoins,
+                    GiftCoinsByUser.OrderByDescending(kv => kv.Value).Take(5)
+                                   .Select(kv => (kv.Key, kv.Value)).ToList());
             }
         }
 
@@ -80,8 +99,16 @@ namespace GameTracker.Services
                     s.TopChatters.Select(t => $"{t.user} ({t.count})")));
             if (s.Games.Count > 0)
                 lines.Add("🎮 Played: " + string.Join(", ", s.Games));
+            if (s.GiftCount > 0)
+            {
+                lines.Add($"🎁 Gifts: {s.GiftCount}" + (s.GiftCoins > 0 ? $" ({s.GiftCoins} coins)" : ""));
+                if (s.TopGifters.Count > 0 && s.GiftCoins > 0)
+                    lines.Add("💝 Top gifters: " + string.Join(", ", s.TopGifters.Select(t => $"{t.user} ({t.coins})")));
+            }
+            if (s.Follows > 0) lines.Add($"➕ New followers: {s.Follows}");
+            if (s.Subs > 0) lines.Add($"⭐ New subs/members: {s.Subs}");
             if (s.Challenges > 0) lines.Add($"🎡 Challenges rolled: {s.Challenges}");
-            if (s.Redeems > 0) lines.Add($"🎁 Redeems fired: {s.Redeems}" + (s.Morphs > 0 ? $" ({s.Morphs} voice morphs)" : ""));
+            if (s.Redeems > 0) lines.Add($"✨ Redeems fired: {s.Redeems}" + (s.Morphs > 0 ? $" ({s.Morphs} voice morphs)" : ""));
             if (s.Requests > 0) lines.Add($"📥 Game requests: {s.Requests}");
             if (s.Clips > 0) lines.Add($"🎬 Clips: {s.Clips}");
             if (s.PointsGiven > 0) lines.Add($"🪙 Points handed out: {s.PointsGiven}");

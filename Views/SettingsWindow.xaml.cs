@@ -377,6 +377,18 @@ namespace GameTracker.Views
             Step(2, "\"Import backup…\" restores a zip — your current data is saved to a safety backup first, then the app restarts with the imported data.");
             Step(3, "Great for reinstalls or moving to a new PC.");
 
+            Section("Gift alerts & the activity feed");
+            Body("Gifts from your streams (TikTok Roses, etc.) can trigger tiered sound alerts, and a live Activity Feed can show gifts, follows, subs and redeems right on your overlay.");
+            Step(1, "Settings → Chat → 🎁 Gift Alerts: add tiers by coin value. When a gift arrives, the highest tier its value reaches plays its sound (and optional confetti/fireworks/shake). Example: a small gift plays a chime, a 1000-coin gift sets off fireworks.");
+            Step(2, "Turn on the Activity Feed in the overlay layout editor (open the overlay with ?edit, tick \"Activity Feed\", drag it where you like). New gifts, follows, subs, raids and redeems slide in live.");
+            Step(3, "Gifts, follows and subs are also tallied in Stream Stats and included in the recap.");
+            Step(4, "Share the recap to Discord: open Stream Stats → \"📤 Share to Discord\". It posts through the companion bot (into your recap/tavern/clips channel) or a webhook if that's all you've set. Admins can pick the recap channel in Discord with !gh setup recapchannel.");
+            Step(5, "Gift/follow/sub detection reads Social Stream Ninja's event data; if a gift ever doesn't trigger, a diagnostic log at %AppData%\\LazerGuanas Game Hunter\\events-debug.log captures the raw event so mappings can be tuned.");
+
+            Section("Bot update announcements (Discord)");
+            Body("The companion bot can announce new Game Hunter releases in your Discord.");
+            Step(1, "In the Discord channel you want announcements in, an admin types: !gh setup updatechannel. The bot posts there whenever a new Game Hunter version is released. Turn it off with !gh setup updateoff.");
+
             Section("Tavern Tales — the chat RPG (needs the companion bot)");
             Body("A text RPG your community plays by typing \"tt <command>\" — in Discord and in your stream chat, sharing one character. It runs on the LazerGuanas Discord bot; Game Hunter forwards chat commands to it.");
             Step(1, "Set up the bot (see its README) and, in Settings → Chat → ⚙ Features → Discord, paste the Bot ingest URL + token, then tick \"Let chatters play Tavern Tales from chat\".");
@@ -612,6 +624,12 @@ namespace GameTracker.Views
         {
             var win = new SoundAlertsWindow { Owner = this };
             if (win.ShowDialog() == true) ChatWindow.Current?.ReloadSoundAlerts();
+        }
+
+        private void GiftAlerts_Click(object sender, RoutedEventArgs e)
+        {
+            // The window persists and calls ChatWindow.ReloadFeatures() itself on Save.
+            new GiftAlertsWindow { Owner = this }.ShowDialog();
         }
 
         // ---- overlay ----

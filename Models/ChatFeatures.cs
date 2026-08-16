@@ -16,6 +16,19 @@ namespace GameTracker.Models
         public double Volume { get; set; } = 1.0;
     }
 
+    /// <summary>
+    /// A gift-alert tier: when a gift's coin value reaches <see cref="MinCoins"/>, play its
+    /// sound (and optional overlay effect). The highest-threshold matching tier wins.
+    /// </summary>
+    public class CoinAlertTier
+    {
+        public string Name { get; set; } = string.Empty;     // label shown on the feed, e.g. "Big gift"
+        public int MinCoins { get; set; } = 1;               // inclusive coin threshold
+        public string SoundPath { get; set; } = string.Empty; // sound to play (optional)
+        public double Volume { get; set; } = 1.0;
+        public string Effect { get; set; } = string.Empty;   // "" | confetti | fireworks | shake
+    }
+
     /// <summary>Streamer-configurable chat features: counts, chatters list, points, style, redeems.</summary>
     public class ChatFeatureSettings
     {
@@ -63,5 +76,17 @@ namespace GameTracker.Models
 
         // Tavern Tales: let chatters play the Discord bot's RPG from chat (via the bot).
         public bool RpgEnabled { get; set; } = false;
+
+        // Gift alerts (TikTok gifts, etc.): tiered sound + effect by coin value.
+        public bool GiftAlertsEnabled { get; set; } = true;
+        public List<CoinAlertTier> CoinTiers { get; set; } = new()
+        {
+            new CoinAlertTier { Name = "Gift",      MinCoins = 1,    Effect = "" },
+            new CoinAlertTier { Name = "Big gift",  MinCoins = 100,  Effect = "confetti" },
+            new CoinAlertTier { Name = "Huge gift", MinCoins = 1000, Effect = "fireworks" },
+        };
+
+        // Show stream events (gifts, follows, subs) on the overlay activity feed + a toast.
+        public bool EventFeedEnabled { get; set; } = true;
     }
 }

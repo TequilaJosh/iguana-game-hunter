@@ -335,7 +335,10 @@
                                         Margin="0,0,8,0"
                                         ToolTip="Chatter counts, points, chat style, and point redeems"/>
                                 <Button Content="&#128266; Sound Alerts" Click="SoundAlerts_Click" Style="{StaticResource Btn}"
+                                        Margin="0,0,8,0"
                                         ToolTip="Chat commands that play your own sound files"/>
+                                <Button Content="&#127873; Gift Alerts" Click="GiftAlerts_Click" Style="{StaticResource Btn}"
+                                        ToolTip="Tiered sound + effect alerts for TikTok gifts (by coin value)"/>
                             </StackPanel>
                             <TextBlock Foreground="#7a9070" FontSize="11" Margin="0,8,0,0" TextWrapping="Wrap"
                                        Text="The live Chatters list stays in the chat window (it shows who's active right now)."/>

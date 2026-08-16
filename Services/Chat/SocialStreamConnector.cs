@@ -111,20 +111,152 @@ namespace GameTracker.Services.Chat
             // The chat object is usually top-level, but may be wrapped.
             var msg = o["chatmessage"] != null ? o
                     : (o["contents"] as JObject) ?? (o["message"] as JObject) ?? o;
+            if (msg == null) return;
 
-            var name = ChatText.Plain((string?)msg?["chatname"]);
-            var segments = ChatText.Parse((string?)msg?["chatmessage"]);
-            if (string.IsNullOrWhiteSpace(name) && segments.Count == 0) return;
+            var name = ChatText.Plain((string?)msg["chatname"]);
+            var segments = ChatText.Parse((string?)msg["chatmessage"]);
+
+            // Classify gifts / follows / subs / likes / shares before the chat-only early-return,
+            // so event frames (which often carry no chatmessage) still come through.
+            var evt = Classify(msg, name, ChatText.Plain((string?)msg["chatmessage"]));
+
+            if (evt.Kind == ChatEventKind.Chat && string.IsNullOrWhiteSpace(name) && segments.Count == 0)
+                return;
 
             MessageReceived?.Invoke(new ChatMessage
             {
-                Platform = ((string?)msg?["type"] ?? "social").ToLowerInvariant(),
+                Platform = ((string?)msg["type"] ?? "social").ToLowerInvariant(),
                 User = name,
                 Segments = segments,
-                UserColor = (string?)msg?["nameColor"] ?? string.Empty,
-                AvatarUrl = (string?)msg?["chatimg"] ?? string.Empty,   // SSN forwards the avatar
-                Badges = ParseBadges(msg?["chatbadges"]),
+                UserColor = (string?)msg["nameColor"] ?? string.Empty,
+                AvatarUrl = (string?)msg["chatimg"] ?? string.Empty,   // SSN forwards the avatar
+                Badges = ParseBadges(msg["chatbadges"]),
+                EventKind = evt.Kind,
+                GiftName = evt.GiftName,
+                CoinValue = evt.Coins,
+                Repeat = evt.Repeat,
+                EventText = evt.Text,
             });
+        }
+
+        private readonly record struct EventInfo(ChatEventKind Kind, string GiftName, int Coins, int Repeat, string Text);
+
+        /// <summary>
+        /// Best-effort classification of a Social Stream Ninja frame into a stream event.
+        /// SSN merges every platform, so field names vary; we check the common ones and log
+        /// anything event-like (raw) to help tune mappings against real data.
+        /// </summary>
+        private EventInfo Classify(JObject msg, string name, string plainMessage)
+        {
+            string donation = (Str(msg, "hasDonation") ?? Str(msg, "donation") ?? string.Empty).Trim();
+            string membership = (Str(msg, "membership") ?? Str(msg, "subtitle") ?? string.Empty).Trim();
+            string giftName = (Str(msg, "giftName") ?? Str(msg, "gift") ?? Str(msg, "donationType") ?? string.Empty).Trim();
+            string evtRaw = (Str(msg, "event") ?? Str(msg, "eventType") ?? Str(msg, "type2") ?? string.Empty).Trim().ToLowerInvariant();
+            bool eventFlag = IsTruthy(msg["event"]);
+            int coins = FirstInt(msg, "coins", "diamonds", "amount", "value", "donationAmount", "valueNumeric", "priceInCoins", "repeatCount") ?? DigitsIn(donation);
+            int repeat = FirstInt(msg, "repeatCount", "comboCount", "count") ?? 1;
+            if (repeat < 1) repeat = 1;
+
+            bool looksGift = !string.IsNullOrEmpty(giftName) || !string.IsNullOrEmpty(donation) || coins > 0
+                             || evtRaw.Contains("gift") || evtRaw.Contains("dono") || evtRaw.Contains("super") || evtRaw.Contains("cheer") || evtRaw.Contains("bits");
+
+            ChatEventKind kind = ChatEventKind.Chat;
+            string text = string.Empty;
+
+            var haystack = (evtRaw + " " + plainMessage + " " + membership).ToLowerInvariant();
+            if (looksGift)
+            {
+                kind = ChatEventKind.Gift;
+                if (string.IsNullOrEmpty(giftName)) giftName = GuessGiftName(plainMessage);
+                text = giftName.Length > 0
+                    ? (repeat > 1 ? $"sent {repeat}× {giftName}" : $"sent {giftName}") + (coins > 0 ? $" ({coins})" : "")
+                    : (coins > 0 ? $"sent a gift worth {coins}" : "sent a gift");
+            }
+            // Only treat this as a non-gift event when there's a real event signal — NOT just a
+            // `membership` field, which SSN may attach to ordinary messages from members/subscribers
+            // (treating that as a sub would misclassify every member's chat line).
+            else if (eventFlag || evtRaw.Length > 0)
+            {
+                if (haystack.Contains("follow")) { kind = ChatEventKind.Follow; text = "followed"; }
+                else if (haystack.Contains("subscrib") || haystack.Contains("member")) { kind = ChatEventKind.Subscribe; text = "subscribed"; }
+                else if (haystack.Contains("raid") || haystack.Contains("host")) { kind = ChatEventKind.Raid; text = "raided"; }
+                else if (haystack.Contains("share")) { kind = ChatEventKind.Share; text = "shared the stream"; }
+                else if (haystack.Contains("like")) { kind = ChatEventKind.Like; text = "liked the stream"; }
+            }
+
+            // Log real events for tuning — but not high-frequency likes (they'd flood the log).
+            if (kind != ChatEventKind.Chat && kind != ChatEventKind.Like) EventDebug(msg, kind);
+            return new EventInfo(kind, giftName, Math.Max(0, coins), repeat, text);
+        }
+
+        private static string GuessGiftName(string plain)
+        {
+            plain = (plain ?? string.Empty).Trim();
+            if (plain.Length == 0) return string.Empty;
+            // Strip common lead-ins ("sent", "gifted", emoji) and take the first few words.
+            var t = System.Text.RegularExpressions.Regex.Replace(plain, @"^(sent|gifted|donated)\s+", "", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+            return t.Length > 40 ? t[..40] : t;
+        }
+
+        private static string? Str(JObject o, string key)
+        {
+            var t = o[key];
+            return t == null || t.Type == JTokenType.Null ? null : (string?)t;
+        }
+
+        private static int? FirstInt(JObject o, params string[] keys)
+        {
+            foreach (var k in keys)
+            {
+                var t = o[k];
+                if (t == null || t.Type == JTokenType.Null) continue;
+                if (t.Type == JTokenType.Integer) return (int)t;
+                if (t.Type == JTokenType.Float) return (int)(double)t;
+                if (t.Type == JTokenType.String)
+                {
+                    var d = DigitsIn((string?)t ?? string.Empty);
+                    if (d > 0) return d;
+                }
+            }
+            return null;
+        }
+
+        private static int DigitsIn(string s)
+        {
+            var m = System.Text.RegularExpressions.Regex.Match(s ?? string.Empty, @"\d[\d,]*");
+            return m.Success && int.TryParse(m.Value.Replace(",", ""), out var n) ? n : 0;
+        }
+
+        private static bool IsTruthy(JToken? t)
+        {
+            if (t == null) return false;
+            return t.Type switch
+            {
+                JTokenType.Boolean => (bool)t,
+                JTokenType.Integer => (int)t != 0,
+                JTokenType.String => !string.IsNullOrWhiteSpace((string?)t) && !string.Equals((string?)t, "false", StringComparison.OrdinalIgnoreCase) && (string?)t != "0",
+                _ => false,
+            };
+        }
+
+        // Append raw event JSON to a capped debug log so real gift/follow/sub shapes can be verified.
+        private static readonly object _dbgLock = new();
+        private static void EventDebug(JObject msg, ChatEventKind kind)
+        {
+            try
+            {
+                var dir = System.IO.Path.Combine(
+                    Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "LazerGuanas Game Hunter");
+                System.IO.Directory.CreateDirectory(dir);
+                var path = System.IO.Path.Combine(dir, "events-debug.log");
+                lock (_dbgLock)
+                {
+                    try { if (new System.IO.FileInfo(path).Exists && new System.IO.FileInfo(path).Length > 256_000) System.IO.File.Delete(path); }
+                    catch { }
+                    System.IO.File.AppendAllText(path, $"{DateTime.Now:HH:mm:ss} [{kind}] {msg.ToString(Newtonsoft.Json.Formatting.None)}{Environment.NewLine}");
+                }
+            }
+            catch { /* diagnostics only — never disrupt chat */ }
         }
 
         // SSN "chatbadges": an array of image URLs (strings) or objects with a url field.

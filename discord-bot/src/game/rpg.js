@@ -202,6 +202,14 @@ async function afterTurn(msg, char, res) {
       desc += '\n\n**Loot:**\n' + reward.items.map((i) => `${RARITY_EMOJI[i.rarity] || '•'} ${i.name}${i.qty > 1 ? ` x${i.qty}` : ''}`).join('\n');
     }
     if (reward.levels.length) desc += `\n\n🎉 **LEVEL UP!** You’re now level **${char.level}** (fully healed).`;
+
+    // What players can do next.
+    const next = ['`!adventure`'];
+    if (reward.levels.length) next.push('`!skills`');
+    if (reward.items.length) next.push('`!inv`');
+    next.push('`!char`', '`!shop`', '`!rest`');
+    desc += `\n\n▶️ **Next:** ${next.join(' · ')}`;
+
     e.setDescription(desc);
     return msg.reply({ embeds: [e] });
   }

@@ -532,6 +532,15 @@ namespace GameTracker.Views
             if (!_ttsSettings.Enabled || _sound.Muted) return;   // panic mute also silences TTS
             var text = (m.Text ?? string.Empty).Trim();
             if (text.Length == 0) return;
+
+            // Ignore chat emotes: read only the text runs; if it was nothing but emotes, stay quiet.
+            if (_ttsSettings.SkipEmotes && m.Segments.Any(s => s.Kind == ChatSegmentKind.Emote))
+            {
+                text = string.Concat(m.Segments.Where(s => s.Kind != ChatSegmentKind.Emote).Select(s => s.Text));
+                text = System.Text.RegularExpressions.Regex.Replace(text, @"\s{2,}", " ").Trim();
+                if (text.Length == 0) return;
+            }
+
             if (_ttsSettings.SkipCommands && text.StartsWith("!", StringComparison.Ordinal)) return;
 
             // Tavern Tales: never read game commands or the bot's echoed replies aloud.

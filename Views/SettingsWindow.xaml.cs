@@ -70,6 +70,7 @@ namespace GameTracker.Views
             TtsSkipCommands.IsChecked = tts.SkipCommands;
             TtsSkipRedeems.IsChecked = tts.SkipRedeemMessages;
             TtsSkipLinks.IsChecked = tts.SkipLinks;
+            TtsSkipEmotes.IsChecked = tts.SkipEmotes;
             TtsBleepBadWords.IsChecked = tts.BleepBadWords;
             TtsIgnoreUsers.Text = string.Join(", ", tts.IgnoreUsers);
             TtsIgnoreKeywords.Text = string.Join(", ", tts.IgnoreKeywords);
@@ -524,6 +525,7 @@ namespace GameTracker.Views
             t.SkipCommands = TtsSkipCommands.IsChecked == true;
             t.SkipRedeemMessages = TtsSkipRedeems.IsChecked == true;
             t.SkipLinks = TtsSkipLinks.IsChecked == true;
+            t.SkipEmotes = TtsSkipEmotes.IsChecked == true;
             t.BleepBadWords = TtsBleepBadWords.IsChecked == true;
             t.IgnoreUsers = SplitList(TtsIgnoreUsers.Text);
             t.IgnoreKeywords = SplitList(TtsIgnoreKeywords.Text);

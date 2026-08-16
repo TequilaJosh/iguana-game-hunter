@@ -285,9 +285,13 @@
                                       Checked="Tts_Changed" Unchecked="Tts_Changed"
                                       ToolTip="Ignores Twitch channel-point announcements like 'morgan2333 redeemed AVALANCHE TIME 50' — the person's normal chats still read"/>
                             <CheckBox x:Name="TtsSkipLinks" Content="Don't read links"
-                                      Foreground="#a8c488" FontSize="12" Margin="0,0,0,6"
+                                      Foreground="#a8c488" FontSize="12" Margin="0,0,0,4"
                                       Checked="Tts_Changed" Unchecked="Tts_Changed"
                                       ToolTip="URLs are removed from the spoken message; messages that are only a link are skipped entirely"/>
+                            <CheckBox x:Name="TtsSkipEmotes" Content="Ignore chat emotes"
+                                      Foreground="#a8c488" FontSize="12" Margin="0,0,0,6"
+                                      Checked="Tts_Changed" Unchecked="Tts_Changed"
+                                      ToolTip="Emotes are removed from the spoken message; messages that are only emotes are skipped entirely"/>
                             <Grid Margin="0,0,0,6">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="120"/>

@@ -30,6 +30,7 @@ namespace GameTracker.Models
         public List<string> IgnoreKeywords { get; set; } = new();
         public bool SkipRedeemMessages { get; set; } = true; // "<user> redeemed <reward>" announcements
         public bool SkipLinks { get; set; } = true;          // strip URLs from spoken text (skip pure-link messages)
+        public bool SkipEmotes { get; set; } = false;        // strip chat emotes (skip emote-only messages)
 
         // Bad-word filter: bleep listed words in spoken chat with a chicken bawk.
         // BadWords is the full, editable list (seeded from BadWordDefaults on first run,

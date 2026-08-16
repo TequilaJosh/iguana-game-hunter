@@ -6,3 +6,7 @@ npm-debug.log*
 data/
 # Local machine-specific auto-start launcher
 start-hidden.vbs
+
+# scratch test artifacts
+_*data/
+_*test.mjs

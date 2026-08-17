@@ -122,6 +122,13 @@ function onLine(line) {
   let l = line;
   if (l[0] === '@') { const sp = l.indexOf(' '); if (sp > 0) l = l.slice(sp + 1); }
 
+  if (l.includes(' 001 ')) { log.info('Twitch: authenticated ✔'); reconcile().catch(() => {}); return; }
+  if (l.includes(' NOTICE ')) {                     // login failures, msg errors, etc.
+    const nm = l.match(/ NOTICE [^:]*:(.*)$/);
+    log.info('Twitch NOTICE: ' + (nm ? nm[1] : l));
+    return;
+  }
+
   const m = l.match(/^:([^!]+)![^ ]+ PRIVMSG #(\S+) :(.*)$/);
   if (!m) return;
   const user = m[1];

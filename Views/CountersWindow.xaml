@@ -17,6 +17,7 @@
     </shell:WindowChrome.WindowChrome>
 
     <Window.Resources>
+        <BooleanToVisibilityConverter x:Key="B2V"/>
         <Style x:Key="In" TargetType="TextBox">
             <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/>
             <Setter Property="Foreground" Value="#e8e0c4"/>
@@ -61,6 +62,7 @@
                 <RowDefinition Height="32"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
             <Border Grid.Row="0" Background="{DynamicResource ThemeBg}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,0,0,1">
@@ -144,6 +146,33 @@
                     </ItemsControl.ItemTemplate>
                 </ItemsControl>
             </ScrollViewer>
+
+            <!-- Live overlay preview -->
+            <Border Grid.Row="3" Margin="14,0,14,12" Background="#0a1410"
+                    BorderBrush="{DynamicResource ThemeAccentDeep}" BorderThickness="1" CornerRadius="8" Padding="12,8">
+                <StackPanel>
+                    <TextBlock Text="OVERLAY PREVIEW" Foreground="{DynamicResource ThemeAccent}" FontSize="9"
+                               FontWeight="Bold" Margin="0,0,0,6"/>
+                    <ItemsControl ItemsSource="{Binding ElementName=CounterList, Path=ItemsSource}">
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Border Visibility="{Binding Show, Converter={StaticResource B2V}}"
+                                        Background="#12241a" CornerRadius="6" Padding="10,5" Margin="0,0,8,6">
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="{Binding Name}" Foreground="#cfe0bd" FontSize="12"
+                                                   VerticalAlignment="Center" Margin="0,0,10,0"/>
+                                        <TextBlock Text="{Binding Value}" Foreground="{Binding ColorBrush}"
+                                                   FontSize="17" FontWeight="Bold"/>
+                                    </StackPanel>
+                                </Border>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </Border>
         </Grid>
     </Border>
 </Window>

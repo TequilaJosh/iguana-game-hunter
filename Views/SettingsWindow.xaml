@@ -400,6 +400,20 @@
                                         ToolTip="Open /ticker?edit in a browser to design the ticker live"/>
                             </StackPanel>
 
+                            <!-- Ticker preview (reflects the saved config) -->
+                            <Border Margin="0,10,0,0" Background="#0a1410" BorderBrush="{DynamicResource ThemeAccentDeep}"
+                                    BorderThickness="1" CornerRadius="8" Padding="10,8">
+                                <StackPanel>
+                                    <TextBlock Text="TICKER PREVIEW" Foreground="{DynamicResource ThemeAccent}" FontSize="9"
+                                               FontWeight="Bold" Margin="0,0,0,6"/>
+                                    <Border Background="#14241c" CornerRadius="8" Padding="2" HorizontalAlignment="Left">
+                                        <StackPanel x:Name="TickerPreviewBar" Orientation="Horizontal"/>
+                                    </Border>
+                                    <TextBlock Foreground="#7a9070" FontSize="10" Margin="0,6,0,0" TextWrapping="Wrap"
+                                               Text="Shows your saved slots &amp; colour. Design it live via 'Copy editor URL'; reopen Settings to refresh here."/>
+                                </StackPanel>
+                            </Border>
+
                             <TextBlock x:Name="OverlayStatus" Foreground="#7a9070" FontSize="11" Margin="0,10,0,0"
                                        TextWrapping="Wrap"/>
                         </StackPanel>

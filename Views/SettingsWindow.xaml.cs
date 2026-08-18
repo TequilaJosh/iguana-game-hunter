@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 using GameTracker.Models;
 using GameTracker.Services;
+using Newtonsoft.Json.Linq;
 
 namespace GameTracker.Views
 {
@@ -81,6 +82,7 @@ namespace GameTracker.Views
             PortBox.Text = OverlayServer.Port.ToString();
             ChatLinesBox.Text = SettingsService.LoadOverlayChatLines().ToString();
             UpdateOverlayStatus();
+            RenderTickerPreview();
 
             _ready = true;
         }
@@ -94,7 +96,7 @@ namespace GameTracker.Views
                 PanelHelp.Visibility = PanelBackup.Visibility = PanelHotkeys.Visibility = Visibility.Collapsed;
 
             if (sender == NavChat) { NavChat.Tag = "active"; PanelChat.Visibility = Visibility.Visible; }
-            else if (sender == NavOverlay) { NavOverlay.Tag = "active"; PanelOverlay.Visibility = Visibility.Visible; }
+            else if (sender == NavOverlay) { NavOverlay.Tag = "active"; PanelOverlay.Visibility = Visibility.Visible; RenderTickerPreview(); }
             else if (sender == NavBackup) { NavBackup.Tag = "active"; PanelBackup.Visibility = Visibility.Visible; }
             else if (sender == NavHotkeys)
             {
@@ -676,6 +678,62 @@ namespace GameTracker.Views
             var url = OverlayUrl + "ticker?edit";
             try { Clipboard.SetText(url); OverlayStatus.Text = "Copied editor URL — open it in a browser to design the ticker; changes save & update OBS live."; }
             catch { /* clipboard can be momentarily locked */ }
+        }
+
+        private static readonly Dictionary<string, (string icon, string label)> TickerSlotDefs = new()
+        {
+            ["sub"] = ("⭐", "Newest Sub"), ["follow"] = ("➕", "Newest Follower"), ["gift"] = ("🎁", "Latest Gift"),
+            ["raid"] = ("⚔️", "Latest Raid"), ["redeem"] = ("✨", "Last Redeem"), ["clip"] = ("🎬", "Last Clip"),
+        };
+
+        // A small WPF stand-in for the /ticker overlay, built from the saved config.
+        private void RenderTickerPreview()
+        {
+            if (TickerPreviewBar == null) return;
+            TickerPreviewBar.Children.Clear();
+
+            var kinds = new List<string> { "sub", "follow", "gift" };
+            string accent = "#7cc44a";
+            bool labels = true;
+            try
+            {
+                var json = SettingsService.LoadOverlayTicker();
+                if (!string.IsNullOrWhiteSpace(json))
+                {
+                    var o = JObject.Parse(json);
+                    if (o["kinds"] is JArray a && a.Count > 0)
+                        kinds = a.Select(x => (string?)x ?? "").Where(s => s.Length > 0).ToList();
+                    accent = (string?)o["accent"] ?? accent;
+                    if (o["labels"] != null) labels = (bool)o["labels"]!;
+                }
+            }
+            catch { /* fall back to defaults */ }
+
+            var accentBrush = Brush2(accent);
+            bool first = true;
+            foreach (var k in kinds)
+            {
+                if (!TickerSlotDefs.TryGetValue(k, out var d)) continue;
+                if (!first)
+                    TickerPreviewBar.Children.Add(new Border
+                    { Width = 1, Background = new SolidColorBrush(Color.FromArgb(70, 124, 196, 74)), Margin = new Thickness(0, 6, 0, 6) });
+                first = false;
+
+                var slot = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(10, 6, 10, 6), VerticalAlignment = VerticalAlignment.Center };
+                slot.Children.Add(new TextBlock { Text = d.icon, FontSize = 16, VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(0, 0, 7, 0) });
+                var txt = new StackPanel();
+                if (labels)
+                    txt.Children.Add(new TextBlock { Text = d.label.ToUpperInvariant(), FontSize = 8, FontWeight = FontWeights.Bold, Foreground = accentBrush });
+                txt.Children.Add(new TextBlock { Text = "—", FontSize = 14, FontWeight = FontWeights.Bold, Foreground = Brushes.White });
+                slot.Children.Add(txt);
+                TickerPreviewBar.Children.Add(slot);
+            }
+        }
+
+        private static SolidColorBrush Brush2(string hex)
+        {
+            try { return new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex)); }
+            catch { return new SolidColorBrush(Color.FromRgb(0x7c, 0xc4, 0x4a)); }
         }
 
         private void ChatLines_Changed(object sender, RoutedEventArgs e)

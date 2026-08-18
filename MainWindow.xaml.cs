@@ -248,10 +248,12 @@ namespace GameTracker
             }
             var list = Services.SettingsService.LoadCounters();
             if (index < 0 || index >= list.Count) return;
-            list[index].Value += delta;
+            var game = CurrentGameTitle();
+            var c = list[index];
+            c.SetValue(game, c.ValueFor(game) + delta);
             Services.SettingsService.SaveCounters(list);
             Services.OverlayServer.PushCounters(list);
-            StatusText.Text = $"Counter: {list[index].Name} = {list[index].Value}.";
+            StatusText.Text = $"Counter: {c.Name} = {c.ValueFor(game)}" + (string.IsNullOrEmpty(game) ? "" : $" ({game})") + ".";
         }
 
         // Ctrl+Shift+0: end the active morph and stop hotkey sounds.

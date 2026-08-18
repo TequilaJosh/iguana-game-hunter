@@ -90,7 +90,14 @@
                 </Grid.ColumnDefinitions>
                 <StackPanel VerticalAlignment="Center">
                     <TextBlock Foreground="#7a9070" FontSize="11" TextWrapping="Wrap"
-                               Text="On-stream tallies (deaths, catchphrases, anything). Turn on the Counters block in the layout editor. Each counter shows for its game (or all games). Set +/- hotkeys per counter below so you can tap them mid-game."/>
+                               Text="On-stream tallies (deaths, catchphrases, anything). Each counter keeps a SEPARATE count per game and only shows for the game you're playing. Pick its games (multi-select) and set +/- hotkeys per counter below."/>
+                    <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                        <TextBlock Text="Editing counts for:" Foreground="#a8c488" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <ComboBox x:Name="EditGameCombo" Width="190" VerticalAlignment="Center"
+                                  ItemsSource="{Binding EditingGames, RelativeSource={RelativeSource AncestorType=Window}}"
+                                  SelectionChanged="EditGame_Changed"
+                                  ToolTip="Which game's counts the value/±1 buttons here edit (hotkeys always bump the game you're streaming)"/>
+                    </StackPanel>
                     <TextBlock x:Name="CaptureStatus" Foreground="{DynamicResource ThemeAccent}" FontSize="11"
                                FontWeight="Bold" Margin="0,4,0,0"/>
                 </StackPanel>
@@ -129,10 +136,9 @@
                                                 Style="{StaticResource Btn}" Margin="0,0,3,0"/>
                                         <Button Grid.Column="5" Content="&#8635;" Tag="{Binding}" Click="Reset_Click"
                                                 Style="{StaticResource Btn}" Margin="0,0,8,0" ToolTip="Reset to 0"/>
-                                        <ComboBox Grid.Column="6" Width="150" Margin="0,0,8,0" VerticalAlignment="Center"
-                                                  ItemsSource="{Binding Games, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                  SelectedItem="{Binding GameLabel, Mode=TwoWay}"
-                                                  ToolTip="Which game this counter shows for"/>
+                                        <Button Grid.Column="6" Content="{Binding GamesSummary}" Tag="{Binding}" Click="Games_Click"
+                                                Style="{StaticResource Btn}" Width="150" Margin="0,0,8,0"
+                                                ToolTip="Which games this counter shows for (multi-select; default = all games)"/>
                                         <Button Grid.Column="7" Tag="{Binding}" Click="PickColor_Click" Cursor="Hand"
                                                 Margin="0,0,8,0" ToolTip="Value color">
                                             <Button.Template>

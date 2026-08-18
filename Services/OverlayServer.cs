@@ -917,9 +917,9 @@ namespace GameTracker.Services
                 .Select(c => new
                 {
                     name = c.Name,
-                    value = c.Value,
                     color = string.IsNullOrWhiteSpace(c.Color) ? "#7cc44a" : c.Color,
-                    game = c.Game ?? string.Empty,   // overlay shows it only for this game ("" = all)
+                    games = (c.Games ?? new List<string>()).ToArray(),  // empty = all games
+                    values = c.Values ?? new Dictionary<string, int>(), // per-game value; overlay picks the current game
                 }).ToArray();
 
         /// <summary>Push the streamer's counters to all clients (live as they change).</summary>

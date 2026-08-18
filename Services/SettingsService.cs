@@ -271,7 +271,12 @@ namespace GameTracker.Services
             SaveAll(s);
         }
 
-        public static List<GameCounter> LoadCounters() => LoadAll().Counters ?? new List<GameCounter>();
+        public static List<GameCounter> LoadCounters()
+        {
+            var list = LoadAll().Counters ?? new List<GameCounter>();
+            foreach (var c in list) c.MigrateLegacy();   // upgrade v1.0.55/56 single-value counters
+            return list;
+        }
 
         public static void SaveCounters(List<GameCounter> counters)
         {

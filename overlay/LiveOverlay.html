@@ -1133,18 +1133,26 @@
     row.appendChild(nm); row.appendChild(val);
     return row;
   }
+  // A counter applies to the current game if it lists that game, or lists none (= all games).
+  function counterApplies(c) {
+    if (!c.games || c.games.length === 0) return true;
+    var t = (currentGameTitle || "").toLowerCase();
+    for (var i = 0; i < c.games.length; i++) if ((c.games[i] || "").toLowerCase() === t) return true;
+    return false;
+  }
+  function counterValue(c) {
+    return (c.values && Object.prototype.hasOwnProperty.call(c.values, currentGameTitle)) ? c.values[currentGameTitle] : 0;
+  }
   function renderCounters(list) {
     try {
       if (Array.isArray(list)) lastCounters = list;
       const box = document.getElementById("cnt");
       const rows = document.getElementById("cntRows");
       if (!box || !rows) return;
-      // Show a counter for the current game, or ones marked for all games ("").
-      const shown = EDIT ? lastCounters
-        : lastCounters.filter(function (c) { return !c.game || c.game === currentGameTitle; });
+      const shown = EDIT ? lastCounters : lastCounters.filter(counterApplies);
       box.hidden = EDIT ? !isOn("cnt") : !(shown.length && isOn("cnt"));
       while (rows.firstChild) rows.removeChild(rows.firstChild);
-      for (let i = 0; i < shown.length; i++) rows.appendChild(counterRow(shown[i].name, shown[i].value, shown[i].color));
+      for (let i = 0; i < shown.length; i++) rows.appendChild(counterRow(shown[i].name, counterValue(shown[i]), shown[i].color));
     } catch (e) { logErr("renderCounters failed: " + (e && e.message)); }
   }
 
@@ -1576,10 +1584,7 @@
     const feedEl = document.getElementById("feed");
     if (feedEl) feedEl.hidden = !(isOn("feed") && lastActivity.length);
     const cntEl = document.getElementById("cnt");
-    if (cntEl) {
-      const anyCnt = lastCounters.some(function (c) { return !c.game || c.game === currentGameTitle; });
-      cntEl.hidden = !(isOn("cnt") && anyCnt);
-    }
+    if (cntEl) cntEl.hidden = !(isOn("cnt") && lastCounters.some(counterApplies));
     lastStateSig = "";   // let the next state frame re-fill content
   }
 

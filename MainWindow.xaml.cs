@@ -131,6 +131,25 @@ namespace GameTracker
         /// <summary>The title of the game currently being streamed (empty if none).</summary>
         public string CurrentGameTitle() => CurrentlyStreaming()?.Title ?? string.Empty;
 
+        /// <summary>Game titles grouped by board status (Hunting → Devoured → Dormant), for the counters picker.</summary>
+        public List<(string category, List<string> titles)> GamesByStatus()
+        {
+            static string Cat(GameStatus s) => s switch
+            {
+                GameStatus.InProgress => "Hunting",
+                GameStatus.Beaten => "Devoured",
+                _ => "Dormant",
+            };
+            return new[] { "Hunting", "Devoured", "Dormant" }
+                .Select(cat => (cat, _games
+                    .Where(g => !string.IsNullOrWhiteSpace(g.Title) && Cat(g.Status) == cat)
+                    .Select(g => g.Title)
+                    .Distinct(StringComparer.OrdinalIgnoreCase)
+                    .OrderBy(t => t, StringComparer.OrdinalIgnoreCase)
+                    .ToList()))
+                .ToList();
+        }
+
         /// <summary>Re-read hotkey config + redeem hotkeys and re-register (Settings uses this).</summary>
         public void RefreshHotkeys()
         {

@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
@@ -126,32 +127,65 @@ namespace GameTracker.Views
             }
         }
 
-        // Multi-select games: a checkable menu ("All games" + one per game).
+        private static SolidColorBrush Hex(string h)
+        {
+            try { return new SolidColorBrush((System.Windows.Media.Color)ColorConverter.ConvertFromString(h)); }
+            catch { return Brushes.Gray; }
+        }
+
+        // Multi-select games: a popup with a collapsible section per board status
+        // (Hunting / Devoured / Dormant), each game a checkbox. Empty selection = all games.
         private void Games_Click(object sender, RoutedEventArgs e)
         {
             if (sender is not Button b || b.Tag is not CounterVm v) return;
-            var menu = new ContextMenu();
-            var all = new MenuItem { Header = "All games", IsCheckable = true, IsChecked = v.Games.Count == 0, StaysOpenOnClick = true };
-            all.Click += (_, _) => { if (all.IsChecked) v.SetGames(new List<string>()); OnChanged(); };
-            menu.Items.Add(all);
-            menu.Items.Add(new Separator());
-            foreach (var g in Main?.AllGameTitles() ?? Enumerable.Empty<string>())
+
+            SolidColorBrush ink = Hex("#e8e0c4"), accent = Hex("#7cc44a"), border = Hex("#4a7c3a"), bg = Hex("#0c140f");
+            bool suppress = false;
+            var gameBoxes = new List<CheckBox>();
+            var panel = new StackPanel { Margin = new Thickness(6) };
+
+            var allCb = new CheckBox
             {
-                var gg = g;
-                var mi = new MenuItem { Header = g, IsCheckable = true, StaysOpenOnClick = true, IsChecked = v.Games.Any(x => x.Equals(gg, StringComparison.OrdinalIgnoreCase)) };
-                mi.Click += (_, _) =>
-                {
-                    var games = new List<string>(v.Games);
-                    if (mi.IsChecked) { if (!games.Any(x => x.Equals(gg, StringComparison.OrdinalIgnoreCase))) games.Add(gg); }
-                    else games.RemoveAll(x => x.Equals(gg, StringComparison.OrdinalIgnoreCase));
-                    v.SetGames(games);
-                    all.IsChecked = games.Count == 0;
-                    OnChanged();
-                };
-                menu.Items.Add(mi);
+                Content = "All games", Foreground = ink, FontWeight = FontWeights.Bold,
+                Margin = new Thickness(6, 4, 6, 4), IsChecked = v.Games.Count == 0,
+            };
+            panel.Children.Add(allCb);
+
+            void Sync()
+            {
+                var games = allCb.IsChecked == true
+                    ? new List<string>()
+                    : gameBoxes.Where(c => c.IsChecked == true).Select(c => (string)c.Content).ToList();
+                v.SetGames(games);
+                OnChanged();
             }
-            menu.PlacementTarget = b;
-            menu.IsOpen = true;
+            allCb.Click += (_, _) => { if (!suppress) Sync(); };
+
+            foreach (var (category, titles) in Main?.GamesByStatus() ?? new List<(string, List<string>)>())
+            {
+                if (titles.Count == 0) continue;
+                var inner = new StackPanel { Margin = new Thickness(14, 2, 4, 2) };
+                foreach (var t in titles)
+                {
+                    var cb = new CheckBox
+                    {
+                        Content = t, Foreground = ink, Margin = new Thickness(2),
+                        IsChecked = v.Games.Any(g => g.Equals(t, StringComparison.OrdinalIgnoreCase)),
+                    };
+                    cb.Click += (_, _) =>
+                    {
+                        if (cb.IsChecked == true && allCb.IsChecked == true) { suppress = true; allCb.IsChecked = false; suppress = false; }
+                        Sync();
+                    };
+                    gameBoxes.Add(cb);
+                    inner.Children.Add(cb);
+                }
+                panel.Children.Add(new Expander { Header = $"{category} ({titles.Count})", IsExpanded = true, Foreground = accent, Margin = new Thickness(2), Content = inner });
+            }
+
+            var scroll = new ScrollViewer { Content = panel, MaxHeight = 380, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
+            var chrome = new Border { Child = scroll, Background = bg, BorderBrush = border, BorderThickness = new Thickness(1), CornerRadius = new CornerRadius(6), MinWidth = 230 };
+            new Popup { Child = chrome, PlacementTarget = b, Placement = PlacementMode.Bottom, StaysOpen = false, AllowsTransparency = true }.IsOpen = true;
         }
 
         private void Close_Click(object sender, RoutedEventArgs e)

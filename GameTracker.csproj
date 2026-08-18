@@ -8,9 +8,9 @@
     <RootNamespace>GameTracker</RootNamespace>
     <Nullable>enable</Nullable>
     <ApplicationIcon>iguana-eye.ico</ApplicationIcon>
-    <Version>1.0.55</Version>
-    <AssemblyVersion>1.0.55.0</AssemblyVersion>
-    <FileVersion>1.0.55.0</FileVersion>
+    <Version>1.0.56</Version>
+    <AssemblyVersion>1.0.56.0</AssemblyVersion>
+    <FileVersion>1.0.56.0</FileVersion>
     <!-- The Node.js Discord bot lives alongside the app but is not part of the .NET build. -->
     <DefaultItemExcludes>$(DefaultItemExcludes);discord-bot\**</DefaultItemExcludes>
   </PropertyGroup>

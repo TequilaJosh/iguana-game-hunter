@@ -88,8 +88,12 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Foreground="#7a9070" FontSize="11" TextWrapping="Wrap" VerticalAlignment="Center"
-                           Text="On-stream tallies (deaths, catchphrases, anything). Turn on the Counters block in the layout editor. Each counter shows for its game (or all games). Set +/- hotkeys in Settings → Hotkeys so you can tap them mid-game."/>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Foreground="#7a9070" FontSize="11" TextWrapping="Wrap"
+                               Text="On-stream tallies (deaths, catchphrases, anything). Turn on the Counters block in the layout editor. Each counter shows for its game (or all games). Set +/- hotkeys per counter below so you can tap them mid-game."/>
+                    <TextBlock x:Name="CaptureStatus" Foreground="{DynamicResource ThemeAccent}" FontSize="11"
+                               FontWeight="Bold" Margin="0,4,0,0"/>
+                </StackPanel>
                 <Button Grid.Column="1" Content="+ Add counter" Click="Add_Click"
                         Style="{StaticResource Btn}" Margin="10,0,0,0" VerticalAlignment="Center"/>
             </Grid>
@@ -100,47 +104,65 @@
                         <DataTemplate>
                             <Border Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource ThemeBorder}"
                                     BorderThickness="1" CornerRadius="5" Padding="8" Margin="0,0,0,7">
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="*"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                        <ColumnDefinition Width="Auto"/>
-                                    </Grid.ColumnDefinitions>
-                                    <CheckBox Grid.Column="0" IsChecked="{Binding Show}" VerticalAlignment="Center"
-                                              Margin="0,0,6,0" ToolTip="Show on the overlay"/>
-                                    <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
-                                             Style="{StaticResource In}" Margin="0,0,6,0" ToolTip="Counter name"/>
-                                    <Button Grid.Column="2" Content="&#8722;1" Tag="{Binding}" Click="Minus_Click"
-                                            Style="{StaticResource Btn}" Margin="0,0,3,0"/>
-                                    <TextBox Grid.Column="3" Width="56" Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
-                                             Style="{StaticResource In}" Margin="0,0,3,0" TextAlignment="Center" ToolTip="Current value"/>
-                                    <Button Grid.Column="4" Content="+1" Tag="{Binding}" Click="Plus_Click"
-                                            Style="{StaticResource Btn}" Margin="0,0,3,0"/>
-                                    <Button Grid.Column="5" Content="&#8635;" Tag="{Binding}" Click="Reset_Click"
-                                            Style="{StaticResource Btn}" Margin="0,0,8,0" ToolTip="Reset to 0"/>
-                                    <ComboBox Grid.Column="6" Width="150" Margin="0,0,8,0" VerticalAlignment="Center"
-                                              ItemsSource="{Binding Games, RelativeSource={RelativeSource AncestorType=Window}}"
-                                              SelectedItem="{Binding GameLabel, Mode=TwoWay}"
-                                              ToolTip="Which game this counter shows for"/>
-                                    <Button Grid.Column="7" Tag="{Binding}" Click="PickColor_Click" Cursor="Hand"
-                                            Margin="0,0,8,0" ToolTip="Value color">
-                                        <Button.Template>
-                                            <ControlTemplate TargetType="Button">
-                                                <Border Width="18" Height="18" CornerRadius="3"
-                                                        Background="{Binding ColorBrush}"
-                                                        BorderBrush="{DynamicResource ThemeAccentDeep}" BorderThickness="1"/>
-                                            </ControlTemplate>
-                                        </Button.Template>
-                                    </Button>
-                                    <Button Grid.Column="8" Content="&#x2715;" Tag="{Binding}" Click="Remove_Click"
-                                            Style="{StaticResource Btn}" ToolTip="Remove counter"/>
-                                </Grid>
+                                <StackPanel>
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <CheckBox Grid.Column="0" IsChecked="{Binding Show}" VerticalAlignment="Center"
+                                                  Margin="0,0,6,0" ToolTip="Show on the overlay"/>
+                                        <TextBox Grid.Column="1" Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
+                                                 Style="{StaticResource In}" Margin="0,0,6,0" ToolTip="Counter name"/>
+                                        <Button Grid.Column="2" Content="&#8722;1" Tag="{Binding}" Click="Minus_Click"
+                                                Style="{StaticResource Btn}" Margin="0,0,3,0"/>
+                                        <TextBox Grid.Column="3" Width="56" Text="{Binding Value, UpdateSourceTrigger=PropertyChanged}"
+                                                 Style="{StaticResource In}" Margin="0,0,3,0" TextAlignment="Center" ToolTip="Current value"/>
+                                        <Button Grid.Column="4" Content="+1" Tag="{Binding}" Click="Plus_Click"
+                                                Style="{StaticResource Btn}" Margin="0,0,3,0"/>
+                                        <Button Grid.Column="5" Content="&#8635;" Tag="{Binding}" Click="Reset_Click"
+                                                Style="{StaticResource Btn}" Margin="0,0,8,0" ToolTip="Reset to 0"/>
+                                        <ComboBox Grid.Column="6" Width="150" Margin="0,0,8,0" VerticalAlignment="Center"
+                                                  ItemsSource="{Binding Games, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                  SelectedItem="{Binding GameLabel, Mode=TwoWay}"
+                                                  ToolTip="Which game this counter shows for"/>
+                                        <Button Grid.Column="7" Tag="{Binding}" Click="PickColor_Click" Cursor="Hand"
+                                                Margin="0,0,8,0" ToolTip="Value color">
+                                            <Button.Template>
+                                                <ControlTemplate TargetType="Button">
+                                                    <Border Width="18" Height="18" CornerRadius="3"
+                                                            Background="{Binding ColorBrush}"
+                                                            BorderBrush="{DynamicResource ThemeAccentDeep}" BorderThickness="1"/>
+                                                </ControlTemplate>
+                                            </Button.Template>
+                                        </Button>
+                                        <Button Grid.Column="8" Content="&#x2715;" Tag="{Binding}" Click="Remove_Click"
+                                                Style="{StaticResource Btn}" ToolTip="Remove counter"/>
+                                    </Grid>
+
+                                    <!-- +/- hotkeys -->
+                                    <StackPanel Orientation="Horizontal" Margin="26,7,0,0">
+                                        <TextBlock Text="&#9000; Hotkeys:" Foreground="#7a9070" FontSize="11"
+                                                   VerticalAlignment="Center" Margin="0,0,8,0"/>
+                                        <Button Content="{Binding IncHotkeyDisplay}" Tag="{Binding}" Click="IncHotkey_Click"
+                                                Style="{StaticResource Btn}" Margin="0,0,2,0" MinWidth="96"
+                                                ToolTip="Set the global +1 hotkey"/>
+                                        <Button Content="&#x2715;" Tag="{Binding}" Click="ClearIncHotkey_Click"
+                                                Style="{StaticResource Btn}" Margin="0,0,14,0" ToolTip="Clear +1 hotkey"/>
+                                        <Button Content="{Binding DecHotkeyDisplay}" Tag="{Binding}" Click="DecHotkey_Click"
+                                                Style="{StaticResource Btn}" Margin="0,0,2,0" MinWidth="96"
+                                                ToolTip="Set the global −1 hotkey"/>
+                                        <Button Content="&#x2715;" Tag="{Binding}" Click="ClearDecHotkey_Click"
+                                                Style="{StaticResource Btn}" ToolTip="Clear −1 hotkey"/>
+                                    </StackPanel>
+                                </StackPanel>
                             </Border>
                         </DataTemplate>
                     </ItemsControl.ItemTemplate>

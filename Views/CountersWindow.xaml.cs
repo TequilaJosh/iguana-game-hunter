@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using System.Windows;
+using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Threading;
 using GameTracker.Models;
@@ -120,9 +121,68 @@ namespace GameTracker.Views
 
         private void Close_Click(object sender, RoutedEventArgs e)
         {
+            EndHotkeyCapture(cancel: true);
             _push.Stop();
             SaveAndPush();
             Close();
+        }
+
+        // ── inline +/- hotkey capture ───────────────────────────────────────────
+        private Action<HotkeyBinding>? _hotkeyCapture;
+
+        private void IncHotkey_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement fe && fe.Tag is CounterVm v)
+                StartHotkeyCapture($"+1 for “{v.Name}”", hk => { v.IncHotkey = hk; Main?.RefreshHotkeys(); });
+        }
+
+        private void DecHotkey_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement fe && fe.Tag is CounterVm v)
+                StartHotkeyCapture($"−1 for “{v.Name}”", hk => { v.DecHotkey = hk; Main?.RefreshHotkeys(); });
+        }
+
+        private void ClearIncHotkey_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement fe && fe.Tag is CounterVm v) { v.IncHotkey = null; Main?.RefreshHotkeys(); }
+        }
+
+        private void ClearDecHotkey_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement fe && fe.Tag is CounterVm v) { v.DecHotkey = null; Main?.RefreshHotkeys(); }
+        }
+
+        private void StartHotkeyCapture(string what, Action<HotkeyBinding> apply)
+        {
+            EndHotkeyCapture(cancel: true);
+            Main?.PauseHotkeys();              // release globals so the combo reaches us
+            _hotkeyCapture = apply;
+            CaptureStatus.Text = $"Press a key combo for {what}…  (Esc cancels)";
+            PreviewKeyDown += HotkeyCapture_KeyDown;
+        }
+
+        private void EndHotkeyCapture(bool cancel)
+        {
+            if (_hotkeyCapture == null) return;
+            PreviewKeyDown -= HotkeyCapture_KeyDown;
+            _hotkeyCapture = null;
+            CaptureStatus.Text = "";
+            Main?.RefreshHotkeys();            // re-arm the global hotkeys
+        }
+
+        private void HotkeyCapture_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (_hotkeyCapture == null) return;
+            var key = e.Key == Key.System ? e.SystemKey : e.Key;
+            if (key is Key.LeftCtrl or Key.RightCtrl or Key.LeftShift or Key.RightShift
+                    or Key.LeftAlt or Key.RightAlt or Key.LWin or Key.RWin) return;   // ignore bare modifiers
+            e.Handled = true;
+            if (key == Key.Escape) { EndHotkeyCapture(cancel: true); return; }
+            var apply = _hotkeyCapture;
+            _hotkeyCapture = null;
+            PreviewKeyDown -= HotkeyCapture_KeyDown;
+            CaptureStatus.Text = "";
+            apply(new HotkeyBinding(Keyboard.Modifiers, key));
         }
 
         public sealed class CounterVm : INotifyPropertyChanged
@@ -131,8 +191,20 @@ namespace GameTracker.Views
             private string _name = "", _color = "#7cc44a", _game = "";
             private int _value;
             private bool _show = true;
-            public HotkeyBinding? IncHotkey;    // preserved across edits (set in Settings → Hotkeys)
-            public HotkeyBinding? DecHotkey;
+            private HotkeyBinding? _inc, _dec;
+
+            public HotkeyBinding? IncHotkey
+            {
+                get => _inc;
+                set { _inc = value; Raise(nameof(IncHotkey)); Raise(nameof(IncHotkeyDisplay)); _changed(); }
+            }
+            public HotkeyBinding? DecHotkey
+            {
+                get => _dec;
+                set { _dec = value; Raise(nameof(DecHotkey)); Raise(nameof(DecHotkeyDisplay)); _changed(); }
+            }
+            public string IncHotkeyDisplay => _inc?.Display ?? "set +1 key…";
+            public string DecHotkeyDisplay => _dec?.Display ?? "set −1 key…";
 
             public string Name { get => _name; set { _name = value; Bump(nameof(Name)); } }
             public int Value { get => _value; set { _value = value; Bump(nameof(Value)); } }
@@ -164,7 +236,7 @@ namespace GameTracker.Views
                 _name = c.Name, _value = c.Value,
                 _color = string.IsNullOrWhiteSpace(c.Color) ? "#7cc44a" : c.Color,
                 _show = c.Show, _game = c.Game ?? "",
-                IncHotkey = c.IncHotkey, DecHotkey = c.DecHotkey,
+                _inc = c.IncHotkey, _dec = c.DecHotkey,   // set backing fields (don't trigger a save on load)
                 _changed = changed,
             };
 

@@ -70,6 +70,10 @@ namespace GameTracker
         private const int HK_REDEEM_BASE = 10;
         private const int MAX_REDEEM_HK = 24;
         private const int HK_FX_STOP = 40;
+        // Per-counter hotkeys: increment ids 100.., decrement ids 140.. (index within each block).
+        private const int HK_COUNTER_INC_BASE = 100;
+        private const int HK_COUNTER_DEC_BASE = 140;
+        private const int MAX_COUNTER_HK = 24;
         private IntPtr _hwnd;
         private HotkeyConfig _hotkeys = new();
 
@@ -105,7 +109,27 @@ namespace GameTracker
                 if (hk != null && hk.VirtualKey != 0)
                     RegisterHotKey(_hwnd, HK_REDEEM_BASE + i, hk.Win32Modifiers, hk.VirtualKey);
             }
+
+            // Per-counter +/- hotkeys.
+            var counters = Services.SettingsService.LoadCounters();
+            for (int i = 0; i < counters.Count && i < MAX_COUNTER_HK; i++)
+            {
+                var inc = counters[i].IncHotkey;
+                if (inc != null && inc.VirtualKey != 0)
+                    RegisterHotKey(_hwnd, HK_COUNTER_INC_BASE + i, inc.Win32Modifiers, inc.VirtualKey);
+                var dec = counters[i].DecHotkey;
+                if (dec != null && dec.VirtualKey != 0)
+                    RegisterHotKey(_hwnd, HK_COUNTER_DEC_BASE + i, dec.Win32Modifiers, dec.VirtualKey);
+            }
         }
+
+        /// <summary>Distinct game titles (for the counters editor's per-game picker).</summary>
+        public System.Collections.Generic.List<string> AllGameTitles() =>
+            _games.Select(g => g.Title).Where(t => !string.IsNullOrWhiteSpace(t))
+                  .Distinct(StringComparer.OrdinalIgnoreCase).OrderBy(t => t).ToList();
+
+        /// <summary>The title of the game currently being streamed (empty if none).</summary>
+        public string CurrentGameTitle() => CurrentlyStreaming()?.Title ?? string.Empty;
 
         /// <summary>Re-read hotkey config + redeem hotkeys and re-register (Settings uses this).</summary>
         public void RefreshHotkeys()
@@ -124,6 +148,11 @@ namespace GameTracker
             UnregisterHotKey(_hwnd, HK_CLIP);
             UnregisterHotKey(_hwnd, HK_NOTE);
             for (int i = 0; i < MAX_REDEEM_HK; i++) UnregisterHotKey(_hwnd, HK_REDEEM_BASE + i);
+            for (int i = 0; i < MAX_COUNTER_HK; i++)
+            {
+                UnregisterHotKey(_hwnd, HK_COUNTER_INC_BASE + i);
+                UnregisterHotKey(_hwnd, HK_COUNTER_DEC_BASE + i);
+            }
             UnregisterHotKey(_hwnd, HK_FX_STOP);
         }
 
@@ -142,6 +171,16 @@ namespace GameTracker
                         if (id >= HK_REDEEM_BASE && id < HK_REDEEM_BASE + MAX_REDEEM_HK)
                         {
                             HotkeyRedeem(id - HK_REDEEM_BASE);
+                            handled = true;
+                        }
+                        else if (id >= HK_COUNTER_INC_BASE && id < HK_COUNTER_INC_BASE + MAX_COUNTER_HK)
+                        {
+                            CounterBump(id - HK_COUNTER_INC_BASE, +1);
+                            handled = true;
+                        }
+                        else if (id >= HK_COUNTER_DEC_BASE && id < HK_COUNTER_DEC_BASE + MAX_COUNTER_HK)
+                        {
+                            CounterBump(id - HK_COUNTER_DEC_BASE, -1);
                             handled = true;
                         }
                         break;
@@ -193,6 +232,26 @@ namespace GameTracker
                 Services.VoiceMorphService.ActivateByName(r.MorphPreset);
             Services.StreamStatsService.CountRedeem();
             StatusText.Text = $"Hotkey: fired {r.Command} (slot {index + 1}).";
+        }
+
+        // A per-counter +/- hotkey fired. If the editor is open it owns the value (keeps its UI
+        // in sync); otherwise bump + save + push straight to the overlay.
+        private void CounterBump(int index, int delta)
+        {
+            if (Views.CountersWindow.Current is { } w)
+            {
+                var open = Services.SettingsService.LoadCounters();
+                w.BumpByIndex(index, delta);
+                if (index >= 0 && index < open.Count)
+                    StatusText.Text = $"Counter: {open[index].Name} {(delta > 0 ? "+" : "")}{delta}.";
+                return;
+            }
+            var list = Services.SettingsService.LoadCounters();
+            if (index < 0 || index >= list.Count) return;
+            list[index].Value += delta;
+            Services.SettingsService.SaveCounters(list);
+            Services.OverlayServer.PushCounters(list);
+            StatusText.Text = $"Counter: {list[index].Name} = {list[index].Value}.";
         }
 
         // Ctrl+Shift+0: end the active morph and stop hotkey sounds.

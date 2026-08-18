@@ -375,8 +375,11 @@
                                         Style="{StaticResource Btn}" Margin="0,0,8,0"
                                         ToolTip="Up to 5 custom text panels for OBS"/>
                                 <Button Content="&#127919; Goals" Click="Goals_Click"
-                                        Style="{StaticResource Btn}"
+                                        Style="{StaticResource Btn}" Margin="0,0,8,0"
                                         ToolTip="Progress bars for the overlay (follower goals, donation goals, anything)"/>
+                                <Button Content="&#128290; Counters" Click="Counters_Click"
+                                        Style="{StaticResource Btn}"
+                                        ToolTip="On-stream tallies per game (deaths, catchphrases…) with +/- hotkeys"/>
                             </StackPanel>
                             <TextBlock Text="EFFECTS OVERLAY" Style="{StaticResource SecHdr}"/>
                             <TextBlock Foreground="#7a9070" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,6"

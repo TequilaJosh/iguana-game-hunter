@@ -722,6 +722,16 @@ namespace GameTracker.Views
             _goalsWindow.Show();
         }
 
+        private CountersWindow? _countersWindow;
+
+        private void Counters_Click(object sender, RoutedEventArgs e)
+        {
+            if (_countersWindow != null) { _countersWindow.Activate(); return; }
+            _countersWindow = new CountersWindow { Owner = this };
+            _countersWindow.Closed += (_, _) => _countersWindow = null;
+            _countersWindow.Show();
+        }
+
         private void UpdateOverlayStatus() =>
             OverlayStatus.Text = OverlayServer.IsRunning
                 ? $"Serving at {OverlayUrl} — use this as the OBS Browser source URL."
@@ -859,6 +869,23 @@ namespace GameTracker.Views
                     BuildHotkeys();
                 };
                 HotkeysContent.Children.Add(defBtn);
+            }
+
+            Head("GAME COUNTERS (+ / -)");
+            var counters = SettingsService.LoadCounters();
+            if (counters.Count == 0)
+                Note("No counters yet — create some in Settings → Overlay → Counters first.");
+            for (int i = 0; i < counters.Count && i < 24; i++)
+            {
+                int idx = i;
+                var c = counters[i];
+                var nm = string.IsNullOrWhiteSpace(c.Name) ? $"(counter {i + 1})" : c.Name;
+                HotkeysContent.Children.Add(Row("▲ " + nm + "  +1", c.IncHotkey,
+                    b => { var l = SettingsService.LoadCounters(); if (idx < l.Count) l[idx].IncHotkey = b; SettingsService.SaveCounters(l); Main?.RefreshHotkeys(); BuildHotkeys(); },
+                    () => { var l = SettingsService.LoadCounters(); if (idx < l.Count) l[idx].IncHotkey = null; SettingsService.SaveCounters(l); Main?.RefreshHotkeys(); BuildHotkeys(); }));
+                HotkeysContent.Children.Add(Row("▼ " + nm + "  -1", c.DecHotkey,
+                    b => { var l = SettingsService.LoadCounters(); if (idx < l.Count) l[idx].DecHotkey = b; SettingsService.SaveCounters(l); Main?.RefreshHotkeys(); BuildHotkeys(); },
+                    () => { var l = SettingsService.LoadCounters(); if (idx < l.Count) l[idx].DecHotkey = null; SettingsService.SaveCounters(l); Main?.RefreshHotkeys(); BuildHotkeys(); }));
             }
         }
 

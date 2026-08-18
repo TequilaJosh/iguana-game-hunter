@@ -154,6 +154,12 @@
   .feed-ic { font-size: 1.05em; flex: 0 0 auto; }
   .feed-tx { font-size: 0.62em; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
+  /* ---- Counters ---- */
+  #cntRows { display: flex; flex-direction: column; gap: 6px; overflow: hidden; }
+  .cnt-row { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+  .cnt-name { font-size: 0.72em; font-weight: 600; color: #cfe0bd; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .cnt-val { font-size: 1em; font-weight: 800; font-variant-numeric: tabular-nums; flex: 0 0 auto; }
+
   /* ---- Edit mode ---- */
   body.editing .box { cursor: move; outline: 1px dashed rgba(124, 196, 74, 0.55); }
   body.editing .box.sel { outline: 2px solid #7cc44a; }
@@ -434,6 +440,12 @@
       <div class="hd">🎯 GOALS</div>
       <div id="glRows"></div>
       <div class="rz" data-el="gl"></div>
+    </section>
+
+    <section id="cnt" class="box" hidden>
+      <div class="hd">🔢 COUNTERS</div>
+      <div id="cntRows"></div>
+      <div class="rz" data-el="cnt"></div>
     </section>
 
     <section id="poll" class="box" hidden>
@@ -766,6 +778,7 @@
         if (data.poll !== undefined) renderPoll(data.poll);
         if (Array.isArray(data.activity)) renderActivity(data.activity);
         if (data.state) renderState(data.state);
+        if (Array.isArray(data.counters)) renderCounters(data.counters);
         if (Array.isArray(data.chat)) {
           for (let i = 0; i < data.chat.length; i++) appendMessage(data.chat[i]);
         }
@@ -785,6 +798,9 @@
         break;
       case "goals":
         renderGoals(data.goals);
+        break;
+      case "counters":
+        renderCounters(data.counters);
         break;
       case "poll":
         renderPoll(data.poll);
@@ -833,6 +849,9 @@
       const sig = live + "|" + title + "|" + elapsed + "|" + requester + "|" + challenges.join("␟");
       if (sig === lastStateSig) return;            // nothing changed
       lastStateSig = sig;
+
+      // Game changed → re-filter the counters for the new game.
+      if (title !== currentGameTitle) { currentGameTitle = title; renderCounters(lastCounters); }
 
       // Now Playing — the block stays on screen; content switches between live and waiting.
       const npDot = document.getElementById("npDot");
@@ -1100,6 +1119,33 @@
           Math.min(100, 100 * (g.current || 0) / Math.max(1, g.target)), g.color || "#7cc44a"));
       }
     } catch (e) { logErr("renderGoals failed: " + (e && e.message)); }
+  }
+
+  // ---- Counters (per-game tallies) ----
+  let lastCounters = [];
+  let currentGameTitle = "";
+  function counterRow(name, value, color) {
+    const row = document.createElement("div");
+    row.className = "cnt-row";
+    const nm = document.createElement("span"); nm.className = "cnt-name"; nm.textContent = name;
+    const val = document.createElement("span"); val.className = "cnt-val"; val.textContent = value;
+    val.style.color = color || "#7cc44a";
+    row.appendChild(nm); row.appendChild(val);
+    return row;
+  }
+  function renderCounters(list) {
+    try {
+      if (Array.isArray(list)) lastCounters = list;
+      const box = document.getElementById("cnt");
+      const rows = document.getElementById("cntRows");
+      if (!box || !rows) return;
+      // Show a counter for the current game, or ones marked for all games ("").
+      const shown = EDIT ? lastCounters
+        : lastCounters.filter(function (c) { return !c.game || c.game === currentGameTitle; });
+      box.hidden = EDIT ? !isOn("cnt") : !(shown.length && isOn("cnt"));
+      while (rows.firstChild) rows.removeChild(rows.firstChild);
+      for (let i = 0; i < shown.length; i++) rows.appendChild(counterRow(shown[i].name, shown[i].value, shown[i].color));
+    } catch (e) { logErr("renderCounters failed: " + (e && e.message)); }
   }
 
   let lastPoll = null;
@@ -1454,9 +1500,9 @@
   // =========================================================================
   //  Layout (per-element position / size / font) + in-browser editor (?edit)
   // =========================================================================
-  const ELEMENTS = ["np", "ch", "chat", "cl", "gl", "poll", "feed"];
+  const ELEMENTS = ["np", "ch", "chat", "cl", "gl", "poll", "feed", "cnt"];
   const ELEMENT_NAMES = { np: "Now Playing", ch: "Challenges", chat: "Live Chat", cl: "Chatters",
-                          gl: "Goals", poll: "Poll", feed: "Activity Feed" };
+                          gl: "Goals", poll: "Poll", feed: "Activity Feed", cnt: "Counters" };
   const DEFAULT_LAYOUT = {
     np:   { x: 246, y: 48,  w: 618, h: 72,  font: "", size: 22, color: "#e8e0c4", bgo: 100 },
     ch:   { x: 246, y: 128, w: 294, h: 372, font: "", size: 18, color: "#e8e0c4", bgo: 100 },
@@ -1464,7 +1510,8 @@
     cl:   { x: 872, y: 128, w: 200, h: 372, font: "", size: 20, color: "#e8e0c4", bgo: 100 },
     gl:   { x: 246, y: 512, w: 294, h: 160, font: "", size: 18, color: "#e8e0c4", bgo: 100 },
     poll: { x: 548, y: 512, w: 316, h: 160, font: "", size: 18, color: "#e8e0c4", bgo: 100 },
-    feed: { x: 872, y: 512, w: 200, h: 160, font: "", size: 16, color: "#e8e0c4", bgo: 100, on: false }
+    feed: { x: 872, y: 512, w: 200, h: 160, font: "", size: 16, color: "#e8e0c4", bgo: 100, on: false },
+    cnt:  { x: 40,  y: 128, w: 196, h: 200, font: "", size: 20, color: "#e8e0c4", bgo: 100, on: false }
   };
   const FONTS = ["", "MR. Saturn", "Segoe UI", "Arial", "Verdana", "Tahoma", "Trebuchet MS",
                  "Georgia", "Times New Roman", "Courier New", "Consolas",
@@ -1528,6 +1575,11 @@
     if (pollEl) pollEl.hidden = !(isOn("poll") && lastPoll);
     const feedEl = document.getElementById("feed");
     if (feedEl) feedEl.hidden = !(isOn("feed") && lastActivity.length);
+    const cntEl = document.getElementById("cnt");
+    if (cntEl) {
+      const anyCnt = lastCounters.some(function (c) { return !c.game || c.game === currentGameTitle; });
+      cntEl.hidden = !(isOn("cnt") && anyCnt);
+    }
     lastStateSig = "";   // let the next state frame re-fill content
   }
 

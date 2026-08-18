@@ -70,6 +70,7 @@ namespace GameTracker.Services
         private static object? _chatters; // counts + chatters list state
         private static object? _panels;   // custom text-panel overlays (wire form)
         private static object? _goals;    // goal bars (wire form)
+        private static object? _counters; // per-game counters (wire form)
         private static object? _poll;     // active poll (wire form; null = none)
         private static readonly List<object> _activity = new(); // live activity feed (gifts/follows/subs…)
         private static readonly Dictionary<string, object> _latestByKind = new(); // newest item per kind (ticker)
@@ -106,6 +107,7 @@ namespace GameTracker.Services
                 _style = new { mode = f.ChatStyle, colors = f.BoxColors.ToArray() };
                 _panels = PanelsToWire(SettingsService.LoadTextPanels());
                 _goals = GoalsToWire(SettingsService.LoadGoals());
+                _counters = CountersToWire(SettingsService.LoadCounters());
                 _cts = new CancellationTokenSource();
                 _listener = new TcpListener(IPAddress.Loopback, Port);
                 _listener.Start();
@@ -649,7 +651,7 @@ namespace GameTracker.Services
             {
                 type = "snapshot", state = _state, chat = _chat,
                 layout = _layout, presets = _presets, style = _style, chatters = _chatters,
-                panels = _panels, morph = MorphSnapshot(), goals = _goals, poll = _poll,
+                panels = _panels, morph = MorphSnapshot(), goals = _goals, counters = _counters, poll = _poll,
                 activity = _activity.ToArray(),
                 activityLatest = new Dictionary<string, object>(_latestByKind),
                 ticker = _ticker,
@@ -906,6 +908,27 @@ namespace GameTracker.Services
             var wire = GoalsToWire(goals);
             lock (Gate) _goals = wire;
             Broadcast(new { type = "goals", goals = wire });
+        }
+
+        private static object CountersToWire(IEnumerable<GameCounter>? counters) =>
+            (counters ?? Enumerable.Empty<GameCounter>())
+                .Where(c => c.Show && !string.IsNullOrWhiteSpace(c.Name))
+                .Take(12)
+                .Select(c => new
+                {
+                    name = c.Name,
+                    value = c.Value,
+                    color = string.IsNullOrWhiteSpace(c.Color) ? "#7cc44a" : c.Color,
+                    game = c.Game ?? string.Empty,   // overlay shows it only for this game ("" = all)
+                }).ToArray();
+
+        /// <summary>Push the streamer's counters to all clients (live as they change).</summary>
+        public static void PushCounters(IEnumerable<GameCounter> counters)
+        {
+            if (!_running) return;
+            var wire = CountersToWire(counters);
+            lock (Gate) _counters = wire;
+            Broadcast(new { type = "counters", counters = wire });
         }
 
         /// <summary>Push the streamer's text panels to all clients (live while typing).</summary>

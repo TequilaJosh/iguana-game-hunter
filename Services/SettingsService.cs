@@ -41,6 +41,7 @@ namespace GameTracker.Services
             public ThemeSettings Theme { get; set; } = new();          // app colour theme
             public ChatTtsSettings Tts { get; set; } = new();          // read chat aloud
             public List<StreamGoal> Goals { get; set; } = new();       // overlay goal bars
+            public List<GameCounter> Counters { get; set; } = new();   // per-game on-stream counters
             public int MigrationRev { get; set; }                      // one-time defaults migrations applied
             public MorphSettings Morph { get; set; } = new();          // live mic voice morph
             public string? OverlayTicker { get; set; }                 // JSON: ticker banner config (null = default)
@@ -267,6 +268,15 @@ namespace GameTracker.Services
         {
             var s = LoadAll();
             s.Goals = goals;
+            SaveAll(s);
+        }
+
+        public static List<GameCounter> LoadCounters() => LoadAll().Counters ?? new List<GameCounter>();
+
+        public static void SaveCounters(List<GameCounter> counters)
+        {
+            var s = LoadAll();
+            s.Counters = counters;
             SaveAll(s);
         }
 

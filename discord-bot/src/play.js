@@ -8,6 +8,7 @@ import { CLASSES, RACES, CLASS_LIST, RACE_LIST, ZONE_LIST, STAT_KEYS, skillsForC
 import { derive, xpToNext, shopInventory, sellValue, gearScore, isZoneUnlocked } from './game/engine.js';
 import { getFight } from './game/fights.js';
 import { PROFESSIONS } from './game/professions.js';
+import { WORKER_COMMANDS } from './game/gather.js';
 import { runForChat } from './game/rpg.js';
 
 const GEAR_SLOTS = new Set(['weapon', 'head', 'body', 'shield', 'feet', 'accessory']);
@@ -102,6 +103,14 @@ function buildState(discordId) {
       affordable: (c.gold || 0) >= (i.price ?? i.value ?? 0),
     })),
     zones: ZONE_LIST.map((z) => ({ name: z.name, unlocked: isZoneUnlocked(c, z), cleared: !!c.cleared?.[z.id] })),
+    // Remaining gather cooldown per worker action (ms, 0 = ready) so the browser can
+    // show a live countdown over each button.
+    gatherCd: (() => {
+      const now = Date.now(), cd = c.gatherCd || {};
+      const o = {};
+      for (const k of WORKER_COMMANDS) o[k] = Math.max(0, (cd[k] || 0) - now);
+      return o;
+    })(),
     professions: PROF_KEYS.map((k) => ({ name: PROFESSIONS[k].name, emoji: PROFESSIONS[k].emoji, level: (c.professions?.[k]?.level) || 1 }))
       .filter((p) => p.level > 1 || p.name === 'Worker'),
   };
@@ -182,6 +191,13 @@ const PLAY_HTML = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
   button.p{background:var(--accent);color:#0a140e;border-color:var(--accent)}
   button.atk{background:#3a1c1c;border-color:#7a3a3a}button.atk:hover:not(:disabled){background:#4d2424}
   button.sm{padding:6px 9px;font-size:12px}
+  button.on{background:var(--accent);color:#0a140e;border-color:var(--accent)}
+  /* Gather button with a cooldown overlay */
+  button.gather{position:relative;overflow:hidden}
+  button.gather.cooling{color:var(--dim)}
+  .cd{position:absolute;inset:0;display:none;align-items:center;justify-content:center;
+      background:rgba(8,15,10,.78);color:#f0c84a;font-weight:800;font-size:13px;letter-spacing:.03em}
+  button.gather.cooling .cd{display:flex}
   .price{color:var(--gold);font-weight:700}
   .rar-uncommon{color:#6fd06f}.rar-rare{color:#5a9ad4}.rar-epic{color:#b06ad0}.rar-legendary{color:var(--gold)}
   .eqrow{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;border-bottom:1px solid rgba(35,51,31,.5)}
@@ -227,16 +243,29 @@ async function api(path,opts){
   if(!r.ok) throw new Error(d.error||("HTTP "+r.status));
   return d;
 }
-async function refresh(){ try{ S=await api("/play/api/state"); render(); }catch(e){ fail(e.message); } }
+async function refresh(){ try{ S=await api("/play/api/state"); syncCooldowns(); startCooldownTicker(); render(); }catch(e){ fail(e.message); } }
 function fail(m){ document.getElementById("root").innerHTML='<div class="card center">⚠️ '+esc(m)+'</div>'; }
 
 // Send a game command (as if the player typed "tt <cmd>"), then re-render from fresh state.
 async function cmd(c){
   if(BUSY) return; BUSY=true; render();
   try{ var d=await api("/play/api/cmd",{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify({command:c})});
-       LASTMSG=d.reply||""; S=d.state; }
+       LASTMSG=d.reply||""; S=d.state; syncCooldowns(); }
   catch(e){ LASTMSG="⚠️ "+e.message; }
-  BUSY=false; render();
+  BUSY=false; render(); maybeAuto();
+}
+
+// ── Auto-attack: a client-side loop that repeats the normal attack command every
+// ~0.85s until the fight ends or the player turns it off (replaces Discord's
+// message-editing auto-battle, which can't run in the browser). ─────────────────
+var AUTO=false, AUTO_TIMER=null;
+function toggleAuto(){ AUTO=!AUTO; render(); maybeAuto(); }
+function maybeAuto(){
+  if(AUTO_TIMER){ clearTimeout(AUTO_TIMER); AUTO_TIMER=null; }
+  if(S && !S.inFight){ AUTO=false; return; }        // fight over → stop
+  if(AUTO && S && S.inFight && !BUSY){
+    AUTO_TIMER=setTimeout(function(){ AUTO_TIMER=null; cmd('attack'); }, 850);
+  }
 }
 
 function theme(){ var t=THEME[S&&S.cls]||{c:"#7cc44a",e:"🎮"}; document.documentElement.style.setProperty("--accent",t.c); return t; }
@@ -288,6 +317,7 @@ function panelFight(){
     bar("Enemy HP",f.mhp,f.mmaxhp,"hp")+
     '<h3>Actions</h3><div class="btns">'+
       '<button class="atk" '+(BUSY?'disabled':'')+' onclick="cmd(\\'attack\\')">🗡️ Attack</button>'+
+      '<button class="sm '+(AUTO?'on':'')+'" onclick="toggleAuto()">'+(AUTO?'⏸️ Auto: ON':'▶️ Auto')+'</button>'+
       '<button class="sm" '+(BUSY||!hasPot?'disabled':'')+' onclick="cmd(\\'use\\')">🧪 Potion</button>'+
       '<button class="sm" '+(BUSY?'disabled':'')+' onclick="cmd(\\'flee\\')">🏃 Flee</button>'+
     '</div>'+
@@ -314,6 +344,38 @@ function tabBody(){
 }
 function actBtn(label,c,cls,dis){ return '<button class="'+(cls||'')+'" '+((BUSY||dis)?'disabled':'')+' onclick="cmd(\\''+c+'\\')">'+label+'</button>'; }
 
+// Gather button: disabled + overlaid with a live countdown while on cooldown.
+function gatherBtn(label,c){
+  var rem=(S.gatherCd&&S.gatherCd[c])||0;
+  var cooling=rem>0;
+  return '<button id="gb-'+c+'" class="sm gather'+(cooling?' cooling':'')+'" '+((BUSY||cooling)?'disabled':'')+
+    ' onclick="cmd(\\''+c+'\\')">'+label+'<span class="cd" id="cd-'+c+'">'+(cooling?fmtCd(rem):'')+'</span></button>';
+}
+function fmtCd(ms){ var s=Math.ceil(ms/1000); return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2); }
+
+// Turn the per-action remaining-ms from state into absolute local target times, so
+// the countdown keeps ticking between server fetches without clock-skew issues.
+var GCD_TARGET={};
+function syncCooldowns(){
+  if(!S||!S.gatherCd) return;
+  var now=Date.now();
+  for(var k in S.gatherCd){ var rem=S.gatherCd[k]; if(rem>0) GCD_TARGET[k]=now+rem; else delete GCD_TARGET[k]; }
+}
+// One shared 1s ticker updates the gather overlays in place (no full re-render).
+var COOLDOWN_TICKER=null;
+function startCooldownTicker(){
+  if(COOLDOWN_TICKER) return;
+  COOLDOWN_TICKER=setInterval(function(){
+    if(BUSY) return;
+    for(var k in GCD_TARGET){
+      var btn=document.getElementById('gb-'+k), el=document.getElementById('cd-'+k);
+      var rem=(GCD_TARGET[k]||0)-Date.now();
+      if(rem>0){ if(el)el.textContent=fmtCd(rem); if(btn){btn.classList.add('cooling');btn.disabled=true;} }
+      else { delete GCD_TARGET[k]; if(el)el.textContent=''; if(btn){btn.classList.remove('cooling');btn.disabled=false;} }
+    }
+  },1000);
+}
+
 function bodyAdventure(){
   var zonesCleared=S.zones.filter(function(z){return z.cleared;}).length;
   return '<div class="btns">'+
@@ -322,8 +384,8 @@ function bodyAdventure(){
       actBtn("🛌 Rest","rest")+
     '</div>'+
     '<h3>Gather</h3><div class="btns">'+
-      actBtn("🪓 Chop","chop","sm")+actBtn("⛏️ Mine","mine","sm")+actBtn("🎣 Fish","fish","sm")+
-      actBtn("🌿 Forage","forage","sm")+actBtn("🪏 Dig","dig","sm")+actBtn("🔦 Scavenge","scavenge","sm")+
+      gatherBtn("🪓 Chop","chop")+gatherBtn("⛏️ Mine","mine")+gatherBtn("🎣 Fish","fish")+
+      gatherBtn("🌿 Forage","forage")+gatherBtn("🪏 Dig","dig")+gatherBtn("🔦 Scavenge","scavenge")+
     '</div>'+
     '<h3>Zones ('+zonesCleared+'/'+S.zones.length+' cleared)</h3><div class="chips">'+
       S.zones.map(function(z){return '<span class="chip">'+(z.cleared?'✅':(z.unlocked?'🔓':'🔒'))+' '+esc(z.name)+'</span>';}).join("")+

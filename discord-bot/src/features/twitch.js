@@ -140,9 +140,10 @@ function onLine(line) {
 async function handleChat(channel, user, text) {
   const gid = chanToGuild[channel];
   if (!gid || !text) return;
-  // Only react to Tavern Tales commands, never ordinary chatter.
+  // Only react to Tavern Tales "tt" commands — NEVER "!" (those belong to StreamElements/
+  // Nightbot/etc.) or ordinary chatter, so the bot doesn't reply to everything.
   const low = text.toLowerCase();
-  const isCmd = low === 'tt' || low.startsWith('tt ') || low.startsWith('!');
+  const isCmd = low === 'tt' || low.startsWith('tt ');
   if (!isCmd) return;
 
   const reply = await handleGameMessage(discordClient, gid, 'twitch', user, text);

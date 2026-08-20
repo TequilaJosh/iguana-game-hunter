@@ -16,3 +16,7 @@ discord-bot/.env.bak
 .env.bak
 .env.bak*
 data/players.json.bak*
+
+# Web-play tokens (per-player secrets) — never commit
+discord-bot/**/webtokens.json
+discord-bot/.ttok

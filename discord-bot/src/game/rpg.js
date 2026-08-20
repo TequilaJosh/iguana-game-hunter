@@ -22,6 +22,7 @@ import { boxPrice, getBoxes, openBox } from './lootbox.js';
 import { ensureQuest, questProgress, questClaim } from './quests.js';
 import { guideUrl } from '../features/guide.js';
 import { profileUrl } from '../profile.js';
+import { playUrl } from '../play.js';
 import { getGuild } from '../guildStore.js';
 
 const PREFIX = '!';
@@ -189,6 +190,22 @@ function cmdProfile(msg) {
   const url = profileUrl(msg.author.id);
   if (url) return msg.reply(`🪪 **Your hero profile:** ${url}`);
   return msg.reply('Your character sheet: `tt char`. (A web profile link isn’t configured on this bot.)');
+}
+
+function cmdWeb(msg) {
+  const url = playUrl(msg.author.id);
+  if (!url) return msg.reply('The browser version isn’t configured on this bot. Play here with `tt` commands, or see `tt help`.');
+  // The link is a private key to this hero — DM it so it isn't exposed in public chat.
+  const send = async () => {
+    try {
+      const dm = await msg.author.createDM();
+      await dm.send(`🎮 **Play Tavern Tales in your browser** — this link is private to your hero (like a password, don’t share it):\n${url}`);
+      return msg.reply('🎮 I’ve DM’d you your private browser-play link! (It’s tied to your hero — keep it secret.)');
+    } catch {
+      return msg.reply(`🎮 **Play in your browser:** ${url}\n⚠️ This link controls your hero — treat it like a password and don’t share it.`);
+    }
+  };
+  return send();
 }
 
 function cmdClasses(msg) {
@@ -1016,6 +1033,7 @@ const COMMANDS = {
   inspect: cmdInspect, item: cmdInspect, examine: cmdInspect,
   guide: cmdGuide, wiki: cmdGuide,
   profile: cmdProfile, pf: cmdProfile,
+  web: cmdWeb, play: cmdWeb, browser: cmdWeb, online: cmdWeb,
   shop: cmdShop, store: cmdShop, buy: cmdBuy, sell: cmdSell,
   equip: cmdEquip, rest: cmdRest,
   leaderboard: cmdLeaderboard, lb: cmdLeaderboard,

@@ -9,6 +9,7 @@ import { derive, xpToNext, shopInventory, sellValue, gearScore, isZoneUnlocked }
 import { getFight } from './game/fights.js';
 import { PROFESSIONS } from './game/professions.js';
 import { WORKER_COMMANDS } from './game/gather.js';
+import { describeItem } from './game/itemInfo.js';
 import { runForChat } from './game/rpg.js';
 
 const GEAR_SLOTS = new Set(['weapon', 'head', 'body', 'shield', 'feet', 'accessory']);
@@ -95,12 +96,12 @@ function buildState(discordId) {
       turn: fight.turn, log: (fight.log || []).slice(-6),
     } : null,
     equipped: EQUIP_SLOTS.map((s) => ({ slot: s, name: c.equipped?.[s]?.name || null, rarity: c.equipped?.[s]?.rarity || '' })),
-    gear: gear.map((i, idx) => ({ n: idx + 1, name: i.name, slot: i.slot, rarity: i.rarity || '', score: gearScore(i) })),
+    gear: gear.map((i, idx) => ({ n: idx + 1, name: i.name, slot: i.slot, rarity: i.rarity || '', score: gearScore(i), desc: describeItem(i, c) })),
     bag: inv.filter((i) => !GEAR_SLOTS.has(i.slot))
-      .map((i) => ({ name: i.name, qty: i.qty || 1, slot: i.slot, potion: i.effect === 'heal_pct' })),
+      .map((i) => ({ name: i.name, qty: i.qty || 1, slot: i.slot, potion: i.effect === 'heal_pct', desc: describeItem(i, c) })),
     shop: shop.map((i, idx) => ({
       n: idx + 1, name: i.name, price: i.price ?? i.value ?? 0, slot: i.slot, rarity: i.rarity || '',
-      affordable: (c.gold || 0) >= (i.price ?? i.value ?? 0),
+      affordable: (c.gold || 0) >= (i.price ?? i.value ?? 0), desc: describeItem(i, c),
     })),
     zones: ZONE_LIST.map((z) => ({ name: z.name, unlocked: isZoneUnlocked(c, z), cleared: !!c.cleared?.[z.id] })),
     // Remaining gather cooldown per worker action (ms, 0 = ready) so the browser can
@@ -202,7 +203,17 @@ const PLAY_HTML = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
   .rar-uncommon{color:#6fd06f}.rar-rare{color:#5a9ad4}.rar-epic{color:#b06ad0}.rar-legendary{color:var(--gold)}
   .eqrow{display:flex;justify-content:space-between;font-size:13px;padding:3px 0;border-bottom:1px solid rgba(35,51,31,.5)}
   .eqrow .slot{color:var(--dim);text-transform:capitalize}.eqrow .empty{color:#5f7355}
-  .listrow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(35,51,31,.5);font-size:13px}
+  .listrow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:5px 0;font-size:13px}
+  .item{padding:8px 0;border-bottom:1px solid rgba(35,51,31,.5)}
+  .item:hover{background:rgba(124,196,74,.04)}
+  .idet{margin-top:2px;font-size:11.5px;line-height:1.5}
+  .istat{color:#b8c9ad}
+  .iflav{color:#7f9673;font-style:italic;margin-top:2px}
+  .cmp{display:inline-block;margin-left:4px;padding:1px 7px;border-radius:20px;font-size:11px;font-weight:700}
+  .cmp.up{background:rgba(111,208,111,.15);color:#7fd07f}
+  .cmp.down{background:rgba(212,106,106,.15);color:#e08a8a}
+  .cmp.same{background:rgba(147,168,136,.15);color:var(--dim)}
+  .cmp.new{background:rgba(240,200,74,.15);color:var(--gold)}
   .chips{display:flex;flex-wrap:wrap;gap:6px}
   .chip{background:#0a140e;border:1px solid var(--line);border-radius:20px;padding:3px 10px;font-size:12px}
   .chip .pill{color:var(--accent);font-weight:700}
@@ -255,15 +266,16 @@ async function cmd(c){
   BUSY=false; render(); maybeAuto();
 }
 
-// ── Auto-attack: a client-side loop that repeats the normal attack command every
-// ~0.85s until the fight ends or the player turns it off (replaces Discord's
-// message-editing auto-battle, which can't run in the browser). ─────────────────
-var AUTO=false, AUTO_TIMER=null;
-function toggleAuto(){ AUTO=!AUTO; render(); maybeAuto(); }
+// ── Auto-attack: always ON, but it waits for the player to throw the FIRST punch
+// (click Attack) before it takes over and keeps swinging every ~0.85s until the
+// fight ends. This replaces Discord's message-editing auto-battle, which can't run
+// in the browser, and still lets you open with a skill/potion if you prefer. ─────
+var AUTO=true, autoArmed=false, AUTO_TIMER=null;
+function toggleAuto(){ AUTO=!AUTO; if(!AUTO){ autoArmed=false; if(AUTO_TIMER){clearTimeout(AUTO_TIMER);AUTO_TIMER=null;} } render(); maybeAuto(); }
 function maybeAuto(){
   if(AUTO_TIMER){ clearTimeout(AUTO_TIMER); AUTO_TIMER=null; }
-  if(S && !S.inFight){ AUTO=false; return; }        // fight over → stop
-  if(AUTO && S && S.inFight && !BUSY){
+  if(S && !S.inFight){ autoArmed=false; return; }   // fight over → disarm for next time
+  if(AUTO && autoArmed && S && S.inFight && !BUSY){
     AUTO_TIMER=setTimeout(function(){ AUTO_TIMER=null; cmd('attack'); }, 850);
   }
 }
@@ -309,27 +321,28 @@ function logBox(){
 function panelFight(){
   var f=S.fight||{};
   var skills=S.skills.map(function(s){
-    return '<button class="sm" '+(BUSY||!s.affordable?'disabled':'')+' onclick="cmd(\\'skill '+s.n+'\\')">'+esc(s.name)+' <span class="muted">'+s.mp+'mp</span></button>';
+    return '<button class="sm"'+tip("Cast "+s.name+" — costs "+s.mp+" MP ("+s.type+").")+' '+(BUSY||!s.affordable?'disabled':'')+' onclick="cmd(\\'skill '+s.n+'\\')">'+esc(s.name)+' <span class="muted">'+s.mp+'mp</span></button>';
   }).join("");
   var hasPot=S.bag.some(function(b){return b.potion&&b.qty>0;});
   return '<div class="card">'+
     '<div class="foe"><div class="fn">'+(f.emoji||'👹')+' '+esc(f.monster)+'</div><div class="muted">Turn '+f.turn+'</div></div>'+
     bar("Enemy HP",f.mhp,f.mmaxhp,"hp")+
     '<h3>Actions</h3><div class="btns">'+
-      '<button class="atk" '+(BUSY?'disabled':'')+' onclick="cmd(\\'attack\\')">🗡️ Attack</button>'+
-      '<button class="sm '+(AUTO?'on':'')+'" onclick="toggleAuto()">'+(AUTO?'⏸️ Auto: ON':'▶️ Auto')+'</button>'+
-      '<button class="sm" '+(BUSY||!hasPot?'disabled':'')+' onclick="cmd(\\'use\\')">🧪 Potion</button>'+
-      '<button class="sm" '+(BUSY?'disabled':'')+' onclick="cmd(\\'flee\\')">🏃 Flee</button>'+
+      '<button class="atk" '+(BUSY?'disabled':'')+' title="Swing your weapon for one turn. Once you attack, auto-battle takes over and keeps swinging." onclick="cmd(\\'attack\\')">🗡️ Attack</button>'+
+      '<button class="sm '+(AUTO?'on':'')+'" title="Auto-battle repeats your attack until the fight ends. It waits for your first Attack before starting. Click to turn '+(AUTO?'off':'on')+'." onclick="toggleAuto()">'+(AUTO?'🤖 Auto: ON':'🤖 Auto: off')+'</button>'+
+      '<button class="sm" '+(BUSY||!hasPot?'disabled':'')+' title="Quaff a healing potion from your bag." onclick="cmd(\\'use\\')">🧪 Potion</button>'+
+      '<button class="sm" '+(BUSY?'disabled':'')+' title="Try to escape the fight. Faster heroes flee more reliably." onclick="cmd(\\'flee\\')">🏃 Flee</button>'+
     '</div>'+
+    '<div class="muted" style="margin-top:6px">'+(AUTO?(autoArmed&&S.inFight?'🤖 Auto-battling — tap Skill/Potion/Flee any time to interject.':'🤖 Auto-battle is ON — click 🗡️ Attack to begin.'):'Auto-battle is off — one action per click.')+'</div>'+
     (skills?'<h3>Skills</h3><div class="btns">'+skills+'</div>':'')+
   '</div>';
 }
 
 // ── Out of combat: tabbed action panels ─────────────────────────────────────
 function panelTabs(){
-  var tabs=[["adventure","⚔️ Adventure"],["shop","🛒 Shop"],["bag","🎒 Bag"],["craft","🔨 Craft"],["more","✨ More"]];
+  var tabs=[["adventure","⚔️ Adventure","Fight, gather materials, and see zones."],["shop","🛒 Shop","Buy gear and potions."],["bag","🎒 Bag","Equip, sell and inspect your items."],["craft","🔨 Craft","Craft gear, brew potions, enchant."],["more","✨ More","Quests, lootboxes, leaderboard, ascend."]];
   var bar='<div class="tabs">'+tabs.map(function(x){
-    return '<button class="'+(TAB===x[0]?'active':'')+'" onclick="setTab(\\''+x[0]+'\\')">'+x[1]+'</button>';
+    return '<button class="'+(TAB===x[0]?'active':'')+'"'+tip(x[2])+' onclick="setTab(\\''+x[0]+'\\')">'+x[1]+'</button>';
   }).join("")+'</div>';
   return '<div class="card">'+bar+tabBody()+'</div>';
 }
@@ -342,14 +355,38 @@ function tabBody(){
   if(TAB==="craft") return bodyCraft();
   return bodyMore();
 }
-function actBtn(label,c,cls,dis){ return '<button class="'+(cls||'')+'" '+((BUSY||dis)?'disabled':'')+' onclick="cmd(\\''+c+'\\')">'+label+'</button>'; }
+function tip(t){ return t?' title="'+esc(t)+'"':''; }
+function actBtn(label,c,cls,dis,title){ return '<button class="'+(cls||'')+'"'+tip(title)+' '+((BUSY||dis)?'disabled':'')+' onclick="cmd(\\''+c+'\\')">'+label+'</button>'; }
 
 // Gather button: disabled + overlaid with a live countdown while on cooldown.
-function gatherBtn(label,c){
+function gatherBtn(label,c,title){
   var rem=(S.gatherCd&&S.gatherCd[c])||0;
   var cooling=rem>0;
-  return '<button id="gb-'+c+'" class="sm gather'+(cooling?' cooling':'')+'" '+((BUSY||cooling)?'disabled':'')+
+  return '<button id="gb-'+c+'" class="sm gather'+(cooling?' cooling':'')+'"'+tip(title)+' '+((BUSY||cooling)?'disabled':'')+
     ' onclick="cmd(\\''+c+'\\')">'+label+'<span class="cd" id="cd-'+c+'">'+(cooling?fmtCd(rem):'')+'</span></button>';
+}
+
+// ── Item descriptions: stats, a comparison vs what's equipped, and funny flavor ──
+function cmpBadge(cmp){
+  if(!cmp) return '';
+  if(cmp.dir==='new') return '<span class="cmp new">✨ new slot</span>';
+  if(cmp.dir==='up') return '<span class="cmp up">▲ +'+cmp.delta+' vs your '+esc(cmp.text)+'</span>';
+  if(cmp.dir==='down') return '<span class="cmp down">▼ '+cmp.delta+' vs your '+esc(cmp.text)+'</span>';
+  return '<span class="cmp same">= same as your '+esc(cmp.text)+'</span>';
+}
+function itemDetail(d){
+  if(!d) return '';
+  return '<div class="idet">'+(d.stats?'<span class="istat">'+esc(d.stats)+'</span>':'')+cmpBadge(d.compare)+
+    (d.flavor?'<div class="iflav">\\u201c'+esc(d.flavor)+'\\u201d</div>':'')+'</div>';
+}
+function itemTip(name,d){
+  var t=name;
+  if(d){
+    if(d.stats) t+='\\n'+d.stats;
+    if(d.compare){ var c=d.compare; t+='\\n'+(c.dir==='new'?'New slot — nothing equipped':(c.dir==='up'?'+'+c.delta+' vs your '+c.text:(c.dir==='down'?c.delta+' vs your '+c.text:'Same as your '+c.text))); }
+    if(d.flavor) t+='\\n\\u201c'+d.flavor+'\\u201d';
+  }
+  return t;
 }
 function fmtCd(ms){ var s=Math.ceil(ms/1000); return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2); }
 
@@ -379,13 +416,17 @@ function startCooldownTicker(){
 function bodyAdventure(){
   var zonesCleared=S.zones.filter(function(z){return z.cleared;}).length;
   return '<div class="btns">'+
-      actBtn("⚔️ Adventure","adventure","p")+
-      actBtn("👑 Boss","boss")+
-      actBtn("🛌 Rest","rest")+
+      actBtn("⚔️ Adventure","adventure","p",false,"Explore the current zone and pick a fight for XP, gold and loot.")+
+      actBtn("👑 Boss","boss",null,false,"Fight the zone boss. Win to unlock the next zone.")+
+      actBtn("🛌 Rest","rest",null,false,"Rest at the tavern to fully restore HP and MP.")+
     '</div>'+
     '<h3>Gather</h3><div class="btns">'+
-      gatherBtn("🪓 Chop","chop")+gatherBtn("⛏️ Mine","mine")+gatherBtn("🎣 Fish","fish")+
-      gatherBtn("🌿 Forage","forage")+gatherBtn("🪏 Dig","dig")+gatherBtn("🔦 Scavenge","scavenge")+
+      gatherBtn("🪓 Chop","chop","Chop wood for crafting materials + Worker XP. 3-minute cooldown.")+
+      gatherBtn("⛏️ Mine","mine","Mine ore for crafting materials + Worker XP. 3-minute cooldown.")+
+      gatherBtn("🎣 Fish","fish","Fish up materials + Worker XP. 3-minute cooldown.")+
+      gatherBtn("🌿 Forage","forage","Forage herbs + Worker XP. 3-minute cooldown.")+
+      gatherBtn("🪏 Dig","dig","Dig for excavation finds + Worker XP. 3-minute cooldown.")+
+      gatherBtn("🔦 Scavenge","scavenge","Scavenge salvage + Worker XP. 3-minute cooldown.")+
     '</div>'+
     '<h3>Zones ('+zonesCleared+'/'+S.zones.length+' cleared)</h3><div class="chips">'+
       S.zones.map(function(z){return '<span class="chip">'+(z.cleared?'✅':(z.unlocked?'🔓':'🔒'))+' '+esc(z.name)+'</span>';}).join("")+
@@ -395,11 +436,13 @@ function bodyAdventure(){
 function bodyShop(){
   if(!S.shop.length) return '<div class="muted">The shop is empty right now.</div>';
   var rows=S.shop.map(function(it){
-    return '<div class="listrow"><span class="'+rar(it.rarity)+'">'+esc(it.name)+' <span class="muted">'+esc(it.slot)+'</span></span>'+
+    return '<div class="item"'+tip(itemTip(it.name,it.desc))+'>'+
+      '<div class="listrow"><span class="'+rar(it.rarity)+'">'+esc(it.name)+'</span>'+
       '<span><span class="price">🪙 '+it.price+'</span> '+
-      '<button class="sm" '+(BUSY||!it.affordable?'disabled':'')+' onclick="cmd(\\'buy '+it.n+'\\')">Buy</button></span></div>';
+      '<button class="sm"'+tip("Buy this with gold.")+' '+(BUSY||!it.affordable?'disabled':'')+' onclick="cmd(\\'buy '+it.n+'\\')">Buy</button></span></div>'+
+      itemDetail(it.desc)+'</div>';
   }).join("");
-  return '<div class="muted">Sell from the 🎒 Bag tab.</div>'+rows;
+  return '<div class="muted">Tap 🎒 Bag to equip or sell what you own.</div>'+rows;
 }
 
 function bodyBag(){
@@ -408,12 +451,16 @@ function bodyBag(){
       (s.name?'<span class="'+rar(s.rarity)+'">'+esc(s.name)+'</span>':'<span class="empty">— empty —</span>')+'</div>';
   }).join("");
   var gear=S.gear.length?('<h3>Gear — equip or sell</h3>'+S.gear.map(function(g){
-    return '<div class="listrow"><span class="'+rar(g.rarity)+'">'+esc(g.name)+' <span class="muted">'+esc(g.slot)+' · '+g.score+'</span></span>'+
-      '<span><button class="sm p" '+(BUSY?'disabled':'')+' onclick="cmd(\\'equip '+g.n+'\\')">Equip</button> '+
-      '<button class="sm" '+(BUSY?'disabled':'')+' onclick="cmd(\\'sell '+g.n+'\\')">Sell</button></span></div>';
-  }).join("")+'<div class="btns" style="margin-top:8px">'+actBtn("Sell all gear","sell allgear","sm")+actBtn("Sell all materials","sell all","sm")+'</div>'):'<h3>Gear</h3><div class="muted">No spare gear.</div>';
+    return '<div class="item"'+tip(itemTip(g.name,g.desc))+'>'+
+      '<div class="listrow"><span class="'+rar(g.rarity)+'">'+esc(g.name)+' <span class="muted">'+esc(g.slot)+'</span></span>'+
+      '<span><button class="sm p"'+tip("Equip this — swaps out your current "+g.slot+".")+' '+(BUSY?'disabled':'')+' onclick="cmd(\\'equip '+g.n+'\\')">Equip</button> '+
+      '<button class="sm"'+tip("Sell for gold.")+' '+(BUSY?'disabled':'')+' onclick="cmd(\\'sell '+g.n+'\\')">Sell</button></span></div>'+
+      itemDetail(g.desc)+'</div>';
+  }).join("")+'<div class="btns" style="margin-top:8px">'+actBtn("Sell all gear","sell allgear","sm",false,"Sell every unequipped gear piece at once.")+actBtn("Sell all materials","sell all","sm",false,"Sell all crafting materials at once.")+'</div>'):'<h3>Gear</h3><div class="muted">No spare gear.</div>';
   var items=S.bag.length?('<h3>Items & materials</h3>'+S.bag.map(function(b){
-    return '<div class="listrow"><span>'+(b.potion?'🧪 ':'')+esc(b.name)+'</span><span class="muted">×'+b.qty+'</span></div>';
+    return '<div class="item"'+tip(itemTip(b.name,b.desc))+'>'+
+      '<div class="listrow"><span>'+(b.potion?'🧪 ':'')+esc(b.name)+'</span><span class="muted">×'+b.qty+'</span></div>'+
+      itemDetail(b.desc)+'</div>';
   }).join("")):'';
   return eq+gear+items;
 }
@@ -421,7 +468,9 @@ function bodyBag(){
 function bodyCraft(){
   return '<div class="muted">Open a list, then tap a number to make it.</div>'+
     '<div class="btns" style="margin-top:8px">'+
-      actBtn("🔨 Recipes","recipes","sm")+actBtn("⚗️ Brew list","brew","sm")+actBtn("🔮 Enchant list","enchant","sm")+
+      actBtn("🔨 Recipes","recipes","sm",false,"List gear you can craft from materials (Crafter).")+
+      actBtn("⚗️ Brew list","brew","sm",false,"List potions you can brew (Alchemist).")+
+      actBtn("🔮 Enchant list","enchant","sm",false,"List enchantments you can apply (Enchanter).")+
     '</div>'+numPad(["craft","brew","enchant"])+
     '<h3>Professions</h3><div class="chips">'+
       S.professions.map(function(p){return '<span class="chip">'+esc(p.emoji)+' '+esc(p.name)+' <span class="pill">'+p.level+'</span></span>';}).join("")+
@@ -430,9 +479,11 @@ function bodyCraft(){
 
 function bodyMore(){
   return '<div class="btns">'+
-      actBtn("📜 Quest","quest","sm")+actBtn("🎁 Lootbox","lootbox","sm")+
-      actBtn("🏆 Leaderboard","leaderboard","sm")+actBtn("✨ Skills","skills","sm")+
-      actBtn("⭐ Ascend","ascend","sm")+
+      actBtn("📜 Quest","quest","sm",false,"View your daily quest and claim its reward.")+
+      actBtn("🎁 Lootbox","lootbox","sm",false,"Open a lootbox for random loot.")+
+      actBtn("🏆 Leaderboard","leaderboard","sm",false,"See the top heroes by level.")+
+      actBtn("✨ Skills","skills","sm",false,"List your class skills and what unlocks next.")+
+      actBtn("⭐ Ascend","ascend","sm",false,"Prestige at high level: reset for a permanent +2% stats each time.")+
     '</div>'+numPad(["lootbox","quest"])+
     '<div class="muted" style="margin-top:10px">Tip: your browser hero and your chat hero are the same character.</div>';
 }
@@ -445,7 +496,7 @@ function numPad(cmds){
   var hint = PADCMD && cmds.indexOf(PADCMD)>=0 ? PADCMD : null;
   var pick = hint || cmds[0];
   var nums="";
-  for(var i=1;i<=9;i++) nums+='<button class="sm" '+(BUSY?'disabled':'')+' onclick="cmd(\\''+pick+' '+i+'\\')">'+i+'</button>';
+  for(var i=1;i<=9;i++) nums+='<button class="sm"'+tip("Do: "+pick+" #"+i+" (from the list above)")+' '+(BUSY?'disabled':'')+' onclick="cmd(\\''+pick+' '+i+'\\')">'+i+'</button>';
   return '<div class="barlab" style="margin-top:10px"><span>Make #</span><span class="muted">'+esc(pick)+' &lt;#&gt;</span></div><div class="btns">'+nums+'</div>';
 }
 
@@ -462,7 +513,7 @@ function renderCreate(){
     '<div class="card"><h3>Choose a class</h3><div class="cls-pick">'+cls+'</div>'+
     '<h3>Choose a race</h3><div class="cls-pick">'+race+'</div>'+
     '<div class="center" style="margin-top:16px">'+
-      '<button class="p" '+(NEWCLS&&NEWRACE&&!BUSY?'':'disabled')+' onclick="doCreate()">🎉 Create Hero</button>'+
+      '<button class="p"'+tip("Create your hero with the chosen class and race.")+' '+(NEWCLS&&NEWRACE&&!BUSY?'':'disabled')+' onclick="doCreate()">🎉 Create Hero</button>'+
     '</div>'+(LASTMSG?'<div class="log" style="margin-top:12px">'+esc(LASTMSG)+'</div>':'')+'</div>';
 }
 function pickCls(id){ NEWCLS=id; renderCreate(); }
@@ -471,7 +522,12 @@ async function doCreate(){ if(!NEWCLS||!NEWRACE)return; await cmd("create "+NEWC
 
 // Track which list command was last run so the craft/more number pads target it.
 var _cmd=cmd;
-cmd=function(c){ var head=c.split(" ")[0]; if(["recipes","brew","enchant","lootbox","quest"].indexOf(head)>=0) PADCMD=(head==="recipes"?"craft":head); return _cmd(c); };
+cmd=function(c){
+  var head=c.split(" ")[0];
+  if(head==="attack") autoArmed=true;   // the first Attack click hands control to auto
+  if(["recipes","brew","enchant","lootbox","quest"].indexOf(head)>=0) PADCMD=(head==="recipes"?"craft":head);
+  return _cmd(c);
+};
 
 if(!TOKEN){ fail("No play link — type 'tt web' in chat to get your personal link."); }
 else refresh();

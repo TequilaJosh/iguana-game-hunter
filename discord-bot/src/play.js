@@ -259,11 +259,34 @@ function fail(m){ document.getElementById("root").innerHTML='<div class="card ce
 
 // Send a game command (as if the player typed "tt <cmd>"), then re-render from fresh state.
 async function cmd(c){
-  if(BUSY) return; BUSY=true; render();
+  if(BUSY) return; BUSY=true;
+  var wasFight=!!(S&&S.inFight);
   try{ var d=await api("/play/api/cmd",{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify({command:c})});
        LASTMSG=d.reply||""; S=d.state; syncCooldowns(); }
   catch(e){ LASTMSG="⚠️ "+e.message; }
-  BUSY=false; render(); maybeAuto();
+  BUSY=false;
+  // Staying in the SAME fight → patch values in place (no flicker). Any structural
+  // change (fight starts/ends, tab switch) → one full render.
+  if(wasFight && S && S.inFight && document.getElementById('combatPanel')) patchCombat();
+  else render();
+  maybeAuto();
+}
+
+// Update only the numbers/bars/log that changed this turn, leaving the DOM intact
+// so combat doesn't flash on every auto-swing.
+function patchCombat(){
+  var f=S.fight; if(!f){ render(); return; }
+  setW('ehp-fill',f.mhp,f.mmaxhp); setT('ehp-lab',f.mhp+' / '+f.mmaxhp);
+  setW('hp-fill',S.hp,S.maxhp);     setT('hp-lab',S.hp+' / '+S.maxhp);
+  setW('mp-fill',S.mp,S.maxmp);     setT('mp-lab',S.mp+' / '+S.maxmp);
+  setW('xp-fill',S.xp,S.xpNext);    setT('xp-lab',S.xp+' / '+S.xpNext);
+  setW('stam-fill',S.stamina,S.maxStamina); setT('stam-lab',S.stamina+' / '+S.maxStamina);
+  setT('gold-lab','🪙 '+S.gold+' gold');
+  setT('turnlab','Turn '+f.turn);
+  setT('autohint',autoHintText());
+  var lt=document.getElementById('logtext'); if(lt) lt.textContent=LASTMSG||'';
+  S.skills.forEach(function(s){ var b=document.getElementById('sk-'+s.n); if(b) b.disabled=!s.affordable; });
+  var pot=document.getElementById('potbtn'); if(pot) pot.disabled=!S.bag.some(function(b){return b.potion&&b.qty>0;});
 }
 
 // ── Auto-attack: always ON, but it waits for the player to throw the FIRST punch
@@ -295,45 +318,49 @@ function render(){
       '<div class="name">'+esc(S.name)+'</div>'+
       '<div class="sub">Lv '+S.level+' '+esc(S.raceName)+' '+esc(S.className)+stars+'</div>'+
     '</div></div>'+
-    bar("HP",S.hp,S.maxhp,"hp")+bar("MP",S.mp,S.maxmp,"mp")+
-    bar("XP",S.xp,S.xpNext,"xp")+bar("Stamina",S.stamina,S.maxStamina,"stam")+
+    bar("HP",S.hp,S.maxhp,"hp","hp")+bar("MP",S.mp,S.maxmp,"mp","mp")+
+    bar("XP",S.xp,S.xpNext,"xp","xp")+bar("Stamina",S.stamina,S.maxStamina,"stam","stam")+
     '<div class="grid">'+
       '<div class="stat"><b>'+S.power+'</b><span>Power</span></div>'+
       '<div class="stat"><b>'+S.def+'</b><span>Def</span></div>'+
       '<div class="stat"><b>'+S.res+'</b><span>Res</span></div>'+
     '</div><div class="grid">'+statCells+'</div>'+
-    '<div class="barlab" style="margin-top:12px"><span>🪙 '+S.gold+' gold</span><span></span></div>'+
+    '<div class="barlab" style="margin-top:12px"><span id="gold-lab">🪙 '+S.gold+' gold</span><span></span></div>'+
    '</div>';
 
   var right = S.inFight ? panelFight() : panelTabs();
   root.innerHTML='<div class="grid2">'+hero+'<div>'+logBox()+right+'</div></div>';
 }
 
-function bar(label,a,b,cls){
-  return '<div class="barlab"><span>'+label+'</span><span>'+a+' / '+b+'</span></div>'+
-         '<div class="bar"><div class="fill '+cls+'" style="width:'+pct(a,b)+'%"></div></div>';
+function bar(label,a,b,cls,id){
+  var lab=id?' id="'+id+'-lab"':'', fill=id?' id="'+id+'-fill"':'';
+  return '<div class="barlab"><span>'+label+'</span><span'+lab+'>'+a+' / '+b+'</span></div>'+
+         '<div class="bar"><div class="fill '+cls+'"'+fill+' style="width:'+pct(a,b)+'%"></div></div>';
 }
+function setW(id,a,b){ var e=document.getElementById(id); if(e) e.style.width=pct(a,b)+'%'; }
+function setT(id,t){ var e=document.getElementById(id); if(e) e.textContent=t; }
 function logBox(){
-  return '<div class="card" style="margin-bottom:14px"><div class="log">'+(BUSY?'<span class="spin">…thinking…</span>':(esc(LASTMSG)||'<span class="muted">Pick an action to begin your adventure.</span>'))+'</div></div>';
+  return '<div class="card" style="margin-bottom:14px"><div class="log" id="logtext">'+(esc(LASTMSG)||'<span class="muted">Pick an action to begin your adventure.</span>')+'</div></div>';
 }
+function autoHintText(){ return AUTO?(autoArmed&&S.inFight?'🤖 Auto-battling — tap Skill/Potion/Flee any time to interject.':'🤖 Auto-battle is ON — click 🗡️ Attack to begin.'):'Auto-battle is off — one action per click.'; }
 
 // ── Combat ──────────────────────────────────────────────────────────────────
 function panelFight(){
   var f=S.fight||{};
   var skills=S.skills.map(function(s){
-    return '<button class="sm"'+tip("Cast "+s.name+" — costs "+s.mp+" MP ("+s.type+").")+' '+(BUSY||!s.affordable?'disabled':'')+' onclick="cmd(\\'skill '+s.n+'\\')">'+esc(s.name)+' <span class="muted">'+s.mp+'mp</span></button>';
+    return '<button id="sk-'+s.n+'" class="sm"'+tip("Cast "+s.name+" — costs "+s.mp+" MP ("+s.type+").")+' '+(BUSY||!s.affordable?'disabled':'')+' onclick="cmd(\\'skill '+s.n+'\\')">'+esc(s.name)+' <span class="muted">'+s.mp+'mp</span></button>';
   }).join("");
   var hasPot=S.bag.some(function(b){return b.potion&&b.qty>0;});
-  return '<div class="card">'+
-    '<div class="foe"><div class="fn">'+(f.emoji||'👹')+' '+esc(f.monster)+'</div><div class="muted">Turn '+f.turn+'</div></div>'+
-    bar("Enemy HP",f.mhp,f.mmaxhp,"hp")+
+  return '<div class="card" id="combatPanel">'+
+    '<div class="foe"><div class="fn">'+(f.emoji||'👹')+' '+esc(f.monster)+'</div><div class="muted" id="turnlab">Turn '+f.turn+'</div></div>'+
+    bar("Enemy HP",f.mhp,f.mmaxhp,"hp","ehp")+
     '<h3>Actions</h3><div class="btns">'+
       '<button class="atk" '+(BUSY?'disabled':'')+' title="Swing your weapon for one turn. Once you attack, auto-battle takes over and keeps swinging." onclick="cmd(\\'attack\\')">🗡️ Attack</button>'+
       '<button class="sm '+(AUTO?'on':'')+'" title="Auto-battle repeats your attack until the fight ends. It waits for your first Attack before starting. Click to turn '+(AUTO?'off':'on')+'." onclick="toggleAuto()">'+(AUTO?'🤖 Auto: ON':'🤖 Auto: off')+'</button>'+
-      '<button class="sm" '+(BUSY||!hasPot?'disabled':'')+' title="Quaff a healing potion from your bag." onclick="cmd(\\'use\\')">🧪 Potion</button>'+
+      '<button id="potbtn" class="sm" '+(BUSY||!hasPot?'disabled':'')+' title="Quaff a healing potion from your bag." onclick="cmd(\\'use\\')">🧪 Potion</button>'+
       '<button class="sm" '+(BUSY?'disabled':'')+' title="Try to escape the fight. Faster heroes flee more reliably." onclick="cmd(\\'flee\\')">🏃 Flee</button>'+
     '</div>'+
-    '<div class="muted" style="margin-top:6px">'+(AUTO?(autoArmed&&S.inFight?'🤖 Auto-battling — tap Skill/Potion/Flee any time to interject.':'🤖 Auto-battle is ON — click 🗡️ Attack to begin.'):'Auto-battle is off — one action per click.')+'</div>'+
+    '<div class="muted" id="autohint" style="margin-top:6px">'+autoHintText()+'</div>'+
     (skills?'<h3>Skills</h3><div class="btns">'+skills+'</div>':'')+
   '</div>';
 }

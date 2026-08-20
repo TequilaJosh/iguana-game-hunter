@@ -3,10 +3,11 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { config } from './config.js';
 import { log } from './logger.js';
-import { getPlayer } from './game/store.js';
+import { getPlayer, savePlayer } from './game/store.js';
+import { merchantSale } from './game/professions.js';
 import { CLASSES, RACES, CLASS_LIST, RACE_LIST, ZONE_LIST, STAT_KEYS, skillsForClass } from './game/content.js';
 import { derive, xpToNext, shopInventory, sellValue, gearScore, isZoneUnlocked } from './game/engine.js';
-import { getFight } from './game/fights.js';
+import { getFight, addItem } from './game/fights.js';
 import { PROFESSIONS } from './game/professions.js';
 import { WORKER_COMMANDS } from './game/gather.js';
 import { describeItem } from './game/itemInfo.js';
@@ -56,6 +57,25 @@ export const playUrl = (discordId) => {
   return `${config.publicUrl.replace(/\/+$/, '')}/play?t=${tokenFor(discordId)}`;
 };
 
+// A tile emoji for an inventory item, by kind.
+const WEAPON_EMOJI = { sword: '🗡️', greatsword: '⚔️', axe: '🪓', spear: '🔱', dagger: '🔪', bow: '🏹', knuckles: '🥊', staff: '🪄', rod: '🔮', mace: '🔨' };
+const ARMOR_EMOJI = { head: '🪖', body: '🧥', shield: '🛡️', feet: '🥾', accessory: '💍' };
+function itemEmoji(it) {
+  if (it.slot === 'material') return '📦';
+  if (it.effect) {
+    const e = String(it.effect);
+    if (e.startsWith('cure:')) return '💊';
+    if (e.startsWith('damage:')) return '💣';
+    if (e === 'mp_pct') return '🔵';
+    if (e === 'revive') return '🪽';
+    if (e === 'flee_guaranteed') return '💨';
+    if (e === 'stamina') return '⚡';
+    return '🧪';
+  }
+  if (it.slot === 'weapon') return WEAPON_EMOJI[it.weapon_type] || '🗡️';
+  return ARMOR_EMOJI[it.slot] || '❔';
+}
+
 // ── State snapshot the browser renders from ─────────────────────────────────
 function buildState(discordId) {
   const c = getPlayer(discordId);
@@ -96,9 +116,13 @@ function buildState(discordId) {
       turn: fight.turn, log: (fight.log || []).slice(-6),
     } : null,
     equipped: EQUIP_SLOTS.map((s) => ({ slot: s, name: c.equipped?.[s]?.name || null, rarity: c.equipped?.[s]?.rarity || '' })),
-    gear: gear.map((i, idx) => ({ n: idx + 1, name: i.name, slot: i.slot, rarity: i.rarity || '', score: gearScore(i), desc: describeItem(i, c) })),
-    bag: inv.filter((i) => !GEAR_SLOTS.has(i.slot))
-      .map((i) => ({ name: i.name, qty: i.qty || 1, slot: i.slot, potion: i.effect === 'heal_pct', desc: describeItem(i, c) })),
+    // Unified bag: every non-equipped item, indexed by its position in char.inventory
+    // (ii) so the item-action endpoint can act on exactly the one clicked.
+    items: inv.map((i, ii) => ({
+      ii, name: i.name, slot: i.slot, rarity: i.rarity || '', qty: i.qty || 1,
+      gear: GEAR_SLOTS.has(i.slot), potion: i.effect === 'heal_pct', emoji: itemEmoji(i),
+      sell: sellValue(i) * (i.qty || 1), desc: describeItem(i, c),
+    })),
     shop: shop.map((i, idx) => ({
       n: idx + 1, name: i.name, price: i.price ?? i.value ?? 0, slot: i.slot, rarity: i.rarity || '',
       affordable: (c.gold || 0) >= (i.price ?? i.value ?? 0), desc: describeItem(i, c),
@@ -150,6 +174,44 @@ export function mountPlay(app, client) {
       return res.status(500).json({ error: 'Something went wrong running that.' });
     }
     res.json({ reply: reply || '…', state: buildState(req.discordId) });
+  });
+
+  // Per-item bag actions (equip / sell / toss) by inventory index — used by the
+  // grid UI. Goes through the store like everything else so chat + web stay in sync.
+  app.post('/play/api/item', gate, express_json_guard, (req, res) => {
+    const idx = Number(req.body?.idx);
+    const action = String(req.body?.action || '');
+    const c = getPlayer(req.discordId);
+    if (!c) return res.status(400).json({ error: 'No hero.' });
+    const inv = c.inventory || [];
+    const item = inv[idx];
+    if (!item) return res.json({ reply: 'That item is no longer in your bag.', state: buildState(req.discordId) });
+
+    let reply;
+    if (action === 'equip') {
+      if (!GEAR_SLOTS.has(item.slot)) { reply = `You can’t equip a ${item.name}.`; }
+      else {
+        c.equipped = c.equipped || {};
+        const old = c.equipped[item.slot];
+        c.equipped[item.slot] = item;
+        c.inventory = inv.filter((x) => x !== item);
+        if (old) addItem(c, old);
+        reply = `✅ Equipped ${item.name}${old ? ` (was ${old.name})` : ''}.`;
+      }
+    } else if (action === 'sell') {
+      const base = sellValue(item) * (item.qty || 1);
+      const { gold, leveled } = merchantSale(c, base);
+      c.gold = (c.gold || 0) + gold;
+      c.inventory = inv.filter((x) => x !== item);
+      reply = `💰 Sold ${item.qty > 1 ? item.qty + '× ' : ''}${item.name} for ${gold} 🪙.${leveled ? ' 💰 Merchant level up!' : ''}`;
+    } else if (action === 'toss') {
+      c.inventory = inv.filter((x) => x !== item);
+      reply = `🗑️ Tossed ${item.qty > 1 ? item.qty + '× ' : ''}${item.name}.`;
+    } else {
+      return res.status(400).json({ error: 'bad action' });
+    }
+    savePlayer(req.discordId, c);
+    res.json({ reply, state: buildState(req.discordId) });
   });
 }
 
@@ -225,6 +287,31 @@ const PLAY_HTML = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
   .tabs button.active{background:var(--accent);color:#0a140e;border-color:var(--accent)}
   .hide{display:none}
   .muted{color:var(--dim);font-size:12px}
+  /* Bag grid */
+  .bagGrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;
+           max-height:52vh;overflow-y:auto;padding:4px 2px}
+  .tile{position:relative;background:#0a140e;border:1px solid var(--line);border-radius:11px;
+        padding:9px 6px 8px;text-align:center;cursor:pointer;transition:.12s;min-height:78px}
+  .tile:hover{border-color:var(--accent);transform:translateY(-1px);background:#12241a}
+  .tile.sel{border-color:var(--accent);background:#15291b;box-shadow:0 0 0 1px var(--accent)}
+  .tile.rar-uncommon{border-color:#3f6b3f}.tile.rar-rare{border-color:#3a5f80}
+  .tile.rar-epic{border-color:#6a4a80}.tile.rar-legendary{border-color:#8a7326}
+  .tile .tie{font-size:26px;line-height:1}
+  .tile .tin{font-size:10.5px;color:var(--ink);margin-top:5px;line-height:1.25;
+             display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .tile .tq{position:absolute;top:4px;right:6px;font-size:10px;color:var(--dim);font-weight:700}
+  .tile .tc{position:absolute;top:3px;left:6px;font-size:11px;font-weight:800}
+  .tile .tc.up{color:#7fd07f}.tile .tc.down{color:#e08a8a}.tile .tc.same{color:var(--dim)}.tile .tc.new{color:var(--gold)}
+  .bagsel{background:#0a140e;border:1px solid var(--accent);border-radius:11px;padding:10px 12px;margin-bottom:10px}
+  .bstop{display:flex;justify-content:space-between;align-items:center;font-weight:700}
+  .bstop .x{background:none;border:none;color:var(--dim);font-size:14px;padding:2px 6px;cursor:pointer}
+  button.danger{background:#3a1c1c;border-color:#7a3a3a}
+  button.danger:hover:not(:disabled){background:#4d2424}
+  .bagpop{position:fixed;z-index:50;display:none;background:#0c1610;border:1px solid var(--accent);
+          border-radius:10px;padding:9px 11px;box-shadow:0 8px 30px rgba(0,0,0,.6);pointer-events:none;font-size:12px}
+  .bagpop .pn{font-weight:800;color:#fff}
+  .bagpop .ps{color:#b8c9ad;margin-top:3px}
+  .bagpop .pf{color:#7f9673;font-style:italic;margin-top:4px}
   .center{text-align:center}
   .cls-pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
   .pk{background:#0a140e;border:1px solid var(--line);border-radius:10px;padding:10px;cursor:pointer;text-align:left}
@@ -243,7 +330,7 @@ var THEME={
   cleric:{c:"#f0e6a6",e:"✨"},necromancer:{c:"#9a6ad0",e:"💀"},monk:{c:"#e0a45a",e:"👊"},bard:{c:"#e884b8",e:"🎵"}
 };
 var TOKEN=new URLSearchParams(location.search).get("t")||"";
-var S=null, TAB="adventure", NEWCLS=null, NEWRACE=null, BUSY=false, LASTMSG="";
+var S=null, TAB="adventure", NEWCLS=null, NEWRACE=null, BUSY=false, LASTMSG="", BAG_SEL=null;
 function esc(s){return String(s==null?"":s).replace(/[&<>]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;"}[c];});}
 function rar(r){return r?'rar-'+String(r).toLowerCase():'';}
 function pct(a,b){return Math.max(0,Math.min(100,Math.round(100*(a||0)/Math.max(1,b))));}
@@ -286,7 +373,7 @@ function patchCombat(){
   setT('autohint',autoHintText());
   var lt=document.getElementById('logtext'); if(lt) lt.textContent=LASTMSG||'';
   S.skills.forEach(function(s){ var b=document.getElementById('sk-'+s.n); if(b) b.disabled=!s.affordable; });
-  var pot=document.getElementById('potbtn'); if(pot) pot.disabled=!S.bag.some(function(b){return b.potion&&b.qty>0;});
+  var pot=document.getElementById('potbtn'); if(pot) pot.disabled=!S.items.some(function(b){return b.potion&&b.qty>0;});
 }
 
 // ── Auto-attack: always ON, but it waits for the player to throw the FIRST punch
@@ -350,7 +437,7 @@ function panelFight(){
   var skills=S.skills.map(function(s){
     return '<button id="sk-'+s.n+'" class="sm"'+tip("Cast "+s.name+" — costs "+s.mp+" MP ("+s.type+").")+' '+(BUSY||!s.affordable?'disabled':'')+' onclick="cmd(\\'skill '+s.n+'\\')">'+esc(s.name)+' <span class="muted">'+s.mp+'mp</span></button>';
   }).join("");
-  var hasPot=S.bag.some(function(b){return b.potion&&b.qty>0;});
+  var hasPot=S.items.some(function(b){return b.potion&&b.qty>0;});
   return '<div class="card" id="combatPanel">'+
     '<div class="foe"><div class="fn">'+(f.emoji||'👹')+' '+esc(f.monster)+'</div><div class="muted" id="turnlab">Turn '+f.turn+'</div></div>'+
     bar("Enemy HP",f.mhp,f.mmaxhp,"hp","ehp")+
@@ -373,7 +460,7 @@ function panelTabs(){
   }).join("")+'</div>';
   return '<div class="card">'+bar+tabBody()+'</div>';
 }
-function setTab(t){ TAB=t; render(); }
+function setTab(t){ TAB=t; BAG_SEL=null; bagOut(); render(); }
 
 function tabBody(){
   if(TAB==="adventure") return bodyAdventure();
@@ -477,20 +564,63 @@ function bodyBag(){
     return '<div class="eqrow"><span class="slot">'+esc(s.slot)+'</span>'+
       (s.name?'<span class="'+rar(s.rarity)+'">'+esc(s.name)+'</span>':'<span class="empty">— empty —</span>')+'</div>';
   }).join("");
-  var gear=S.gear.length?('<h3>Gear — equip or sell</h3>'+S.gear.map(function(g){
-    return '<div class="item"'+tip(itemTip(g.name,g.desc))+'>'+
-      '<div class="listrow"><span class="'+rar(g.rarity)+'">'+esc(g.name)+' <span class="muted">'+esc(g.slot)+'</span></span>'+
-      '<span><button class="sm p"'+tip("Equip this — swaps out your current "+g.slot+".")+' '+(BUSY?'disabled':'')+' onclick="cmd(\\'equip '+g.n+'\\')">Equip</button> '+
-      '<button class="sm"'+tip("Sell for gold.")+' '+(BUSY?'disabled':'')+' onclick="cmd(\\'sell '+g.n+'\\')">Sell</button></span></div>'+
-      itemDetail(g.desc)+'</div>';
-  }).join("")+'<div class="btns" style="margin-top:8px">'+actBtn("Sell all gear","sell allgear","sm",false,"Sell every unequipped gear piece at once.")+actBtn("Sell all materials","sell all","sm",false,"Sell all crafting materials at once.")+'</div>'):'<h3>Gear</h3><div class="muted">No spare gear.</div>';
-  var items=S.bag.length?('<h3>Items & materials</h3>'+S.bag.map(function(b){
-    return '<div class="item"'+tip(itemTip(b.name,b.desc))+'>'+
-      '<div class="listrow"><span>'+(b.potion?'🧪 ':'')+esc(b.name)+'</span><span class="muted">×'+b.qty+'</span></div>'+
-      itemDetail(b.desc)+'</div>';
-  }).join("")):'';
-  return eq+gear+items;
+  if(!S.items.length) return eq+'<h3>Bag</h3><div class="muted">Your bag is empty — go adventure!</div>';
+
+  // The action panel for the currently-selected tile.
+  var sel=null; for(var i=0;i<S.items.length;i++){ if(S.items[i].ii===BAG_SEL){ sel=S.items[i]; break; } }
+  var panel='';
+  if(sel){
+    var d=sel.desc;
+    panel='<div class="bagsel">'+
+      '<div class="bstop"><span class="'+rar(sel.rarity)+'">'+sel.emoji+' '+esc(sel.name)+'</span>'+
+        '<button class="x" title="Close" onclick="selectTile('+sel.ii+')">✕</button></div>'+
+      itemDetail(d)+
+      '<div class="btns" style="margin-top:8px">'+
+        (sel.gear?'<button class="sm p"'+tip("Equip — swaps out your current "+sel.slot+".")+' '+(BUSY?'disabled':'')+' onclick="itemAction('+sel.ii+',\\'equip\\')">⚔️ Equip</button>':'')+
+        '<button class="sm"'+tip("Sell for gold.")+' '+(BUSY?'disabled':'')+' onclick="itemAction('+sel.ii+',\\'sell\\')">💰 Sell · '+sel.sell+'🪙</button>'+
+        '<button class="sm danger"'+tip("Throw it away for nothing.")+' '+(BUSY?'disabled':'')+' onclick="itemAction('+sel.ii+',\\'toss\\')">🗑️ Toss</button>'+
+      '</div></div>';
+  }
+
+  var tiles=S.items.map(function(it,p){
+    var badge=it.desc.compare?'<div class="tc '+it.desc.compare.dir+'">'+cmpArrow(it.desc.compare)+'</div>':'';
+    return '<div class="tile '+rar(it.rarity)+(BAG_SEL===it.ii?' sel':'')+'"'+
+      ' onmouseenter="bagHover(event,'+p+')" onmouseleave="bagOut()" onclick="selectTile('+it.ii+')">'+
+      '<div class="tie">'+it.emoji+'</div>'+
+      '<div class="tin">'+esc(it.name)+'</div>'+
+      (it.qty>1?'<div class="tq">×'+it.qty+'</div>':'')+badge+'</div>';
+  }).join("");
+
+  return eq+'<h3>Bag — hover to inspect, tap to act</h3>'+panel+'<div class="bagGrid">'+tiles+'</div>';
 }
+function cmpArrow(c){ return c.dir==='up'?'▲':c.dir==='down'?'▼':c.dir==='new'?'✨':'='; }
+function selectTile(ii){ BAG_SEL=(BAG_SEL===ii?null:ii); bagOut(); render(); }
+
+// Per-item action → item endpoint, then re-render the bag with fresh state.
+async function itemAction(ii,action){
+  if(BUSY) return; BUSY=true; bagOut();
+  try{ var d=await api("/play/api/item",{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify({idx:ii,action:action})});
+       LASTMSG=d.reply||""; S=d.state; syncCooldowns(); }
+  catch(e){ LASTMSG="⚠️ "+e.message; }
+  BUSY=false; BAG_SEL=null; render();
+}
+
+// Floating hover popover with an item's stats, comparison and flavor.
+function ensurePop(){ var p=document.getElementById('bagpop'); if(!p){ p=document.createElement('div'); p.id='bagpop'; p.className='bagpop'; document.body.appendChild(p);} return p; }
+function bagHover(ev,p){
+  var it=S.items[p]; if(!it) return;
+  var d=it.desc, pop=ensurePop();
+  pop.innerHTML='<div class="pn '+rar(it.rarity)+'">'+it.emoji+' '+esc(it.name)+' <span class="muted">'+esc(it.slot)+'</span></div>'+
+    (d.stats?'<div class="ps">'+esc(d.stats)+'</div>':'')+
+    (d.compare?'<div style="margin-top:3px">'+cmpBadge(d.compare)+'</div>':'')+
+    (d.flavor?'<div class="pf">\\u201c'+esc(d.flavor)+'\\u201d</div>':'');
+  var r=ev.currentTarget.getBoundingClientRect();
+  var pw=Math.min(250,window.innerWidth-16); pop.style.width=pw+'px'; pop.style.display='block';
+  var left=r.left; if(left+pw>window.innerWidth-8) left=window.innerWidth-8-pw;
+  var top=r.bottom+8; if(top+pop.offsetHeight>window.innerHeight-8) top=r.top-8-pop.offsetHeight;
+  pop.style.left=Math.max(8,left)+'px'; pop.style.top=Math.max(8,top)+'px';
+}
+function bagOut(){ var p=document.getElementById('bagpop'); if(p) p.style.display='none'; }
 
 function bodyCraft(){
   return '<div class="muted">Open a list, then tap a number to make it.</div>'+

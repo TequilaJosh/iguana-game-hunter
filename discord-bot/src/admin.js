@@ -2,11 +2,14 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { config } from './config.js';
-import { getPlayer, savePlayer, allPlayers } from './game/store.js';
+import { getPlayer, savePlayer, allPlayers, deletePlayer } from './game/store.js';
 import { ITEMS, RARITIES, ZONE_LIST, CLASS_LIST } from './game/content.js';
 import { makeGear } from './game/engine.js';
 import { giveStack } from './game/invutil.js';
+import { PROFESSIONS } from './game/professions.js';
 import { log } from './logger.js';
+
+const EQUIP_SLOTS = ['weapon', 'head', 'body', 'shield', 'feet', 'accessory'];
 
 const GEAR_SLOTS = new Set(['weapon', 'head', 'body', 'shield', 'feet', 'accessory']);
 
@@ -28,6 +31,8 @@ function catalog() {
     items,
     rarities: RARITIES.map((r) => ({ id: r.id, name: r.name || r.id })),
     zones: ZONE_LIST.map((z) => ({ id: z.id, name: z.name })),
+    slots: EQUIP_SLOTS,
+    professions: PROF_KEYS.map((k) => ({ key: k, name: PROFESSIONS[k].name, emoji: PROFESSIONS[k].emoji })),
   };
 }
 
@@ -41,6 +46,13 @@ function summarizeInventory(char) {
     gear: GEAR_SLOTS.has(i.slot),
   }));
 }
+
+function summarizeEquipped(char) {
+  const eq = char.equipped || {};
+  return EQUIP_SLOTS.map((slot) => ({ slot, name: eq[slot]?.name || null, rarity: eq[slot]?.rarity || '' }));
+}
+
+const PROF_KEYS = Object.keys(PROFESSIONS);
 
 /** Add routes for the web player-editor to an existing Express app. */
 export function mountAdmin(app) {
@@ -73,6 +85,7 @@ export function mountAdmin(app) {
       stamina: c.stamina ?? 20, ascension: c.ascension || 0,
       cleared: c.cleared || {},
       inventory: summarizeInventory(c),
+      equipped: summarizeEquipped(c),
       professions: c.professions || {},
     });
   });
@@ -83,6 +96,7 @@ export function mountAdmin(app) {
     if (!c) return res.status(404).json({ error: 'No such player.' });
     const b = req.body || {};
     const num = (v, cur) => (Number.isFinite(+v) ? Math.round(+v) : cur);
+    if (typeof b.name === 'string' && b.name.trim()) c.name = b.name.trim().slice(0, 32);
     c.level = Math.max(1, num(b.level, c.level));
     c.xp = Math.max(0, num(b.xp, c.xp || 0));
     c.gold = Math.max(0, num(b.gold, c.gold || 0));
@@ -92,8 +106,56 @@ export function mountAdmin(app) {
       c.cleared = {};
       for (const z of ZONE_LIST) if (b.cleared[z.id]) c.cleared[z.id] = true;
     }
+    if (b.professions && typeof b.professions === 'object') {
+      c.professions = c.professions || {};
+      for (const key of PROF_KEYS) {
+        const p = b.professions[key];
+        if (p && Number.isFinite(+p.level)) {
+          c.professions[key] = { level: Math.max(1, Math.round(+p.level)), xp: Math.max(0, Math.round(+(p.xp) || 0)) };
+        }
+      }
+    }
     savePlayer(req.params.id, c);
-    log.info(`Admin edited ${c.name} (${req.params.id}) stats/cleared.`);
+    log.info(`Admin edited ${c.name} (${req.params.id}).`);
+    res.json({ ok: true });
+  });
+
+  // Equip a bag gear item to its slot (current equipped goes back to the bag).
+  app.post('/admin/api/player/:id/equip', (req, res) => {
+    const c = getPlayer(req.params.id);
+    if (!c) return res.status(404).json({ error: 'No such player.' });
+    const idx = Math.round(+(req.body?.idx));
+    const inv = c.inventory || [];
+    const item = inv[idx];
+    if (!item || !GEAR_SLOTS.has(item.slot)) return res.status(400).json({ error: 'Not a gear item.' });
+    c.equipped = c.equipped || {};
+    const old = c.equipped[item.slot];
+    c.equipped[item.slot] = item;
+    inv.splice(idx, 1);
+    if (old) inv.push(old);
+    savePlayer(req.params.id, c);
+    res.json({ ok: true, inventory: summarizeInventory(c), equipped: summarizeEquipped(c) });
+  });
+
+  // Unequip a slot back into the bag.
+  app.post('/admin/api/player/:id/unequip', (req, res) => {
+    const c = getPlayer(req.params.id);
+    if (!c) return res.status(404).json({ error: 'No such player.' });
+    const slot = String(req.body?.slot || '');
+    const eq = c.equipped || {};
+    if (!eq[slot]) return res.status(400).json({ error: 'Nothing equipped there.' });
+    (c.inventory = c.inventory || []).push(eq[slot]);
+    delete eq[slot];
+    savePlayer(req.params.id, c);
+    res.json({ ok: true, inventory: summarizeInventory(c), equipped: summarizeEquipped(c) });
+  });
+
+  // Reset: delete the character entirely (they can re-roll with tt create).
+  app.post('/admin/api/player/:id/delete', (req, res) => {
+    const c = getPlayer(req.params.id);
+    if (!c) return res.status(404).json({ error: 'No such player.' });
+    deletePlayer(req.params.id);
+    log.info(`Admin deleted character ${c.name} (${req.params.id}).`);
     res.json({ ok: true });
   });
 
@@ -195,8 +257,9 @@ const ADMIN_HTML = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
     </div>
 
     <div class="card" id="statsCard">
-      <h2>Stats</h2>
+      <h2>Character</h2>
       <div class="row">
+        <div><label>Name</label><input type="text" id="name" maxlength="32" style="width:200px"/></div>
         <div><label>Level</label><input type="number" id="level"/></div>
         <div><label>XP</label><input type="number" id="xp"/></div>
         <div><label>Gold</label><input type="number" id="gold"/></div>
@@ -205,8 +268,15 @@ const ADMIN_HTML = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
       </div>
       <label>Zones cleared (tick to unlock the next zone)</label>
       <div class="zones" id="zones"></div>
-      <div class="row" style="margin-top:12px"><button onclick="saveStats()">Save stats</button></div>
+      <label style="margin-top:10px">Profession levels</label>
+      <div class="row" id="profs"></div>
+      <div class="row" style="margin-top:12px"><button onclick="saveStats()">Save changes</button></div>
       <div class="status" id="statsStatus"></div>
+    </div>
+
+    <div class="card">
+      <h2>Equipped gear</h2>
+      <table><thead><tr><th>Slot</th><th>Item</th><th></th></tr></thead><tbody id="equipped"></tbody></table>
     </div>
 
     <div class="card">
@@ -223,6 +293,13 @@ const ADMIN_HTML = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
     <div class="card">
       <h2>Inventory</h2>
       <table><thead><tr><th>Item</th><th>Slot</th><th>Qty</th><th></th></tr></thead><tbody id="inv"></tbody></table>
+    </div>
+
+    <div class="card">
+      <h2 style="color:var(--danger)">Danger zone</h2>
+      <p class="sub" style="margin:0 0 8px">Delete this character completely — they can start fresh with <code>tt create</code>.</p>
+      <button class="danger" onclick="deleteChar()">Delete character</button>
+      <div class="status" id="dangerStatus"></div>
     </div>
   </div>
 
@@ -273,6 +350,7 @@ async function loadPlayer(){
   try{
     var c=await api("/admin/api/player/"+encodeURIComponent(PID));
     document.getElementById("who").textContent=c.name+" · "+(c.race||"")+" "+(c.cls||"");
+    document.getElementById("name").value=c.name||"";
     document.getElementById("level").value=c.level;
     document.getElementById("xp").value=c.xp;
     document.getElementById("gold").value=c.gold;
@@ -282,27 +360,64 @@ async function loadPlayer(){
       var on=c.cleared&&c.cleared[z.id]?"checked":"";
       return '<label><input type="checkbox" class="zc" value="'+esc(z.id)+'" '+on+'/> '+esc(z.name)+'</label>';
     }).join("");
+    document.getElementById("profs").innerHTML=(CAT.professions||[]).map(function(p){
+      var lvl=(c.professions&&c.professions[p.key]&&c.professions[p.key].level)||1;
+      return '<div><label>'+esc(p.emoji)+' '+esc(p.name)+'</label><input type="number" id="prof_'+esc(p.key)+'" value="'+lvl+'" min="1" style="width:70px"/></div>';
+    }).join("");
+    renderEquipped(c.equipped);
     renderInv(c.inventory);
   }catch(e){ st.textContent="⚠ "+e.message; }
 }
 
+var EQ=[];
+function renderEquipped(eq){
+  EQ=eq||[];
+  document.getElementById("equipped").innerHTML=EQ.map(function(s,i){
+    var item=s.name?esc(s.name)+(s.rarity?' <span class="pill">'+esc(s.rarity)+'</span>':''):'<span style="color:var(--dim)">— empty —</span>';
+    var btn=s.name?'<button class="danger" onclick="unequip('+i+')">Unequip</button>':'';
+    return '<tr><td>'+esc(s.slot)+'</td><td>'+item+'</td><td>'+btn+'</td></tr>';
+  }).join("");
+}
+
 function renderInv(inv){
   document.getElementById("inv").innerHTML=(inv||[]).map(function(i){
-    return '<tr><td>'+esc(i.name)+(i.rarity?' <span class="pill">'+esc(i.rarity)+'</span>':'')+'</td><td>'+esc(i.slot)+'</td><td>'+i.qty+'</td>'+
-      '<td><button class="danger" onclick="removeItem('+i.idx+')">Remove</button></td></tr>';
+    var actions=(i.gear?'<button onclick="equipItem('+i.idx+')">Equip</button> ':'')+'<button class="danger" onclick="removeItem('+i.idx+')">Remove</button>';
+    return '<tr><td>'+esc(i.name)+(i.rarity?' <span class="pill">'+esc(i.rarity)+'</span>':'')+'</td><td>'+esc(i.slot)+'</td><td>'+i.qty+'</td><td>'+actions+'</td></tr>';
   }).join("") || '<tr><td colspan="4" style="color:var(--dim)">Empty</td></tr>';
 }
+
+function purl(sfx){return "/admin/api/player/"+encodeURIComponent(PID)+(sfx||"");}
 
 async function saveStats(){
   var st=document.getElementById("statsStatus");
   var cleared={};document.querySelectorAll(".zc").forEach(function(cb){if(cb.checked)cleared[cb.value]=true;});
+  var professions={};(CAT.professions||[]).forEach(function(p){var el=document.getElementById("prof_"+p.key);if(el)professions[p.key]={level:+el.value};});
   try{
-    await api("/admin/api/player/"+encodeURIComponent(PID),{method:"POST",body:JSON.stringify({
+    await api(purl(),{method:"POST",body:JSON.stringify({
+      name:document.getElementById("name").value,
       level:+document.getElementById("level").value,xp:+document.getElementById("xp").value,
       gold:+document.getElementById("gold").value,stamina:+document.getElementById("stamina").value,
-      ascension:+document.getElementById("ascension").value,cleared:cleared})});
+      ascension:+document.getElementById("ascension").value,cleared:cleared,professions:professions})});
     st.textContent="✓ Saved.";
+    var opt=document.getElementById("player").selectedOptions[0];
+    if(opt) opt.textContent=document.getElementById("name").value+" — Lv "+document.getElementById("level").value;
   }catch(e){ st.textContent="⚠ "+e.message; }
+}
+
+async function equipItem(idx){
+  try{ var r=await api(purl("/equip"),{method:"POST",body:JSON.stringify({idx:idx})}); renderInv(r.inventory); renderEquipped(r.equipped); }
+  catch(e){ alert(e.message); }
+}
+async function unequip(i){
+  var slot=(EQ[i]||{}).slot; if(!slot)return;
+  try{ var r=await api(purl("/unequip"),{method:"POST",body:JSON.stringify({slot:slot})}); renderInv(r.inventory); renderEquipped(r.equipped); }
+  catch(e){ alert(e.message); }
+}
+async function deleteChar(){
+  if(!confirm("Delete this character permanently? They'll start over next time they play."))return;
+  var st=document.getElementById("dangerStatus");
+  try{ await api(purl("/delete"),{method:"POST",body:"{}"}); st.textContent="✓ Deleted."; document.getElementById("editor").classList.add("hide"); loadPlayers(); }
+  catch(e){ st.textContent="⚠ "+e.message; }
 }
 
 async function giveItem(){

@@ -5,6 +5,7 @@ import { postClip } from './features/clips.js';
 import { postRecap } from './features/recap.js';
 import { guideHtml } from './features/guide.js';
 import { mountAdmin } from './admin.js';
+import { mountProfile } from './profile.js';
 import { handleGameMessage } from './game/bridge.js';
 import { forceRaid } from './game/raids.js';
 import { log } from './logger.js';
@@ -106,7 +107,8 @@ export function startIngestServer(client) {
     res.json(r.error ? { ok: false, error: r.error } : { ok: true, boss: r.raid.boss.name, zone: r.zone.name });
   });
 
-  mountAdmin(app);   // web player-editor at /admin (password-gated)
+  mountAdmin(app);     // web player-editor at /admin (password-gated)
+  mountProfile(app);   // public read-only hero profiles at /profile
 
   app.listen(config.port, () => log.info(`Ingest server listening on :${config.port}`));
 }

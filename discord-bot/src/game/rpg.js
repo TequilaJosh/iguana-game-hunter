@@ -21,6 +21,7 @@ import { enchantList, enchantCap, nextCost, doEnchant, REAGENT_NAME } from './en
 import { boxPrice, getBoxes, openBox } from './lootbox.js';
 import { ensureQuest, questProgress, questClaim } from './quests.js';
 import { guideUrl } from '../features/guide.js';
+import { profileUrl } from '../profile.js';
 import { getGuild } from '../guildStore.js';
 
 const PREFIX = '!';
@@ -181,6 +182,13 @@ function cmdGuide(msg) {
   const url = guideUrl();
   if (url) return msg.reply(`📖 **Tavern Tales player guide:** ${url}\nEverything — how to play, every command, classes, professions & items.`);
   return msg.reply('📖 Full command list: `tt help`. (A web guide link isn’t configured on this bot.)');
+}
+
+function cmdProfile(msg) {
+  if (!getPlayer(msg.author.id)) return msg.reply('No hero yet — `tt create` first.');
+  const url = profileUrl(msg.author.id);
+  if (url) return msg.reply(`🪪 **Your hero profile:** ${url}`);
+  return msg.reply('Your character sheet: `tt char`. (A web profile link isn’t configured on this bot.)');
 }
 
 function cmdClasses(msg) {
@@ -1007,6 +1015,7 @@ const COMMANDS = {
   inv: cmdInv, inventory: cmdInv, bag: cmdInv,
   inspect: cmdInspect, item: cmdInspect, examine: cmdInspect,
   guide: cmdGuide, wiki: cmdGuide,
+  profile: cmdProfile, pf: cmdProfile,
   shop: cmdShop, store: cmdShop, buy: cmdBuy, sell: cmdSell,
   equip: cmdEquip, rest: cmdRest,
   leaderboard: cmdLeaderboard, lb: cmdLeaderboard,

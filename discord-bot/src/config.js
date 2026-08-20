@@ -17,6 +17,9 @@ export const config = {
   // Where per-server config is persisted. On a host, point this at a persistent volume.
   dataDir: process.env.DATA_DIR || './data',
 
+  // Password for the web player-editor at /admin. Leave blank to disable the panel.
+  adminToken: get('ADMIN_TOKEN'),
+
   // Twitch chat integration (optional): a bot account that joins streamers' channels
   // and runs Tavern Tales in chat, independent of Game Hunter. Channels are set per
   // server with /setup twitch. Live-join needs a Twitch app (client id + secret).

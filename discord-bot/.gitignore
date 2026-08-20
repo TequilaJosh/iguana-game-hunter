@@ -14,3 +14,5 @@ discord-bot/bot.out.log
 discord-bot/bot.err.log
 discord-bot/.env.bak
 .env.bak
+.env.bak*
+data/players.json.bak*

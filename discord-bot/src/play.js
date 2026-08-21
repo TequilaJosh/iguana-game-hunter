@@ -155,7 +155,7 @@ function buildState(discordId) {
       n: idx + 1, name: i.name, price: i.price ?? i.value ?? 0, slot: i.slot, rarity: i.rarity || '',
       affordable: (c.gold || 0) >= (i.price ?? i.value ?? 0), desc: describeItem(i, c),
     })),
-    zones: ZONE_LIST.map((z) => ({ name: z.name, unlocked: isZoneUnlocked(c, z), cleared: !!c.cleared?.[z.id] })),
+    zones: ZONE_LIST.map((z) => ({ id: z.id, name: z.name, unlocked: isZoneUnlocked(c, z), cleared: !!c.cleared?.[z.id] })),
     // Remaining gather cooldown per worker action (ms, 0 = ready) so the browser can
     // show a live countdown over each button.
     gatherCd: (() => {
@@ -351,6 +351,8 @@ const PLAY_HTML = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
   .chip.zc-cleared{color:#7fd07f;border-color:#2f4a2f;background:rgba(111,208,111,.07)}
   .chip.zc-open{color:var(--ink);border-color:var(--accent);background:rgba(124,196,74,.12);font-weight:700}
   .chip.zc-locked{opacity:.45}
+  .chip.zc-click{cursor:pointer}
+  .chip.zc-click:hover{border-color:var(--accent);background:rgba(124,196,74,.2)}
   .ztag{font-size:9px;font-weight:800;color:#0a140e;background:var(--accent);border-radius:10px;padding:1px 6px;margin-left:4px;vertical-align:middle}
   .log{background:#080f0a;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px;
        min-height:44px;white-space:pre-wrap;line-height:1.5}
@@ -538,7 +540,17 @@ function bar(label,a,b,cls,id){
 function setW(id,a,b){ var e=document.getElementById(id); if(e) e.style.width=pct(a,b)+'%'; }
 function setT(id,t){ var e=document.getElementById(id); if(e) e.textContent=t; }
 function logBox(){
-  return '<div class="card" style="margin-bottom:14px"><div class="log" id="logtext">'+(esc(LASTMSG)||'<span class="muted">Pick an action to begin your adventure.</span>')+'</div></div>';
+  return '<div class="card" style="margin-bottom:14px"><div class="log" id="logtext">'+(esc(cleanMsg(LASTMSG))||'<span class="muted">Pick an action to begin your adventure.</span>')+'</div></div>';
+}
+// Tidy a reply for the town log box: drop the blow-by-blow (it was in the fight log)
+// and the trailing "Next: tt …" command hints, keeping the outcome + rewards + loot.
+function cleanMsg(m){
+  if(!m) return m;
+  m=m.replace(/(?:·\\s*)?(?:▶️\\s*)?Next:[\\s\\S]*$/i,'').trim();
+  var parts=m.split(' · ').filter(function(p){
+    return !/(strike|hits you|attack misses|'s attack|CRIT|quaff|you regenerate|you drain|is stunned|is afflicted|slip away|fail to escape|suffers|takes effect|brace for impact|attacks are boosted)/i.test(p);
+  });
+  return parts.join(' · ').replace(/^·\\s*/,'').replace(/·\\s*$/,'').trim();
 }
 function autoHintText(){ return AUTO?(autoArmed&&S.inFight?'🤖 Auto-battling — tap Skill/Potion/Flee any time to interject.':'🤖 Auto-battle is ON — click 🗡️ Attack to begin.'):'Auto-battle is off — one action per click.'; }
 // Render one combat-log line: escape, then turn **bold** into <b>.
@@ -669,12 +681,13 @@ function bodyAdventure(){
       gatherBtn("🪏 Dig","dig","Dig for excavation finds + Worker XP. 3-minute cooldown.")+
       gatherBtn("🔦 Scavenge","scavenge","Scavenge salvage + Worker XP. 3-minute cooldown.")+
     '</div>'+
-    '<h3>Zones ('+zonesCleared+'/'+S.zones.length+' cleared)</h3><div class="chips">'+
+    '<h3>Zones ('+zonesCleared+'/'+S.zones.length+' cleared) — tap one to adventure there</h3><div class="chips">'+
       S.zones.map(function(z){
         var cls=z.cleared?'zc-cleared':z.unlocked?'zc-open':'zc-locked';
         var icon=z.cleared?'✅':z.unlocked?'⚔️':'🔒';
         var tag=(!z.cleared&&z.unlocked)?' <span class="ztag">OPEN</span>':'';
-        return '<span class="chip '+cls+'">'+icon+' '+esc(z.name)+tag+'</span>';
+        var go=z.unlocked?' zc-click"'+tip('Adventure in '+z.name)+' onclick="cmd(\\'adventure '+z.id+'\\')"':'"'+tip("Locked — beat the previous zone's boss to unlock");
+        return '<span class="chip '+cls+go+'>'+icon+' '+esc(z.name)+tag+'</span>';
       }).join("")+
     '</div>';
 }

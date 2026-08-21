@@ -303,6 +303,8 @@ async function cmdAdventure(msg, args) {
   const fight = startFight(msg.author.id, char, monsterId, zone.id);
   fight.log.push(`You venture into **${zone.name}** and a **${fight.monster.name}** appears!`);
 
+  // Twitch/relay: auto-fight to the finish and reply once (no editing, no spam).
+  if (msg._auto) return autoFinish(msg, char);
   // Stream chat can't edit messages, so it stays manual (type "tt attack" each turn).
   if (msg._chat) return msg.reply({ embeds: [fightEmbed(fight)] });
 
@@ -333,6 +335,7 @@ async function cmdBoss(msg, args) {
   const fight = startFight(msg.author.id, char, bossForZone(zone), zone.id);
   fight.bossZone = zone.id;
   fight.log.push(`⚔️ You challenge **${fight.monster.name}**, the boss of **${zone.name}**!`);
+  if (msg._auto) return autoFinish(msg, char);
   if (msg._chat) return msg.reply({ embeds: [fightEmbed(fight)] });
   const sent = await msg.reply({ content: '👑 **BOSS FIGHT!** Type `tt attack` to begin!', embeds: [fightEmbed(fight)] });
   autos.set(msg.author.id, { message: sent, char, timer: null });
@@ -463,7 +466,42 @@ async function afterTurn(msg, char, res) {
   if (res.fled) { char.hp = fight.php; char.mp = fight.pmp; endFight(msg.author.id); savePlayer(msg.author.id, char); return msg.reply('🏃 ' + res.log.join('\n')); }
   if (res.win) { const reward = resolveWin(fight, char); questProgress(char, 'win', 1); endFight(msg.author.id); savePlayer(msg.author.id, char); return msg.reply({ embeds: [victoryEmbed(fight, reward, char)] }); }
   if (res.lose) { const { lost } = resolveLoss(char); endFight(msg.author.id); savePlayer(msg.author.id, char); return msg.reply({ embeds: [defeatEmbed(fight, lost)] }); }
+  // Twitch/relay auto mode: no per-turn spam and no message editing available, so
+  // swing the fight to its conclusion and send a single summary line.
+  if (msg._auto) return autoFinish(msg, char);
   return msg.reply({ embeds: [fightEmbed(fight)] });
+}
+
+// Resolve the current fight to completion (chat auto-battle) → one concise reply.
+async function autoFinish(msg, char) {
+  const uid = msg.author.id;
+  const fight = getFight(uid);
+  if (!fight) return msg.reply('You’re not in a fight. `tt adventure` to find one.');
+  let guard = 0;
+  while (guard++ < 500) {
+    const res = takeTurn(fight, 'attack');
+    fight.log.push(...res.log);
+    if (res.win) {
+      const reward = resolveWin(fight, char); questProgress(char, 'win', 1); endFight(uid); savePlayer(uid, char);
+      return msg.reply(autoWinLine(fight, reward, char));
+    }
+    if (res.lose) {
+      const { lost } = resolveLoss(char); endFight(uid); savePlayer(uid, char);
+      return msg.reply(`💀 You fell to the **${fight.monster.name}** — down ${lost} 🪙 but alive. \`tt rest\`, then \`tt adventure\`.`);
+    }
+    if (res.fled) { char.hp = fight.php; char.mp = fight.pmp; endFight(uid); savePlayer(uid, char); return msg.reply('🏃 You slipped away from the fight.'); }
+  }
+  endFight(uid); savePlayer(uid, char);
+  return msg.reply('The battle dragged on and fizzled out.');
+}
+function autoWinLine(fight, reward, char) {
+  const pd = derive(char);
+  let s = `🏆 **${fight.monster.name}** defeated! +${reward.xp} XP · +${reward.gold} 🪙`;
+  if (reward.items && reward.items.length) s += ` · Loot: ${reward.items.map((i) => `${i.name}${i.qty > 1 ? ` x${i.qty}` : ''}`).join(', ')}`;
+  if (reward.levels && reward.levels.length) s += ` · 🎉 now Lv ${char.level}!`;
+  if (reward.clearedBoss) s += reward.unlocked ? ` · 🗺️ unlocked **${reward.unlocked}**!` : ' · 👑 final zone cleared!';
+  s += ` · ❤️ ${char.hp}/${pd.maxhp}`;
+  return s;
 }
 
 function cmdAttack(msg) {
@@ -1089,7 +1127,7 @@ function toChatLine(t) {
  * Run a game command for a non-Discord chatter (already resolved to a Discord id),
  * reusing the exact same handlers, and return a one-line plain-text reply.
  */
-export async function runForChat({ discordId, username, content, guildId, client }) {
+export async function runForChat({ discordId, username, content, guildId, client, auto = false }) {
   let captured = null;
   const msg = {
     author: { id: discordId, username, bot: false },
@@ -1097,6 +1135,7 @@ export async function runForChat({ discordId, username, content, guildId, client
     guildId,      // for raids (per-server)
     client,       // for resolving the announce channel
     _chat: true,  // stream chat: manual mode, no auto-battle loop / message editing
+    _auto: auto,  // Twitch/relay: resolve the whole fight and reply with one summary
     reply: async (payload) => { captured = payload; return {}; },
   };
   await handleRpg(msg);

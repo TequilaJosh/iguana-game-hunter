@@ -76,7 +76,9 @@ export async function handleGameMessage(client, guildId, platform, user, text) {
       if (!PUBLIC_COMMANDS.has(cmd)) return 'Link your account first: type tt play <your Discord @username> and I\'ll DM you a code.';
     }
     const runId = discordId || `unlinked:${platform}:${user}`;
-    const reply = await runForChat({ discordId: runId, username: user, content: 'tt ' + body, guildId, client });
+    // Chat platforms (Twitch/TikTok) can't edit messages, so fights auto-resolve to a
+    // single summary line instead of one reply per turn.
+    const reply = await runForChat({ discordId: runId, username: user, content: 'tt ' + body, guildId, client, auto: true });
     return reply || null;
   } catch (e) {
     log.error('handleGameMessage failed:', e);

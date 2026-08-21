@@ -582,16 +582,23 @@ function bodyBag(){
       '</div></div>';
   }
 
-  var tiles=S.items.map(function(it,p){
-    var badge=it.desc.compare?'<div class="tc '+it.desc.compare.dir+'">'+cmpArrow(it.desc.compare)+'</div>':'';
-    return '<div class="tile '+rar(it.rarity)+(BAG_SEL===it.ii?' sel':'')+'"'+
-      ' onmouseenter="bagHover(event,'+p+')" onmouseleave="bagOut()" onclick="selectTile('+it.ii+')">'+
-      '<div class="tie">'+it.emoji+'</div>'+
-      '<div class="tin">'+esc(it.name)+'</div>'+
-      (it.qty>1?'<div class="tq">×'+it.qty+'</div>':'')+badge+'</div>';
-  }).join("");
-
-  return eq+'<h3>Bag — hover to inspect, tap to act</h3>'+panel+'<div class="bagGrid">'+tiles+'</div>';
+  return eq+'<div class="muted" style="margin:2px 0 8px">Hover to inspect · tap to act.</div>'+panel+
+    bagSection('⚔️ Equipment', function(it){ return it.gear; })+
+    bagSection('🧪 Materials & Items', function(it){ return !it.gear; });
+}
+// One tile in the bag grid. p is the item's index within S.items (for hover lookup).
+function tileHTML(it,p){
+  var badge=it.desc.compare?'<div class="tc '+it.desc.compare.dir+'">'+cmpArrow(it.desc.compare)+'</div>':'';
+  return '<div class="tile '+rar(it.rarity)+(BAG_SEL===it.ii?' sel':'')+'"'+
+    ' onmouseenter="bagHover(event,'+p+')" onmouseleave="bagOut()" onclick="selectTile('+it.ii+')">'+
+    '<div class="tie">'+it.emoji+'</div>'+
+    '<div class="tin">'+esc(it.name)+'</div>'+
+    (it.qty>1?'<div class="tq">×'+it.qty+'</div>':'')+badge+'</div>';
+}
+// A titled grid of the items matching pred (empty string if none).
+function bagSection(title,pred){
+  var t=''; S.items.forEach(function(it,p){ if(pred(it)) t+=tileHTML(it,p); });
+  return t?'<h3>'+title+'</h3><div class="bagGrid">'+t+'</div>':'';
 }
 function cmpArrow(c){ return c.dir==='up'?'▲':c.dir==='down'?'▼':c.dir==='new'?'✨':'='; }
 function selectTile(ii){ BAG_SEL=(BAG_SEL===ii?null:ii); bagOut(); render(); }

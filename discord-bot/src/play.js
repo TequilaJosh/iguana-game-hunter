@@ -141,7 +141,7 @@ function buildState(discordId) {
       monster: fight.monster?.name || 'Monster', emoji: fight.monster?.emoji || '👹',
       mhp: Math.max(0, fight.mhp), mmaxhp: fight.mmaxhp,
       php: Math.max(0, fight.php), pmaxhp: pd.maxhp, pmp: fight.pmp, pmaxmp: pd.maxmp,
-      turn: fight.turn, log: (fight.log || []).slice(-6),
+      turn: fight.turn, log: (fight.log || []).slice(-60),
     } : null,
     equipped: EQUIP_SLOTS.map((s) => ({ slot: s, name: c.equipped?.[s]?.name || null, rarity: c.equipped?.[s]?.rarity || '' })),
     // Unified bag: every non-equipped item, indexed by its position in char.inventory
@@ -301,8 +301,18 @@ const PLAY_HTML = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
   .bar{height:12px;border-radius:8px;background:#0a140e;border:1px solid var(--line);overflow:hidden}
   .fill{height:100%;border-radius:8px;transition:width .25s}
   .fill.hp{background:#d46a6a}.fill.mp{background:#5a9ad4}.fill.xp{background:var(--accent)}.fill.stam{background:#c8a24a}
+  .fill.foe{background:#d46a6a}.fill.you{background:#5fc27e}
+  /* Combat: clearly separated Enemy vs You */
+  .fighter{border:1px solid var(--line);border-radius:10px;padding:9px 11px}
+  .fighter.foe-side{border-color:rgba(212,106,106,.45);background:rgba(212,106,106,.06)}
+  .fighter.you-side{border-color:rgba(95,194,126,.45);background:rgba(95,194,126,.06)}
+  .frow{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
+  .fname{font-weight:800;color:#fff;font-size:14px}
+  .youtag{font-size:9px;font-weight:800;color:#0a140e;background:#5fc27e;border-radius:10px;padding:1px 7px;margin-left:4px;vertical-align:middle}
+  .vsdiv{text-align:center;color:var(--dim);font-size:11px;font-weight:800;letter-spacing:.08em;margin:6px 0}
   .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:12px}
-  .stat{background:#0a140e;border:1px solid var(--line);border-radius:9px;padding:7px;text-align:center}
+  .stat{background:#0a140e;border:1px solid var(--line);border-radius:9px;padding:7px;text-align:center;cursor:help}
+  .stat:hover{border-color:var(--accent)}
   .stat b{display:block;font-size:16px;color:#fff}.stat span{font-size:9px;color:var(--dim);text-transform:uppercase}
   h3{font-size:11px;color:var(--accent);text-transform:uppercase;letter-spacing:.06em;margin:16px 0 7px}
   .btns{display:flex;flex-wrap:wrap;gap:7px}
@@ -338,8 +348,17 @@ const PLAY_HTML = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
   .chips{display:flex;flex-wrap:wrap;gap:6px}
   .chip{background:#0a140e;border:1px solid var(--line);border-radius:20px;padding:3px 10px;font-size:12px}
   .chip .pill{color:var(--accent);font-weight:700}
+  .chip.zc-cleared{color:#7fd07f;border-color:#2f4a2f;background:rgba(111,208,111,.07)}
+  .chip.zc-open{color:var(--ink);border-color:var(--accent);background:rgba(124,196,74,.12);font-weight:700}
+  .chip.zc-locked{opacity:.45}
+  .ztag{font-size:9px;font-weight:800;color:#0a140e;background:var(--accent);border-radius:10px;padding:1px 6px;margin-left:4px;vertical-align:middle}
   .log{background:#080f0a;border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:13px;
        min-height:44px;white-space:pre-wrap;line-height:1.5}
+  .clog{max-height:180px;overflow-y:auto;background:#080f0a;border:1px solid var(--line);border-radius:10px;
+        padding:8px 11px;margin:10px 0 2px;font-size:12.5px;line-height:1.5}
+  .clog .cl{padding:2px 0;border-bottom:1px solid rgba(35,51,31,.35)}
+  .clog .cl:last-child{border-bottom:none}
+  .clog b{color:#fff}
   .foe{display:flex;justify-content:space-between;align-items:center}
   .foe .fn{font-weight:800;color:#fff}
   .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
@@ -407,6 +426,17 @@ var THEME={
   cleric:{c:"#f0e6a6",e:"✨"},necromancer:{c:"#9a6ad0",e:"💀"},monk:{c:"#e0a45a",e:"👊"},bard:{c:"#e884b8",e:"🎵"}
 };
 var TOKEN=new URLSearchParams(location.search).get("t")||"";
+var STAT_TIP={
+  POWER:"Power — your overall attack strength, from your main stat plus your weapon.",
+  DEF:"Defense — reduces the physical damage you take.",
+  RES:"Resistance — reduces the magical damage you take.",
+  STR:"Strength — raises physical attack power (melee weapons).",
+  MAG:"Magic — raises spell power (staves, rods and skills).",
+  VIT:"Vitality — raises your max HP and adds to Defense.",
+  SPR:"Spirit — raises your max MP and adds to Resistance.",
+  AGI:"Agility — improves hit chance, dodging, and fleeing.",
+  LCK:"Luck — improves critical-hit chance and loot quality."
+};
 var S=null, TAB="adventure", NEWCLS=null, NEWRACE=null, BUSY=false, LASTMSG="", BAG_SEL=null, CRAFT_TAB="crafter", CRAFT_LEVEL=null, MORE_VIEW=null;
 function esc(s){return String(s==null?"":s).replace(/[&<>]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;"}[c];});}
 function rar(r){return r?'rar-'+String(r).toLowerCase():'';}
@@ -441,6 +471,8 @@ async function cmd(c){
 function patchCombat(){
   var f=S.fight; if(!f){ render(); return; }
   setW('ehp-fill',f.mhp,f.mmaxhp); setT('ehp-lab',f.mhp+' / '+f.mmaxhp);
+  setW('php-fill',f.php,f.pmaxhp); setT('php-lab',f.php+' / '+f.pmaxhp);
+  setW('pmp-fill',f.pmp,f.pmaxmp); setT('pmp-lab',f.pmp+' / '+f.pmaxmp);
   setW('hp-fill',S.hp,S.maxhp);     setT('hp-lab',S.hp+' / '+S.maxhp);
   setW('mp-fill',S.mp,S.maxmp);     setT('mp-lab',S.mp+' / '+S.maxmp);
   setW('xp-fill',S.xp,S.xpNext);    setT('xp-lab',S.xp+' / '+S.xpNext);
@@ -448,7 +480,7 @@ function patchCombat(){
   setT('gold-lab','🪙 '+S.gold+' gold');
   setT('turnlab','Turn '+f.turn);
   setT('autohint',autoHintText());
-  var lt=document.getElementById('logtext'); if(lt) lt.textContent=LASTMSG||'';
+  var cl=document.getElementById('clog'); if(cl){ cl.innerHTML=clogHTML(f.log); cl.scrollTop=cl.scrollHeight; }
   S.skills.forEach(function(s){ var b=document.getElementById('sk-'+s.n); if(b) b.disabled=!s.affordable; });
   var pot=document.getElementById('potbtn'); if(pot) pot.disabled=!S.items.some(function(b){return b.potion&&b.qty>0;});
 }
@@ -475,7 +507,7 @@ function render(){
   var t=theme();
   var root=document.getElementById("root");
   var stars=S.ascension?'<span class="stars"> '+"★".repeat(Math.min(5,S.ascension))+(S.ascension>5?"+":"")+'</span>':'';
-  var statCells=S.stats.map(function(s){return '<div class="stat"><b>'+s.v+'</b><span>'+esc(s.k)+'</span></div>';}).join("");
+  var statCells=S.stats.map(function(s){return '<div class="stat"'+tip(STAT_TIP[s.k]||'')+'><b>'+s.v+'</b><span>'+esc(s.k)+'</span></div>';}).join("");
   var hero=
    '<div class="card hero">'+
     '<div class="row"><div class="emoji">'+t.e+'</div><div>'+
@@ -485,15 +517,17 @@ function render(){
     bar("HP",S.hp,S.maxhp,"hp","hp")+bar("MP",S.mp,S.maxmp,"mp","mp")+
     bar("XP",S.xp,S.xpNext,"xp","xp")+bar("Stamina",S.stamina,S.maxStamina,"stam","stam")+
     '<div class="grid">'+
-      '<div class="stat"><b>'+S.power+'</b><span>Power</span></div>'+
-      '<div class="stat"><b>'+S.def+'</b><span>Def</span></div>'+
-      '<div class="stat"><b>'+S.res+'</b><span>Res</span></div>'+
+      '<div class="stat"'+tip(STAT_TIP.POWER)+'><b>'+S.power+'</b><span>Power</span></div>'+
+      '<div class="stat"'+tip(STAT_TIP.DEF)+'><b>'+S.def+'</b><span>Def</span></div>'+
+      '<div class="stat"'+tip(STAT_TIP.RES)+'><b>'+S.res+'</b><span>Res</span></div>'+
     '</div><div class="grid">'+statCells+'</div>'+
     '<div class="barlab" style="margin-top:12px"><span id="gold-lab">🪙 '+S.gold+' gold</span><span></span></div>'+
    '</div>';
 
   var right = S.inFight ? panelFight() : panelTabs();
-  root.innerHTML='<div class="grid2">'+hero+'<div>'+logBox()+right+'</div></div>';
+  // During a fight the combat panel has its own scrolling log, so drop the top log box.
+  root.innerHTML='<div class="grid2">'+hero+'<div>'+(S.inFight?'':logBox())+right+'</div></div>';
+  if(S.inFight) scrollClog();
 }
 
 function bar(label,a,b,cls,id){
@@ -507,6 +541,10 @@ function logBox(){
   return '<div class="card" style="margin-bottom:14px"><div class="log" id="logtext">'+(esc(LASTMSG)||'<span class="muted">Pick an action to begin your adventure.</span>')+'</div></div>';
 }
 function autoHintText(){ return AUTO?(autoArmed&&S.inFight?'🤖 Auto-battling — tap Skill/Potion/Flee any time to interject.':'🤖 Auto-battle is ON — click 🗡️ Attack to begin.'):'Auto-battle is off — one action per click.'; }
+// Render one combat-log line: escape, then turn **bold** into <b>.
+function fmtLine(l){ return esc(l).replace(/\\*\\*(.+?)\\*\\*/g,'<b>$1</b>'); }
+function clogHTML(lines){ return (lines||[]).map(function(l){return '<div class="cl">'+fmtLine(l)+'</div>';}).join(''); }
+function scrollClog(){ var c=document.getElementById('clog'); if(c) c.scrollTop=c.scrollHeight; }
 
 // ── Combat ──────────────────────────────────────────────────────────────────
 function panelFight(){
@@ -515,9 +553,21 @@ function panelFight(){
     return '<button id="sk-'+s.n+'" class="sm"'+tip("Cast "+s.name+" — costs "+s.mp+" MP ("+s.type+").")+' '+(BUSY||!s.affordable?'disabled':'')+' onclick="cmd(\\'skill '+s.n+'\\')">'+esc(s.name)+' <span class="muted">'+s.mp+'mp</span></button>';
   }).join("");
   var hasPot=S.items.some(function(b){return b.potion&&b.qty>0;});
+  var pt=THEME[S.cls]||{e:'🙂'};
   return '<div class="card" id="combatPanel">'+
-    '<div class="foe"><div class="fn">'+(f.emoji||'👹')+' '+esc(f.monster)+'</div><div class="muted" id="turnlab">Turn '+f.turn+'</div></div>'+
-    bar("Enemy HP",f.mhp,f.mmaxhp,"hp","ehp")+
+    // Enemy side
+    '<div class="fighter foe-side">'+
+      '<div class="frow"><span class="fname">'+(f.emoji||'👹')+' '+esc(f.monster)+'</span><span class="muted" id="turnlab">Turn '+f.turn+'</span></div>'+
+      bar("Enemy HP",f.mhp,f.mmaxhp,"foe","ehp")+
+    '</div>'+
+    '<div class="vsdiv">⚔️ VS</div>'+
+    // Your side
+    '<div class="fighter you-side">'+
+      '<div class="frow"><span class="fname">'+pt.e+' '+esc(S.name)+' <span class="youtag">YOU</span></span></div>'+
+      bar("Your HP",f.php,f.pmaxhp,"you","php")+
+      bar("Your MP",f.pmp,f.pmaxmp,"mp","pmp")+
+    '</div>'+
+    '<div class="clog" id="clog">'+clogHTML(f.log)+'</div>'+
     '<h3>Actions</h3><div class="btns">'+
       '<button class="atk" '+(BUSY?'disabled':'')+' title="Swing your weapon for one turn. Once you attack, auto-battle takes over and keeps swinging." onclick="cmd(\\'attack\\')">🗡️ Attack</button>'+
       '<button class="sm '+(AUTO?'on':'')+'" title="Auto-battle repeats your attack until the fight ends. It waits for your first Attack before starting. Click to turn '+(AUTO?'off':'on')+'." onclick="toggleAuto()">'+(AUTO?'🤖 Auto: ON':'🤖 Auto: off')+'</button>'+
@@ -620,7 +670,12 @@ function bodyAdventure(){
       gatherBtn("🔦 Scavenge","scavenge","Scavenge salvage + Worker XP. 3-minute cooldown.")+
     '</div>'+
     '<h3>Zones ('+zonesCleared+'/'+S.zones.length+' cleared)</h3><div class="chips">'+
-      S.zones.map(function(z){return '<span class="chip">'+(z.cleared?'✅':(z.unlocked?'🔓':'🔒'))+' '+esc(z.name)+'</span>';}).join("")+
+      S.zones.map(function(z){
+        var cls=z.cleared?'zc-cleared':z.unlocked?'zc-open':'zc-locked';
+        var icon=z.cleared?'✅':z.unlocked?'⚔️':'🔒';
+        var tag=(!z.cleared&&z.unlocked)?' <span class="ztag">OPEN</span>':'';
+        return '<span class="chip '+cls+'">'+icon+' '+esc(z.name)+tag+'</span>';
+      }).join("")+
     '</div>';
 }
 

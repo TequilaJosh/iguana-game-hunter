@@ -14,6 +14,7 @@ import { describeItem } from './game/itemInfo.js';
 import { listRecipes, recipeName, matName } from './game/recipes.js';
 import { countMat, hasMats } from './game/invutil.js';
 import { enchantList, enchantCap, nextCost, REAGENT_NAME } from './game/enchant.js';
+import { boxPrice, getBoxes } from './game/lootbox.js';
 import { runForChat } from './game/rpg.js';
 
 const GEAR_SLOTS = new Set(['weapon', 'head', 'body', 'shield', 'feet', 'accessory']);
@@ -159,6 +160,7 @@ function buildState(discordId) {
     professions: PROF_KEYS.map((k) => ({ name: PROFESSIONS[k].name, emoji: PROFESSIONS[k].emoji, level: (c.professions?.[k]?.level) || 1 }))
       .filter((p) => p.level > 1 || p.name === 'Worker'),
     recipes: { crafter: recipesFor(c, 'crafter'), alchemist: recipesFor(c, 'alchemist') },
+    lootbox: { boxes: getBoxes(c), price: boxPrice(c) },
     enchants: (() => {
       const cap = enchantCap(c), quartz = countMat(c, 'quartz');
       return {
@@ -732,13 +734,21 @@ function enchantBody(){
 }
 
 function bodyMore(){
-  return '<div class="btns">'+
+  var lb=S.lootbox||{boxes:0,price:0};
+  var box='<h3>🎁 Mystery Boxes</h3>'+
+    '<div class="muted" style="margin-bottom:6px">You hold <b style="color:var(--ink)">'+lb.boxes+'</b> box'+(lb.boxes===1?'':'es')+'. Boxes drop gold, gear, materials or potions.</div>'+
+    '<div class="btns">'+
+      '<button class="sm p" '+(BUSY||S.gold<lb.price?'disabled':'')+' title="Buy a mystery box for '+lb.price+' gold."'+' onclick="cmd(\\'lootbox buy\\')">🛒 Buy box · '+lb.price+'🪙</button>'+
+      '<button class="sm" '+(BUSY||lb.boxes<1?'disabled':'')+' title="Open one of your boxes." onclick="cmd(\\'lootbox open\\')">🎁 Open</button>'+
+      (lb.boxes>1?'<button class="sm" '+(BUSY?'disabled':'')+' title="Open up to 10 boxes at once." onclick="cmd(\\'lootbox open '+Math.min(lb.boxes,10)+'\\')">Open all ('+Math.min(lb.boxes,10)+')</button>':'')+
+    '</div>';
+  var other='<h3>More</h3><div class="btns">'+
       actBtn("📜 Quest","quest","sm",false,"View your daily quest and claim its reward.")+
-      actBtn("🎁 Lootbox","lootbox","sm",false,"Open a lootbox for random loot.")+
       actBtn("🏆 Leaderboard","leaderboard","sm",false,"See the top heroes by level.")+
       actBtn("✨ Skills","skills","sm",false,"List your class skills and what unlocks next.")+
       actBtn("⭐ Ascend","ascend","sm",false,"Prestige at high level: reset for a permanent +2% stats each time.")+
-    '</div>'+numPad(["lootbox","quest"])+
+    '</div>';
+  return box+other+
     '<div class="muted" style="margin-top:10px">Tip: your browser hero and your chat hero are the same character.</div>';
 }
 

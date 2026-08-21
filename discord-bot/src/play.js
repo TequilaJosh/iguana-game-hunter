@@ -288,7 +288,7 @@ const PLAY_HTML = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
        background:radial-gradient(1200px 700px at 50% -10%, #16241a 0%, #0a120d 55%, #070d09 100%)}
   .wrap{max-width:1080px;margin:0 auto;padding:16px 18px 70px}
   h1{color:var(--accent);text-align:center;font-size:20px;margin:4px 0 14px}
-  .grid2{display:grid;grid-template-columns:1fr;gap:14px}
+  .grid2{display:grid;grid-template-columns:1fr;gap:14px;align-items:start}
   @media(min-width:720px){.grid2{grid-template-columns:1.05fr .95fr}}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px}
   .card.hero{border-color:var(--accent);box-shadow:inset 0 0 60px -30px var(--accent)}

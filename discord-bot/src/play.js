@@ -3,7 +3,8 @@ import path from 'node:path';
 import crypto from 'node:crypto';
 import { config } from './config.js';
 import { log } from './logger.js';
-import { getPlayer, savePlayer } from './game/store.js';
+import { getPlayer, savePlayer, allPlayers } from './game/store.js';
+import { ensureQuest } from './game/quests.js';
 import { merchantSale } from './game/professions.js';
 import { CLASSES, RACES, CLASS_LIST, RACE_LIST, ZONE_LIST, STAT_KEYS, skillsForClass, ITEMS } from './game/content.js';
 import { derive, xpToNext, shopInventory, sellValue, gearScore, isZoneUnlocked } from './game/engine.js';
@@ -161,6 +162,20 @@ function buildState(discordId) {
       .filter((p) => p.level > 1 || p.name === 'Worker'),
     recipes: { crafter: recipesFor(c, 'crafter'), alchemist: recipesFor(c, 'alchemist') },
     lootbox: { boxes: getBoxes(c), price: boxPrice(c) },
+    skillbook: {
+      className: cls?.name || c.cls,
+      unlocked: skillsForClass(c.cls, c.level).map((s) => ({ name: s.name, mp: s.mp, type: s.type, power: s.power || 0 })),
+      locked: skillsForClass(c.cls, 99).filter((s) => s.unlock_level > (c.level || 1))
+        .map((s) => ({ name: s.name, level: s.unlock_level })),
+    },
+    quest: (() => {
+      const q = ensureQuest(c), done = (q.progress || 0) >= q.target;
+      return { desc: q.desc, progress: q.progress || 0, target: q.target, gold: q.gold, xp: q.xp, claimed: !!q.claimed, done, claimable: done && !q.claimed };
+    })(),
+    leaderboard: Object.entries(allPlayers()).filter(([, p]) => p && p.name)
+      .sort(([, a], [, b]) => ((b.ascension || 0) - (a.ascension || 0)) || (b.level - a.level) || ((b.xp || 0) - (a.xp || 0)))
+      .slice(0, 10)
+      .map(([id, p], i) => ({ rank: i + 1, name: p.name, level: p.level || 1, cls: p.cls, className: CLASSES[p.cls]?.name || p.cls, ascension: p.ascension || 0, me: id === discordId })),
     enchants: (() => {
       const cap = enchantCap(c), quartz = countMat(c, 'quartz');
       return {
@@ -381,7 +396,7 @@ var THEME={
   cleric:{c:"#f0e6a6",e:"✨"},necromancer:{c:"#9a6ad0",e:"💀"},monk:{c:"#e0a45a",e:"👊"},bard:{c:"#e884b8",e:"🎵"}
 };
 var TOKEN=new URLSearchParams(location.search).get("t")||"";
-var S=null, TAB="adventure", NEWCLS=null, NEWRACE=null, BUSY=false, LASTMSG="", BAG_SEL=null, CRAFT_TAB="crafter";
+var S=null, TAB="adventure", NEWCLS=null, NEWRACE=null, BUSY=false, LASTMSG="", BAG_SEL=null, CRAFT_TAB="crafter", MORE_VIEW=null;
 function esc(s){return String(s==null?"":s).replace(/[&<>]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;"}[c];});}
 function rar(r){return r?'rar-'+String(r).toLowerCase():'';}
 function pct(a,b){return Math.max(0,Math.min(100,Math.round(100*(a||0)/Math.max(1,b))));}
@@ -511,7 +526,7 @@ function panelTabs(){
   }).join("")+'</div>';
   return '<div class="card">'+bar+tabBody()+'</div>';
 }
-function setTab(t){ TAB=t; BAG_SEL=null; bagOut(); render(); }
+function setTab(t){ TAB=t; BAG_SEL=null; MORE_VIEW=null; bagOut(); render(); }
 
 function tabBody(){
   if(TAB==="adventure") return bodyAdventure();
@@ -733,7 +748,14 @@ function enchantBody(){
     '<div class="recipeList">'+rows+'</div>';
 }
 
+function moreView(v){ MORE_VIEW=v; render(); }
+function backBar(t){ return '<div class="tabs" style="margin-bottom:10px"><button onclick="moreView(null)">← Back</button><button class="active" style="pointer-events:none">'+t+'</button></div>'; }
+
 function bodyMore(){
+  if(MORE_VIEW==='skills') return backBar('✨ Skills')+skillsPanel();
+  if(MORE_VIEW==='leaderboard') return backBar('🏆 Leaderboard')+leaderboardPanel();
+  if(MORE_VIEW==='quest') return backBar('📜 Quest')+questPanel();
+
   var lb=S.lootbox||{boxes:0,price:0};
   var box='<h3>🎁 Mystery Boxes</h3>'+
     '<div class="muted" style="margin-bottom:6px">You hold <b style="color:var(--ink)">'+lb.boxes+'</b> box'+(lb.boxes===1?'':'es')+'. Boxes drop gold, gear, materials or potions.</div>'+
@@ -742,14 +764,56 @@ function bodyMore(){
       '<button class="sm" '+(BUSY||lb.boxes<1?'disabled':'')+' title="Open one of your boxes." onclick="cmd(\\'lootbox open\\')">🎁 Open</button>'+
       (lb.boxes>1?'<button class="sm" '+(BUSY?'disabled':'')+' title="Open up to 10 boxes at once." onclick="cmd(\\'lootbox open '+Math.min(lb.boxes,10)+'\\')">Open all ('+Math.min(lb.boxes,10)+')</button>':'')+
     '</div>';
+  var q=S.quest||{}, qtag=q.claimable?' <span class="rstat g">ready!</span>':q.claimed?' <span class="rstat l">done</span>':'';
   var other='<h3>More</h3><div class="btns">'+
-      actBtn("📜 Quest","quest","sm",false,"View your daily quest and claim its reward.")+
-      actBtn("🏆 Leaderboard","leaderboard","sm",false,"See the top heroes by level.")+
-      actBtn("✨ Skills","skills","sm",false,"List your class skills and what unlocks next.")+
+      '<button class="sm" title="Your daily quest and reward." onclick="moreView(\\'quest\\')">📜 Quest'+qtag+'</button>'+
+      '<button class="sm" title="See the top heroes." onclick="moreView(\\'leaderboard\\')">🏆 Leaderboard</button>'+
+      '<button class="sm" title="Your class skills and what unlocks next." onclick="moreView(\\'skills\\')">✨ Skills</button>'+
       actBtn("⭐ Ascend","ascend","sm",false,"Prestige at high level: reset for a permanent +2% stats each time.")+
     '</div>';
   return box+other+
     '<div class="muted" style="margin-top:10px">Tip: your browser hero and your chat hero are the same character.</div>';
+}
+
+function skillsPanel(){
+  var sk=S.skillbook||{unlocked:[],locked:[]};
+  var rows=sk.unlocked.map(function(s){
+    return '<div class="rrow"><div class="rtop"><span class="rname">✨ '+esc(s.name)+'</span>'+
+      '<span class="rstat g">'+s.mp+' MP</span></div>'+
+      '<div class="rings"><span class="ing ok">'+esc(s.type)+'</span>'+(s.power?'<span class="ing ok">power '+s.power+'</span>':'')+'</div></div>';
+  }).join('') || '<div class="muted">No skills yet.</div>';
+  var locked=sk.locked.length?('<h3>🔒 Unlocks next</h3><div class="chips">'+
+    sk.locked.map(function(l){return '<span class="chip">'+esc(l.name)+' <span class="pill">Lv '+l.level+'</span></span>';}).join('')+'</div>'):'';
+  return '<div class="muted" style="margin-bottom:6px">'+esc(sk.className)+' · Lv '+S.level+' — used in combat.</div><div class="recipeList">'+rows+'</div>'+locked;
+}
+
+function leaderboardPanel(){
+  var lb=S.leaderboard||[];
+  if(!lb.length) return '<div class="muted">No heroes yet.</div>';
+  var medal=['🥇','🥈','🥉'];
+  var rows=lb.map(function(h){
+    var th=THEME[h.cls]||{c:'#7cc44a',e:'🎮'};
+    var rank=medal[h.rank-1]||('#'+h.rank);
+    var stars=h.ascension?' <span class="stars">'+'★'.repeat(Math.min(5,h.ascension))+(h.ascension>5?'+':'')+'</span>':'';
+    return '<div class="rrow'+(h.me?' ready':'')+'"><div class="rtop">'+
+      '<span class="rname"><span style="display:inline-block;width:26px">'+rank+'</span>'+th.e+' '+esc(h.name)+(h.me?' <span class="muted">(you)</span>':'')+'</span>'+
+      '<span class="rstat g">Lv '+h.level+stars+'</span></div>'+
+      '<div class="rings"><span class="ing ok">'+esc(h.className)+'</span></div></div>';
+  }).join('');
+  return '<div class="recipeList">'+rows+'</div>';
+}
+
+function questPanel(){
+  var q=S.quest||{};
+  if(!q.desc) return '<div class="muted">No quest available.</div>';
+  var pctv=Math.min(100,Math.round(100*(q.progress||0)/Math.max(1,q.target)));
+  var status=q.claimed?'<span class="rstat l">✅ claimed — new one tomorrow</span>':q.done?'<span class="rstat g">✨ ready to claim!</span>':'<span class="rstat">'+q.progress+' / '+q.target+'</span>';
+  return '<div class="card" style="border-color:var(--accent)">'+
+    '<div class="rtop"><span class="rname">📜 '+esc(q.desc)+'</span>'+status+'</div>'+
+    '<div class="bar" style="margin-top:10px"><div class="fill xp" style="width:'+pctv+'%"></div></div>'+
+    '<div class="muted" style="margin-top:8px">Reward: <b style="color:var(--gold)">'+q.gold+' 🪙</b> + '+q.xp+' XP'+(q.claimed||q.done?'':' · matching actions count automatically')+'</div>'+
+    (q.claimable?'<div class="btns" style="margin-top:10px"><button class="p" '+(BUSY?'disabled':'')+' onclick="cmd(\\'quest claim\\')">🎉 Claim reward</button></div>':'')+
+  '</div>';
 }
 
 // A 1–9 number pad that repeats the last "list" command with a chosen index —

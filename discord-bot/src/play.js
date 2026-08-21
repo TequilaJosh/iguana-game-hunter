@@ -161,6 +161,7 @@ function buildState(discordId) {
     professions: PROF_KEYS.map((k) => ({ name: PROFESSIONS[k].name, emoji: PROFESSIONS[k].emoji, level: (c.professions?.[k]?.level) || 1 }))
       .filter((p) => p.level > 1 || p.name === 'Worker'),
     recipes: { crafter: recipesFor(c, 'crafter'), alchemist: recipesFor(c, 'alchemist') },
+    craftLevels: { crafter: getProf(c, 'crafter').level, alchemist: getProf(c, 'alchemist').level, enchanter: getProf(c, 'enchanter').level },
     lootbox: { boxes: getBoxes(c), price: boxPrice(c) },
     skillbook: {
       className: cls?.name || c.cls,
@@ -337,6 +338,9 @@ const PLAY_HTML = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
   .foe .fn{font-weight:800;color:#fff}
   .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
   .tabs button.active{background:var(--accent);color:#0a140e;border-color:var(--accent)}
+  .lvpill{font-size:10px;font-weight:800;padding:1px 6px;border-radius:20px;background:rgba(0,0,0,.28);
+          border:1px solid rgba(255,255,255,.14);vertical-align:middle;margin-left:2px}
+  .tabs button.active .lvpill{background:rgba(0,0,0,.18)}
   .hide{display:none}
   .muted{color:var(--dim);font-size:12px}
   /* Bag grid */
@@ -695,12 +699,13 @@ function bagHover(ev,p){
 }
 function bagOut(){ var p=document.getElementById('bagpop'); if(p) p.style.display='none'; }
 
-function craftSeg(id,label){ return '<button class="'+(CRAFT_TAB===id?'active':'')+'" onclick="setCraft(\\''+id+'\\')">'+label+'</button>'; }
+function craftSeg(id,label,lvl){ return '<button class="'+(CRAFT_TAB===id?'active':'')+'" onclick="setCraft(\\''+id+'\\')">'+label+' <span class="lvpill">Lv '+lvl+'</span></button>'; }
 function setCraft(t){ CRAFT_TAB=t; render(); }
 
 function bodyCraft(){
+  var cl=S.craftLevels||{crafter:1,alchemist:1,enchanter:1};
   var seg='<div class="tabs" style="margin-bottom:10px">'+
-    craftSeg('crafter','🔨 Craft')+craftSeg('alchemist','⚗️ Brew')+craftSeg('enchant','✨ Enchant')+'</div>';
+    craftSeg('crafter','🔨 Craft',cl.crafter)+craftSeg('alchemist','⚗️ Brew',cl.alchemist)+craftSeg('enchant','✨ Enchant',cl.enchanter)+'</div>';
   var body = CRAFT_TAB==='enchant' ? enchantBody() : recipeBody(CRAFT_TAB);
   return seg+body+
     '<h3>Professions</h3><div class="chips">'+

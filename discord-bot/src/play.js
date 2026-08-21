@@ -5,12 +5,15 @@ import { config } from './config.js';
 import { log } from './logger.js';
 import { getPlayer, savePlayer } from './game/store.js';
 import { merchantSale } from './game/professions.js';
-import { CLASSES, RACES, CLASS_LIST, RACE_LIST, ZONE_LIST, STAT_KEYS, skillsForClass } from './game/content.js';
+import { CLASSES, RACES, CLASS_LIST, RACE_LIST, ZONE_LIST, STAT_KEYS, skillsForClass, ITEMS } from './game/content.js';
 import { derive, xpToNext, shopInventory, sellValue, gearScore, isZoneUnlocked } from './game/engine.js';
 import { getFight, addItem } from './game/fights.js';
-import { PROFESSIONS } from './game/professions.js';
+import { PROFESSIONS, getProf } from './game/professions.js';
 import { WORKER_COMMANDS } from './game/gather.js';
 import { describeItem } from './game/itemInfo.js';
+import { listRecipes, recipeName, matName } from './game/recipes.js';
+import { countMat, hasMats } from './game/invutil.js';
+import { enchantList, enchantCap, nextCost, REAGENT_NAME } from './game/enchant.js';
 import { runForChat } from './game/rpg.js';
 
 const GEAR_SLOTS = new Set(['weapon', 'head', 'body', 'shield', 'feet', 'accessory']);
@@ -76,6 +79,23 @@ function itemEmoji(it) {
   return ARMOR_EMOJI[it.slot] || '❔';
 }
 
+// Structured, clickable recipe list for a profession (crafter/alchemist).
+function recipesFor(c, prof) {
+  const lvl = getProf(c, prof).level;
+  return listRecipes(prof).map((r, i) => {
+    const locked = lvl < r.level;
+    const inputs = Object.entries(r.inputs).map(([b, q]) => {
+      const have = countMat(c, b);
+      return { name: matName(b), have, need: q, ok: have >= q };
+    });
+    const out = ITEMS[r.output] || {};
+    return {
+      n: i + 1, name: recipeName(r), emoji: itemEmoji(out), slot: out.slot || '',
+      level: r.level, locked, ready: !locked && hasMats(c, r.inputs), inputs,
+    };
+  });
+}
+
 // ── State snapshot the browser renders from ─────────────────────────────────
 function buildState(discordId) {
   const c = getPlayer(discordId);
@@ -138,6 +158,21 @@ function buildState(discordId) {
     })(),
     professions: PROF_KEYS.map((k) => ({ name: PROFESSIONS[k].name, emoji: PROFESSIONS[k].emoji, level: (c.professions?.[k]?.level) || 1 }))
       .filter((p) => p.level > 1 || p.name === 'Worker'),
+    recipes: { crafter: recipesFor(c, 'crafter'), alchemist: recipesFor(c, 'alchemist') },
+    enchants: (() => {
+      const cap = enchantCap(c), quartz = countMat(c, 'quartz');
+      return {
+        level: getProf(c, 'enchanter').level, cap, reagent: REAGENT_NAME, quartz,
+        list: enchantList(c).map((e, i) => {
+          const cur = e.item.enchant || 0, cost = nextCost(e.item), maxed = cur >= cap;
+          return {
+            n: i + 1, name: e.item.name, rarity: e.item.rarity || '', emoji: itemEmoji(e.item),
+            where: e.where, cur, maxed, cost,
+            affordable: !maxed && (c.gold || 0) >= cost.gold && quartz >= cost.quartz,
+          };
+        }),
+      };
+    })(),
   };
 }
 
@@ -312,6 +347,20 @@ const PLAY_HTML = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
   .bagpop .pn{font-weight:800;color:#fff}
   .bagpop .ps{color:#b8c9ad;margin-top:3px}
   .bagpop .pf{color:#7f9673;font-style:italic;margin-top:4px}
+  /* Recipe / enchant list */
+  .recipeList{display:flex;flex-direction:column;gap:7px;max-height:52vh;overflow-y:auto;padding:2px}
+  .rrow{background:#0a140e;border:1px solid var(--line);border-radius:10px;padding:9px 11px;transition:.12s}
+  .rrow.ready{cursor:pointer;border-color:#2c5233}
+  .rrow.ready:hover{background:#13251a;border-color:var(--accent);transform:translateY(-1px)}
+  .rrow.locked{opacity:.6}
+  .rtop{display:flex;justify-content:space-between;align-items:center;gap:8px}
+  .rname{font-weight:700;color:#fff;font-size:13.5px}
+  .rstat{font-size:11px;font-weight:800;white-space:nowrap}
+  .rstat.g{color:var(--accent)}.rstat.r{color:#e08a8a}.rstat.l{color:var(--dim)}
+  .rings{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+  .ing{font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid var(--line)}
+  .ing.ok{color:#7fd07f;border-color:#2f4a2f;background:rgba(111,208,111,.08)}
+  .ing.no{color:#e08a8a;border-color:#4a2f2f;background:rgba(212,106,106,.08)}
   .center{text-align:center}
   .cls-pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
   .pk{background:#0a140e;border:1px solid var(--line);border-radius:10px;padding:10px;cursor:pointer;text-align:left}
@@ -330,7 +379,7 @@ var THEME={
   cleric:{c:"#f0e6a6",e:"✨"},necromancer:{c:"#9a6ad0",e:"💀"},monk:{c:"#e0a45a",e:"👊"},bard:{c:"#e884b8",e:"🎵"}
 };
 var TOKEN=new URLSearchParams(location.search).get("t")||"";
-var S=null, TAB="adventure", NEWCLS=null, NEWRACE=null, BUSY=false, LASTMSG="", BAG_SEL=null;
+var S=null, TAB="adventure", NEWCLS=null, NEWRACE=null, BUSY=false, LASTMSG="", BAG_SEL=null, CRAFT_TAB="crafter";
 function esc(s){return String(s==null?"":s).replace(/[&<>]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;"}[c];});}
 function rar(r){return r?'rar-'+String(r).toLowerCase():'';}
 function pct(a,b){return Math.max(0,Math.min(100,Math.round(100*(a||0)/Math.max(1,b))));}
@@ -629,16 +678,57 @@ function bagHover(ev,p){
 }
 function bagOut(){ var p=document.getElementById('bagpop'); if(p) p.style.display='none'; }
 
+function craftSeg(id,label){ return '<button class="'+(CRAFT_TAB===id?'active':'')+'" onclick="setCraft(\\''+id+'\\')">'+label+'</button>'; }
+function setCraft(t){ CRAFT_TAB=t; render(); }
+
 function bodyCraft(){
-  return '<div class="muted">Open a list, then tap a number to make it.</div>'+
-    '<div class="btns" style="margin-top:8px">'+
-      actBtn("🔨 Recipes","recipes","sm",false,"List gear you can craft from materials (Crafter).")+
-      actBtn("⚗️ Brew list","brew","sm",false,"List potions you can brew (Alchemist).")+
-      actBtn("🔮 Enchant list","enchant","sm",false,"List enchantments you can apply (Enchanter).")+
-    '</div>'+numPad(["craft","brew","enchant"])+
+  var seg='<div class="tabs" style="margin-bottom:10px">'+
+    craftSeg('crafter','🔨 Craft')+craftSeg('alchemist','⚗️ Brew')+craftSeg('enchant','✨ Enchant')+'</div>';
+  var body = CRAFT_TAB==='enchant' ? enchantBody() : recipeBody(CRAFT_TAB);
+  return seg+body+
     '<h3>Professions</h3><div class="chips">'+
       S.professions.map(function(p){return '<span class="chip">'+esc(p.emoji)+' '+esc(p.name)+' <span class="pill">'+p.level+'</span></span>';}).join("")+
     '</div>';
+}
+
+// Clickable recipe list for crafter/alchemist. Tap a ready recipe to make it.
+function recipeBody(prof){
+  var list=(S.recipes&&S.recipes[prof])||[], verb=prof==='alchemist'?'brew':'craft';
+  if(!list.length) return '<div class="muted">No recipes here yet.</div>';
+  var rows=list.map(function(r){
+    var ings=r.inputs.map(function(x){
+      return '<span class="ing '+(x.ok?'ok':'no')+'">'+esc(x.name)+' '+Math.min(x.have,x.need)+'/'+x.need+'</span>';
+    }).join('');
+    var stat = r.locked?'<span class="rstat l">🔒 Lv '+r.level+'</span>'
+             : r.ready?'<span class="rstat g">Craft ▸</span>'
+             : '<span class="rstat r">need mats</span>';
+    var cls='rrow'+(r.ready?' ready':'')+(r.locked?' locked':'');
+    var click=r.ready?' onclick="cmd(\\''+verb+' '+r.n+'\\')"':'';
+    var ttl=r.locked?'Needs level '+r.level:(r.ready?'Tap to '+verb+' this':'Gather the missing materials first');
+    return '<div class="'+cls+'"'+tip(ttl)+click+'>'+
+      '<div class="rtop"><span class="rname">'+r.emoji+' '+esc(r.name)+'</span>'+stat+'</div>'+
+      '<div class="rings">'+ings+'</div></div>';
+  }).join('');
+  return '<div class="muted" style="margin-bottom:6px">Tap a ready recipe to make it. Gather materials with the Adventure tab.</div>'+
+    '<div class="recipeList">'+rows+'</div>';
+}
+
+// Clickable enchant list — tap a gear piece to upgrade it.
+function enchantBody(){
+  var e=S.enchants;
+  if(!e||!e.list.length) return '<div class="muted">No gear to enchant yet — craft or find some first.</div>';
+  var rows=e.list.map(function(x){
+    var where=x.where==='equipped'?'⚔️':'🎒';
+    var stat = x.maxed?'<span class="rstat l">MAX +'+x.cur+'</span>'
+             : x.affordable?'<span class="rstat g">Enchant ▸</span>'
+             : '<span class="rstat r">need '+x.cost.gold+'🪙 + '+x.cost.quartz+'</span>';
+    var cls='rrow'+(x.affordable?' ready':'')+(x.maxed?' locked':'');
+    var click=x.affordable?' onclick="cmd(\\'enchant '+x.n+'\\')"':'';
+    return '<div class="'+cls+'"'+tip(x.maxed?'At your enchant cap':'Costs '+x.cost.gold+' gold + '+x.cost.quartz+' '+e.reagent)+click+'>'+
+      '<div class="rtop"><span class="rname">'+where+' '+x.emoji+' <span class="'+rar(x.rarity)+'">'+esc(x.name)+'</span>'+(x.cur?' <span class="muted">+'+x.cur+'</span>':'')+'</span>'+stat+'</div></div>';
+  }).join('');
+  return '<div class="muted" style="margin-bottom:6px">Enchanter Lv '+e.level+' · cap +'+e.cap+' · '+e.reagent+' ×'+e.quartz+'. Tap a piece to enchant it.</div>'+
+    '<div class="recipeList">'+rows+'</div>';
 }
 
 function bodyMore(){

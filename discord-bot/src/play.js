@@ -9,7 +9,7 @@ import { merchantSale } from './game/professions.js';
 import { CLASSES, RACES, CLASS_LIST, RACE_LIST, ZONE_LIST, STAT_KEYS, skillsForClass, ITEMS } from './game/content.js';
 import { derive, xpToNext, shopInventory, sellValue, gearScore, isZoneUnlocked } from './game/engine.js';
 import { getFight, addItem } from './game/fights.js';
-import { PROFESSIONS, getProf } from './game/professions.js';
+import { PROFESSIONS, getProf, profXpToNext } from './game/professions.js';
 import { WORKER_COMMANDS } from './game/gather.js';
 import { describeItem } from './game/itemInfo.js';
 import { listRecipes, recipeName, matName } from './game/recipes.js';
@@ -93,9 +93,15 @@ function recipesFor(c, prof) {
     const out = ITEMS[r.output] || {};
     return {
       n: i + 1, name: recipeName(r), emoji: itemEmoji(out), slot: out.slot || '',
-      level: r.level, locked, ready: !locked && hasMats(c, r.inputs), inputs,
+      level: r.level, locked, ready: !locked && hasMats(c, r.inputs), inputs, xp: r.xp,
     };
   });
+}
+
+// Profession level + XP-to-next progress, for the craft tab headers/pills.
+function profProg(c, key) {
+  const p = getProf(c, key);
+  return { level: p.level, xp: p.xp || 0, next: profXpToNext(p.level), name: PROFESSIONS[key].name, emoji: PROFESSIONS[key].emoji };
 }
 
 // ── State snapshot the browser renders from ─────────────────────────────────
@@ -161,7 +167,7 @@ function buildState(discordId) {
     professions: PROF_KEYS.map((k) => ({ name: PROFESSIONS[k].name, emoji: PROFESSIONS[k].emoji, level: (c.professions?.[k]?.level) || 1 }))
       .filter((p) => p.level > 1 || p.name === 'Worker'),
     recipes: { crafter: recipesFor(c, 'crafter'), alchemist: recipesFor(c, 'alchemist') },
-    craftLevels: { crafter: getProf(c, 'crafter').level, alchemist: getProf(c, 'alchemist').level, enchanter: getProf(c, 'enchanter').level },
+    craftProg: { crafter: profProg(c, 'crafter'), alchemist: profProg(c, 'alchemist'), enchanter: profProg(c, 'enchanter') },
     lootbox: { boxes: getBoxes(c), price: boxPrice(c) },
     skillbook: {
       className: cls?.name || c.cls,
@@ -280,7 +286,7 @@ const PLAY_HTML = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
   *{box-sizing:border-box}
   body{margin:0;min-height:100vh;color:var(--ink);font-family:'Segoe UI',system-ui,Arial,sans-serif;
        background:radial-gradient(1200px 700px at 50% -10%, #16241a 0%, #0a120d 55%, #070d09 100%)}
-  .wrap{max-width:860px;margin:0 auto;padding:16px 14px 70px}
+  .wrap{max-width:1080px;margin:0 auto;padding:16px 18px 70px}
   h1{color:var(--accent);text-align:center;font-size:20px;margin:4px 0 14px}
   .grid2{display:grid;grid-template-columns:1fr;gap:14px}
   @media(min-width:720px){.grid2{grid-template-columns:1.05fr .95fr}}
@@ -382,6 +388,7 @@ const PLAY_HTML = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
   .ing{font-size:11px;padding:2px 8px;border-radius:20px;border:1px solid var(--line)}
   .ing.ok{color:#7fd07f;border-color:#2f4a2f;background:rgba(111,208,111,.08)}
   .ing.no{color:#e08a8a;border-color:#4a2f2f;background:rgba(212,106,106,.08)}
+  .rxp{margin-left:auto;font-size:11px;font-weight:700;color:var(--gold);align-self:center}
   .center{text-align:center}
   .cls-pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
   .pk{background:#0a140e;border:1px solid var(--line);border-radius:10px;padding:10px;cursor:pointer;text-align:left}
@@ -400,7 +407,7 @@ var THEME={
   cleric:{c:"#f0e6a6",e:"✨"},necromancer:{c:"#9a6ad0",e:"💀"},monk:{c:"#e0a45a",e:"👊"},bard:{c:"#e884b8",e:"🎵"}
 };
 var TOKEN=new URLSearchParams(location.search).get("t")||"";
-var S=null, TAB="adventure", NEWCLS=null, NEWRACE=null, BUSY=false, LASTMSG="", BAG_SEL=null, CRAFT_TAB="crafter", MORE_VIEW=null;
+var S=null, TAB="adventure", NEWCLS=null, NEWRACE=null, BUSY=false, LASTMSG="", BAG_SEL=null, CRAFT_TAB="crafter", CRAFT_LEVEL=null, MORE_VIEW=null;
 function esc(s){return String(s==null?"":s).replace(/[&<>]/g,function(c){return{"&":"&amp;","<":"&lt;",">":"&gt;"}[c];});}
 function rar(r){return r?'rar-'+String(r).toLowerCase():'';}
 function pct(a,b){return Math.max(0,Math.min(100,Math.round(100*(a||0)/Math.max(1,b))));}
@@ -700,12 +707,20 @@ function bagHover(ev,p){
 function bagOut(){ var p=document.getElementById('bagpop'); if(p) p.style.display='none'; }
 
 function craftSeg(id,label,lvl){ return '<button class="'+(CRAFT_TAB===id?'active':'')+'" onclick="setCraft(\\''+id+'\\')">'+label+' <span class="lvpill">Lv '+lvl+'</span></button>'; }
-function setCraft(t){ CRAFT_TAB=t; render(); }
+function setCraft(t){ CRAFT_TAB=t; CRAFT_LEVEL=null; render(); }
+function setCraftLevel(L){ CRAFT_LEVEL=L; render(); }
+
+function xpHeader(prog){
+  var p=Math.min(100,Math.round(100*(prog.xp||0)/Math.max(1,prog.next)));
+  return '<div style="margin-bottom:10px">'+
+    '<div class="barlab"><span>'+prog.emoji+' '+esc(prog.name)+' Lv '+prog.level+'</span><span>'+prog.xp+' / '+prog.next+' XP to next</span></div>'+
+    '<div class="bar"><div class="fill xp" style="width:'+p+'%"></div></div></div>';
+}
 
 function bodyCraft(){
-  var cl=S.craftLevels||{crafter:1,alchemist:1,enchanter:1};
+  var cp=S.craftProg||{crafter:{level:1},alchemist:{level:1},enchanter:{level:1}};
   var seg='<div class="tabs" style="margin-bottom:10px">'+
-    craftSeg('crafter','🔨 Craft',cl.crafter)+craftSeg('alchemist','⚗️ Brew',cl.alchemist)+craftSeg('enchant','✨ Enchant',cl.enchanter)+'</div>';
+    craftSeg('crafter','🔨 Craft',cp.crafter.level)+craftSeg('alchemist','⚗️ Brew',cp.alchemist.level)+craftSeg('enchant','✨ Enchant',cp.enchanter.level)+'</div>';
   var body = CRAFT_TAB==='enchant' ? enchantBody() : recipeBody(CRAFT_TAB);
   return seg+body+
     '<h3>Professions</h3><div class="chips">'+
@@ -716,22 +731,33 @@ function bodyCraft(){
 // Clickable recipe list for crafter/alchemist. Tap a ready recipe to make it.
 function recipeBody(prof){
   var list=(S.recipes&&S.recipes[prof])||[], verb=prof==='alchemist'?'brew':'craft';
-  if(!list.length) return '<div class="muted">No recipes here yet.</div>';
-  var rows=list.map(function(r){
+  var head=S.craftProg?xpHeader(S.craftProg[prof]):'';
+  if(!list.length) return head+'<div class="muted">No recipes here yet.</div>';
+  var myLvl=(S.craftProg&&S.craftProg[prof].level)||1;
+
+  // Group recipes by required level → one tab per tier.
+  var levels=[]; list.forEach(function(r){ if(levels.indexOf(r.level)<0) levels.push(r.level); });
+  levels.sort(function(a,b){return a-b;});
+  var sel=levels.indexOf(CRAFT_LEVEL)>=0?CRAFT_LEVEL:levels[0];
+  var lvlTabs=levels.length>1?'<div class="tabs lvltabs" style="margin-bottom:8px">'+levels.map(function(L){
+      return '<button class="'+(sel===L?'active':'')+'" onclick="setCraftLevel('+L+')">Lv '+L+(myLvl<L?' 🔒':'')+'</button>';
+    }).join('')+'</div>':'';
+
+  var rows=list.filter(function(r){return r.level===sel;}).map(function(r){
     var ings=r.inputs.map(function(x){
       return '<span class="ing '+(x.ok?'ok':'no')+'">'+esc(x.name)+' '+Math.min(x.have,x.need)+'/'+x.need+'</span>';
     }).join('');
     var stat = r.locked?'<span class="rstat l">🔒 Lv '+r.level+'</span>'
-             : r.ready?'<span class="rstat g">Craft ▸</span>'
+             : r.ready?'<span class="rstat g">'+(verb==='brew'?'Brew ▸':'Craft ▸')+'</span>'
              : '<span class="rstat r">need mats</span>';
     var cls='rrow'+(r.ready?' ready':'')+(r.locked?' locked':'');
     var click=r.ready?' onclick="cmd(\\''+verb+' '+r.n+'\\')"':'';
-    var ttl=r.locked?'Needs level '+r.level:(r.ready?'Tap to '+verb+' this':'Gather the missing materials first');
+    var ttl=r.locked?'Needs level '+r.level:(r.ready?'Tap to '+verb+' this — grants +'+r.xp+' XP':'Gather the missing materials first');
     return '<div class="'+cls+'"'+tip(ttl)+click+'>'+
       '<div class="rtop"><span class="rname">'+r.emoji+' '+esc(r.name)+'</span>'+stat+'</div>'+
-      '<div class="rings">'+ings+'</div></div>';
+      '<div class="rings">'+ings+'<span class="rxp">+'+r.xp+' XP</span></div></div>';
   }).join('');
-  return '<div class="muted" style="margin-bottom:6px">Tap a ready recipe to make it. Gather materials with the Adventure tab.</div>'+
+  return head+lvlTabs+'<div class="muted" style="margin-bottom:6px">Tap a ready recipe to make it. Gather materials with the Adventure tab.</div>'+
     '<div class="recipeList">'+rows+'</div>';
 }
 
@@ -749,7 +775,8 @@ function enchantBody(){
     return '<div class="'+cls+'"'+tip(x.maxed?'At your enchant cap':'Costs '+x.cost.gold+' gold + '+x.cost.quartz+' '+e.reagent)+click+'>'+
       '<div class="rtop"><span class="rname">'+where+' '+x.emoji+' <span class="'+rar(x.rarity)+'">'+esc(x.name)+'</span>'+(x.cur?' <span class="muted">+'+x.cur+'</span>':'')+'</span>'+stat+'</div></div>';
   }).join('');
-  return '<div class="muted" style="margin-bottom:6px">Enchanter Lv '+e.level+' · cap +'+e.cap+' · '+e.reagent+' ×'+e.quartz+'. Tap a piece to enchant it.</div>'+
+  var head=S.craftProg?xpHeader(S.craftProg.enchanter):'';
+  return head+'<div class="muted" style="margin-bottom:6px">cap +'+e.cap+' · '+e.reagent+' ×'+e.quartz+'. Tap a piece to enchant it.</div>'+
     '<div class="recipeList">'+rows+'</div>';
 }
 

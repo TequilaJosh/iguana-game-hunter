@@ -161,6 +161,9 @@
   .cnt-val { font-size: 1em; font-weight: 800; font-variant-numeric: tabular-nums; flex: 0 0 auto; }
 
   /* ---- Edit mode ---- */
+  .partyHint { position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
+               text-align: center; padding: 8px; font-size: 13px; color: #9fb59a; }
+  body.editing #party .partyHint { display: flex; }
   body.editing .box { cursor: move; outline: 1px dashed rgba(124, 196, 74, 0.55); }
   body.editing .box.sel { outline: 2px solid #7cc44a; }
   .rz {
@@ -461,6 +464,12 @@
       <div class="rz" data-el="feed"></div>
     </section>
 
+    <section id="party" class="box" hidden>
+      <canvas id="partyCanvas" style="position:absolute;inset:0;width:100%;height:100%;display:block"></canvas>
+      <div id="partyHint" class="partyHint"></div>
+      <div class="rz" data-el="party"></div>
+    </section>
+
     <div id="status" class="status"></div>
   </div>
 
@@ -512,6 +521,12 @@
     fallbackHost: "localhost",
     fallbackPort: 3620,
     wsPath: "/ws",
+
+    // -- Tavern Tales party overlay. The app bakes in the companion bot's base URL
+    //    (derived from the Discord bot connection in Settings) so the "Party" element
+    //    can fetch who's playing. Empty = bot not connected yet.
+    partyBase: "",
+    partyPollMs: 2500,
 
     // -- Reconnect (exponential backoff; never gives up).
     reconnectBaseMs: 1000,        // first retry delay
@@ -1508,9 +1523,10 @@
   // =========================================================================
   //  Layout (per-element position / size / font) + in-browser editor (?edit)
   // =========================================================================
-  const ELEMENTS = ["np", "ch", "chat", "cl", "gl", "poll", "feed", "cnt"];
+  const ELEMENTS = ["np", "ch", "chat", "cl", "gl", "poll", "feed", "cnt", "party"];
   const ELEMENT_NAMES = { np: "Now Playing", ch: "Challenges", chat: "Live Chat", cl: "Chatters",
-                          gl: "Goals", poll: "Poll", feed: "Activity Feed", cnt: "Counters" };
+                          gl: "Goals", poll: "Poll", feed: "Activity Feed", cnt: "Counters",
+                          party: "Party (Tavern Tales)" };
   const DEFAULT_LAYOUT = {
     np:   { x: 246, y: 48,  w: 618, h: 72,  font: "", size: 22, color: "#e8e0c4", bgo: 100 },
     ch:   { x: 246, y: 128, w: 294, h: 372, font: "", size: 18, color: "#e8e0c4", bgo: 100 },
@@ -1519,7 +1535,8 @@
     gl:   { x: 246, y: 512, w: 294, h: 160, font: "", size: 18, color: "#e8e0c4", bgo: 100 },
     poll: { x: 548, y: 512, w: 316, h: 160, font: "", size: 18, color: "#e8e0c4", bgo: 100 },
     feed: { x: 872, y: 512, w: 200, h: 160, font: "", size: 16, color: "#e8e0c4", bgo: 100, on: false },
-    cnt:  { x: 40,  y: 128, w: 196, h: 200, font: "", size: 20, color: "#e8e0c4", bgo: 100, on: false }
+    cnt:  { x: 40,  y: 128, w: 196, h: 200, font: "", size: 20, color: "#e8e0c4", bgo: 100, on: false },
+    party:{ x: 246, y: 556, w: 788, h: 128, font: "", size: 16, color: "#e8e0c4", bgo: 0,   on: false }
   };
   const FONTS = ["", "MR. Saturn", "Segoe UI", "Arial", "Verdana", "Tahoma", "Trebuchet MS",
                  "Georgia", "Times New Roman", "Courier New", "Consolas",
@@ -1585,6 +1602,8 @@
     if (feedEl) feedEl.hidden = !(isOn("feed") && lastActivity.length);
     const cntEl = document.getElementById("cnt");
     if (cntEl) cntEl.hidden = !(isOn("cnt") && lastCounters.some(counterApplies));
+    const partyEl = document.getElementById("party");
+    if (partyEl) partyEl.hidden = !isOn("party");   // content comes from its own bot feed
     lastStateSig = "";   // let the next state frame re-fill content
   }
 
@@ -1878,12 +1897,62 @@
     applyScale();
     applyLayout();                 // position boxes at defaults (a snapshot may override)
     if (EDIT) initEditor();
+    initParty();                   // Tavern Tales party sprite overlay (fetches from the bot)
 
     hidden = (document.visibilityState === "hidden");
     maintenanceTimer = setInterval(maintenance, CONFIG.maintenanceIntervalMs);
 
     log("init (uptime clock started)");
     connect();
+  }
+
+  // ---- Tavern Tales party sprite overlay ------------------------------------
+  // Loads the sprite engine from the companion bot and renders recently-active
+  // heroes doing what they're doing in the game, into the "Party" element's canvas.
+  var PARTY_DEMO = [
+    { name: "Aldric", action: "fight", look: { skin: "#f1c9a5", hair: "#6b4423", outfit: "#a54a4a", style: "armor", weapon: "sword" } },
+    { name: "Mira",   action: "mine",  look: { skin: "#c68642", hair: "#8e44ad", outfit: "#8e6fa5", style: "robe",  weapon: "staff" } },
+    { name: "Fen",    action: "craft", look: { skin: "#e6b892", hair: "#c9a227", outfit: "#4aa55e", style: "tunic", weapon: "hammer" } }
+  ];
+  var partyData = [];
+  function initParty() {
+    var base = (CONFIG.partyBase || "").replace(/\/+$/, "");
+    var canvas = document.getElementById("partyCanvas");
+    var hint = document.getElementById("partyHint");
+    if (!canvas) return;
+    if (!base) { if (hint) hint.textContent = "Connect the Discord bot in Settings, then this shows your Tavern Tales party."; startPartyLoop(canvas); return; }
+    if (hint) hint.textContent = "Party (Tavern Tales) — drag to place. Active players will appear here.";
+    var s = document.createElement("script");
+    s.src = base + "/party/engine.js";
+    s.onload = function () {
+      startPartyLoop(canvas);
+      var poll = function () {
+        fetch(base + "/party/api", { cache: "no-store" })
+          .then(function (r) { return r.json(); })
+          .then(function (d) { partyData = (d && d.party) || []; })
+          .catch(function () {});
+      };
+      poll(); setInterval(poll, CONFIG.partyPollMs || 2500);
+    };
+    s.onerror = function () { if (hint) hint.textContent = "Couldn't reach the bot at " + base + "."; startPartyLoop(canvas); };
+    document.head.appendChild(s);
+  }
+  function startPartyLoop(canvas) {
+    function frame(now) {
+      var w = canvas.clientWidth || canvas.offsetWidth || 0, h = canvas.clientHeight || canvas.offsetHeight || 0;
+      if (w > 0 && h > 0) {
+        var dpr = Math.min(2, window.devicePixelRatio || 1);
+        var cw = Math.floor(w * dpr), ch = Math.floor(h * dpr);
+        if (canvas.width !== cw) canvas.width = cw;
+        if (canvas.height !== ch) canvas.height = ch;
+        if (typeof TT_drawParty === "function") {
+          var draw = partyData.length ? partyData : (EDIT ? PARTY_DEMO : []);
+          TT_drawParty(canvas, draw, now);
+        }
+      }
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
   }
 
   if (document.readyState === "loading") {

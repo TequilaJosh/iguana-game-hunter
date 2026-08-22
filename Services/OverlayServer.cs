@@ -1133,8 +1133,28 @@ namespace GameTracker.Services
         // Bake the live port into the overlay's CONFIG.fallbackPort so that opening
         // the file directly (file://) still finds the server. When served over http://
         // the overlay derives the host from its own URL, so this is belt-and-braces.
-        private static string InjectPort(string html) =>
-            html.Replace("fallbackPort: " + DefaultPort, "fallbackPort: " + Port);
+        private static string InjectPort(string html)
+        {
+            html = html.Replace("fallbackPort: " + DefaultPort, "fallbackPort: " + Port);
+            html = html.Replace("partyBase: \"\"", "partyBase: \"" + BotBaseUrl() + "\"");
+            return html;
+        }
+
+        // The companion bot's base URL, derived from the Discord-bot connection the
+        // streamer set up (BotIngestUrl, e.g. https://host/clip -> https://host). Empty
+        // if not configured yet, so the Party overlay shows a "connect the bot" hint.
+        private static string BotBaseUrl()
+        {
+            try
+            {
+                var ingest = SettingsService.LoadChatFeatures()?.BotIngestUrl;
+                if (string.IsNullOrWhiteSpace(ingest)) return "";
+                var u = new Uri(ingest, UriKind.Absolute);
+                var baseUrl = u.GetLeftPart(UriPartial.Authority); // scheme://host[:port]
+                return baseUrl.Replace("\"", "").Replace("\\", "");
+            }
+            catch { return ""; }
+        }
 
         private static void TryWriteCopy(string html)
         {

@@ -18,6 +18,13 @@ export function mountParty(app) {
     res.json({ party });
   });
 
+  // The sprite engine, served standalone so Game Hunter's main overlay can load it
+  // cross-origin and render the party element itself (one source of truth).
+  app.get('/party/engine.js', (_req, res) => {
+    res.set('Access-Control-Allow-Origin', '*');
+    res.type('application/javascript').send(SPRITE_JS);
+  });
+
   app.get('/party', (_req, res) => res.type('html').send(PARTY_HTML));
 }
 

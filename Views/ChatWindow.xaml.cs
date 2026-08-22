@@ -719,8 +719,11 @@ namespace GameTracker.Views
             _pollWindow.Show();
         }
 
-        // Spawn a Tavern Tales raid with a 5-minute join timer via the companion bot.
-        private async void Raid_Click(object sender, RoutedEventArgs e)
+        private static string RaidDiff(int lvl) =>
+            lvl <= 2 ? "Easy" : lvl <= 4 ? "Normal" : lvl <= 6 ? "Hard" : "Brutal";
+
+        // Clicking Raid pops a boss-level picker; choosing one spawns the raid.
+        private void Raid_Click(object sender, RoutedEventArgs e)
         {
             if (!_features.RpgEnabled ||
                 string.IsNullOrWhiteSpace(_features.BotIngestUrl) ||
@@ -731,19 +734,35 @@ namespace GameTracker.Views
                     "Raid", MessageBoxButton.OK, MessageBoxImage.Information);
                 return;
             }
+            var menu = new System.Windows.Controls.ContextMenu();
+            menu.Items.Add(new System.Windows.Controls.MenuItem { Header = "Choose boss level:", IsEnabled = false });
+            for (int lvl = 1; lvl <= 8; lvl++)
+            {
+                int L = lvl;
+                var mi = new System.Windows.Controls.MenuItem { Header = $"⚔️  Level {L}  ({RaidDiff(L)})" };
+                mi.Click += async (_, __) => await SpawnRaid(L);
+                menu.Items.Add(mi);
+            }
+            menu.PlacementTarget = RaidBtn;
+            menu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+            menu.IsOpen = true;
+        }
+
+        private async System.Threading.Tasks.Task SpawnRaid(int level)
+        {
             if (MessageBox.Show(this,
-                    "Spawn a raid now with a 5-minute join timer?\nViewers join with  tt raid join",
+                    $"Spawn a Level {level} ({RaidDiff(level)}) raid with a 5-minute join timer?\nViewers join with  tt raid join",
                     "Spawn Raid", MessageBoxButton.OKCancel, MessageBoxImage.Question) != MessageBoxResult.OK)
                 return;
 
             RaidBtn.IsEnabled = false;
             try
             {
-                var desc = await DiscordService.SpawnRaidAsync(_features.BotIngestUrl, _features.BotIngestToken, 5);
+                var desc = await DiscordService.SpawnRaidAsync(_features.BotIngestUrl, _features.BotIngestToken, 5, level);
                 if (desc != null)
                     OverlayServer.Toast($"⚔️ RAID: {desc} — join with tt raid join! (5 min)", confetti: true);
                 else
-                    MessageBox.Show(this, "Couldn't start a raid. Check the bot connection in Settings.",
+                    MessageBox.Show(this, "Couldn't start a raid. A raid may already be active, or check the bot connection in Settings.",
                         "Raid", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
             finally { RaidBtn.IsEnabled = true; }

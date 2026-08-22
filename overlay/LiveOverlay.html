@@ -1915,6 +1915,7 @@
     { name: "Fen",    action: "craft", look: { skin: "#e6b892", hair: "#c9a227", outfit: "#4aa55e", style: "tunic", weapon: "hammer" } }
   ];
   var partyData = [];
+  var partyRaid = null;
   function initParty() {
     var base = (CONFIG.partyBase || "").replace(/\/+$/, "");
     var canvas = document.getElementById("partyCanvas");
@@ -1929,7 +1930,7 @@
       var poll = function () {
         fetch(base + "/party/api", { cache: "no-store" })
           .then(function (r) { return r.json(); })
-          .then(function (d) { partyData = (d && d.party) || []; })
+          .then(function (d) { partyData = (d && d.party) || []; partyRaid = (d && d.raid) || null; })
           .catch(function () {});
       };
       poll(); setInterval(poll, CONFIG.partyPollMs || 2500);
@@ -1946,8 +1947,8 @@
         if (canvas.width !== cw) canvas.width = cw;
         if (canvas.height !== ch) canvas.height = ch;
         if (typeof TT_drawParty === "function") {
-          var draw = partyData.length ? partyData : (EDIT ? PARTY_DEMO : []);
-          TT_drawParty(canvas, draw, now);
+          var draw = partyData.length ? partyData : (EDIT && !partyRaid ? PARTY_DEMO : []);
+          TT_drawParty(canvas, draw, now, partyRaid);
         }
       }
       requestAnimationFrame(frame);

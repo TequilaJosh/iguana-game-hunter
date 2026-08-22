@@ -1102,6 +1102,14 @@ function cmdLeaderboard(msg) {
   return msg.reply('🏆 **Top heroes**\n' + lines.join('\n'));
 }
 
+// Shortcut for `tt raid revive`: respawn into the current raid at full HP.
+function cmdRevive(msg) {
+  const gid = msg.guildId;
+  if (!gid) return msg.reply('Revive works during a raid.');
+  const r = raidAction(gid, msg.author.id, { kind: 'revive' });
+  return msg.reply(r.error || '💚 Revived at **full HP** — back into the raid!');
+}
+
 // ── dispatch ──────────────────────────────────────────────────────────────────
 const COMMANDS = {
   rpg: cmdHelp, tavern: cmdHelp, tt: cmdHelp, tthelp: cmdHelp, help: cmdHelp, commands: cmdHelp,
@@ -1109,7 +1117,7 @@ const COMMANDS = {
   create: cmdCreate, signup: cmdCreate, start: cmdCreate, char: cmdChar, sheet: cmdChar, me: cmdChar,
   skills: cmdSkills, zones: cmdZones,
   adventure: cmdAdventure, explore: cmdAdventure, hunt: cmdAdventure,
-  boss: cmdBoss, raid: cmdRaid,
+  boss: cmdBoss, raid: cmdRaid, revive: cmdRevive, respawn: cmdRevive,
   chop: (m, a) => cmdGather(m, a, 'chop'), mine: (m, a) => cmdGather(m, a, 'mine'),
   fish: (m, a) => cmdGather(m, a, 'fish'), forage: (m, a) => cmdGather(m, a, 'forage'),
   dig: (m, a) => cmdGather(m, a, 'dig'), scavenge: (m, a) => cmdGather(m, a, 'scavenge'),

@@ -64,7 +64,7 @@ function TT_drawChar(ctx,cx,groundY,u,look,action,now,fight,opts){
   else if(action==='forage'||action==='scavenge'){ bend=(Math.sin(p*6.28)*0.5+0.5)*0.5; armA=0.9+(action==='scavenge'?Math.sin(now/90)*0.4:Math.sin(p*6.28)*0.3); }
 
   var propX=cx+6*u;
-  if(action!=='idle') _drawProp(ctx,action,propX,groundY,u,now);
+  if(action!=='idle' && !opts.noProp) _drawProp(ctx,action,propX,groundY,u,now);
 
   ctx.save();
   // mirror for left-walking idle heroes (no props/HP in that state, so it's safe)
@@ -97,8 +97,8 @@ function TT_drawChar(ctx,cx,groundY,u,look,action,now,fight,opts){
   _drawItem(ctx,held,u);ctx.restore();ctx.restore();
   ctx.restore();
 
-  if(impact){ if(action==='craft') _spark(ctx,propX-0.5*u,groundY-2.5*u,u,'#ffd34a'); else if(CHOP) _spark(ctx,propX-0.9*u,groundY-1.8*u,u,'#e8dcc0'); else if(action==='fight') _spark(ctx,propX,groundY-2.5*u,u,'#ff6a6a'); }
-  if(action==='fish'){ var dip=Math.sin(now/450)>0.7?1*u:0; ctx.strokeStyle='rgba(230,230,230,0.8)';ctx.lineWidth=0.35*u;ctx.beginPath();ctx.moveTo(cx+6.5*u,groundY-6*u);ctx.lineTo(propX+1.3*u,groundY-0.3*u+dip);ctx.stroke(); }
+  if(impact && !opts.noProp){ if(action==='craft') _spark(ctx,propX-0.5*u,groundY-2.5*u,u,'#ffd34a'); else if(CHOP) _spark(ctx,propX-0.9*u,groundY-1.8*u,u,'#e8dcc0'); else if(action==='fight') _spark(ctx,propX,groundY-2.5*u,u,'#ff6a6a'); }
+  if(action==='fish' && !opts.noProp){ var dip=Math.sin(now/450)>0.7?1*u:0; ctx.strokeStyle='rgba(230,230,230,0.8)';ctx.lineWidth=0.35*u;ctx.beginPath();ctx.moveTo(cx+6.5*u,groundY-6*u);ctx.lineTo(propX+1.3*u,groundY-0.3*u+dip);ctx.stroke(); }
 
   // HP bars over heads during a live fight
   if(fight){
@@ -110,10 +110,59 @@ function TT_drawChar(ctx,cx,groundY,u,look,action,now,fight,opts){
 // ---- Whole-party render: heroes walk around, then act in place ----------------
 var TT_POS={};      // name -> { x, vx, wanderAt }
 var TT_LAST=0;
-function TT_drawParty(canvas,party,now){
+function _mmss(ms){var s=Math.max(0,Math.ceil(ms/1000));return Math.floor(s/60)+':'+('0'+(s%60)).slice(-2);}
+function _miniBar(ctx,x,y,u,cur,max,color){var w=5*u,h=0.8*u,p=Math.max(0,Math.min(1,cur/Math.max(1,max)));ctx.fillStyle='#0a140e';_rr(ctx,x-w/2,y,w,h,0.4*u);ctx.fill();ctx.fillStyle=color;_rr(ctx,x-w/2,y,w*p,h,0.4*u);ctx.fill();}
+function _bossBar(ctx,W,H,raid,u,now){
+  var boss=raid.boss,pad=u*3,x=pad,y=pad,w=W-pad*2,h=u*3;
+  ctx.fillStyle='rgba(0,0,0,0.55)';_rr(ctx,x-2,y-2,w+4,h+4,6);ctx.fill();
+  ctx.fillStyle='#0a140e';_rr(ctx,x,y,w,h,5);ctx.fill();
+  var p=Math.max(0,Math.min(1,boss.hp/Math.max(1,boss.maxhp)));
+  var grd=ctx.createLinearGradient(x,0,x+w,0);grd.addColorStop(0,'#d64f4f');grd.addColorStop(1,'#9a2fd6');
+  ctx.fillStyle=grd;_rr(ctx,x,y,w*p,h,5);ctx.fill();
+  ctx.font='800 '+Math.round(u*3)+'px Segoe UI, sans-serif';ctx.textBaseline='middle';ctx.lineWidth=u*0.8;ctx.strokeStyle='rgba(0,0,0,0.9)';ctx.fillStyle='#fff';
+  ctx.textAlign='left';var lab='🐉 '+boss.name+'  (T'+raid.tier+')';ctx.strokeText(lab,x+u,y+h/2);ctx.fillText(lab,x+u,y+h/2);
+  ctx.textAlign='right';var r=raid.phase==='lobby'?('STARTS IN '+_mmss(raid.startsInMs)+' · tt raid join'):(Math.round(boss.hp)+' / '+Math.round(boss.maxhp));ctx.strokeText(r,x+w-u,y+h/2);ctx.fillText(r,x+w-u,y+h/2);
+}
+function _drawBoss(ctx,bx,groundY,bs,boss,now,phase){
+  var breathe=Math.sin(now/600)*0.05+1;ctx.save();
+  ctx.fillStyle='rgba(0,0,0,0.3)';ctx.beginPath();ctx.ellipse(bx,groundY+0.4*bs,bs*3,bs*0.9,0,0,7);ctx.fill();
+  ctx.globalAlpha=phase==='lobby'?0.65:1;
+  ctx.fillStyle='#4a2560';ctx.beginPath();ctx.ellipse(bx,groundY-bs*2.6*breathe,bs*3,bs*3*breathe,0,0,7);ctx.fill();
+  ctx.fillStyle='#5e3178';ctx.beginPath();ctx.ellipse(bx,groundY-bs*3.9,bs*2.2,bs*2,0,0,7);ctx.fill();
+  ctx.fillStyle='#2a1636';ctx.beginPath();ctx.moveTo(bx-bs*1.8,groundY-bs*5.1);ctx.lineTo(bx-bs*2.6,groundY-bs*6.8);ctx.lineTo(bx-bs*1.1,groundY-bs*5.4);ctx.closePath();ctx.fill();ctx.beginPath();ctx.moveTo(bx+bs*1.8,groundY-bs*5.1);ctx.lineTo(bx+bs*2.6,groundY-bs*6.8);ctx.lineTo(bx+bs*1.1,groundY-bs*5.4);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#ffd34a';ctx.beginPath();ctx.arc(bx-bs*0.9,groundY-bs*4.1,bs*0.5,0,7);ctx.arc(bx+bs*0.9,groundY-bs*4.1,bs*0.5,0,7);ctx.fill();
+  ctx.fillStyle='#201';ctx.beginPath();ctx.arc(bx-bs*0.9,groundY-bs*4.1,bs*0.22,0,7);ctx.arc(bx+bs*0.9,groundY-bs*4.1,bs*0.22,0,7);ctx.fill();
+  ctx.strokeStyle='#1a0d22';ctx.lineWidth=bs*0.4;ctx.beginPath();ctx.arc(bx,groundY-bs*2.9,bs*0.9,0.25,2.9);ctx.stroke();
+  ctx.globalAlpha=1;ctx.font=Math.round(bs*2.6)+'px serif';ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.fillText(boss.emoji||'🐉',bx,groundY-bs*7.2);
+  ctx.restore();
+}
+function TT_drawRaid(ctx,W,H,raid,now){
+  var u=Math.max(1.2,Math.min(H/22,4.2));
+  var groundY=H-Math.max(4,u*1.4);
+  var bs=Math.max(3,Math.min(H/7,W/18));
+  var bx=W-bs*4;
+  _bossBar(ctx,W,H,raid,u,now);
+  _drawBoss(ctx,bx,groundY,bs,raid.boss,now,raid.phase);
+  var rs=raid.raiders||[],n=Math.min(rs.length,12);
+  var left=u*5,right=bx-bs*3.5;
+  var slot=n>0?Math.min((right-left)/n,u*9):u*9;
+  for(var i=0;i<n;i++){
+    var rd=rs[i],cx=left+slot*(i+0.5);
+    ctx.font='700 '+Math.max(8,Math.round(u*2.3))+'px Segoe UI, sans-serif';ctx.textAlign='center';ctx.textBaseline='alphabetic';
+    var nm=(rd.name||'').slice(0,10);ctx.lineWidth=Math.max(2,u*0.7);ctx.strokeStyle='rgba(0,0,0,0.85)';ctx.strokeText(nm,cx,groundY-u*12);
+    ctx.fillStyle=rd.downed?'#e08a8a':'#fff';ctx.fillText(nm,cx,groundY-u*12);
+    if(rd.downed){ ctx.globalAlpha=0.45;TT_drawChar(ctx,cx,groundY,u,rd.look,'idle',now,null,{noProp:true});ctx.globalAlpha=1;ctx.font=Math.round(u*3)+'px serif';ctx.fillText('💀',cx,groundY-u*8.5); }
+    else { TT_drawChar(ctx,cx,groundY,u,rd.look,'fight',now+i*151,null,{noProp:true});_miniBar(ctx,cx,groundY-u*10.5,u,rd.hp,rd.maxhp,'#5fc27e');
+      if(raid.phase==='combat' && (Math.floor((now+i*151)/560)%2===0)) _spark(ctx,cx+u*5,groundY-u*4,u,'#ffd34a'); }
+  }
+  if(n===0 && raid.phase==='lobby'){ ctx.fillStyle='#cfe';ctx.font='700 '+Math.round(u*3)+'px Segoe UI, sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('Type  tt raid join  to fight!',W*0.35,groundY-u*5); }
+}
+
+function TT_drawParty(canvas,party,now,raid){
   var ctx=canvas.getContext('2d');
   var W=canvas.width,H=canvas.height;
   ctx.clearRect(0,0,W,H);
+  if(raid){ TT_drawRaid(ctx,W,H,raid,now); return; }
   if(!party||!party.length){ return; }
   var dt=Math.min(60, now-(TT_LAST||now)); TT_LAST=now;
   var n=Math.min(party.length,20);

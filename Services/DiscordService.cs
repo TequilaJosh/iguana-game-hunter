@@ -102,7 +102,7 @@ namespace GameTracker.Services
         /// Trigger a Tavern Tales raid on the companion bot (/raidnow) with a join timer.
         /// Returns the "Boss @ Zone" description on success, or null on failure.
         /// </summary>
-        public static async Task<string?> SpawnRaidAsync(string? ingestUrl, string? token, int lobbyMinutes)
+        public static async Task<string?> SpawnRaidAsync(string? ingestUrl, string? token, int lobbyMinutes, int level = 0)
         {
             ingestUrl = (ingestUrl ?? string.Empty).Trim();
             token = (token ?? string.Empty).Trim();
@@ -112,7 +112,7 @@ namespace GameTracker.Services
             try
             {
                 var raidUrl = new Uri(new Uri(ingestUrl), "/raidnow");
-                var json = Newtonsoft.Json.JsonConvert.SerializeObject(new { lobbyMinutes });
+                var json = Newtonsoft.Json.JsonConvert.SerializeObject(new { lobbyMinutes, level });
                 using var req = new HttpRequestMessage(HttpMethod.Post, raidUrl)
                 {
                     Content = new StringContent(json, Encoding.UTF8, "application/json"),

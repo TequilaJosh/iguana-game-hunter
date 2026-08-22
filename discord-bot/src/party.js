@@ -2,6 +2,7 @@ import { getPlayer } from './game/store.js';
 import { getParty } from './activity.js';
 import { getLook } from './game/cosmetics.js';
 import { getFight } from './game/fights.js';
+import { raidOverlayState } from './game/raids.js';
 import { SPRITE_JS } from './game/spriteEngine.js';
 
 // Party sprite overlay: little animated heroes doing what they're doing in Tavern Tales.
@@ -27,7 +28,19 @@ export function mountParty(app) {
       }
       return entry;
     }).filter(Boolean);
-    res.json({ party });
+
+    // Active raid: a shared boss everyone fights together in the overlay.
+    let raid = raidOverlayState();
+    if (raid) {
+      raid = {
+        ...raid,
+        raiders: raid.raiders.map((rd) => {
+          const rc = getPlayer(rd.id);
+          return { ...rd, name: rd.name || (rc && rc.name) || '?', look: getLook(rc || {}) };
+        }),
+      };
+    }
+    res.json(raid ? { party, raid } : { party });
   });
 
   // The sprite engine, served standalone so Game Hunter's main overlay can load it
@@ -47,11 +60,11 @@ const PARTY_HTML = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
 </head><body><canvas id="c"></canvas>
 <script>
 ${SPRITE_JS}
-var canvas=document.getElementById('c'), party=[];
+var canvas=document.getElementById('c'), party=[], raidState=null;
 function resize(){var dpr=Math.min(2,window.devicePixelRatio||1);canvas.width=Math.floor(innerWidth*dpr);canvas.height=Math.floor(innerHeight*dpr);}
 window.addEventListener('resize',resize);resize();
-async function poll(){try{var r=await fetch('/party/api',{cache:'no-store'});var d=await r.json();party=d.party||[];}catch(e){}}
-poll();setInterval(poll,2500);
-function frame(now){TT_drawParty(canvas,party,now);requestAnimationFrame(frame);}
+async function poll(){try{var r=await fetch('/party/api',{cache:'no-store'});var d=await r.json();party=d.party||[];raidState=d.raid||null;}catch(e){}}
+poll();setInterval(poll,2000);
+function frame(now){TT_drawParty(canvas,party,now,raidState);requestAnimationFrame(frame);}
 requestAnimationFrame(frame);
 </script></body></html>`;

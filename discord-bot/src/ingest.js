@@ -104,7 +104,8 @@ export function startIngestServer(client) {
     const guildId = findGuildByToken(token);
     if (!guildId) return res.status(401).json({ ok: false, error: 'unknown ingest token' });
     const m = Number(req.body?.lobbyMinutes);
-    const r = await forceRaid(guildId, client, Number.isFinite(m) && m > 0 ? m * 60000 : undefined)
+    const level = req.body?.level;
+    const r = await forceRaid(guildId, client, Number.isFinite(m) && m > 0 ? m * 60000 : undefined, level)
       .catch((e) => ({ error: e.message }));
     res.json(r.error ? { ok: false, error: r.error } : { ok: true, boss: r.raid.boss.name, zone: r.zone.name });
   });

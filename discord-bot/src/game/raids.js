@@ -10,7 +10,7 @@ import { log } from '../logger.js';
 
 const LOBBY_MS = 60 * 60 * 1000;        // "starts in 1 hour" sign-up window
 const COMBAT_TICK_MS = 4000;            // auto-combat tick
-const COMBAT_CAP_MS = 30 * 60 * 1000;   // combat can't run forever
+const COMBAT_CAP_MS = 15 * 60 * 1000;   // a raid fight runs up to 15 minutes
 const RAID_HP_MULT = 15;                // boss HP is a big shared pool
 const SPAWN_MIN = 6 * 60 * 60 * 1000;   // announce a raid every 6–12h at random
 const SPAWN_MAX = 12 * 60 * 60 * 1000;
@@ -21,6 +21,26 @@ const nextSpawn = new Map();   // guildId -> timestamp
 
 export const getRaid = (gid) => raids.get(gid) || null;
 export const hasRaid = (gid) => raids.has(gid);
+
+// Compact state for the party sprite overlay: the first active raid's boss + raiders.
+// (Overlay is per-bot; if multiple guilds raid at once, the first one wins.)
+export function raidOverlayState() {
+  for (const r of raids.values()) {
+    if (r.phase !== 'combat' && r.phase !== 'lobby') continue;
+    if (r.phase === 'combat' && r.hp <= 0) continue;
+    const zone = ZONES[r.zoneId];
+    return {
+      phase: r.phase,
+      startsInMs: r.phase === 'lobby' ? Math.max(0, r.startsAt - Date.now()) : 0,
+      tier: zone ? zone.tier : 1,
+      boss: { name: r.boss.name, emoji: r.boss.emoji || '🐉', hp: Math.max(0, r.hp), maxhp: r.maxhp },
+      raiders: [...r.parts.values()].slice(0, 16).map((p) => ({
+        id: p.discordId, name: p.name, hp: Math.max(0, p.hp), maxhp: p.maxhp, downed: !!p.downed,
+      })),
+    };
+  }
+  return null;
+}
 const rand = (lo, hi) => lo + Math.random() * (hi - lo);
 
 // Where to announce raids: the dedicated Tavern Tales channel, else the clips channel.
@@ -97,7 +117,7 @@ export function raidAction(guildId, discordId, action) {
   const p = addParticipant(raid, discordId); if (!p) return { error: 'Make a hero first with `!create`.' };
   if (action.kind === 'revive') {
     if (!p.downed) return { error: 'You’re still standing.' };
-    p.downed = false; p.hp = Math.max(1, Math.round(p.maxhp * 0.5));
+    p.downed = false; p.hp = p.maxhp; // respawn at FULL HP and rejoin the fight
     return { raid, revived: true };
   }
   p.queued = action;
@@ -202,13 +222,17 @@ async function announceRaid(raid, channel, zone, lobbyMs) {
 }
 
 // Force-announce a raid right now (used by /raidnow). Random difficulty; short lobby by default.
-export async function forceRaid(guildId, client, lobbyMs = 5 * 60 * 1000) {
+// `level` (1..N) picks the boss's zone/difficulty; omitted/invalid = random.
+export async function forceRaid(guildId, client, lobbyMs = 5 * 60 * 1000, level = null) {
   if (raids.has(guildId)) return { error: 'A raid is already active.' };
   const chanId = announceChannelId(guildId);
   if (!chanId) return { error: 'No raid/clips channel set. Run /setup tavern #channel first.' };
   const channel = await client.channels.fetch(chanId).catch(() => null);
   if (!channel || !channel.isTextBased()) return { error: 'Clips channel not found or not text.' };
-  const zone = ZONE_LIST[Math.floor(Math.random() * ZONE_LIST.length)];
+  const lvl = parseInt(level, 10);
+  const zone = (Number.isInteger(lvl) && lvl >= 1 && lvl <= ZONE_LIST.length)
+    ? ZONE_LIST[lvl - 1]
+    : ZONE_LIST[Math.floor(Math.random() * ZONE_LIST.length)];
   const r = spawnRaid(guildId, zone, channel, lobbyMs);
   if (r.error) return r;
   nextSpawn.set(guildId, Date.now() + rand(SPAWN_MIN, SPAWN_MAX)); // push back the next auto one

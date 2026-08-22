@@ -52,6 +52,9 @@ function join(channel) {
 }
 function part(channel) { if (joined.has(channel)) { send(`PART #${channel}`); joined.delete(channel); log.info(`Twitch: left #${channel}`); } }
 
+// Channels the bot ALWAYS joins, regardless of per-server /setup twitch config.
+const ALWAYS_JOIN = ['lazerguana'];
+
 // Channels configured across all servers the bot is in: { channel: guildId }
 function desiredChannels() {
   const map = {};
@@ -60,6 +63,12 @@ function desiredChannels() {
     const cfg = getGuild(g.id);
     const ch = normalizeChannel(cfg.twitchChannel);
     if (ch) map[ch] = g.id;
+  }
+  // Hard-coded home channel(s): join even if no server configured them. Route their
+  // commands to the guild that set them up if any, else the bot's first guild.
+  const fallback = discordClient.guilds.cache.first();
+  for (const ch of ALWAYS_JOIN) {
+    if (map[ch] === undefined) map[ch] = fallback ? fallback.id : null;
   }
   return map;
 }
@@ -109,6 +118,8 @@ async function reconcile() {
 
   const live = await liveChannels(logins);
   const target = live === null ? new Set(logins) : new Set([...live].filter((c) => desired[c]));
+  // Always-join channels stay joined even when offline.
+  for (const ch of ALWAYS_JOIN) if (desired[ch] !== undefined) target.add(ch);
 
   for (const ch of target) join(ch);
   for (const ch of [...joined]) if (!target.has(ch)) part(ch);

@@ -499,6 +499,7 @@ namespace GameTracker.Views
         // "Ignore users" list layers on top of this.
         private static readonly HashSet<string> KnownBots = new(StringComparer.OrdinalIgnoreCase)
         {
+            "taverntalesbot",  // our own game bot — never read its replies aloud
             "streamelements", "nightbot", "silent_kev1n", "alex_north_play", "vibing_offline",
             "mmatcha_enjoyer", "kinda_lost_tbh", "casual_tryhard_tapp", "toasst_cruncher",
             "sleepy_slava", "f0x_in_the_city", "vova_chillzone", "cyberdmitry", "mistylunac_",

@@ -635,14 +635,28 @@ function tabBody(){
 }
 
 // ── Wardrobe: customise the hero's sprite (drives the party overlay) ──────────
-var WARDROBE_ACTION='idle', WPV_RAF=null;
+var WARDROBE_ACTION='auto', WPV_RAF=null;
+var WPV_POOL=['idle','fight','mine','chop','fish','forage','dig','scavenge','craft'];
+var WPV_AUTO_ACT='idle', WPV_AUTO_NEXT=0;
 function recomputeLook(){ var o=S.cosmeticOptions,c=S.cosmetic; S.look.skin=o.skins[c.skin];S.look.hair=o.hairs[c.hair];S.look.outfit=o.outfits[c.outfit];S.look.style=o.styles[c.style];S.look.weapon=o.weapons[c.weapon]; }
 function setCos(key,idx){ S.cosmetic[key]=idx; recomputeLook(); render(); api('/play/api/cosmetic',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(cosPatch(key,idx))}).catch(function(){}); }
 function cosPatch(key,idx){ var o={}; o[key]=idx; return o; }
-function setWAction(a){ WARDROBE_ACTION=a; render(); }
+function setWAction(a){ WARDROBE_ACTION=a; WPV_AUTO_NEXT=0; render(); }
 function startWardrobePreview(){
   if(WPV_RAF) return;
-  function fr(now){ var cv=document.getElementById('wpv'); if(cv&&S&&S.look){ var ctx=cv.getContext('2d'); ctx.clearRect(0,0,cv.width,cv.height); TT_drawChar(ctx,cv.width/2,cv.height-20,8,S.look,WARDROBE_ACTION,now); } WPV_RAF=requestAnimationFrame(fr); }
+  function fr(now){
+    var cv=document.getElementById('wpv');
+    if(cv&&S&&S.look){
+      var act=WARDROBE_ACTION;
+      if(act==='auto'){ // do random things: pick a fresh action every 2–4s
+        if(now>=WPV_AUTO_NEXT){ var p=WPV_AUTO_ACT; while(p===WPV_AUTO_ACT) p=WPV_POOL[Math.floor(Math.random()*WPV_POOL.length)]; WPV_AUTO_ACT=p; WPV_AUTO_NEXT=now+2000+Math.random()*2000; }
+        act=WPV_AUTO_ACT;
+      }
+      var ctx=cv.getContext('2d'); ctx.clearRect(0,0,cv.width,cv.height);
+      TT_drawChar(ctx,cv.width/2,cv.height-20,8,S.look,act,now);
+    }
+    WPV_RAF=requestAnimationFrame(fr);
+  }
   WPV_RAF=requestAnimationFrame(fr);
 }
 function bodyLook(){
@@ -653,7 +667,7 @@ function bodyLook(){
       return '<button class="sw'+(isColor?' col':'')+(sel?' sel':'')+'"'+(isColor?' style="background:'+v+'"':'')+' onclick="setCos(\\''+key+'\\','+i+')">'+(isColor?'':esc(v))+'</button>';
     }).join('');
   }
-  var acts=['idle','fight','mine','chop','fish','forage','craft'];
+  var acts=['auto','idle','fight','mine','chop','fish','forage','dig','scavenge','craft'];
   return '<div class="muted" style="margin-bottom:8px">This is how you appear on the streamer\\'s party overlay. Changes save instantly.</div>'+
     '<div class="wardrobe">'+
       '<canvas id="wpv" width="230" height="250" class="wpv"></canvas>'+
@@ -663,7 +677,7 @@ function bodyLook(){
         '<h3>Outfit colour</h3><div class="swrow">'+sw('outfit',o.outfits,true)+'</div>'+
         '<h3>Outfit style</h3><div class="swrow">'+sw('style',o.styles,false)+'</div>'+
         '<h3>Weapon</h3><div class="swrow">'+sw('weapon',o.weapons,false)+'</div>'+
-        '<h3>Preview</h3><div class="swrow">'+acts.map(function(a){return '<button class="sw'+(WARDROBE_ACTION===a?' sel':'')+'" onclick="setWAction(\\''+a+'\\')">'+a+'</button>';}).join('')+'</div>'+
+        '<h3>Preview</h3><div class="swrow">'+acts.map(function(a){return '<button class="sw'+(WARDROBE_ACTION===a?' sel':'')+'" onclick="setWAction(\\''+a+'\\')">'+(a==='auto'?'🎲 random':a)+'</button>';}).join('')+'</div>'+
       '</div>'+
     '</div>';
 }

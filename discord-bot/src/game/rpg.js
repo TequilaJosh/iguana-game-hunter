@@ -195,6 +195,9 @@ function cmdProfile(msg) {
 function cmdWeb(msg) {
   const url = playUrl(msg.author.id);
   if (!url) return msg.reply('The browser version isn’t configured on this bot. Play here with `tt` commands, or see `tt help`.');
+  // The link controls the hero (like a password), so never print it in public chat —
+  // it can only be delivered by DM, which stream chat can't do.
+  if (msg._chat) return msg.reply('🎮 The browser link is private (it controls your hero). Type `tt web` in our Discord and I’ll DM it to you.');
   // The link is a private key to this hero — DM it so it isn't exposed in public chat.
   const send = async () => {
     try {
@@ -226,7 +229,7 @@ function cmdCreate(msg, args) {
   const race = RACE_LIST.find((r) => r.id === raceQ || r.name.toLowerCase() === raceQ);
   if (!cls || !race) {
     return msg.reply(
-      'Usage: `tt create <class> <race> [name]`\n' +
+      'Usage: `tt signup <class> <race> [name]` (or `tt create`)\n' +
       `Classes: ${CLASS_LIST.map((c) => c.id).join(', ')}\n` +
       `Races: ${RACE_LIST.map((r) => r.id).join(', ')}`
     );
@@ -1051,7 +1054,7 @@ function cmdLeaderboard(msg) {
 const COMMANDS = {
   rpg: cmdHelp, tavern: cmdHelp, tt: cmdHelp, tthelp: cmdHelp, help: cmdHelp, commands: cmdHelp,
   classes: cmdClasses, races: cmdRaces,
-  create: cmdCreate, char: cmdChar, sheet: cmdChar, me: cmdChar,
+  create: cmdCreate, signup: cmdCreate, start: cmdCreate, char: cmdChar, sheet: cmdChar, me: cmdChar,
   skills: cmdSkills, zones: cmdZones,
   adventure: cmdAdventure, explore: cmdAdventure, hunt: cmdAdventure,
   boss: cmdBoss, raid: cmdRaid,

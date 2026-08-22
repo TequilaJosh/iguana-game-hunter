@@ -2,18 +2,15 @@ import { runForChat } from './rpg.js';
 import { getLinkedDiscordId, createPendingCode, confirmCode, findDiscordMember } from './links.js';
 import { log } from '../logger.js';
 
-// Informational commands a chatter can use before linking an account.
-const PUBLIC_COMMANDS = new Set(['help', 'rpg', 'tavern', 'tt', 'tthelp', 'commands', 'classes', 'races', 'zones']);
-
 // Commands that manage the account link (usable before a link exists).
 async function handleLink(client, guildId, platform, user, args) {
   const name = args.join(' ').trim();
-  if (!name) return 'Usage: tt play <your Discord @username> — I\'ll DM you a code to link your accounts.';
+  if (!name) return 'Usage: tt link <your Discord name> — connects this chat to your Discord hero so you can play in both. New here? Just type tt signup <class> <race> to make a hero right now.';
   const guild = client.guilds.cache.get(guildId) || (await client.guilds.fetch(guildId).catch(() => null));
   if (!guild) return 'Could not reach the Discord server. Try again shortly.';
 
   const member = await findDiscordMember(guild, name);
-  if (!member) return `Couldn't find "${name}" in this Discord server. Use your exact Discord @username and make sure you've joined the server.`;
+  if (!member) return `Couldn't find "${name}" in this Discord server (linking needs you in the Discord). To just play here, type tt signup <class> <race>.`;
 
   const code = createPendingCode(platform, user, member.id);
   try {
@@ -66,15 +63,14 @@ export async function handleGameMessage(client, guildId, platform, user, text) {
     const [cmdRaw, ...args] = body.split(/\s+/);
     const cmd = (cmdRaw || '').toLowerCase();
 
-    if (cmd === 'play' || cmd === 'link') return await handleLink(client, guildId, platform, user, args);
+    // Linking a chat account to an existing Discord hero (optional).
+    if (cmd === 'link') return await handleLink(client, guildId, platform, user, args);
     if (cmd === 'confirm') return await handleConfirm(client, platform, user, args);
 
-    // Info commands work before linking; everything else needs a linked hero.
+    // No Discord needed to play: unlinked chatters get a hero keyed to their own
+    // platform identity, so they can `tt signup`/`tt create` and play straight from chat.
+    if (!prefixed) return null; // stay silent on stray non-"tt" chatter lines
     const discordId = getLinkedDiscordId(platform, user);
-    if (!discordId) {
-      if (!prefixed) return null; // stay silent on stray non-"tt" chatter lines
-      if (!PUBLIC_COMMANDS.has(cmd)) return 'Link your account first: type tt play <your Discord @username> and I\'ll DM you a code.';
-    }
     const runId = discordId || `unlinked:${platform}:${user}`;
     // Chat platforms (Twitch/TikTok) can't edit messages, so fights auto-resolve to a
     // single summary line instead of one reply per turn.

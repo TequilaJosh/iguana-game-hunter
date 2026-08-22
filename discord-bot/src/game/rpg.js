@@ -23,6 +23,7 @@ import { ensureQuest, questProgress, questClaim } from './quests.js';
 import { guideUrl } from '../features/guide.js';
 import { profileUrl } from '../profile.js';
 import { playUrl } from '../play.js';
+import { recordActivity, actionForCommand } from '../activity.js';
 import { getGuild } from '../guildStore.js';
 
 const PREFIX = '!';
@@ -1142,6 +1143,12 @@ export async function runForChat({ discordId, username, content, guildId, client
     reply: async (payload) => { captured = payload; return {}; },
   };
   await handleRpg(msg);
+  // Record what this hero is doing for the /party sprite overlay (only if they have one).
+  try {
+    const body = /^tt\s/i.test(content) ? content.slice(3).trim() : String(content || '').trim();
+    const ch = getPlayer(discordId);
+    if (ch && ch.name) recordActivity(discordId, ch.name, ch.cls, actionForCommand(body.split(/\s+/)[0]));
+  } catch { /* activity is best-effort */ }
   if (captured == null) return null;
   if (typeof captured === 'string') return toChatLine(captured);
   const parts = [];

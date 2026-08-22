@@ -16,6 +16,8 @@ import { listRecipes, recipeName, matName } from './game/recipes.js';
 import { countMat, hasMats } from './game/invutil.js';
 import { enchantList, enchantCap, nextCost, REAGENT_NAME } from './game/enchant.js';
 import { boxPrice, getBoxes } from './game/lootbox.js';
+import { getLook, cosmeticIndices, setCosmetic, COSMETIC_META } from './game/cosmetics.js';
+import { SPRITE_JS } from './game/spriteEngine.js';
 import { runForChat } from './game/rpg.js';
 
 const GEAR_SLOTS = new Set(['weapon', 'head', 'body', 'shield', 'feet', 'accessory']);
@@ -169,6 +171,7 @@ function buildState(discordId) {
     recipes: { crafter: recipesFor(c, 'crafter'), alchemist: recipesFor(c, 'alchemist') },
     craftProg: { crafter: profProg(c, 'crafter'), alchemist: profProg(c, 'alchemist'), enchanter: profProg(c, 'enchanter') },
     lootbox: { boxes: getBoxes(c), price: boxPrice(c) },
+    look: getLook(c), cosmetic: cosmeticIndices(c), cosmeticOptions: COSMETIC_META,
     skillbook: {
       className: cls?.name || c.cls,
       unlocked: skillsForClass(c.cls, c.level).map((s) => ({ name: s.name, mp: s.mp, type: s.type, power: s.power || 0 })),
@@ -271,6 +274,15 @@ export function mountPlay(app, client) {
     }
     savePlayer(req.discordId, c);
     res.json({ reply, state: buildState(req.discordId) });
+  });
+
+  // Wardrobe: save cosmetic choices (skin/hair/outfit/style/weapon indices).
+  app.post('/play/api/cosmetic', gate, express_json_guard, (req, res) => {
+    const c = getPlayer(req.discordId);
+    if (!c) return res.status(400).json({ error: 'No hero.' });
+    setCosmetic(c, req.body || {});
+    savePlayer(req.discordId, c);
+    res.json({ ok: true, state: buildState(req.discordId) });
   });
 }
 
@@ -410,6 +422,16 @@ const PLAY_HTML = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
   .ing.ok{color:#7fd07f;border-color:#2f4a2f;background:rgba(111,208,111,.08)}
   .ing.no{color:#e08a8a;border-color:#4a2f2f;background:rgba(212,106,106,.08)}
   .rxp{margin-left:auto;font-size:11px;font-weight:700;color:var(--gold);align-self:center}
+  /* Wardrobe */
+  .wardrobe{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-start}
+  .wpv{background:radial-gradient(circle at 50% 40%, #16241a, #0a140e);border:1px solid var(--line);border-radius:12px;flex:0 0 auto}
+  .wopts{flex:1;min-width:230px}
+  .wopts h3{margin:10px 0 5px}
+  .swrow{display:flex;flex-wrap:wrap;gap:6px}
+  .sw{min-width:34px;height:30px;padding:0 9px;border:1px solid var(--line);border-radius:7px;background:#13251a;color:var(--ink);cursor:pointer;font-size:12px;text-transform:capitalize}
+  .sw.col{width:30px;padding:0}
+  .sw:hover{border-color:var(--accent)}
+  .sw.sel{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent)}
   .center{text-align:center}
   .cls-pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
   .pk{background:#0a140e;border:1px solid var(--line);border-radius:10px;padding:10px;cursor:pointer;text-align:left}
@@ -427,6 +449,7 @@ var THEME={
   ranger:{c:"#7cc44a",e:"🏹"},rogue:{c:"#a884e0",e:"🗡️"},mage:{c:"#6a9ff0",e:"🔮"},
   cleric:{c:"#f0e6a6",e:"✨"},necromancer:{c:"#9a6ad0",e:"💀"},monk:{c:"#e0a45a",e:"👊"},bard:{c:"#e884b8",e:"🎵"}
 };
+${SPRITE_JS}
 var TOKEN=new URLSearchParams(location.search).get("t")||"";
 var STAT_TIP={
   POWER:"Power — your overall attack strength, from your main stat plus your weapon.",
@@ -530,6 +553,7 @@ function render(){
   // During a fight the combat panel has its own scrolling log, so drop the top log box.
   root.innerHTML='<div class="grid2">'+hero+'<div>'+(S.inFight?'':logBox())+right+'</div></div>';
   if(S.inFight) scrollClog();
+  if(!S.inFight && TAB==='look') startWardrobePreview();
 }
 
 function bar(label,a,b,cls,id){
@@ -593,7 +617,7 @@ function panelFight(){
 
 // ── Out of combat: tabbed action panels ─────────────────────────────────────
 function panelTabs(){
-  var tabs=[["adventure","⚔️ Adventure","Fight, gather materials, and see zones."],["shop","🛒 Shop","Buy gear and potions."],["bag","🎒 Bag","Equip, sell and inspect your items."],["craft","🔨 Craft","Craft gear, brew potions, enchant."],["more","✨ More","Quests, lootboxes, leaderboard, ascend."]];
+  var tabs=[["adventure","⚔️ Adventure","Fight, gather materials, and see zones."],["shop","🛒 Shop","Buy gear and potions."],["bag","🎒 Bag","Equip, sell and inspect your items."],["craft","🔨 Craft","Craft gear, brew potions, enchant."],["look","👕 Look","Customise how your hero looks on the party overlay."],["more","✨ More","Quests, lootboxes, leaderboard, ascend."]];
   var bar='<div class="tabs">'+tabs.map(function(x){
     return '<button class="'+(TAB===x[0]?'active':'')+'"'+tip(x[2])+' onclick="setTab(\\''+x[0]+'\\')">'+x[1]+'</button>';
   }).join("")+'</div>';
@@ -606,7 +630,42 @@ function tabBody(){
   if(TAB==="shop") return bodyShop();
   if(TAB==="bag") return bodyBag();
   if(TAB==="craft") return bodyCraft();
+  if(TAB==="look") return bodyLook();
   return bodyMore();
+}
+
+// ── Wardrobe: customise the hero's sprite (drives the party overlay) ──────────
+var WARDROBE_ACTION='idle', WPV_RAF=null;
+function recomputeLook(){ var o=S.cosmeticOptions,c=S.cosmetic; S.look.skin=o.skins[c.skin];S.look.hair=o.hairs[c.hair];S.look.outfit=o.outfits[c.outfit];S.look.style=o.styles[c.style];S.look.weapon=o.weapons[c.weapon]; }
+function setCos(key,idx){ S.cosmetic[key]=idx; recomputeLook(); render(); api('/play/api/cosmetic',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(cosPatch(key,idx))}).catch(function(){}); }
+function cosPatch(key,idx){ var o={}; o[key]=idx; return o; }
+function setWAction(a){ WARDROBE_ACTION=a; render(); }
+function startWardrobePreview(){
+  if(WPV_RAF) return;
+  function fr(now){ var cv=document.getElementById('wpv'); if(cv&&S&&S.look){ var ctx=cv.getContext('2d'); ctx.clearRect(0,0,cv.width,cv.height); TT_drawChar(ctx,cv.width/2,cv.height-20,8,S.look,WARDROBE_ACTION,now); } WPV_RAF=requestAnimationFrame(fr); }
+  WPV_RAF=requestAnimationFrame(fr);
+}
+function bodyLook(){
+  var o=S.cosmeticOptions;
+  function sw(key,arr,isColor){
+    return arr.map(function(v,i){
+      var sel=S.cosmetic[key]===i;
+      return '<button class="sw'+(isColor?' col':'')+(sel?' sel':'')+'"'+(isColor?' style="background:'+v+'"':'')+' onclick="setCos(\\''+key+'\\','+i+')">'+(isColor?'':esc(v))+'</button>';
+    }).join('');
+  }
+  var acts=['idle','fight','mine','chop','fish','forage','craft'];
+  return '<div class="muted" style="margin-bottom:8px">This is how you appear on the streamer\\'s party overlay. Changes save instantly.</div>'+
+    '<div class="wardrobe">'+
+      '<canvas id="wpv" width="230" height="250" class="wpv"></canvas>'+
+      '<div class="wopts">'+
+        '<h3>Skin</h3><div class="swrow">'+sw('skin',o.skins,true)+'</div>'+
+        '<h3>Hair</h3><div class="swrow">'+sw('hair',o.hairs,true)+'</div>'+
+        '<h3>Outfit colour</h3><div class="swrow">'+sw('outfit',o.outfits,true)+'</div>'+
+        '<h3>Outfit style</h3><div class="swrow">'+sw('style',o.styles,false)+'</div>'+
+        '<h3>Weapon</h3><div class="swrow">'+sw('weapon',o.weapons,false)+'</div>'+
+        '<h3>Preview</h3><div class="swrow">'+acts.map(function(a){return '<button class="sw'+(WARDROBE_ACTION===a?' sel':'')+'" onclick="setWAction(\\''+a+'\\')">'+a+'</button>';}).join('')+'</div>'+
+      '</div>'+
+    '</div>';
 }
 function tip(t){ return t?' title="'+esc(t)+'"':''; }
 function actBtn(label,c,cls,dis,title){ return '<button class="'+(cls||'')+'"'+tip(title)+' '+((BUSY||dis)?'disabled':'')+' onclick="cmd(\\''+c+'\\')">'+label+'</button>'; }

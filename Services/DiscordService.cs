@@ -98,6 +98,36 @@ namespace GameTracker.Services
             catch { return false; }
         }
 
+        /// <summary>
+        /// Trigger a Tavern Tales raid on the companion bot (/raidnow) with a join timer.
+        /// Returns the "Boss @ Zone" description on success, or null on failure.
+        /// </summary>
+        public static async Task<string?> SpawnRaidAsync(string? ingestUrl, string? token, int lobbyMinutes)
+        {
+            ingestUrl = (ingestUrl ?? string.Empty).Trim();
+            token = (token ?? string.Empty).Trim();
+            if (ingestUrl.Length == 0 || token.Length == 0) return null;
+            if (!ingestUrl.StartsWith("http", StringComparison.OrdinalIgnoreCase)) return null;
+
+            try
+            {
+                var raidUrl = new Uri(new Uri(ingestUrl), "/raidnow");
+                var json = Newtonsoft.Json.JsonConvert.SerializeObject(new { lobbyMinutes });
+                using var req = new HttpRequestMessage(HttpMethod.Post, raidUrl)
+                {
+                    Content = new StringContent(json, Encoding.UTF8, "application/json"),
+                };
+                req.Headers.TryAddWithoutValidation("Authorization", "Bearer " + token);
+                var resp = await _http.SendAsync(req);
+                if (!resp.IsSuccessStatusCode) return null;
+                var body = await resp.Content.ReadAsStringAsync();
+                var j = Newtonsoft.Json.Linq.JObject.Parse(body);
+                if (j.Value<bool?>("ok") != true) return null;
+                return (j.Value<string?>("boss") ?? "Boss") + " @ " + (j.Value<string?>("zone") ?? "zone");
+            }
+            catch { return null; }
+        }
+
         public enum BotTest { NotConfigured, Unreachable, BadToken, NoClipChannel, Ok }
 
         /// <summary>

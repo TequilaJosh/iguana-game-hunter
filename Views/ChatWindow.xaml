@@ -203,6 +203,9 @@
                             <Button Content="&#128499; Poll" Click="Poll_Click"
                                     Style="{StaticResource ConnectBtn}" Margin="6,0,0,0"
                                     ToolTip="Run a chat poll — viewers vote with !vote 1/2/3, results live on the overlay"/>
+                            <Button x:Name="RaidBtn" Content="&#9876; Raid" Click="Raid_Click"
+                                    Style="{StaticResource ConnectBtn}" Margin="6,0,0,0"
+                                    ToolTip="Spawn a Tavern Tales raid with a 5-minute join timer — viewers join with 'tt raid join'"/>
                         </StackPanel>
                     </Grid>
                 </StackPanel>

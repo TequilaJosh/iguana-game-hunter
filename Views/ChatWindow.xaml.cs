@@ -719,6 +719,36 @@ namespace GameTracker.Views
             _pollWindow.Show();
         }
 
+        // Spawn a Tavern Tales raid with a 5-minute join timer via the companion bot.
+        private async void Raid_Click(object sender, RoutedEventArgs e)
+        {
+            if (!_features.RpgEnabled ||
+                string.IsNullOrWhiteSpace(_features.BotIngestUrl) ||
+                string.IsNullOrWhiteSpace(_features.BotIngestToken))
+            {
+                MessageBox.Show(this,
+                    "Connect the Tavern Tales bot first (Settings → Chat features → Discord bot), then try again.",
+                    "Raid", MessageBoxButton.OK, MessageBoxImage.Information);
+                return;
+            }
+            if (MessageBox.Show(this,
+                    "Spawn a raid now with a 5-minute join timer?\nViewers join with  tt raid join",
+                    "Spawn Raid", MessageBoxButton.OKCancel, MessageBoxImage.Question) != MessageBoxResult.OK)
+                return;
+
+            RaidBtn.IsEnabled = false;
+            try
+            {
+                var desc = await DiscordService.SpawnRaidAsync(_features.BotIngestUrl, _features.BotIngestToken, 5);
+                if (desc != null)
+                    OverlayServer.Toast($"⚔️ RAID: {desc} — join with tt raid join! (5 min)", confetti: true);
+                else
+                    MessageBox.Show(this, "Couldn't start a raid. Check the bot connection in Settings.",
+                        "Raid", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+            finally { RaidBtn.IsEnabled = true; }
+        }
+
         private StreamStatsWindow? _statsWindow;
 
         private void Stats_Click(object sender, RoutedEventArgs e)

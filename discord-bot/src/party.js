@@ -1,6 +1,7 @@
 import { getPlayer } from './game/store.js';
 import { getParty } from './activity.js';
 import { getLook } from './game/cosmetics.js';
+import { getFight } from './game/fights.js';
 import { SPRITE_JS } from './game/spriteEngine.js';
 
 // Party sprite overlay: little animated heroes doing what they're doing in Tavern Tales.
@@ -13,7 +14,18 @@ export function mountParty(app) {
     const party = getParty().map((e) => {
       const c = getPlayer(e.id);
       if (!c || !c.name) return null;
-      return { name: e.name || c.name, action: e.action || 'idle', look: getLook(c) };
+      const entry = { name: e.name || c.name, action: e.action || 'idle', look: getLook(c) };
+      if (e.action === 'fight') {
+        const f = getFight(e.id);
+        if (f && f.monster) {
+          entry.fight = {
+            monster: f.monster.name, emoji: f.monster.emoji || '👹',
+            mhp: Math.max(0, f.mhp), mmaxhp: f.mmaxhp,
+            php: Math.max(0, f.php), pmaxhp: (f.pd && f.pd.maxhp) || f.php,
+          };
+        }
+      }
+      return entry;
     }).filter(Boolean);
     res.json({ party });
   });

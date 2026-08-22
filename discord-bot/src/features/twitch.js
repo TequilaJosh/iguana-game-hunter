@@ -157,7 +157,9 @@ async function handleChat(channel, user, text) {
   const isCmd = low === 'tt' || low.startsWith('tt ');
   if (!isCmd) return;
 
-  const reply = await handleGameMessage(discordClient, gid, 'twitch', user, text);
+  // Deferred replies (e.g. a timed fight's result) come back through this sender.
+  const respond = (text2) => { if (text2) say(channel, `@${user} ${text2}`); };
+  const reply = await handleGameMessage(discordClient, gid, 'twitch', user, text, respond);
   if (reply) say(channel, `@${user} ${reply}`);
 }
 

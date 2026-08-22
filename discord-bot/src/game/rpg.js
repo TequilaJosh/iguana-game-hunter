@@ -307,7 +307,8 @@ async function cmdAdventure(msg, args) {
   const fight = startFight(msg.author.id, char, monsterId, zone.id);
   fight.log.push(`You venture into **${zone.name}** and a **${fight.monster.name}** appears!`);
 
-  // Twitch/relay: auto-fight to the finish and reply once (no editing, no spam).
+  // Twitch: play the fight out over time on the overlay, reply when it's done.
+  if (msg._auto && msg._respond) return startTimedFight(msg, char);
   if (msg._auto) return autoFinish(msg, char);
   // Stream chat can't edit messages, so it stays manual (type "tt attack" each turn).
   if (msg._chat) return msg.reply({ embeds: [fightEmbed(fight)] });
@@ -339,6 +340,7 @@ async function cmdBoss(msg, args) {
   const fight = startFight(msg.author.id, char, bossForZone(zone), zone.id);
   fight.bossZone = zone.id;
   fight.log.push(`⚔️ You challenge **${fight.monster.name}**, the boss of **${zone.name}**!`);
+  if (msg._auto && msg._respond) return startTimedFight(msg, char);
   if (msg._auto) return autoFinish(msg, char);
   if (msg._chat) return msg.reply({ embeds: [fightEmbed(fight)] });
   const sent = await msg.reply({ content: '👑 **BOSS FIGHT!** Type `tt attack` to begin!', embeds: [fightEmbed(fight)] });
@@ -476,6 +478,51 @@ async function afterTurn(msg, char, res) {
   return msg.reply({ embeds: [fightEmbed(fight)] });
 }
 
+// ── Timed chat fights ────────────────────────────────────────────────────────
+// When a chat platform has a way to send follow-up messages (msg._respond), the
+// fight plays out over a few seconds so the party overlay can show real HP ticking
+// down — and the win/lose line is held back until the fight actually finishes.
+const timedFights = new Map(); // uid -> { char, respond }
+const TIMED_TURN_MS = 1400;
+let timedTimer = null;
+function ensureTimedTimer() { if (!timedTimer) timedTimer = setInterval(tickTimedFights, 500); }
+function endTimed(uid, char) { timedFights.delete(uid); recordActivity(uid, char.name, char.cls, null); }
+function tickTimedFights() {
+  const now = Date.now();
+  for (const [uid, tf] of timedFights) {
+    if (now < tf.nextAt) continue;
+    const fight = getFight(uid);
+    if (!fight) { endTimed(uid, tf.char); continue; }
+    const res = takeTurn(fight, 'attack');
+    fight.log.push(...res.log);
+    if (res.win) {
+      const reward = resolveWin(fight, tf.char); questProgress(tf.char, 'win', 1); endFight(uid); savePlayer(uid, tf.char);
+      endTimed(uid, tf.char); tf.respond(autoWinLine(fight, reward, tf.char)); continue;
+    }
+    if (res.lose) {
+      const { lost } = resolveLoss(tf.char); endFight(uid); savePlayer(uid, tf.char);
+      endTimed(uid, tf.char); tf.respond(`💀 You fell to the **${fight.monster.name}** — down ${lost} 🪙 but alive. \`tt rest\`, then \`tt adventure\`.`); continue;
+    }
+    if (res.fled) {
+      tf.char.hp = fight.php; tf.char.mp = fight.pmp; endFight(uid); savePlayer(uid, tf.char);
+      endTimed(uid, tf.char); tf.respond('🏃 You slipped away from the fight.'); continue;
+    }
+    tf.nextAt = now + TIMED_TURN_MS;
+    recordActivity(uid, tf.char.name, tf.char.cls, 'fight'); // keep them "fighting" on the overlay
+  }
+}
+// Start a fight that resolves over time; the reply arrives when it's done.
+function startTimedFight(msg, char) {
+  const uid = msg.author.id;
+  const fight = getFight(uid);
+  if (!fight) return msg.reply('No fight to run.');
+  timedFights.set(uid, { char, respond: msg._respond, nextAt: Date.now() + TIMED_TURN_MS });
+  ensureTimedTimer();
+  recordActivity(uid, char.name, char.cls, 'fight');
+  const boss = fight.bossZone ? ' (BOSS)' : '';
+  return msg.reply(`⚔️ **${char.name}** takes on **${fight.monster.name}**${boss} — watch it on the party overlay!`);
+}
+
 // Resolve the current fight to completion (chat auto-battle) → one concise reply.
 async function autoFinish(msg, char) {
   const uid = msg.author.id;
@@ -512,6 +559,7 @@ function cmdAttack(msg) {
   const char = getPlayer(msg.author.id);
   const fight = getFight(msg.author.id);
   if (!char || !fight) return msg.reply('You’re not in a fight. `tt adventure` to find one.');
+  if (timedFights.has(msg.author.id)) return msg.reply('⚔️ Your fight is playing out on the overlay — sit tight!');
   return act(msg, char, takeTurn(fight, 'attack'), true); // attack (re)starts the auto-loop
 }
 
@@ -519,6 +567,7 @@ function cmdSkill(msg, args) {
   const char = getPlayer(msg.author.id);
   const fight = getFight(msg.author.id);
   if (!char || !fight) return msg.reply('You’re not in a fight. `tt adventure` to find one.');
+  if (timedFights.has(msg.author.id)) return msg.reply('⚔️ Your fight is playing out on the overlay — sit tight!');
   const q = args.join(' ').toLowerCase().trim();
   if (!q) return msg.reply('Which skill? `skill <name>` or `skill 1` — see `tt skills`.');
   const list = skillsForClass(char.cls, char.level);
@@ -533,6 +582,7 @@ function cmdUse(msg) {
   const char = getPlayer(msg.author.id);
   const fight = getFight(msg.author.id);
   if (!char || !fight) return msg.reply('You can only quaff potions in a fight right now. `tt rest` to heal in town.');
+  if (timedFights.has(msg.author.id)) return msg.reply('⚔️ Your fight is playing out on the overlay — sit tight!');
   const pot = (char.inventory || []).find((i) => i.effect === 'heal_pct' && (i.qty || 0) > 0);
   if (!pot) return msg.reply('No potions in your bag.');
   const heal = Math.round(fight.pd.maxhp * (pot.magnitude || 30) / 100);
@@ -545,6 +595,7 @@ function cmdFlee(msg) {
   const char = getPlayer(msg.author.id);
   const fight = getFight(msg.author.id);
   if (!char || !fight) return msg.reply('You’re not in a fight.');
+  if (timedFights.has(msg.author.id)) return msg.reply('⚔️ Your fight is playing out on the overlay — sit tight!');
   return act(msg, char, takeTurn(fight, 'flee'));
 }
 
@@ -1131,7 +1182,7 @@ function toChatLine(t) {
  * Run a game command for a non-Discord chatter (already resolved to a Discord id),
  * reusing the exact same handlers, and return a one-line plain-text reply.
  */
-export async function runForChat({ discordId, username, content, guildId, client, auto = false }) {
+export async function runForChat({ discordId, username, content, guildId, client, auto = false, respond = null }) {
   let captured = null;
   const msg = {
     author: { id: discordId, username, bot: false },
@@ -1140,6 +1191,7 @@ export async function runForChat({ discordId, username, content, guildId, client
     client,       // for resolving the announce channel
     _chat: true,  // stream chat: manual mode, no auto-battle loop / message editing
     _auto: auto,  // Twitch/relay: resolve the whole fight and reply with one summary
+    _respond: respond, // send a follow-up chat line later (deferred fight results)
     reply: async (payload) => { captured = payload; return {}; },
   };
   await handleRpg(msg);

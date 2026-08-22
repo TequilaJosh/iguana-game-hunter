@@ -51,7 +51,7 @@ async function handleConfirm(client, platform, user, args) {
  * platform/user identify the chatter (e.g. "twitch"/"cooluser"); text is the raw command,
  * which is "tt <command>" (or legacy "!command").
  */
-export async function handleGameMessage(client, guildId, platform, user, text) {
+export async function handleGameMessage(client, guildId, platform, user, text, respond = null) {
   try {
     const raw = String(text || '').trim();
     const low = raw.toLowerCase();
@@ -74,7 +74,7 @@ export async function handleGameMessage(client, guildId, platform, user, text) {
     const runId = discordId || `unlinked:${platform}:${user}`;
     // Chat platforms (Twitch/TikTok) can't edit messages, so fights auto-resolve to a
     // single summary line instead of one reply per turn.
-    const reply = await runForChat({ discordId: runId, username: user, content: 'tt ' + body, guildId, client, auto: true });
+    const reply = await runForChat({ discordId: runId, username: user, content: 'tt ' + body, guildId, client, auto: true, respond });
     return reply || null;
   } catch (e) {
     log.error('handleGameMessage failed:', e);

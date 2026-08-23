@@ -571,7 +571,11 @@ namespace GameTracker.Views
                 if (text.Length == 0) return;
             }
             if (_ttsSettings.MaxChars > 0 && text.Length > _ttsSettings.MaxChars)
-                text = text[.._ttsSettings.MaxChars];
+            {
+                // Cut at the last word boundary so it doesn't chop mid-word.
+                var cut = text.LastIndexOf(' ', _ttsSettings.MaxChars - 1);
+                text = text[..(cut > _ttsSettings.MaxChars / 2 ? cut : _ttsSettings.MaxChars)].TrimEnd();
+            }
             var spoken = _ttsSettings.ReadName && !string.IsNullOrWhiteSpace(m.User)
                 ? $"{m.User} says: {text}"
                 : text;

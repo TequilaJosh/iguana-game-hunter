@@ -22,7 +22,7 @@ namespace GameTracker.Models
         public int Volume { get; set; } = 100;               // 0..100
         public bool ReadName { get; set; } = true;           // "Name says: ..." vs message only
         public bool SkipCommands { get; set; } = true;       // don't read messages starting with "!"
-        public int MaxChars { get; set; } = 200;             // truncate long messages
+        public int MaxChars { get; set; } = 500;             // truncate long messages
         public List<CustomVoice> Custom { get; set; } = new(); // user-made voice presets
 
         // Ignore rules: these messages are never read aloud.

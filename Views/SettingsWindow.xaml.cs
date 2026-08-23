@@ -76,6 +76,7 @@ namespace GameTracker.Views
             TtsIgnoreUsers.Text = string.Join(", ", tts.IgnoreUsers);
             TtsIgnoreKeywords.Text = string.Join(", ", tts.IgnoreKeywords);
             TtsBadWords.Text = string.Join(", ", tts.BadWords);
+            TtsMaxChars.Text = tts.MaxChars.ToString();
             UpdateVoicePickerState();
 
             // Overlay
@@ -532,6 +533,9 @@ namespace GameTracker.Views
             t.IgnoreUsers = SplitList(TtsIgnoreUsers.Text);
             t.IgnoreKeywords = SplitList(TtsIgnoreKeywords.Text);
             t.BadWords = SplitList(TtsBadWords.Text);
+            // Max spoken length: 0 = no limit, else clamp to something sane.
+            if (int.TryParse(TtsMaxChars.Text.Trim(), out var maxCh))
+                t.MaxChars = maxCh <= 0 ? 0 : Math.Clamp(maxCh, 50, 2000);
             return t;
         }
 

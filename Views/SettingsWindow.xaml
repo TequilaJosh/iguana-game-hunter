@@ -297,6 +297,17 @@
                                     <ColumnDefinition Width="120"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
+                                <TextBlock Text="Max spoken length" Style="{StaticResource Lbl}"
+                                           ToolTip="Longer messages are cut off at this many characters when read aloud"/>
+                                <TextBox x:Name="TtsMaxChars" Grid.Column="1" Style="{StaticResource In}"
+                                         Width="80" HorizontalAlignment="Left" LostFocus="Tts_Changed"
+                                         ToolTip="Characters to read before cutting off (50–2000). 0 = no limit."/>
+                            </Grid>
+                            <Grid Margin="0,0,0,6">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="120"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
                                 <TextBlock Text="Ignore users" Style="{StaticResource Lbl}"
                                            ToolTip="These accounts are never read aloud"/>
                                 <TextBox x:Name="TtsIgnoreUsers" Grid.Column="1" Style="{StaticResource In}"

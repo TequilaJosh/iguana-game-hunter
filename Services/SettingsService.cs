@@ -205,17 +205,26 @@ namespace GameTracker.Services
         public static void RunMigrations()
         {
             var s = LoadAll();
-            if (s.MigrationRev >= 1) return;
+            if (s.MigrationRev >= 2) return;
 
-            // Rev 1: points became on-by-default at 25 per 5 min. Flip users still on the
-            // old shipped default (off @ 10) — anyone who customized keeps their numbers.
-            s.Features ??= new ChatFeatureSettings();
-            if (!s.Features.PointsEnabled)
+            if (s.MigrationRev < 1)
             {
-                s.Features.PointsEnabled = true;
-                if (s.Features.PointsPerInterval == 10) s.Features.PointsPerInterval = 25;
+                // Rev 1: points became on-by-default at 25 per 5 min. Flip users still on the
+                // old shipped default (off @ 10) — anyone who customized keeps their numbers.
+                s.Features ??= new ChatFeatureSettings();
+                if (!s.Features.PointsEnabled)
+                {
+                    s.Features.PointsEnabled = true;
+                    if (s.Features.PointsPerInterval == 10) s.Features.PointsPerInterval = 25;
+                }
             }
-            s.MigrationRev = 1;
+
+            // Rev 2: TTS max spoken length default went 200 -> 500 (long messages were
+            // audibly cutting off). Only bump users still on the old shipped default.
+            s.Tts ??= new ChatTtsSettings();
+            if (s.Tts.MaxChars == 200) s.Tts.MaxChars = 500;
+
+            s.MigrationRev = 2;
             SaveAll(s);
         }
 

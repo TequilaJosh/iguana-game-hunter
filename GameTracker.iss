@@ -58,3 +58,43 @@ function IsSilentRun(): Boolean;
 begin
   Result := WizardSilent();
 end;
+
+// ---- VB-CABLE virtual audio cable (for TTS -> Discord) --------------------
+// If the cable driver isn't present, download it from vb-audio.com during
+// install/update and run its setup silently (one UAC prompt — driver installs
+// require admin). Any failure (offline, UAC declined, URL moved) is ignored so
+// the app install itself never breaks. The cable appears after a reboot.
+
+function VbCableInstalled(): Boolean;
+begin
+  Result := RegKeyExists(HKLM64, 'SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\VB:VBCABLE {87459874-1236-4469}')
+    or DirExists(ExpandConstant('{commonpf64}\VB\CABLE'));
+end;
+
+procedure InstallVbCable();
+var
+  Zip, Dir: String;
+  Rc: Integer;
+begin
+  if VbCableInstalled() then exit;
+  try
+    DownloadTemporaryFile('https://download.vb-audio.com/Download_CABLE/VBCABLE_Driver_Pack45.zip',
+      'vbcable.zip', '', nil);
+  except
+    exit; // offline or URL changed — skip quietly
+  end;
+  Zip := ExpandConstant('{tmp}\vbcable.zip');
+  Dir := ExpandConstant('{tmp}\vbcable');
+  if not Exec('powershell.exe',
+      '-NoProfile -Command "Expand-Archive -LiteralPath ''' + Zip + ''' -DestinationPath ''' + Dir + ''' -Force"',
+      '', SW_HIDE, ewWaitUntilTerminated, Rc) then exit;
+  if Rc <> 0 then exit;
+  // Elevated silent driver install; if the user declines UAC, just move on.
+  ShellExec('runas', Dir + '\VBCABLE_Setup_x64.exe', '-i -h', Dir, SW_HIDE, ewWaitUntilTerminated, Rc);
+end;
+
+procedure CurStepChanged(CurStep: TSetupStep);
+begin
+  if CurStep = ssPostInstall then
+    InstallVbCable();
+end;

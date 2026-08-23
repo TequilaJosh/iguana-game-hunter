@@ -492,6 +492,7 @@ namespace GameTracker.Views
             _tts.BleepBadWords = _ttsSettings.BleepBadWords;
             _tts.SetBadWords(_ttsSettings.BadWords);
             _tts.OutputDevice = _ttsSettings.OutputDevice ?? string.Empty;
+            _tts.OutputDevice2 = _ttsSettings.OutputDevice2 ?? string.Empty;
         }
 
         // Known chat/service bots (streamscharts.com/tools/bots) — never read aloud.

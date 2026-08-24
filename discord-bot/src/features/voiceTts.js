@@ -10,7 +10,18 @@ import {
 } from '@discordjs/voice';
 import { Readable } from 'node:stream';
 import { PermissionFlagsBits } from 'discord.js';
+import { getGuild } from '../guildStore.js';
 import { log } from '../logger.js';
+
+// Same normalization twitch.js uses, so a bound channel matches incoming chat.
+function normalizeChannel(s) {
+  return String(s || '')
+    .trim().toLowerCase()
+    .replace(/^https?:\/\/(www\.)?twitch\.tv\//, '')
+    .replace(/^#/, '')
+    .replace(/[^a-z0-9_]/g, '');
+}
+const DEFAULT_CHANNEL = 'lazerguana';   // matches twitch.js ALWAYS_JOIN
 
 // ── Voice TTS ───────────────────────────────────────────────────────────────
 // TavernTalesBot joins a Discord voice channel and reads your stream chat aloud,
@@ -87,12 +98,16 @@ function pump(guildId) {
     });
 }
 
-/** Join (or move to) a voice channel and start reading stream chat there. */
-export async function joinVoice(guild, voiceChannel) {
+/** Join (or move to) a voice channel and read the given Twitch channel's chat there. */
+export async function joinVoice(guild, voiceChannel, twitchChannel) {
   const me = guild.members.me;
   const perms = voiceChannel.permissionsFor(me);
+  // Private/locked channels: the bot's role must be granted access here.
+  if (!perms?.has(PermissionFlagsBits.ViewChannel)) {
+    return { ok: false, reason: `I can't see **${voiceChannel.name}** — it's private. Give my role the **View Channel** permission on it (Edit Channel → Permissions → add @${me?.user?.username || 'the bot'}).` };
+  }
   if (!perms?.has(PermissionFlagsBits.Connect) || !perms?.has(PermissionFlagsBits.Speak)) {
-    return { ok: false, reason: "I need permission to Connect and Speak in that voice channel." };
+    return { ok: false, reason: `I need **Connect** and **Speak** on **${voiceChannel.name}**. On a private channel, add my role there (Edit Channel → Permissions) with those allowed.` };
   }
 
   const connection = joinVoiceChannel({
@@ -137,13 +152,14 @@ export async function joinVoice(guild, voiceChannel) {
   sessions.set(guild.id, {
     player,
     channelId: voiceChannel.id,
+    twitchChannel: normalizeChannel(twitchChannel) || DEFAULT_CHANNEL,
     queue: [],
     speaking: false,
     readName: false,
     maxChars: 300,
   });
-  log.info(`voiceTts: joined voice ${voiceChannel.name} in guild ${guild.id}`);
-  return { ok: true, channel: voiceChannel };
+  log.info(`voiceTts: joined voice ${voiceChannel.name} in guild ${guild.id}, reading #${normalizeChannel(twitchChannel) || DEFAULT_CHANNEL}`);
+  return { ok: true, channel: voiceChannel, twitchChannel: normalizeChannel(twitchChannel) || DEFAULT_CHANNEL };
 }
 
 /** Leave the voice channel and stop reading chat. */
@@ -162,30 +178,33 @@ export function isReading(guildId) {
 
 const LINK_RX = /https?:\/\/\S+/gi;
 
-/**
- * Speak one stream-chat line, if this guild has an active voice session.
- * Cheap no-op when the bot isn't in a voice channel for the guild.
- */
-export function speakStreamChat(guildId, user, text) {
-  const s = sessions.get(guildId);
-  if (!s) return;
+// Queue a line into one session (applies its filters), then kick its player.
+function enqueueTo(guildId, s, user, text) {
   let msg = String(text || '').trim();
   if (!msg) return;
-
-  // Strip links; skip messages that were nothing but a link.
   const stripped = msg.replace(LINK_RX, ' ').replace(/\s{2,}/g, ' ').trim();
   if (!stripped) return;
   msg = stripped;
-
   if (msg.length > s.maxChars) {
     const cut = msg.lastIndexOf(' ', s.maxChars - 1);
     msg = msg.slice(0, cut > s.maxChars / 2 ? cut : s.maxChars).trim();
   }
-
   const spoken = s.readName && user ? `${user} says: ${msg}` : msg;
   if (s.queue.length >= QUEUE_CAP) s.queue.shift(); // drop oldest when flooded
   s.queue.push(spoken);
   pump(guildId);
+}
+
+/**
+ * Speak one Twitch-chat line into EVERY voice session bound to that channel —
+ * so the same chat can be read into the main server AND a private friends' server
+ * at once. Cheap no-op when no session is reading that channel.
+ */
+export function speakStreamChat(twitchChannel, user, text) {
+  const ch = normalizeChannel(twitchChannel);
+  for (const [guildId, s] of sessions) {
+    if (s.twitchChannel === ch) enqueueTo(guildId, s, user, text);
+  }
 }
 
 /**
@@ -195,33 +214,40 @@ export function speakStreamChat(guildId, user, text) {
  */
 export async function handleVoiceCommand(msg) {
   const content = (msg.content || '').trim();
-  const m = /^tt\s+vc(?:\s+(\w+))?/i.exec(content);
+  const m = /^tt\s+vc(?:\s+(.+))?$/i.exec(content);
   if (!m) return false;
-  if (!msg.guild) { await msg.reply('Use `tt vc` in a server.').catch(() => {}); return true; }
+  if (!msg.guild) { await msg.reply('Use `tt vc` in a server (join the voice channel first).').catch(() => {}); return true; }
 
-  const sub = (m[1] || 'join').toLowerCase();
+  const arg = (m[1] || '').trim();
+  const first = arg.split(/\s+/)[0]?.toLowerCase() || '';
 
-  if (sub === 'leave' || sub === 'stop' || sub === 'off') {
+  if (first === 'leave' || first === 'stop' || first === 'off') {
     const was = leaveVoice(msg.guild.id);
     await msg.reply(was ? '👋 Left the voice channel — no longer reading chat.' : "I wasn't in a voice channel.").catch(() => {});
     return true;
   }
 
-  if (sub === 'test') {
-    if (!isReading(msg.guild.id)) { await msg.reply('Join a voice channel first with `tt vc`.').catch(() => {}); return true; }
-    speakStreamChat(msg.guild.id, msg.member?.displayName || 'Tester', 'Text to speech is working. Your chat will sound like this.');
+  if (first === 'test') {
+    const s = sessions.get(msg.guild.id);
+    if (!s) { await msg.reply('Join a voice channel first with `tt vc`.').catch(() => {}); return true; }
+    enqueueTo(msg.guild.id, s, msg.member?.displayName || 'Tester', 'Text to speech is working. Your chat will sound like this.');
     await msg.reply('🔊 Playing a test line in the voice channel.').catch(() => {});
     return true;
   }
 
-  // join (default)
+  // join (default). An optional argument names the Twitch channel to read; otherwise
+  // use this server's configured channel, falling back to the home channel. This is
+  // what lets a PRIVATE friends' server read your stream chat: run `tt vc <yourchannel>`.
   const vc = msg.member?.voice?.channel;
   if (!vc) { await msg.reply('Join a voice channel first, then run `tt vc` and I\'ll hop in.').catch(() => {}); return true; }
-  const res = await joinVoice(msg.guild, vc);
+  const wanted = first && first !== 'join' ? arg : '';
+  const twitchChannel = normalizeChannel(wanted) || normalizeChannel(getGuild(msg.guild.id).twitchChannel) || DEFAULT_CHANNEL;
+
+  const res = await joinVoice(msg.guild, vc, twitchChannel);
   if (!res.ok) { await msg.reply(`⚠️ ${res.reason}`).catch(() => {}); return true; }
   await msg.reply(
-    `🔊 Joined **${res.channel.name}** — I'll read your stream chat aloud here. ` +
-    'Stop with `tt vc leave`, test with `tt vc test`.'
+    `🔊 Joined **${res.channel.name}** — reading **${res.twitchChannel}**'s Twitch chat aloud here. ` +
+    'Change it with `tt vc <twitch_channel>`, stop with `tt vc leave`, test with `tt vc test`.'
   ).catch(() => {});
   return true;
 }

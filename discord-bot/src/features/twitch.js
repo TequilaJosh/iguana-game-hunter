@@ -155,10 +155,10 @@ async function handleChat(channel, user, text) {
   const low = text.toLowerCase();
   const isCmd = low === 'tt' || low.startsWith('tt ');
 
-  // Voice TTS: read ordinary chatter aloud in the Discord voice channel (if the bot
-  // was invited into one for this guild). Bot commands ("tt …" / "!…") are skipped —
-  // no-op when no voice session is active.
-  if (!isCmd && !low.startsWith('!')) speakStreamChat(gid, user, text);
+  // Voice TTS: read ordinary chatter aloud in any Discord voice channel bound to this
+  // Twitch channel (main server AND/OR a private friends' server). Bot commands
+  // ("tt …" / "!…") are skipped — no-op when no session is reading this channel.
+  if (!isCmd && !low.startsWith('!')) speakStreamChat(channel, user, text);
 
   // Only react to Tavern Tales "tt" commands — NEVER "!" (those belong to StreamElements/
   // Nightbot/etc.) or ordinary chatter, so the bot doesn't reply to everything.

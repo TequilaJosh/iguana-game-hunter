@@ -71,23 +71,35 @@ const MAGIC_TYPES = new Set(['fire', 'ice', 'lightning', 'dark', 'holy', 'magic'
 export const dr = (d) => d / (d + DRK);
 export const pHit = (aAgi, dAgi) => clamp(85 + (aAgi - dAgi) * 1.5, 35, 99);
 
-export function playerAttack(pd, monster, skill = null) {
+// mods (all optional): defIgnorePct, critBonusPct, guaranteedCrit, dmgMult.
+// Elemental affinity (monster.affinity weak/resist/absorb vs the skill's element)
+// is applied here so both normal fights and raids get it for free.
+export function playerAttack(pd, monster, skill = null, mods = {}) {
   const power = skill ? (skill.power || 1) : 1.0;
   const magic = !!skill && MAGIC_TYPES.has(skill.type);
-  let raw, red;
-  if (magic) {
-    raw = pd.st.mag * P_MAG * power;
-    red = dr(monster.stats.res);
-  } else {
+  const element = skill ? skill.type : 'physical';
+  let raw, defStat;
+  if (magic) { raw = pd.st.mag * P_MAG * power; defStat = monster.stats.res; }
+  else {
     const base = pd.st[pd.scales] ?? pd.st.str;
     raw = (base * P_PHYS_STAT + pd.wpow * P_PHYS_WPN) * power;
-    red = dr(monster.stats.def);
+    defStat = monster.stats.def;
   }
-  let dmg = raw * (1 - red) * rnd(0.9, 1.1);
-  const critChance = clamp(4 + pd.st.lck * 0.4 + (pd.critBonus || 0), 0, 60);
-  const crit = Math.random() * 100 < critChance;
+  if (mods.defIgnorePct) defStat *= 1 - clamp(mods.defIgnorePct, 0, 100) / 100;
+  let dmg = raw * (1 - dr(defStat)) * rnd(0.9, 1.1);
+  const critChance = clamp(4 + pd.st.lck * 0.4 + (pd.critBonus || 0) + (mods.critBonusPct || 0), 0, 90);
+  const crit = mods.guaranteedCrit || Math.random() * 100 < critChance;
   if (crit) dmg *= 1.6;
-  return { dmg: Math.max(1, Math.round(dmg)), crit, magic };
+  if (mods.dmgMult) dmg *= mods.dmgMult;
+  // Elemental affinity: weakness x1.5, resist x0.5, absorb → monster is healed.
+  let absorbed = false;
+  const aff = monster.affinity || {};
+  if (element !== 'physical' && element !== 'magic') {
+    if ((aff.absorb || []).includes(element)) absorbed = true;
+    else if ((aff.weak || []).includes(element)) dmg *= 1.5;
+    else if ((aff.resist || []).includes(element)) dmg *= 0.5;
+  }
+  return { dmg: Math.max(1, Math.round(dmg)), crit, magic, element, absorbed };
 }
 
 export function monsterAttack(monster, pd) {

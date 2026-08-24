@@ -8,6 +8,13 @@ import { getPlayer, savePlayer } from './store.js';
 import { getGuild } from '../guildStore.js';
 import { log } from '../logger.js';
 
+// Parse a skill effect string ("defense_ignore:60", "attack_up:3") for raid combat.
+function parseRaidEffect(eff) {
+  const parts = String(eff || 'none').split(':');
+  const nums = parts.slice(1).filter((p) => /^[+-]?\d+$/.test(p)).map(Number);
+  return { name: parts[0], nums };
+}
+
 const LOBBY_MS = 60 * 60 * 1000;        // "starts in 1 hour" sign-up window
 const COMBAT_TICK_MS = 4000;            // auto-combat tick
 const COMBAT_CAP_MS = 15 * 60 * 1000;   // a raid fight runs up to 15 minutes
@@ -151,22 +158,70 @@ async function tick(guildId) {
       if (pot) { p.hp = Math.min(p.maxhp, p.hp + Math.round(p.maxhp * (pot.magnitude || 30) / 100)); pot.qty -= 1; if (pot.qty <= 0) char.inventory = char.inventory.filter((i) => i !== pot); savePlayer(p.discordId, char); }
       continue;
     }
-    const r = playerAttack(p.pd, boss, act?.kind === 'skill' ? act.skill : null);
-    if (p.pd.elemDmg) r.dmg += p.pd.elemDmg;                 // elemental weapon affixes
-    raid.hp = Math.max(0, raid.hp - r.dmg);
-    p.dmg += r.dmg;
-    // Vampiric weapon: heal the raider back for a % of damage dealt.
-    if (p.pd.lifesteal > 0) p.hp = Math.min(p.maxhp, p.hp + Math.round(r.dmg * p.pd.lifesteal / 100));
+    const skill = act?.kind === 'skill' ? act.skill : null;
+    const eff = parseRaidEffect(skill?.effect);
+
+    // Heal / buff / debuff skills: resolve their effect instead of a plain hit.
+    if (skill && skill.type === 'heal') {
+      const amt = Math.round(p.pd.st.mag * 1.6 * (skill.power || 1) + p.maxhp * 0.10);
+      p.hp = Math.min(p.maxhp, p.hp + amt);
+      if (eff.name === 'regen') p.regen = 3;
+      continue;
+    }
+    if (skill && (skill.type === 'buff' || skill.type === 'utility' || skill.type === 'debuff')) {
+      if (eff.name === 'attack_up' || eff.name === 'all_stats_up') p.atkUp = (eff.nums[0] || 3);
+      if (eff.name === 'defense_up' || eff.name === 'damage_cut' || eff.name === 'resist_up' || eff.name === 'all_stats_up') p.shield = (eff.nums[0] || 3);
+      if (eff.name === 'all_stats_down' || eff.name === 'marked') raid.weaken = 3;   // boss takes more/deals less
+      continue;
+    }
+
+    // Damage skill: fold in the same effect mods as solo combat.
+    const mods = {};
+    if (eff.name === 'defense_ignore') mods.defIgnorePct = eff.nums[0] || 0;
+    if (eff.name === 'crit_bonus') mods.critBonusPct = eff.nums[0] || 0;
+    if (eff.name === 'guaranteed_crit') mods.guaranteedCrit = true;
+    if (eff.name === 'undead_bonus' && boss.family === 'undead') mods.dmgMult = 1 + (eff.nums[0] || 0) / 100;
+    const hits = eff.name === 'hits' ? Math.max(1, eff.nums[0] || 1) : 1;
+
+    let dealt = 0;
+    for (let h = 0; h < hits && raid.hp > 0; h++) {
+      const r = playerAttack(p.pd, boss, skill, mods);
+      let dmg = r.absorbed ? 0 : r.dmg;
+      if (dmg) {
+        if (p.pd.elemDmg) dmg += p.pd.elemDmg;                 // elemental weapon affix
+        if (p.atkUp > 0) dmg = Math.round(dmg * 1.3);
+        if (raid.weaken > 0) dmg = Math.round(dmg * 1.15);     // boss cursed
+      }
+      raid.hp = Math.max(0, raid.hp - dmg);
+      p.dmg += dmg; dealt += dmg;
+    }
+    if (eff.name === 'execute_below' && (raid.hp / raid.maxhp) * 100 <= (eff.nums[0] || 0)) { p.dmg += raid.hp; raid.hp = 0; }
+    // Vampiric weapon + skill lifesteal heal the raider.
+    let leech = p.pd.lifesteal || 0;
+    if (eff.name === 'lifesteal') leech += (eff.nums[0] || 30);
+    if (leech > 0) p.hp = Math.min(p.maxhp, p.hp + Math.round(dealt * leech / 100));
     if (raid.hp <= 0) break;
   }
   if (raid.hp <= 0) return finishRaid(guildId, 'defeated');
+
+  // End-of-round upkeep: raider regen + timers.
+  for (const p of raid.parts.values()) {
+    if (p.downed) continue;
+    if (p.regen > 0) { p.hp = Math.min(p.maxhp, p.hp + Math.round(p.maxhp * 0.08)); p.regen--; }
+    if (p.atkUp > 0) p.atkUp--;
+    if (p.shield > 0) p.shield--;
+  }
+  if (raid.weaken > 0) raid.weaken--;
 
   const targets = active.filter((p) => !p.downed);
   const swings = Math.min(targets.length, (boss.actions_per_turn || 1) + 1);
   for (let i = 0; i < swings && targets.length; i++) {
     const p = targets[Math.floor(Math.random() * targets.length)];
     const a = monsterAttack(boss, p.pd);
-    p.hp = Math.max(0, p.hp - a.dmg);
+    let dmg = a.dmg;
+    if (p.shield > 0) dmg = Math.round(dmg * 0.7);           // damage-cut buff
+    if (raid.weaken > 0) dmg = Math.round(dmg * 0.85);        // boss weakened
+    p.hp = Math.max(0, p.hp - dmg);
     if (p.hp <= 0) p.downed = true;
   }
   await renderRaid(raid).catch(() => {});

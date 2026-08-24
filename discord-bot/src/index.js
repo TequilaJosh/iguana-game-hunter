@@ -8,6 +8,7 @@ import { isRpgCommand, handleRpg } from './game/rpg.js';
 import { startRaidScheduler } from './game/raids.js';
 import { handleGhCommand, startUpdateWatcher } from './features/updates.js';
 import { startTwitch } from './features/twitch.js';
+import { handleVoiceCommand } from './features/voiceTts.js';
 import { log } from './logger.js';
 
 assertCoreConfig();
@@ -44,6 +45,11 @@ client.on(Events.MessageCreate, (msg) => {
   if (msg.author.bot || !msg.content) return;
   if (/^!gh(\s|$)/i.test(msg.content.trim())) {
     handleGhCommand(msg).catch((e) => log.error('!gh command failed:', e));
+    return;
+  }
+  // Voice TTS control: "tt vc [join|leave|test]" — handled before RPG dispatch.
+  if (/^tt\s+vc(\s|$)/i.test(msg.content.trim())) {
+    handleVoiceCommand(msg).catch((e) => log.error('tt vc command failed:', e));
     return;
   }
   if (!isRpgCommand(msg.content)) return;

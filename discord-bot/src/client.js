@@ -15,6 +15,7 @@ export function createClient() {
       GatewayIntentBits.GuildMembers,
       GatewayIntentBits.GuildMessages,
       GatewayIntentBits.MessageContent,
+      GatewayIntentBits.GuildVoiceStates, // voice TTS: join a channel & read chat aloud
     ],
     partials: [Partials.Channel],
   });

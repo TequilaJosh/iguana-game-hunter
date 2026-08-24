@@ -2,6 +2,9 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# ffmpeg: decodes the TTS audio for the voice-channel reader (@discordjs/voice).
+RUN apk add --no-cache ffmpeg
+
 # Install production dependencies first (better layer caching).
 COPY package*.json ./
 RUN npm install --omit=dev

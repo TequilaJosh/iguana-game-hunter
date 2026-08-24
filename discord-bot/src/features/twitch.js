@@ -1,6 +1,7 @@
 import { config } from '../config.js';
 import { getGuild } from '../guildStore.js';
 import { handleGameMessage } from '../game/bridge.js';
+import { speakStreamChat } from './voiceTts.js';
 import { log } from '../logger.js';
 
 // A minimal Twitch IRC client (over Node's built-in WebSocket — no dependency) that
@@ -151,10 +152,16 @@ function onLine(line) {
 async function handleChat(channel, user, text) {
   const gid = chanToGuild[channel];
   if (!gid || !text) return;
-  // Only react to Tavern Tales "tt" commands — NEVER "!" (those belong to StreamElements/
-  // Nightbot/etc.) or ordinary chatter, so the bot doesn't reply to everything.
   const low = text.toLowerCase();
   const isCmd = low === 'tt' || low.startsWith('tt ');
+
+  // Voice TTS: read ordinary chatter aloud in the Discord voice channel (if the bot
+  // was invited into one for this guild). Bot commands ("tt …" / "!…") are skipped —
+  // no-op when no voice session is active.
+  if (!isCmd && !low.startsWith('!')) speakStreamChat(gid, user, text);
+
+  // Only react to Tavern Tales "tt" commands — NEVER "!" (those belong to StreamElements/
+  // Nightbot/etc.) or ordinary chatter, so the bot doesn't reply to everything.
   if (!isCmd) return;
 
   // Deferred replies (e.g. a timed fight's result) come back through this sender.

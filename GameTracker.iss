@@ -77,6 +77,11 @@ var
   Rc: Integer;
 begin
   if VbCableInstalled() then exit;
+  // Driver installs need admin. Only proceed when setup is ALREADY elevated so the
+  // whole thing stays silent — never pop a surprise UAC prompt (e.g. mid-stream
+  // during an auto-update). Unelevated runs just skip; a later elevated install
+  // or update picks it up.
+  if not IsAdmin() then exit;
   try
     DownloadTemporaryFile('https://download.vb-audio.com/Download_CABLE/VBCABLE_Driver_Pack45.zip',
       'vbcable.zip', '', nil);
@@ -89,8 +94,8 @@ begin
       '-NoProfile -Command "Expand-Archive -LiteralPath ''' + Zip + ''' -DestinationPath ''' + Dir + ''' -Force"',
       '', SW_HIDE, ewWaitUntilTerminated, Rc) then exit;
   if Rc <> 0 then exit;
-  // Elevated silent driver install; if the user declines UAC, just move on.
-  ShellExec('runas', Dir + '\VBCABLE_Setup_x64.exe', '-i -h', Dir, SW_HIDE, ewWaitUntilTerminated, Rc);
+  // Already elevated: fully silent driver install, no windows, no prompts.
+  Exec(Dir + '\VBCABLE_Setup_x64.exe', '-i -h', Dir, SW_HIDE, ewWaitUntilTerminated, Rc);
 end;
 
 procedure CurStepChanged(CurStep: TSetupStep);

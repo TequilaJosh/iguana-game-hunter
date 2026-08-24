@@ -45,7 +45,16 @@ export function addItem(char, item) {
 function buffedPlayerDamage(fight, skill) {
   const r = playerAttack(fight.pd, fight.monster, skill);
   if (fight.ps.atkUp > 0) r.dmg = Math.round(r.dmg * 1.3);
+  if (fight.pd.elemDmg) r.dmg += fight.pd.elemDmg;   // elemental weapon affixes (flat on-hit)
   return r;
+}
+
+// Heal the attacker from a Vampiric weapon (pd.lifesteal = % of damage dealt).
+function applyLifesteal(fight, dmg, log) {
+  const pct = fight.pd.lifesteal || 0;
+  if (pct <= 0 || dmg <= 0) return;
+  const h = Math.min(fight.pd.maxhp, fight.php + Math.round(dmg * pct / 100)) - fight.php;
+  if (h > 0) { fight.php += h; log.push(`🩸 Your weapon drains **${h}** HP.`); }
 }
 
 function applyBuff(fight, effName, sk, log) {
@@ -82,6 +91,7 @@ function applySkill(fight, sk, log) {
   }
   fight.mhp -= r.dmg;
   log.push(`✨ ${sk.name} hits the ${m.name} for **${r.dmg}**${r.crit ? ' 💥 CRIT!' : ''}.`);
+  applyLifesteal(fight, r.dmg, log);
 
   if (effName === 'stun' && Math.random() * 100 < effVal) { fight.ms.stun = 1; log.push(`💫 The ${m.name} is stunned!`); }
   if (effName === 'poison' || effName === 'bleed') { fight.ms.dot = { dmg: Math.max(3, Math.round(fight.mmaxhp * 0.04)), turns: 3 }; log.push(`🧪 The ${m.name} is afflicted!`); }
@@ -118,6 +128,11 @@ function tickStatuses(fight, log) {
     if (h > 0) log.push(`💚 You regenerate **${h}** HP.`);
     if (--fight.ps.regen.turns <= 0) fight.ps.regen = null;
   }
+  // "of the Leech" gear regen — a small heal every round, for as long as it's equipped.
+  if (fight.pd.regen > 0 && fight.php > 0) {
+    const h = Math.min(fight.pd.maxhp, fight.php + fight.pd.regen) - fight.php;
+    if (h > 0) { fight.php += h; log.push(`🌿 Your gear mends **${h}** HP.`); }
+  }
   if (fight.ps.atkUp > 0) fight.ps.atkUp--;
   if (fight.ps.defUp > 0) fight.ps.defUp--;
 }
@@ -134,6 +149,7 @@ export function takeTurn(fight, kind, arg) {
     const r = buffedPlayerDamage(fight, null);
     fight.mhp -= r.dmg;
     log.push(`🗡️ You strike the ${m.name} for **${r.dmg}**${r.crit ? ' 💥 CRIT!' : ''}.`);
+    applyLifesteal(fight, r.dmg, log);
   } else if (kind === 'skill') {
     if (fight.pmp < arg.mp) return { error: `Not enough MP for ${arg.name} (need ${arg.mp}, have ${fight.pmp}).` };
     fight.pmp -= arg.mp;

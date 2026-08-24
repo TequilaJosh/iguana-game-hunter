@@ -152,8 +152,11 @@ async function tick(guildId) {
       continue;
     }
     const r = playerAttack(p.pd, boss, act?.kind === 'skill' ? act.skill : null);
+    if (p.pd.elemDmg) r.dmg += p.pd.elemDmg;                 // elemental weapon affixes
     raid.hp = Math.max(0, raid.hp - r.dmg);
     p.dmg += r.dmg;
+    // Vampiric weapon: heal the raider back for a % of damage dealt.
+    if (p.pd.lifesteal > 0) p.hp = Math.min(p.maxhp, p.hp + Math.round(r.dmg * p.pd.lifesteal / 100));
     if (raid.hp <= 0) break;
   }
   if (raid.hp <= 0) return finishRaid(guildId, 'defeated');

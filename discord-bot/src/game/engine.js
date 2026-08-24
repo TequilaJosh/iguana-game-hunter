@@ -17,6 +17,8 @@ export function derive(char) {
     st[k] = c.base_stats[k] + r.stat_mods[k] + Math.round(c.growth[k] * (char.level - 1));
   }
   let wpow = 0, def = 0, res = 0, critBonus = 0;
+  // Affix bonuses that aren't core stats/crit (Vampiric, elemental, +HP/MP, warding…).
+  let lifesteal = 0, hpBonus = 0, mpBonus = 0, elemDmg = 0, regen = 0;
   const eq = char.equipped || {};
   for (const slot of EQUIP_SLOTS) {
     const it = eq[slot];
@@ -27,6 +29,13 @@ export function derive(char) {
     for (const [k, v] of Object.entries(it.stat_bonus || {})) {
       if (STAT_KEYS.includes(k)) st[k] += v;
       else if (k === 'crit') critBonus += v;
+      else if (k === 'lifesteal') lifesteal += v;           // % of hit healed back
+      else if (k === 'hp') hpBonus += v;                    // flat max HP
+      else if (k === 'mp') mpBonus += v;                    // flat max MP
+      else if (k === 'def') def += v;                       // "of the Fortress"
+      else if (k === 'res') res += v;                       // "of Warding"
+      else if (k === 'regen') regen += v;                   // flat HP per turn
+      else if (k === 'fire_dmg' || k === 'ice_dmg' || k === 'lightning_dmg') elemDmg += v; // flat on-hit
     }
   }
   // Ascension: each prestige permanently boosts every stat by 2%.
@@ -34,9 +43,9 @@ export function derive(char) {
   if (asc) for (const k of STAT_KEYS) st[k] = Math.round(st[k] * (1 + 0.02 * asc));
   def += Math.round(st.vit * 0.8);
   res += Math.round(st.spr * 0.8);
-  const maxhp = Math.round((60 + st.vit * 6.5 + char.level * 5) * (r.traits?.hp_mod ?? 1));
-  const maxmp = Math.round((15 + st.spr * 3 + char.level * 2) * (r.traits?.mp_mod ?? 1));
-  return { st, wpow, def, res, maxhp, maxmp, critBonus, scales: c.primary };
+  const maxhp = Math.round((60 + st.vit * 6.5 + char.level * 5) * (r.traits?.hp_mod ?? 1)) + hpBonus;
+  const maxmp = Math.round((15 + st.spr * 3 + char.level * 2) * (r.traits?.mp_mod ?? 1)) + mpBonus;
+  return { st, wpow, def, res, maxhp, maxmp, critBonus, lifesteal, elemDmg, regen, scales: c.primary };
 }
 
 // ── Leveling ────────────────────────────────────────────────────────────────

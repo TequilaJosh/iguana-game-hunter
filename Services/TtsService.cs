@@ -123,7 +123,10 @@ namespace GameTracker.Services
             public int Read(float[] buffer, int offset, int count)
             {
                 int n = Math.Min(count, _data.Length - _pos);
-                if (n > 0) { Array.Copy(_data, _pos, buffer, offset, n); _pos += n; }
+                // Element-wise, NOT Array.Copy: NAudio may pass a WaveBuffer-aliased
+                // array here, and Array.Copy's type check throws ArrayTypeMismatch on it.
+                for (int i = 0; i < n; i++) buffer[offset + i] = _data[_pos + i];
+                _pos += n;
                 return n;
             }
         }

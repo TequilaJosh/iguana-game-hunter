@@ -15,6 +15,20 @@ assertCoreConfig();
 
 const client = createClient();
 
+// OAuth2 invite link with the permissions the bot needs (incl. Connect/Speak for
+// voice TTS). Used by the "tt invite" command so a user can add it to a new server.
+const INVITE_PERMS = (
+  PermissionFlagsBits.ViewChannel |
+  PermissionFlagsBits.SendMessages |
+  PermissionFlagsBits.EmbedLinks |
+  PermissionFlagsBits.ReadMessageHistory |
+  PermissionFlagsBits.Connect |
+  PermissionFlagsBits.Speak |
+  PermissionFlagsBits.UseExternalEmojis
+).toString();
+const inviteUrl = () =>
+  `https://discord.com/oauth2/authorize?client_id=${config.clientId}&permissions=${INVITE_PERMS}&scope=bot%20applications.commands`;
+
 client.once(Events.ClientReady, (c) => {
   log.info(`Logged in as ${c.user.tag} — serving ${c.guilds.cache.size} server(s)`);
   startIngestServer(client);
@@ -50,6 +64,14 @@ client.on(Events.MessageCreate, (msg) => {
   // Voice TTS control: "tt vc [join|leave|test]" — handled before RPG dispatch.
   if (/^tt\s+vc(\s|$)/i.test(msg.content.trim())) {
     handleVoiceCommand(msg).catch((e) => log.error('tt vc command failed:', e));
+    return;
+  }
+  // "tt invite" — hand out the link to add the bot to another (e.g. private) server.
+  if (/^tt\s+invite(\s|$)/i.test(msg.content.trim())) {
+    msg.reply(
+      `➕ **Add me to another server** (great for a private friends' server — voice TTS works there, unlike group DMs):\n${inviteUrl()}\n` +
+      "Open it, pick your server, then in a voice channel there run `tt vc <your_twitch_channel>`."
+    ).catch(() => {});
     return;
   }
   if (!isRpgCommand(msg.content)) return;

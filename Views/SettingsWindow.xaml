@@ -229,17 +229,8 @@
                                            ToolTip="Where TTS plays. Pick a virtual audio cable to feed it into a Discord call."/>
                                 <ComboBox x:Name="TtsOutput" Grid.Column="1" SelectionChanged="Tts_Changed"/>
                             </Grid>
-                            <Grid Margin="0,0,0,3">
-                                <Grid.ColumnDefinitions>
-                                    <ColumnDefinition Width="120"/>
-                                    <ColumnDefinition Width="*"/>
-                                </Grid.ColumnDefinitions>
-                                <TextBlock Text="Also play on" Style="{StaticResource Lbl}"
-                                           ToolTip="Optional second output — TTS plays on both devices at once (e.g. Discord cable + your speakers)."/>
-                                <ComboBox x:Name="TtsOutput2" Grid.Column="1" SelectionChanged="Tts_Changed"/>
-                            </Grid>
                             <TextBlock Foreground="#7a9070" FontSize="11" Margin="0,0,0,8" TextWrapping="Wrap"
-                                       Text="Send TTS into a Discord call: set Output to a virtual audio cable (e.g. VB-CABLE), then in Discord choose that cable as your Microphone. Use 'Also play on' to hear it yourself at the same time."/>
+                                       Text="Send TTS into a Discord call: set this to a virtual audio cable (e.g. VB-CABLE), then in Discord choose that cable as your Microphone."/>
                             <CheckBox x:Name="TtsPerChatter" Content="Give each chatter their own random voice (saved per person)"
                                       Foreground="#a8c488" FontSize="12" Margin="0,0,0,8"
                                       Checked="TtsPerChatter_Changed" Unchecked="TtsPerChatter_Changed"/>

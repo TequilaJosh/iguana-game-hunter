@@ -19,7 +19,6 @@ namespace GameTracker.Views
         private TextPanelsWindow? _textPanelsWindow;
         private readonly TtsService _ttsTest = new();
         private const string DefaultOutputLabel = "Default (system output)";
-        private const string SecondOutputOffLabel = "(off)";
         private List<VoiceProfile> _profiles = new();
 
         // The chosen TTS output device ("" = system default).
@@ -64,11 +63,6 @@ namespace GameTracker.Views
             foreach (var d in TtsService.OutputDevices()) TtsOutput.Items.Add(d);
             TtsOutput.SelectedItem = !string.IsNullOrEmpty(tts.OutputDevice) && TtsOutput.Items.Contains(tts.OutputDevice)
                 ? tts.OutputDevice : DefaultOutputLabel;
-            TtsOutput2.Items.Clear();
-            TtsOutput2.Items.Add(SecondOutputOffLabel);
-            foreach (var d in TtsService.OutputDevices()) TtsOutput2.Items.Add(d);
-            TtsOutput2.SelectedItem = !string.IsNullOrEmpty(tts.OutputDevice2) && TtsOutput2.Items.Contains(tts.OutputDevice2)
-                ? tts.OutputDevice2 : SecondOutputOffLabel;
             TtsEnabled.IsChecked = tts.Enabled;
             TtsPerChatter.IsChecked = tts.PerChatterVoices;
             TtsRate.Value = tts.Rate;
@@ -525,8 +519,6 @@ namespace GameTracker.Views
             var profile = TtsVoice.SelectedItem as VoiceProfile;
             t.Enabled = TtsEnabled.IsChecked == true;
             t.OutputDevice = SelectedTtsOutput();
-            var out2 = TtsOutput2.SelectedItem as string;
-            t.OutputDevice2 = string.IsNullOrEmpty(out2) || out2 == SecondOutputOffLabel ? string.Empty : out2;
             t.PerChatterVoices = TtsPerChatter.IsChecked == true;
             t.Voice = profile?.Voice ?? string.Empty;
             t.Effect = profile?.Effect ?? "normal";

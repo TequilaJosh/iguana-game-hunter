@@ -568,6 +568,8 @@ namespace GameTracker.Views
             _ttsTest.BleepBadWords = TtsBleepBadWords.IsChecked == true;
             _ttsTest.SetBadWords(words);
             _ttsTest.OutputDevice = SelectedTtsOutput();
+            var o2 = TtsOutput2.SelectedItem as string;
+            _ttsTest.OutputDevice2 = string.IsNullOrEmpty(o2) || o2 == SecondOutputOffLabel ? string.Empty : o2;
 
             var sample = words.FirstOrDefault(w => w.Length >= 3) ?? "shit";
             var profile = TtsVoice.SelectedItem as VoiceProfile;
@@ -621,6 +623,8 @@ namespace GameTracker.Views
             // Test the currently-selected single voice (random-per-chatter picks live in chat).
             var profile = TtsVoice.SelectedItem as VoiceProfile;
             _ttsTest.OutputDevice = SelectedTtsOutput();
+            var o2 = TtsOutput2.SelectedItem as string;
+            _ttsTest.OutputDevice2 = string.IsNullOrEmpty(o2) || o2 == SecondOutputOffLabel ? string.Empty : o2;
             _ttsTest.StopAll();
             _ttsTest.Speak("This is a text to speech test. Your chat will sound like this.",
                 profile?.Voice, profile?.Effect ?? "normal", (int)TtsRate.Value, (int)TtsVolume.Value);

@@ -36,18 +36,10 @@ namespace GameTracker.Services
 
         public int MaxBacklog { get; set; } = 5;
 
-        // Playback target: "" = system default. Set to a virtual-audio-cable device to feed
-        // TTS into a Discord call (Discord's mic = that cable). Resolved device is cached.
+        // Playback target: "" = system default output. Resolved device is cached.
         public string OutputDevice { get; set; } = "";
         private MMDevice? _outDev;
         private string _outDevName = "\0";   // sentinel so the first resolve always runs
-
-        // Optional second target ("" = off): the same utterance also plays here, so TTS can
-        // go to the Discord cable AND the streamer's own speakers at the same time.
-        public string OutputDevice2 { get; set; } = "";
-        private IWavePlayer? _out2;
-        private MMDevice? _outDev2;
-        private string _outDev2Name = "\0";
 
         public static List<string> OutputDevices()
         {
@@ -87,59 +79,6 @@ namespace GameTracker.Services
                 catch { /* device busy/unsupported — fall back */ }
             }
             return new WaveOutEvent();
-        }
-
-        // Second output (dual play), or null when off / same as the primary.
-        private IWavePlayer? BuildOutput2()
-        {
-            var name = OutputDevice2 ?? string.Empty;
-            if (name.Length == 0 || name == (OutputDevice ?? string.Empty)) return null;
-            if (name != _outDev2Name)
-            {
-                try { _outDev2?.Dispose(); } catch { }
-                _outDev2 = null;
-                _outDev2Name = name;
-                try
-                {
-                    var e = new MMDeviceEnumerator();
-                    _outDev2 = e.EnumerateAudioEndPoints(DataFlow.Render, DeviceState.Active)
-                               .FirstOrDefault(d => d.FriendlyName == name);
-                }
-                catch { _outDev2 = null; }
-            }
-            if (_outDev2 == null) return null;
-            try { return new WasapiOut(_outDev2, AudioClientShareMode.Shared, true, 120); }
-            catch { return null; }
-        }
-
-        // A sample provider over an in-memory float buffer — lets two outputs each read
-        // the same utterance independently.
-        private sealed class BufferProvider : ISampleProvider
-        {
-            private readonly float[] _data;
-            private int _pos;
-            public BufferProvider(float[] data, WaveFormat format) { _data = data; WaveFormat = format; }
-            public WaveFormat WaveFormat { get; }
-            public int Read(float[] buffer, int offset, int count)
-            {
-                int n = Math.Min(count, _data.Length - _pos);
-                // Element-wise, NOT Array.Copy: NAudio may pass a WaveBuffer-aliased
-                // array here, and Array.Copy's type check throws ArrayTypeMismatch on it.
-                for (int i = 0; i < n; i++) buffer[offset + i] = _data[_pos + i];
-                _pos += n;
-                return n;
-            }
-        }
-
-        // Drain a sample provider fully into memory (TTS clips are seconds long).
-        private static float[] Materialize(ISampleProvider sp)
-        {
-            var all = new List<float>(48000 * 4);
-            var chunk = new float[8192];
-            int n;
-            while ((n = sp.Read(chunk, 0, chunk.Length)) > 0)
-                for (int i = 0; i < n; i++) all.Add(chunk[i]);
-            return all.ToArray();
         }
 
         // ── Bad-word filter ─────────────────────────────────────────────────
@@ -405,28 +344,6 @@ namespace GameTracker.Services
                 };
 
                 _out = BuildOutput();
-                _out2 = BuildOutput2();
-                if (_out2 != null)
-                {
-                    // Dual play (e.g. Discord cable + speakers): buffer the utterance so
-                    // each output reads its own copy; finish when both have stopped.
-                    var pcm = Materialize(sp);
-                    int live = 2;
-                    void OneStopped(object? s2, StoppedEventArgs? e2)
-                    {
-                        if (System.Threading.Interlocked.Decrement(ref live) > 0) return;
-                        CleanupPlayback();
-                        lock (_gate) { _speaking = false; }
-                        Pump();
-                    }
-                    _out.PlaybackStopped += OneStopped;
-                    _out2.PlaybackStopped += OneStopped;
-                    _out.Init(new BufferProvider(pcm, sp.WaveFormat));
-                    _out2.Init(new BufferProvider(pcm, sp.WaveFormat));
-                    _out.Play();
-                    _out2.Play();
-                    return;
-                }
                 _out.PlaybackStopped += (_, _) =>
                 {
                     CleanupPlayback();
@@ -447,8 +364,6 @@ namespace GameTracker.Services
         {
             try { _out?.Dispose(); } catch { }
             _out = null;
-            try { _out2?.Dispose(); } catch { }
-            _out2 = null;
             foreach (var d in _parts) { try { d.Dispose(); } catch { } }
             _parts.Clear();
         }
@@ -457,7 +372,6 @@ namespace GameTracker.Services
         {
             lock (_gate) { _q.Clear(); }
             try { _out?.Stop(); } catch { }
-            try { _out2?.Stop(); } catch { }
             lock (_gate) { _speaking = false; }
         }
 

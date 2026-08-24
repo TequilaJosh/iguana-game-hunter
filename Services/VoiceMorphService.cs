@@ -13,8 +13,7 @@ namespace GameTracker.Services
     /// <summary>
     /// Live streamer voice morph. Runs the mic through an NWaves DSP chain continuously
     /// (dry passthrough when no morph is active) and plays it to a chosen output device.
-    /// Capture it in OBS with an "Application Audio Capture" source (no virtual cable
-    /// needed), or route the output to a virtual cable if you prefer.
+    /// Capture it in OBS with an "Application Audio Capture" source.
     /// Redeems activate a preset for its TimerSeconds; the overlay shows a countdown and
     /// the voice auto-reverts to dry at zero.
     /// </summary>

@@ -14,8 +14,7 @@ namespace GameTracker.Models
     public class ChatTtsSettings
     {
         public bool Enabled { get; set; } = false;
-        public string OutputDevice { get; set; } = "";       // "" = system default; set to a virtual cable for Discord
-        public string OutputDevice2 { get; set; } = "";      // "" = off; second device (e.g. speakers) plays TTS too
+        public string OutputDevice { get; set; } = "";       // "" = system default output device
         public bool PerChatterVoices { get; set; } = true;   // each chatter gets their own saved voice
         public string Voice { get; set; } = string.Empty;    // single-voice mode: base voice name
         public string Effect { get; set; } = "normal";       // single-voice mode: funny-voice effect key

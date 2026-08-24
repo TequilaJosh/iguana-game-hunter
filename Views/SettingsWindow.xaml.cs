@@ -19,7 +19,6 @@ namespace GameTracker.Views
         private TextPanelsWindow? _textPanelsWindow;
         private readonly TtsService _ttsTest = new();
         private const string DefaultOutputLabel = "Default (system output)";
-        private const string SecondOutputOffLabel = "(off)";
         private List<VoiceProfile> _profiles = new();
 
         // The chosen TTS output device ("" = system default).
@@ -64,11 +63,6 @@ namespace GameTracker.Views
             foreach (var d in TtsService.OutputDevices()) TtsOutput.Items.Add(d);
             TtsOutput.SelectedItem = !string.IsNullOrEmpty(tts.OutputDevice) && TtsOutput.Items.Contains(tts.OutputDevice)
                 ? tts.OutputDevice : DefaultOutputLabel;
-            TtsOutput2.Items.Clear();
-            TtsOutput2.Items.Add(SecondOutputOffLabel);
-            foreach (var d in TtsService.OutputDevices()) TtsOutput2.Items.Add(d);
-            TtsOutput2.SelectedItem = !string.IsNullOrEmpty(tts.OutputDevice2) && TtsOutput2.Items.Contains(tts.OutputDevice2)
-                ? tts.OutputDevice2 : SecondOutputOffLabel;
             TtsEnabled.IsChecked = tts.Enabled;
             TtsPerChatter.IsChecked = tts.PerChatterVoices;
             TtsRate.Value = tts.Rate;
@@ -329,7 +323,7 @@ namespace GameTracker.Views
             Img("voicemorph.png");
             Step(1, "Settings → Chat → 🎙 Voice Morph. Pick your mic as Input and choose an Output (headphones to preview; 🔇 None to not hear yourself).");
             Step(2, "Build a morph: pitch slider (±12 semitones) + an effect, then \"Try it live\" and talk. Name it, set how long it lasts, and Save.");
-            Step(3, "To get the morphed voice on stream: in OBS add an Application Audio Capture source pointed at Game Tracker and mute your raw mic — or set Output to a virtual cable (VB-CABLE) and use the cable as your OBS mic.");
+            Step(3, "To get the morphed voice on stream: in OBS add an Application Audio Capture source pointed at Game Tracker and mute your raw mic.");
             Step(4, "Attach saved morphs to point redeems in Features — viewers spend points to change YOUR voice. The overlay shows the morph name with a countdown, and your voice reverts automatically at zero.");
 
             Section("Appearance — themes");
@@ -525,8 +519,6 @@ namespace GameTracker.Views
             var profile = TtsVoice.SelectedItem as VoiceProfile;
             t.Enabled = TtsEnabled.IsChecked == true;
             t.OutputDevice = SelectedTtsOutput();
-            var out2 = TtsOutput2.SelectedItem as string;
-            t.OutputDevice2 = string.IsNullOrEmpty(out2) || out2 == SecondOutputOffLabel ? string.Empty : out2;
             t.PerChatterVoices = TtsPerChatter.IsChecked == true;
             t.Voice = profile?.Voice ?? string.Empty;
             t.Effect = profile?.Effect ?? "normal";
@@ -568,8 +560,6 @@ namespace GameTracker.Views
             _ttsTest.BleepBadWords = TtsBleepBadWords.IsChecked == true;
             _ttsTest.SetBadWords(words);
             _ttsTest.OutputDevice = SelectedTtsOutput();
-            var o2 = TtsOutput2.SelectedItem as string;
-            _ttsTest.OutputDevice2 = string.IsNullOrEmpty(o2) || o2 == SecondOutputOffLabel ? string.Empty : o2;
 
             var sample = words.FirstOrDefault(w => w.Length >= 3) ?? "shit";
             var profile = TtsVoice.SelectedItem as VoiceProfile;
@@ -623,8 +613,6 @@ namespace GameTracker.Views
             // Test the currently-selected single voice (random-per-chatter picks live in chat).
             var profile = TtsVoice.SelectedItem as VoiceProfile;
             _ttsTest.OutputDevice = SelectedTtsOutput();
-            var o2 = TtsOutput2.SelectedItem as string;
-            _ttsTest.OutputDevice2 = string.IsNullOrEmpty(o2) || o2 == SecondOutputOffLabel ? string.Empty : o2;
             _ttsTest.StopAll();
             _ttsTest.Speak("This is a text to speech test. Your chat will sound like this.",
                 profile?.Voice, profile?.Effect ?? "normal", (int)TtsRate.Value, (int)TtsVolume.Value);

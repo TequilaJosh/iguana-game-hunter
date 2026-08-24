@@ -100,7 +100,7 @@
                     <ComboBox x:Name="OutputBox" Width="200" SelectionChanged="Device_Changed"/>
                 </StackPanel>
                 <TextBlock Foreground="#7a9070" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8"
-                           Text="To get this into your stream: in OBS add an 'Application Audio Capture' source pointed at Game Tracker, and mute your raw Mic source. (Or set Output to a virtual cable like VB-CABLE and use that as your OBS mic — silent for you automatically.) Pick your headphones as Output to preview privately, or 🔇 None to hear nothing (note: with None there's no audio for OBS App Capture either — use a cable or an unheard device for streaming)."/>
+                           Text="To get this into your stream: in OBS add an 'Application Audio Capture' source pointed at Game Tracker, and mute your raw Mic source. Pick your headphones as Output to preview privately, or 🔇 None to hear nothing (note: with None there's no audio for OBS App Capture either)."/>
                 <TextBlock x:Name="EngineStatus" Foreground="{DynamicResource ThemeAccent2}" FontSize="11" Margin="0,0,0,4"/>
 
                 <Border Background="{DynamicResource ThemeBorder}" Height="1" Margin="0,4,0,10"/>

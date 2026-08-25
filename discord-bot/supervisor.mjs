@@ -450,11 +450,56 @@ function esc(s){ return String(s).replace(/[&<>"']/g,function(c){return {'&':'&a
 var EDIT_ARR=[], EDIT_IDF='id';
 // Build one labelled control per field of the object; returns {html, meta}. The
 // prefix keeps the add-form and edit-form inputs from colliding.
+// Catalog of traits offered in the dropdown (all wired into combat).
+var TRAIT_CATALOG=[
+  {key:'hp_mod',label:'Max HP × (e.g. 1.15)'},{key:'mp_mod',label:'Max MP × (e.g. 1.15)'},
+  {key:'xp_mod',label:'XP gained × (e.g. 1.1)'},{key:'crit_bonus',label:'Crit chance +% (e.g. 5)'},
+  {key:'flee_bonus',label:'Flee chance +% (e.g. 15)'},{key:'heal_received',label:'Healing received × (e.g. 0.75)'},
+  {key:'fire_resist',label:'Fire resist −% dmg'},{key:'fire_weak',label:'Fire weakness +% dmg'},
+  {key:'ice_resist',label:'Ice resist −% dmg'},{key:'ice_weak',label:'Ice weakness +% dmg'},
+  {key:'lightning_resist',label:'Lightning resist −%'},{key:'lightning_weak',label:'Lightning weakness +%'},
+  {key:'water_resist',label:'Water resist −%'},{key:'water_weak',label:'Water weakness +%'},
+  {key:'earth_resist',label:'Earth resist −%'},{key:'earth_weak',label:'Earth weakness +%'},
+  {key:'wind_resist',label:'Wind resist −%'},{key:'wind_weak',label:'Wind weakness +%'},
+  {key:'poison_resist',label:'Poison resist −%'},{key:'poison_weak',label:'Poison weakness +%'},
+  {key:'dark_resist',label:'Dark resist −%'},{key:'dark_weak',label:'Dark weakness +%'},
+  {key:'holy_resist',label:'Holy resist −%'},{key:'holy_weak',label:'Holy weakness +%'}
+];
+function _traitRow(key,val){
+  return '<div class="traitrow" data-key="'+esc(key)+'" style="display:flex;gap:8px;align-items:center;margin:3px 0"><span style="min-width:150px">'+esc(key)+'</span><input class="traitval" type="number" step="any" value="'+esc(val)+'" style="width:120px"/><button class="danger" type="button" onclick="this.parentNode.remove()">×</button></div>';
+}
+function traitsWidget(prefix,obj){
+  var rows=''; Object.keys(obj||{}).forEach(function(k){ rows+=_traitRow(k,obj[k]); });
+  var opts='<option value="">— choose a trait to add —</option>';
+  for(var i=0;i<TRAIT_CATALOG.length;i++){ opts+='<option value="'+TRAIT_CATALOG[i].key+'">'+esc(TRAIT_CATALOG[i].label)+'</option>'; }
+  opts+='<option value="__custom">Custom…</option>';
+  return '<div id="'+prefix+'traits" class="traitbox" style="border:1px solid var(--line);border-radius:6px;padding:8px;margin-bottom:6px">'+rows+'</div>'+
+    '<div style="display:flex;gap:8px"><select id="'+prefix+'traitsel" style="max-width:280px">'+opts+'</select><button type="button" onclick="addTrait(\\''+prefix+'\\')">＋ Add trait</button></div>';
+}
+function addTrait(prefix){
+  var sel=document.getElementById(prefix+'traitsel'); var k=sel.value; if(!k) return;
+  if(k==='__custom'){ k=prompt('Trait key (e.g. fire_resist):'); if(!k) return; k=k.trim(); if(!k) return; }
+  var box=document.getElementById(prefix+'traits');
+  if(box.querySelector('[data-key="'+k+'"]')){ sel.value=''; return; }   // no dupes
+  box.insertAdjacentHTML('beforeend', _traitRow(k,0)); sel.value='';
+}
+function readTraits(prefix){
+  var box=document.getElementById(prefix+'traits'); var o={}; if(!box) return o;
+  var rows=box.querySelectorAll('.traitrow');
+  for(var i=0;i<rows.length;i++){ var k=rows[i].getAttribute('data-key'); var v=rows[i].querySelector('.traitval').value; if(k) o[k]=(v===''?0:Number(v)); }
+  return o;
+}
 function fieldsHtml(obj, prefix){
   var meta=[], html='';
   Object.keys(obj).forEach(function(k){
-    var v=obj[k]; var typ=(v===null?'string':typeof v); meta.push({k:k,typ:typ});
+    var v=obj[k]; var typ=(v===null?'string':typeof v);
     var id=prefix+k; var req=(k==='id'||k==='key'||k==='name')?' *':'';
+    if(k==='traits' && typ==='object' && !Array.isArray(v)){
+      meta.push({k:k,typ:'traits'});
+      html+='<label>traits (pick from the dropdown, edit the numbers)</label>'+traitsWidget(prefix,v);
+      return;
+    }
+    meta.push({k:k,typ:typ});
     html+='<label>'+esc(k)+req+'</label>';
     if(typ==='boolean') html+='<input type="checkbox" id="'+id+'"'+(v?' checked':'')+'/>';
     else if(typ==='number') html+='<input type="number" step="any" id="'+id+'" value="'+esc(v)+'"/>';
@@ -465,7 +510,9 @@ function fieldsHtml(obj, prefix){
 }
 function collectFields(prefix, meta){
   var entry={}, err='';
-  meta.forEach(function(m){ var el=document.getElementById(prefix+m.k); if(!el)return;
+  meta.forEach(function(m){
+    if(m.typ==='traits'){ entry[m.k]=readTraits(prefix); return; }
+    var el=document.getElementById(prefix+m.k); if(!el)return;
     if(m.typ==='boolean') entry[m.k]=el.checked;
     else if(m.typ==='number') entry[m.k]=(el.value===''?0:Number(el.value));
     else if(m.typ==='object'){ try{ entry[m.k]=JSON.parse(el.value); }catch(e){ if(!err) err='Field "'+m.k+'" must be valid JSON — '+e.message; } }

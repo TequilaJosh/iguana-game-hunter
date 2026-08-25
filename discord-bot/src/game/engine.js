@@ -43,9 +43,11 @@ export function derive(char) {
   if (asc) for (const k of STAT_KEYS) st[k] = Math.round(st[k] * (1 + 0.02 * asc));
   def += Math.round(st.vit * 0.8);
   res += Math.round(st.spr * 0.8);
-  const maxhp = Math.round((60 + st.vit * 6.5 + char.level * 5) * (r.traits?.hp_mod ?? 1)) + hpBonus;
-  const maxmp = Math.round((15 + st.spr * 3 + char.level * 2) * (r.traits?.mp_mod ?? 1)) + mpBonus;
-  return { st, wpow, def, res, maxhp, maxmp, critBonus, lifesteal, elemDmg, regen, scales: c.primary };
+  const traits = r.traits || {};
+  critBonus += traits.crit_bonus || 0;      // race crit trait
+  const maxhp = Math.round((60 + st.vit * 6.5 + char.level * 5) * (traits.hp_mod ?? 1)) + hpBonus;
+  const maxmp = Math.round((15 + st.spr * 3 + char.level * 2) * (traits.mp_mod ?? 1)) + mpBonus;
+  return { st, wpow, def, res, maxhp, maxmp, critBonus, lifesteal, elemDmg, regen, traits, scales: c.primary };
 }
 
 // ── Leveling ────────────────────────────────────────────────────────────────

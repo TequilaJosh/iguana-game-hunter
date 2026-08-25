@@ -144,7 +144,8 @@ function applySkill(fight, sk, log) {
 
   // Heals (may carry a rider effect: regen / cleanse_all / mp_free).
   if (sk.type === 'heal') {
-    const amt = Math.round(fight.pd.st.mag * 1.6 * (sk.power || 1) + fight.pd.maxhp * 0.10);
+    const hr = fight.pd.traits.heal_received || 1;
+    const amt = Math.round((fight.pd.st.mag * 1.6 * (sk.power || 1) + fight.pd.maxhp * 0.10) * hr);
     const healed = Math.min(fight.pd.maxhp, fight.php + amt) - fight.php;
     fight.php += healed;
     log.push(`✨ ${sk.name} restores **${healed}** HP.`);
@@ -239,6 +240,12 @@ function monsterSkill(fight, log) {
 function mitigateIncoming(fight, dmg) {
   if (fight.ps.immune > 0) return 0;
   if (fight.ps.defUp > 0) dmg = Math.round(dmg * 0.7);
+  // Race elemental resist / weakness vs this monster's element.
+  var el = fight.monster.element, tr = fight.pd.traits || {};
+  if (el && el !== 'none') {
+    if (tr[el + '_resist']) dmg = Math.round(dmg * (1 - tr[el + '_resist'] / 100));
+    if (tr[el + '_weak']) dmg = Math.round(dmg * (1 + tr[el + '_weak'] / 100));
+  }
   if (fight.ps.mpShield && fight.ps.mpShield.turns > 0 && fight.pmp > 0) {
     const absorb = Math.min(fight.pmp, Math.round(dmg * fight.ps.mpShield.pct / 100));
     fight.pmp -= absorb; dmg -= absorb;
@@ -356,11 +363,12 @@ export function takeTurn(fight, kind, arg) {
     if (free) { fight.ps.mpFree = 0; } else { fight.pmp -= arg.mp; }
     applySkill(fight, arg, log);
   } else if (kind === 'use') {
-    const healed = Math.min(fight.pd.maxhp, fight.php + arg) - fight.php;
+    const hr = fight.pd.traits.heal_received || 1;
+    const healed = Math.min(fight.pd.maxhp, fight.php + Math.round(arg * hr)) - fight.php;
     fight.php += healed;
     log.push(`🧪 You quaff a potion, restoring **${healed}** HP.`);
   } else if (kind === 'flee') {
-    const chance = clamp(45 + (pd.st.agi - m.stats.agi) * 2, 10, 90);
+    const chance = clamp(45 + (pd.st.agi - m.stats.agi) * 2 + (pd.traits.flee_bonus || 0), 10, 95);
     if (Math.random() * 100 < chance) { log.push('🏃 You slip away from the fight.'); return { fled: true, log }; }
     log.push('🚫 You fail to escape!');
   }

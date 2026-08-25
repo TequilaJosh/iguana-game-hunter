@@ -141,15 +141,22 @@ function fightEmbed(fight, extraLog = [], withImage = false) {
   const m = fight.monster;
   const log = [...fight.log, ...extraLog].slice(-7).join('\n') || 'The battle begins!';
   const rankTag = m.rank && m.rank !== 'trash' ? ` (${m.rank.toUpperCase()})` : '';
+  // Numbered skill list so players can cast with "tt skill 1" (or the name).
+  const owner = getPlayer(fight.userId);
+  let skillsLine = '';
+  if (owner) {
+    const sk = skillsForClass(owner.cls, owner.level);
+    if (sk.length) skillsLine = '\n\n✨ ' + sk.map((s, i) => `\`${i + 1}\` ${s.name} (${s.mp})`).join(' · ');
+  }
   const e = new EmbedBuilder()
     .setColor(m.rank === 'boss' ? 0xd64f4f : m.rank === 'elite' ? 0x9a4fd6 : 0x3f7fd6)
     .setTitle(`⚔️ ${m.name}${rankTag}`)
     .setDescription(
       `**${m.name}**  ${fight.mhp}/${fight.mmaxhp}\n${bar(fight.mhp, fight.mmaxhp)}\n\n` +
       `**You**  ❤️ ${fight.php}/${fight.pd.maxhp}  ·  💧 ${fight.pmp}/${fight.pd.maxmp}\n${bar(fight.php, fight.pd.maxhp)}\n\n` +
-      `${log}`
+      `${log}${skillsLine}`
     )
-    .setFooter({ text: 'tt attack · tt skill <name> · tt use · tt flee' });
+    .setFooter({ text: 'tt attack · tt skill <# or name> · tt use · tt flee' });
   if (withImage) e.setImage('attachment://m.png');
   return e;
 }
@@ -337,7 +344,7 @@ async function cmdAdventure(msg, args) {
   // action (registered but not armed yet).
   const file = monsterFile(fight);
   const sent = await msg.reply({
-    content: '⚔️ **Type `tt attack` to begin!** (or `tt skill <name>` · `tt flee`)',
+    content: '⚔️ **Type `tt attack` to begin!** (or `tt skill <# or name>` · `tt flee`)',
     embeds: [fightEmbed(fight, [], !!file)],
     files: file ? [file] : [],
   });

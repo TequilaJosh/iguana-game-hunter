@@ -21,7 +21,9 @@ export function startIngestServer(client) {
   const app = express();
   app.use(express.json({ limit: '16kb' }));
 
-  app.get('/health', (_req, res) => res.json({ ok: true, uptime: Math.round(process.uptime()) }));
+  // `build` marks which code is live — bump it with notable deploys so /health confirms
+  // the running version (helps catch "pushed but not deployed").
+  app.get('/health', (_req, res) => res.json({ ok: true, build: 'gather5-combat-voice-2026-08-24', uptime: Math.round(process.uptime()) }));
 
   // Public Tavern Tales player guide (no auth) — a shareable HTML page.
   app.get('/guide', (_req, res) => res.type('html').send(guideHtml()));

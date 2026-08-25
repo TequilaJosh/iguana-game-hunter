@@ -21,3 +21,4 @@ data/players.json.bak*
 discord-bot/**/webtokens.json
 discord-bot/.ttok
 logs/
+data-backups/

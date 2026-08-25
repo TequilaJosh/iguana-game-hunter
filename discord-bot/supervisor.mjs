@@ -88,6 +88,67 @@ function botHealth(cb) {
   req.on('timeout', () => { req.destroy(); cb(null); });
 }
 
+// ── Game-data editor ─────────────────────────────────────────────────────────
+// Every Tavern Tales data file is editable here. content.* are keys inside
+// content.json; the others are whole files. Saves validate JSON, back up the old
+// file to data-backups/, then take effect on the next bot restart.
+const GD = path.join(DIR, 'game-data');
+const BACKUPS = path.join(DIR, 'data-backups');
+const SECTIONS = [
+  { key: 'items', label: 'Items — weapons/armor/rings/materials/consumables', file: 'content.json', sub: 'items', kind: 'array' },
+  { key: 'skills', label: 'Skills', file: 'content.json', sub: 'skills', kind: 'array' },
+  { key: 'classes', label: 'Classes', file: 'content.json', sub: 'classes', kind: 'array' },
+  { key: 'races', label: 'Races', file: 'content.json', sub: 'races', kind: 'array' },
+  { key: 'zones', label: 'Zones', file: 'content.json', sub: 'zones', kind: 'array' },
+  { key: 'rarities', label: 'Rarities', file: 'content.json', sub: 'rarities', kind: 'array' },
+  { key: 'affixes', label: 'Affixes (prefix / suffix)', file: 'content.json', sub: 'affixes', kind: 'object' },
+  { key: 'version', label: 'Content version/meta', file: 'content.json', sub: 'version', kind: 'object' },
+  { key: 'monsters', label: 'Monsters', file: 'monsters.json', sub: 'monsters', kind: 'array' },
+  { key: 'recipes', label: 'Recipes — crafting & alchemy', file: 'recipes.json', sub: null, kind: 'array' },
+  { key: 'gather-materials', label: 'Gathering materials', file: 'gather-materials.json', sub: null, kind: 'array' },
+  { key: 'gather-areas', label: 'Gathering areas', file: 'gather-areas.json', sub: null, kind: 'array' },
+  { key: 'gather-drops', label: 'Gathering drops', file: 'gather-drops.json', sub: null, kind: 'array' },
+];
+const sectionByKey = (k) => SECTIONS.find((s) => s.key === k);
+const readJson = (file) => JSON.parse(fs.readFileSync(path.join(GD, file), 'utf8'));
+const getSection = (s) => { const doc = readJson(s.file); return s.sub ? doc[s.sub] : doc; };
+const countOf = (v) => (Array.isArray(v) ? v.length : v && typeof v === 'object' ? Object.keys(v).length : 0);
+function backupFile(file) {
+  try { fs.mkdirSync(BACKUPS, { recursive: true }); const ts = new Date().toISOString().replace(/[:.]/g, '-'); fs.copyFileSync(path.join(GD, file), path.join(BACKUPS, `${file}.${ts}.bak`)); } catch { /* best-effort */ }
+}
+function writeSection(s, value) {
+  if (s.kind === 'array' && !Array.isArray(value)) throw new Error('This section must be a JSON array [ … ].');
+  if (s.kind === 'object' && (typeof value !== 'object' || Array.isArray(value) || value === null)) throw new Error('This section must be a JSON object { … }.');
+  backupFile(s.file);
+  if (s.sub) {
+    const doc = readJson(s.file);
+    doc[s.sub] = value;
+    if (s.file === 'monsters.json' && Array.isArray(value)) doc.count = value.length;
+    fs.writeFileSync(path.join(GD, s.file), JSON.stringify(doc, null, 2) + '\n');
+  } else {
+    fs.writeFileSync(path.join(GD, s.file), JSON.stringify(value, null, 2) + '\n');
+  }
+}
+// "Add new" skeleton: clone the first existing entry and blank its id/name.
+function templateFor(s) {
+  try {
+    const cur = getSection(s);
+    if (Array.isArray(cur) && cur.length) {
+      const t = JSON.parse(JSON.stringify(cur[0]));
+      if ('id' in t) t.id = 'new_' + (t.id || 'entry');
+      if ('key' in t) t.key = 'new_' + (t.key || 'entry');
+      if ('name' in t) t.name = 'New ' + (t.name || 'Entry');
+      return t;
+    }
+  } catch { /* ignore */ }
+  return {};
+}
+function readBody(req, cb) {
+  let b = '';
+  req.on('data', (c) => { b += c; if (b.length > 8e6) req.destroy(); });
+  req.on('end', () => { try { cb(b ? JSON.parse(b) : {}); } catch { cb(null); } });
+}
+
 // ── HTTP server (control panel) ──────────────────────────────────────────────
 function authed(req, url) {
   const t = (req.headers['x-admin-token'] || url.searchParams.get('token') || '').toString();
@@ -119,6 +180,37 @@ const server = http.createServer((req, res) => {
   if (req.method === 'POST' && url.pathname === '/api/restart') { restartBot(); return send(res, 200, { ok: true }); }
   if (req.method === 'POST' && url.pathname === '/api/start') { startBot(); return send(res, 200, { ok: true }); }
   if (req.method === 'POST' && url.pathname === '/api/stop') { stopBot(); return send(res, 200, { ok: true }); }
+
+  // Game-data editor.
+  if (req.method === 'GET' && url.pathname === '/api/data/sections') {
+    return send(res, 200, { sections: SECTIONS.map((s) => { let count = null; try { count = countOf(getSection(s)); } catch { /* file missing */ } return { key: s.key, label: s.label, kind: s.kind, count }; }) });
+  }
+  if (req.method === 'GET' && url.pathname === '/api/data') {
+    const s = sectionByKey(url.searchParams.get('section'));
+    if (!s) return send(res, 404, { error: 'unknown section' });
+    try { const v = getSection(s); return send(res, 200, { json: JSON.stringify(v, null, 2), count: countOf(v), kind: s.kind, file: s.file }); }
+    catch (e) { return send(res, 500, { error: e.message }); }
+  }
+  if (req.method === 'GET' && url.pathname === '/api/data/template') {
+    const s = sectionByKey(url.searchParams.get('section'));
+    if (!s) return send(res, 404, { error: 'unknown section' });
+    return send(res, 200, { template: templateFor(s) });
+  }
+  if (req.method === 'POST' && url.pathname === '/api/data') {
+    readBody(req, (body) => {
+      if (!body) return send(res, 400, { error: 'Bad request body.' });
+      const s = sectionByKey(body.section);
+      if (!s) return send(res, 404, { error: 'unknown section' });
+      let parsed;
+      try { parsed = JSON.parse(body.json); } catch (e) { return send(res, 400, { error: 'Invalid JSON — ' + e.message }); }
+      try { writeSection(s, parsed); } catch (e) { return send(res, 400, { error: e.message }); }
+      pushLog(`✎ game-data saved: ${s.key} (${countOf(parsed)} entries)`);
+      if (body.restart) restartBot();
+      return send(res, 200, { ok: true, count: countOf(parsed), restarted: !!body.restart });
+    });
+    return;
+  }
+
   send(res, 404, { error: 'not found' });
 });
 
@@ -189,6 +281,28 @@ const PAGE = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
       <h2>Log</h2>
       <pre id="log">…</pre>
     </div>
+
+    <div class="card">
+      <h2>Game Data Editor</h2>
+      <p class="sub" style="margin:0 0 10px">Edit everything about Tavern Tales — items, skills, classes, races, zones, rarities, affixes, monsters, recipes and the gathering tables. Add new entries with the template button. Edits apply after a bot restart.</p>
+      <div class="row">
+        <div>
+          <label>Section</label>
+          <select id="ds" onchange="loadSection()"></select>
+        </div>
+        <button onclick="loadSection()">↻ Reload</button>
+        <button onclick="addTemplate()">＋ Add entry</button>
+      </div>
+      <label style="margin-top:10px">JSON <span id="dcount" class="k"></span></label>
+      <textarea id="djson" spellcheck="false" style="width:100%;height:360px;background:#08110b;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:10px;font-family:Consolas,'Courier New',monospace;font-size:12px;white-space:pre;overflow:auto"></textarea>
+      <div class="row" style="margin-top:10px">
+        <button onclick="validateJson()">✓ Validate</button>
+        <button class="amber" onclick="saveData(false)">💾 Save</button>
+        <button class="amber" onclick="saveData(true)">💾 Save &amp; Restart</button>
+      </div>
+      <div class="msg" id="dmsg"></div>
+      <p class="sub" style="margin-top:6px">Every save backs up the old file to <b>data-backups/</b>. Keep <b>id</b>s unique. Broken JSON is rejected — the game keeps running the last good data until you restart.</p>
+    </div>
   </div>
 
 <script>
@@ -200,7 +314,7 @@ function unlock(){
     if(!r.ok){ document.getElementById('loginMsg').textContent='Wrong password.'; return; }
     document.getElementById('loginCard').classList.add('hide');
     document.getElementById('app').classList.remove('hide');
-    tick(); tickLog(); setInterval(tick,2000); setInterval(tickLog,2000);
+    tick(); tickLog(); loadSections(); setInterval(tick,2000); setInterval(tickLog,2000);
   });
 }
 function fmt(s){ if(!s) return '0s'; var m=Math.floor(s/60), h=Math.floor(m/60); if(h) return h+'h '+(m%60)+'m'; if(m) return m+'m '+(s%60)+'s'; return s+'s'; }
@@ -228,6 +342,50 @@ function act(a){
     m.textContent=(a==='restart'?'🔄 Restart triggered.':a==='start'?'▶ Start triggered.':'■ Stop triggered.');
     setTimeout(tick,1500);
   }).catch(function(){ m.textContent='Failed.'; });
+}
+// ── Game Data editor ──
+function loadSections(){
+  fetch('/api/data/sections',{headers:h()}).then(function(r){return r.json();}).then(function(d){
+    var sel=document.getElementById('ds'); var prev=sel.value; sel.innerHTML='';
+    (d.sections||[]).forEach(function(s){ var o=document.createElement('option'); o.value=s.key; o.textContent=s.label+(s.count!=null?' ('+s.count+')':''); sel.appendChild(o); });
+    if(prev) sel.value=prev;
+    if(!document.getElementById('djson').value) loadSection();
+  });
+}
+function loadSection(){
+  var key=document.getElementById('ds').value; if(!key) return;
+  document.getElementById('dmsg').textContent='Loading…';
+  fetch('/api/data?section='+encodeURIComponent(key),{headers:h()}).then(function(r){return r.json();}).then(function(d){
+    if(d.error){ document.getElementById('dmsg').textContent=d.error; return; }
+    document.getElementById('djson').value=d.json;
+    document.getElementById('dcount').textContent='· '+d.count+' · '+d.file;
+    document.getElementById('dmsg').textContent='';
+  });
+}
+function validateJson(){
+  try{ JSON.parse(document.getElementById('djson').value); document.getElementById('dmsg').textContent='✓ Valid JSON.'; return true; }
+  catch(e){ document.getElementById('dmsg').textContent='✗ '+e.message; return false; }
+}
+function addTemplate(){
+  var key=document.getElementById('ds').value;
+  fetch('/api/data/template?section='+encodeURIComponent(key),{headers:h()}).then(function(r){return r.json();}).then(function(d){
+    var ta=document.getElementById('djson'); var arr;
+    try{ arr=JSON.parse(ta.value); }catch(e){ document.getElementById('dmsg').textContent='Fix JSON first: '+e.message; return; }
+    if(!Array.isArray(arr)){ document.getElementById('dmsg').textContent='Add-entry only works on list sections.'; return; }
+    arr.push(d.template||{}); ta.value=JSON.stringify(arr,null,2);
+    ta.scrollTop=ta.scrollHeight; document.getElementById('dmsg').textContent='＋ New entry appended at the bottom — edit its fields (esp. id/name), then Save.';
+  });
+}
+function saveData(restart){
+  if(!validateJson()) return;
+  var key=document.getElementById('ds').value;
+  document.getElementById('dmsg').textContent='Saving…';
+  fetch('/api/data',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},h()),body:JSON.stringify({section:key,json:document.getElementById('djson').value,restart:!!restart})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(d.error){ document.getElementById('dmsg').textContent='✗ '+d.error; return; }
+      document.getElementById('dmsg').textContent='✓ Saved '+d.count+' entries'+(d.restarted?' — bot restarting…':' — click Restart (or Save & Restart) to apply.');
+      loadSections();
+    }).catch(function(){ document.getElementById('dmsg').textContent='Save failed.'; });
 }
 </script>
 </div></body></html>`;

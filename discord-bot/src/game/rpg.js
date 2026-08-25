@@ -1,5 +1,6 @@
 import { EmbedBuilder, AttachmentBuilder } from 'discord.js';
 import { monsterPng } from './monsterImage.js';
+import { heroPng } from './heroImage.js';
 import {
   RACE_LIST, CLASS_LIST, ZONE_LIST, RACES, CLASSES, ZONES, RARITIES, STAT_KEYS, ITEMS,
   skillsForClass,
@@ -100,7 +101,13 @@ function profsSummary(char) {
 }
 
 // ── formatting ────────────────────────────────────────────────────────────────
-function sheetEmbed(char) {
+// A PNG attachment of the hero's sprite (or null).
+function heroFile(char) {
+  try { const buf = heroPng(char); return buf ? new AttachmentBuilder(buf, { name: 'hero.png' }) : null; }
+  catch { return null; }
+}
+
+function sheetEmbed(char, withImage = false) {
   const pd = derive(char);
   const race = RACES[char.race], cls = CLASSES[char.cls];
   const stam = char.stamina ?? MAX_STAMINA;
@@ -110,7 +117,7 @@ function sheetEmbed(char) {
       ? `${RARITY_EMOJI[char.equipped[s].rarity] || ''} **${char.equipped[s].name}** — ${itemStats(char.equipped[s])}`
       : null)
     .filter(Boolean).join('\n') || 'Nothing equipped';
-  return new EmbedBuilder()
+  const e = new EmbedBuilder()
     .setColor(0x7cc44a)
     .setTitle(`${char.ascension ? `⭐${char.ascension} ` : ''}${char.name} — Lvl ${char.level} ${race.name} ${cls.name}`)
     .setDescription(cls.blurb)
@@ -126,6 +133,8 @@ function sheetEmbed(char) {
       { name: 'Equipped', value: gear },
     )
     .setFooter({ text: 'Adventure with tt adventure · gear up with tt inv / tt equip' });
+  if (withImage) e.setThumbnail('attachment://hero.png');
+  return e;
 }
 
 function fightEmbed(fight, extraLog = [], withImage = false) {
@@ -251,13 +260,15 @@ function cmdCreate(msg, args) {
   char.hp = pd.maxhp; char.mp = pd.maxmp;
   char.stamina = MAX_STAMINA; char.stamTs = Date.now();
   savePlayer(msg.author.id, char);
-  return msg.reply({ content: `🎉 **${name}** the ${race.name} ${cls.name} steps into the tavern!`, embeds: [sheetEmbed(char)] });
+  const cf = heroFile(char);
+  return msg.reply({ content: `🎉 **${name}** the ${race.name} ${cls.name} steps into the tavern!`, embeds: [sheetEmbed(char, !!cf)], files: cf ? [cf] : [] });
 }
 
 function cmdChar(msg) {
   const char = getPlayer(msg.author.id);
   if (!char) return msg.reply('No hero yet — make one with `tt create <class> <race> [name]`.');
-  return msg.reply({ embeds: [sheetEmbed(char)] });
+  const cf = heroFile(char);
+  return msg.reply({ embeds: [sheetEmbed(char, !!cf)], files: cf ? [cf] : [] });
 }
 
 function cmdSkills(msg) {

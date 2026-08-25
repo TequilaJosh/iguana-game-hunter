@@ -214,6 +214,44 @@ const server = http.createServer((req, res) => {
       class: { options: uniq(classes.map((c) => c.id)) },
       type: { options: ['physical', 'fire', 'ice', 'lightning', 'dark', 'holy', 'magic', 'heal', 'buff', 'debuff', 'utility', 'summon'] },
       target: { options: ['one', 'all', 'self'] },
+      // Spell builder: every combat effect the engine understands, with its params.
+      effect: { builder: true, effects: [
+        { name: 'none', params: [] },
+        { name: 'stun', params: ['chance %'] },
+        { name: 'poison', params: [] }, { name: 'bleed', params: [] },
+        { name: 'lifesteal', params: ['heal % of dmg'] },
+        { name: 'guaranteed_crit', params: [] },
+        { name: 'crit_bonus', params: ['crit +%'] },
+        { name: 'execute_below', params: ['HP % threshold'] },
+        { name: 'defense_ignore', params: ['ignore def %'] },
+        { name: 'undead_bonus', params: ['bonus % vs undead'] },
+        { name: 'blind', params: ['chance %'] },
+        { name: 'slow', params: ['chance % (>=10) or turns'] },
+        { name: 'accuracy', params: ['hit +/- %'] },
+        { name: 'accuracy_down', params: ['enemy hit -%'] },
+        { name: 'marked', params: ['turns'] },
+        { name: 'doom', params: ['turns to death'] },
+        { name: 'all_stats_down', params: ['turns'] },
+        { name: 'all_stats_up', params: ['turns'] },
+        { name: 'self_damage', params: ['self dmg % maxHP'] },
+        { name: 'hits', params: ['number of hits'] },
+        { name: 'attack_up', params: ['turns'] },
+        { name: 'defense_up', params: ['turns'] },
+        { name: 'damage_cut', params: ['cut %', 'turns'] },
+        { name: 'resist_up', params: ['turns'] },
+        { name: 'regen', params: ['turns'] },
+        { name: 'evade_up', params: ['turns'] },
+        { name: 'immune', params: ['turns'] },
+        { name: 'survive_lethal', params: [] },
+        { name: 'auto_revive', params: ['chance %'] },
+        { name: 'counter', params: ['chance %', 'turns'] },
+        { name: 'mp_absorb', params: ['absorb %', 'turns'] },
+        { name: 'loot_up', params: ['bonus %', 'turns'] },
+        { name: 'cleanse_all', params: [] },
+        { name: 'mp_free', params: [] },
+        { name: 'summon', params: ['turns'] },
+        { name: 'damage_up_vs_family', params: ['bonus %', 'turns'] },
+      ] },
     };
     return send(res, 200, { options });
   }
@@ -396,7 +434,10 @@ const PAGE = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
         <button class="amber" onclick="openAddForm()">＋ Add entry (form)</button>
       </div>
       <div id="addform" class="hide" style="margin-top:12px;border:1px solid var(--amber);border-radius:8px;padding:12px"></div>
-      <div class="row" style="margin-top:10px"><div style="flex:1"><label>Edit / delete existing</label><select id="edsel" onchange="buildEditForm()" style="width:100%;max-width:440px"></select></div></div>
+      <div class="row" style="margin-top:10px">
+        <div><label>Filter</label><input id="edfilter" oninput="filterEdit()" placeholder="e.g. mage, fire, sword" style="width:180px"/></div>
+        <div style="flex:1"><label>Edit / delete existing</label><select id="edsel" onchange="buildEditForm()" style="width:100%;max-width:440px"></select></div>
+      </div>
       <div id="editform" class="hide" style="margin-top:12px;border:1px solid var(--line);border-radius:8px;padding:12px"></div>
       <label style="margin-top:10px">JSON (bulk / advanced) <span id="dcount" class="k"></span></label>
       <textarea id="djson" spellcheck="false" style="width:100%;height:360px;background:#08110b;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:10px;font-family:Consolas,'Courier New',monospace;font-size:12px;white-space:pre;overflow:auto"></textarea>
@@ -537,11 +578,44 @@ function multiWidget(prefix,field,arr,opts){
 function addChip(prefix,field){ var sel=document.getElementById(prefix+field+'_sel'); var v=sel.value; if(!v)return; if(v==='__custom'){ v=prompt(field+' value:'); if(!v)return; v=v.trim(); if(!v)return; } var box=document.getElementById(prefix+field+'_box'); if(box.querySelector('[data-val="'+v+'"]')){ sel.value=''; return; } box.insertAdjacentHTML('beforeend',_chip(v)); sel.value=''; }
 function readChips(prefix,field){ var box=document.getElementById(prefix+field+'_box'); var out=[]; if(box) box.querySelectorAll('.chip').forEach(function(c){ out.push(c.getAttribute('data-val')); }); return out; }
 
+// ── Spell builder: choose an effect + fill its parameters (no raw strings) ──
+function effectParamsHtml(prefix,name,vals){
+  if(name==='__custom'){ return ' raw <input id="'+prefix+'effect_raw" type="text" value="'+esc((vals&&vals.join?vals.join(':'):vals)||'')+'" placeholder="name:param" style="width:180px"/>'; }
+  var e=(OPTIONS.effect.effects||[]).find(function(x){return x.name===name;});
+  if(!e||!e.params.length) return '';
+  var h='';
+  for(var i=0;i<e.params.length;i++){ h+='<input id="'+prefix+'effect_p'+i+'" type="number" step="any" value="'+esc(vals&&vals[i]!=null?vals[i]:'')+'" placeholder="'+esc(e.params[i])+'" title="'+esc(e.params[i])+'" style="width:150px;margin-left:6px"/>'; }
+  return h;
+}
+function effectWidget(prefix,val){
+  var effs=OPTIONS.effect.effects||[];
+  var parts=String(val==null?'none':val).split(':'); var name=parts[0]||'none';
+  var known=effs.some(function(e){return e.name===name;}); var sname=known?name:'__custom';
+  var o=''; effs.forEach(function(e){ o+='<option value="'+e.name+'"'+(e.name===sname?' selected':'')+'>'+esc(e.name)+'</option>'; });
+  o+='<option value="__custom"'+(sname==='__custom'?' selected':'')+'>custom…</option>';
+  var pv=known?parts.slice(1):[val];
+  return '<select id="'+prefix+'effect_name" onchange="effectParams(\\''+prefix+'\\')">'+o+'</select><span id="'+prefix+'effect_params">'+effectParamsHtml(prefix,sname,pv)+'</span>';
+}
+function effectParams(prefix){ var n=document.getElementById(prefix+'effect_name').value; document.getElementById(prefix+'effect_params').innerHTML=effectParamsHtml(prefix,n,[]); }
+function readEffect(prefix){
+  var name=document.getElementById(prefix+'effect_name').value;
+  if(name==='__custom'){ var raw=document.getElementById(prefix+'effect_raw'); return (raw&&raw.value.trim())||'none'; }
+  var e=(OPTIONS.effect.effects||[]).find(function(x){return x.name===name;});
+  var parts=[name];
+  if(e){ for(var i=0;i<e.params.length;i++){ var el=document.getElementById(prefix+'effect_p'+i); if(el&&el.value!=='') parts.push(el.value); } }
+  return parts.join(':');
+}
+
 function fieldsHtml(obj, prefix){
   var meta=[], html='';
   Object.keys(obj).forEach(function(k){
     var v=obj[k]; var typ=(v===null?'string':typeof v);
     var id=prefix+k; var req=(k==='id'||k==='key'||k==='name')?' *':'';
+    if(k==='effect' && OPTIONS.effect){
+      meta.push({k:k,typ:'effect'});
+      html+='<label>effect (spell builder — pick one, fill the numbers)</label>'+effectWidget(prefix,v);
+      return;
+    }
     if(k==='traits' && typ==='object' && !Array.isArray(v)){
       meta.push({k:k,typ:'traits'});
       html+='<label>traits (pick from the dropdown, edit the numbers)</label>'+traitsWidget(prefix,v);
@@ -571,6 +645,7 @@ function collectFields(prefix, meta){
   var entry={}, err='';
   meta.forEach(function(m){
     if(m.typ==='traits'){ entry[m.k]=readTraits(prefix); return; }
+    if(m.typ==='effect'){ entry[m.k]=readEffect(prefix); return; }
     if(m.typ==='multi'){ entry[m.k]=readChips(prefix,m.k); return; }
     if(m.typ==='enum'){ var es=document.getElementById(prefix+m.k); entry[m.k]=es?es.value:''; return; }
     var el=document.getElementById(prefix+m.k); if(!el)return;
@@ -603,17 +678,29 @@ function submitAdd(restart){
     }).catch(function(){ msg.textContent='Add failed.'; });
 }
 // ── Edit / Delete existing ──
+var EDIT_LABELS=[];
 function populateEditPicker(json){
   var sel=document.getElementById('edsel'); document.getElementById('editform').classList.add('hide');
+  var filt=document.getElementById('edfilter'); if(filt) filt.value='';
   var arr; try{ arr=JSON.parse(json); }catch(e){ arr=null; }
-  if(!Array.isArray(arr)){ EDIT_ARR=[]; sel.innerHTML='<option value="">(edit via JSON above)</option>'; return; }
+  if(!Array.isArray(arr)){ EDIT_ARR=[]; EDIT_LABELS=[]; sel.innerHTML='<option value="">(edit via JSON above)</option>'; return; }
   EDIT_ARR=arr;
   var first=arr[0]||{}; EDIT_IDF=('id' in first)?'id':('key' in first)?'key':'';
-  if(!EDIT_IDF){ sel.innerHTML='<option value="">(no id — edit via JSON above)</option>'; return; }
+  if(!EDIT_IDF){ EDIT_LABELS=[]; sel.innerHTML='<option value="">(no id — edit via JSON above)</option>'; return; }
+  EDIT_LABELS=arr.map(function(e,i){
+    var idv=e[EDIT_IDF]; var lbl=idv+(e.name&&e.name!==idv?' — '+e.name:'');
+    if(e.class) lbl+='  ['+e.class+(e.unlock_level?' Lv'+e.unlock_level:'')+']';   // skills: show class
+    return {i:i,label:lbl};
+  });
+  renderEditOptions('');
+}
+function renderEditOptions(filter){
+  var sel=document.getElementById('edsel'); filter=(filter||'').toLowerCase();
   var html='<option value="">— pick an entry to edit —</option>';
-  arr.forEach(function(e,i){ var idv=e[EDIT_IDF]; var lbl=idv+(e.name&&e.name!==idv?' — '+e.name:''); html+='<option value="'+i+'">'+esc(lbl)+'</option>'; });
+  EDIT_LABELS.forEach(function(o){ if(!filter||o.label.toLowerCase().indexOf(filter)>=0) html+='<option value="'+o.i+'">'+esc(o.label)+'</option>'; });
   sel.innerHTML=html;
 }
+function filterEdit(){ renderEditOptions(document.getElementById('edfilter').value); }
 function buildEditForm(){
   var i=document.getElementById('edsel').value; var box=document.getElementById('editform');
   if(i===''){ box.classList.add('hide'); return; }

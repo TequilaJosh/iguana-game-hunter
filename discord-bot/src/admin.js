@@ -236,6 +236,7 @@ const ADMIN_HTML = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
 </style></head><body><div class="wrap">
   <h1>🛠️ Tavern Tales — Player Editor</h1>
   <p class="sub">Fix stuck players, hand out gifts, and edit stats. Edits go through the live bot.</p>
+  <p class="sub">🎛️ Bot status &amp; <b>Restart</b> button → <a href="http://localhost:8642" style="color:#7cc44a">Bot Control panel</a> (runs on this PC only).</p>
 
   <div class="card" id="loginCard">
     <label>Admin password</label>

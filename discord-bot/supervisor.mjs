@@ -236,10 +236,60 @@ const server = http.createServer((req, res) => {
     });
     return;
   }
+  // Update one existing entry (matched by its original id/key).
+  if (req.method === 'POST' && url.pathname === '/api/data/update') {
+    readBody(req, (body) => {
+      if (!body) return send(res, 400, { error: 'Bad request body.' });
+      const s = sectionByKey(body.section);
+      if (!s || s.kind !== 'array') return send(res, 400, { error: 'Edit works only on list sections.' });
+      const entry = body.entry;
+      if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return send(res, 400, { error: 'Entry must be an object.' });
+      let arr;
+      try { arr = getSection(s); } catch (e) { return send(res, 500, { error: e.message }); }
+      const tmpl = templateFor(s);
+      const idf = ('id' in tmpl) ? 'id' : ('key' in tmpl) ? 'key' : null;
+      if (!idf) return send(res, 400, { error: 'This section has no id — edit it in the JSON box instead.' });
+      const idx = arr.findIndex((x) => x && String(x[idf]) === String(body.origId));
+      if (idx < 0) return send(res, 404, { error: `Couldn't find ${idf} "${body.origId}".` });
+      if (!entry[idf]) return send(res, 400, { error: `${idf} is required.` });
+      if (String(entry[idf]) !== String(body.origId) && arr.some((x) => x && String(x[idf]) === String(entry[idf]))) return send(res, 409, { error: `${idf} "${entry[idf]}" already exists.` });
+      arr[idx] = entry;
+      try { writeSection(s, arr); } catch (e) { return send(res, 400, { error: e.message }); }
+      pushLog(`✎ edited ${body.origId} in ${s.key}`);
+      if (body.restart) restartBot();
+      return send(res, 200, { ok: true, count: arr.length, restarted: !!body.restart });
+    });
+    return;
+  }
+  // Delete one entry by id/key.
+  if (req.method === 'POST' && url.pathname === '/api/data/delete') {
+    readBody(req, (body) => {
+      if (!body) return send(res, 400, { error: 'Bad request body.' });
+      const s = sectionByKey(body.section);
+      if (!s || s.kind !== 'array') return send(res, 400, { error: 'Delete works only on list sections.' });
+      let arr;
+      try { arr = getSection(s); } catch (e) { return send(res, 500, { error: e.message }); }
+      const tmpl = templateFor(s);
+      const idf = ('id' in tmpl) ? 'id' : ('key' in tmpl) ? 'key' : null;
+      if (!idf) return send(res, 400, { error: 'This section has no id — delete it in the JSON box instead.' });
+      const idx = arr.findIndex((x) => x && String(x[idf]) === String(body.id));
+      if (idx < 0) return send(res, 404, { error: `Couldn't find ${idf} "${body.id}".` });
+      arr.splice(idx, 1);
+      try { writeSection(s, arr); } catch (e) { return send(res, 400, { error: e.message }); }
+      pushLog(`🗑 deleted ${body.id} from ${s.key} (${arr.length} left)`);
+      if (body.restart) restartBot();
+      return send(res, 200, { ok: true, count: arr.length, restarted: !!body.restart });
+    });
+    return;
+  }
 
   send(res, 404, { error: 'not found' });
 });
 
+server.on('error', (e) => {
+  if (e.code === 'EADDRINUSE') { console.error(`Control panel already running on ${PORT} — exiting this instance.`); process.exit(0); }
+  throw e;
+});
 server.listen(PORT, () => {
   pushLog(`Control panel on http://localhost:${PORT}  (bot port ${BOT_PORT})`);
   if (!ADMIN_TOKEN) pushLog('WARNING: ADMIN_TOKEN not set — panel controls are disabled.');
@@ -320,7 +370,9 @@ const PAGE = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
         <button class="amber" onclick="openAddForm()">＋ Add entry (form)</button>
       </div>
       <div id="addform" class="hide" style="margin-top:12px;border:1px solid var(--amber);border-radius:8px;padding:12px"></div>
-      <label style="margin-top:10px">JSON <span id="dcount" class="k"></span></label>
+      <div class="row" style="margin-top:10px"><div style="flex:1"><label>Edit / delete existing</label><select id="edsel" onchange="buildEditForm()" style="width:100%;max-width:440px"></select></div></div>
+      <div id="editform" class="hide" style="margin-top:12px;border:1px solid var(--line);border-radius:8px;padding:12px"></div>
+      <label style="margin-top:10px">JSON (bulk / advanced) <span id="dcount" class="k"></span></label>
       <textarea id="djson" spellcheck="false" style="width:100%;height:360px;background:#08110b;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:10px;font-family:Consolas,'Courier New',monospace;font-size:12px;white-space:pre;overflow:auto"></textarea>
       <div class="row" style="margin-top:10px">
         <button onclick="validateJson()">✓ Validate</button>
@@ -387,6 +439,7 @@ function loadSection(){
     document.getElementById('djson').value=d.json;
     document.getElementById('dcount').textContent='· '+d.count+' · '+d.file;
     document.getElementById('dmsg').textContent='';
+    populateEditPicker(d.json);
   });
 }
 function validateJson(){
@@ -394,49 +447,92 @@ function validateJson(){
   catch(e){ document.getElementById('dmsg').textContent='✗ '+e.message; return false; }
 }
 function esc(s){ return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
-// Build a labelled form — one control per field of the section — for adding a new entry.
-function openAddForm(){
-  var key=document.getElementById('ds').value;
-  var box=document.getElementById('addform');
-  fetch('/api/data/template?section='+encodeURIComponent(key),{headers:h()}).then(function(r){return r.json();}).then(function(d){
-    var t=d.template||{}; var keys=Object.keys(t);
-    if(!keys.length){ box.innerHTML='<p class="sub">This section has no add-form (edit its JSON directly below).</p>'; box.classList.remove('hide'); return; }
-    var meta=[];
-    var html='<h2 style="margin:0 0 8px">＋ New '+esc(key.replace(/s$/,''))+'</h2>';
-    keys.forEach(function(k){
-      var v=t[k]; var typ=(v===null?'string':typeof v); meta.push({k:k,typ:typ});
-      var id='af_'+k; var req=(k==='id'||k==='key'||k==='name')?' *':'';
-      html+='<label>'+esc(k)+req+'</label>';
-      if(typ==='boolean') html+='<input type="checkbox" id="'+id+'"'+(v?' checked':'')+'/>';
-      else if(typ==='number') html+='<input type="number" step="any" id="'+id+'" value="'+esc(v)+'"/>';
-      else if(typ==='object') html+='<textarea id="'+id+'" style="width:100%;height:64px;background:#08110b;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px;font-family:Consolas,monospace;font-size:12px">'+esc(JSON.stringify(v))+'</textarea>';
-      else html+='<input type="text" id="'+id+'" value="'+esc(v)+'" style="width:100%"/>';
-    });
-    html+='<div class="row" style="margin-top:12px"><button class="amber" onclick="submitAdd(false)">Add</button><button class="amber" onclick="submitAdd(true)">Add &amp; Restart</button><button onclick="document.getElementById(\\'addform\\').classList.add(\\'hide\\')">Cancel</button></div><div class="msg" id="afmsg"></div>';
-    box.innerHTML=html; box.classList.remove('hide');
-    box.setAttribute('data-meta',JSON.stringify(meta));
-    box.scrollIntoView({behavior:'smooth',block:'nearest'});
+var EDIT_ARR=[], EDIT_IDF='id';
+// Build one labelled control per field of the object; returns {html, meta}. The
+// prefix keeps the add-form and edit-form inputs from colliding.
+function fieldsHtml(obj, prefix){
+  var meta=[], html='';
+  Object.keys(obj).forEach(function(k){
+    var v=obj[k]; var typ=(v===null?'string':typeof v); meta.push({k:k,typ:typ});
+    var id=prefix+k; var req=(k==='id'||k==='key'||k==='name')?' *':'';
+    html+='<label>'+esc(k)+req+'</label>';
+    if(typ==='boolean') html+='<input type="checkbox" id="'+id+'"'+(v?' checked':'')+'/>';
+    else if(typ==='number') html+='<input type="number" step="any" id="'+id+'" value="'+esc(v)+'"/>';
+    else if(typ==='object') html+='<textarea id="'+id+'" style="width:100%;height:64px;background:#08110b;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px;font-family:Consolas,monospace;font-size:12px">'+esc(JSON.stringify(v))+'</textarea>';
+    else html+='<input type="text" id="'+id+'" value="'+esc(v)+'" style="width:100%"/>';
   });
+  return {html:html, meta:meta};
 }
-function submitAdd(restart){
-  var box=document.getElementById('addform'); var meta=JSON.parse(box.getAttribute('data-meta')||'[]');
+function collectFields(prefix, meta){
   var entry={}, err='';
-  meta.forEach(function(m){ var el=document.getElementById('af_'+m.k); if(!el)return;
+  meta.forEach(function(m){ var el=document.getElementById(prefix+m.k); if(!el)return;
     if(m.typ==='boolean') entry[m.k]=el.checked;
     else if(m.typ==='number') entry[m.k]=(el.value===''?0:Number(el.value));
     else if(m.typ==='object'){ try{ entry[m.k]=JSON.parse(el.value); }catch(e){ if(!err) err='Field "'+m.k+'" must be valid JSON — '+e.message; } }
     else entry[m.k]=el.value;
   });
-  var msg=document.getElementById('afmsg');
-  if(err){ msg.textContent='✗ '+err; return; }
-  msg.textContent='Adding…';
-  fetch('/api/data/add',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},h()),body:JSON.stringify({section:document.getElementById('ds').value,entry:entry,restart:!!restart})})
+  return {entry:entry, err:err};
+}
+// ── Add ──
+function openAddForm(){
+  var key=document.getElementById('ds').value; var box=document.getElementById('addform');
+  fetch('/api/data/template?section='+encodeURIComponent(key),{headers:h()}).then(function(r){return r.json();}).then(function(d){
+    var t=d.template||{}; if(!Object.keys(t).length){ box.innerHTML='<p class="sub">This section has no add-form (edit its JSON directly below).</p>'; box.classList.remove('hide'); return; }
+    var f=fieldsHtml(t,'af_');
+    box.innerHTML='<h2 style="margin:0 0 8px">＋ New '+esc(key.replace(/s$/,''))+'</h2>'+f.html+
+      '<div class="row" style="margin-top:12px"><button class="amber" onclick="submitAdd(false)">Add</button><button class="amber" onclick="submitAdd(true)">Add &amp; Restart</button><button onclick="document.getElementById(\\'addform\\').classList.add(\\'hide\\')">Cancel</button></div><div class="msg" id="afmsg"></div>';
+    box.classList.remove('hide'); box.setAttribute('data-meta',JSON.stringify(f.meta)); box.scrollIntoView({behavior:'smooth',block:'nearest'});
+  });
+}
+function submitAdd(restart){
+  var box=document.getElementById('addform'); var c=collectFields('af_',JSON.parse(box.getAttribute('data-meta')||'[]'));
+  var msg=document.getElementById('afmsg'); if(c.err){ msg.textContent='✗ '+c.err; return; } msg.textContent='Adding…';
+  fetch('/api/data/add',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},h()),body:JSON.stringify({section:document.getElementById('ds').value,entry:c.entry,restart:!!restart})})
     .then(function(r){return r.json();}).then(function(d){
       if(d.error){ msg.textContent='✗ '+d.error; return; }
       msg.textContent='✓ Added — '+d.count+' total'+(d.restarted?' — bot restarting…':' — Restart to apply.');
-      loadSection(); loadSections();
-      setTimeout(function(){ box.classList.add('hide'); },1200);
+      loadSection(); loadSections(); setTimeout(function(){ box.classList.add('hide'); },1200);
     }).catch(function(){ msg.textContent='Add failed.'; });
+}
+// ── Edit / Delete existing ──
+function populateEditPicker(json){
+  var sel=document.getElementById('edsel'); document.getElementById('editform').classList.add('hide');
+  var arr; try{ arr=JSON.parse(json); }catch(e){ arr=null; }
+  if(!Array.isArray(arr)){ EDIT_ARR=[]; sel.innerHTML='<option value="">(edit via JSON above)</option>'; return; }
+  EDIT_ARR=arr;
+  var first=arr[0]||{}; EDIT_IDF=('id' in first)?'id':('key' in first)?'key':'';
+  if(!EDIT_IDF){ sel.innerHTML='<option value="">(no id — edit via JSON above)</option>'; return; }
+  var html='<option value="">— pick an entry to edit —</option>';
+  arr.forEach(function(e,i){ var idv=e[EDIT_IDF]; var lbl=idv+(e.name&&e.name!==idv?' — '+e.name:''); html+='<option value="'+i+'">'+esc(lbl)+'</option>'; });
+  sel.innerHTML=html;
+}
+function buildEditForm(){
+  var i=document.getElementById('edsel').value; var box=document.getElementById('editform');
+  if(i===''){ box.classList.add('hide'); return; }
+  var entry=EDIT_ARR[Number(i)]; if(!entry) return; var origId=entry[EDIT_IDF];
+  var f=fieldsHtml(entry,'ef_');
+  box.innerHTML='<h2 style="margin:0 0 8px">✎ Edit '+esc(String(origId))+'</h2>'+f.html+
+    '<div class="row" style="margin-top:12px"><button class="amber" onclick="submitEdit(false)">Save changes</button><button class="amber" onclick="submitEdit(true)">Save &amp; Restart</button><button class="danger" onclick="deleteEntry()">🗑 Delete</button><button onclick="document.getElementById(\\'editform\\').classList.add(\\'hide\\')">Cancel</button></div><div class="msg" id="efmsg"></div>';
+  box.classList.remove('hide'); box.setAttribute('data-meta',JSON.stringify(f.meta)); box.setAttribute('data-orig',String(origId)); box.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function submitEdit(restart){
+  var box=document.getElementById('editform'); var c=collectFields('ef_',JSON.parse(box.getAttribute('data-meta')||'[]'));
+  var msg=document.getElementById('efmsg'); if(c.err){ msg.textContent='✗ '+c.err; return; } msg.textContent='Saving…';
+  fetch('/api/data/update',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},h()),body:JSON.stringify({section:document.getElementById('ds').value,origId:box.getAttribute('data-orig'),entry:c.entry,restart:!!restart})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(d.error){ msg.textContent='✗ '+d.error; return; }
+      msg.textContent='✓ Saved'+(d.restarted?' — bot restarting…':' — Restart to apply.'); loadSection();
+    }).catch(function(){ msg.textContent='Save failed.'; });
+}
+function deleteEntry(){
+  var box=document.getElementById('editform'); var origId=box.getAttribute('data-orig');
+  if(!confirm('Delete "'+origId+'"? A backup is kept, but this removes it from the game.')) return;
+  var msg=document.getElementById('efmsg'); msg.textContent='Deleting…';
+  fetch('/api/data/delete',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},h()),body:JSON.stringify({section:document.getElementById('ds').value,id:origId,restart:false})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(d.error){ msg.textContent='✗ '+d.error; return; }
+      msg.textContent='✓ Deleted — '+d.count+' left. Restart to apply.'; box.classList.add('hide'); loadSection(); loadSections();
+    }).catch(function(){ msg.textContent='Delete failed.'; });
 }
 function saveData(restart){
   if(!validateJson()) return;

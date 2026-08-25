@@ -191,6 +191,32 @@ const server = http.createServer((req, res) => {
     try { const v = getSection(s); return send(res, 200, { json: JSON.stringify(v, null, 2), count: countOf(v), kind: s.kind, file: s.file }); }
     catch (e) { return send(res, 500, { error: e.message }); }
   }
+  // Valid options for enum-ish fields, so the forms can offer dropdowns.
+  if (req.method === 'GET' && url.pathname === '/api/data/options') {
+    let classes = [], items = [], monsters = [];
+    try { const c = readJson('content.json'); classes = c.classes || []; items = c.items || []; } catch { /* */ }
+    try { monsters = readJson('monsters.json').monsters || []; } catch { /* */ }
+    const uniq = (a) => [...new Set(a.filter(Boolean))];
+    const weaponTypes = uniq(items.map((i) => i.weapon_type));
+    const families = uniq(monsters.map((m) => m.family));
+    const STAT = ['str', 'mag', 'vit', 'spr', 'agi', 'lck'];
+    const ELEM = ['none', 'physical', 'fire', 'water', 'earth', 'dark', 'wind', 'poison', 'lightning', 'ice', 'holy', 'magic'];
+    const options = {
+      weapons: { multi: true, options: weaponTypes },
+      armor_weight: { options: ['light', 'medium', 'heavy'] },
+      primary: { options: STAT },
+      scales: { options: STAT },
+      slot: { options: ['weapon', 'head', 'body', 'shield', 'feet', 'accessory', 'consumable', 'material'] },
+      weapon_type: { options: weaponTypes },
+      family: { options: families },
+      element: { options: ELEM },
+      rank: { options: ['trash', 'elite', 'boss'] },
+      class: { options: uniq(classes.map((c) => c.id)) },
+      type: { options: ['physical', 'fire', 'ice', 'lightning', 'dark', 'holy', 'magic', 'heal', 'buff', 'debuff', 'utility', 'summon'] },
+      target: { options: ['one', 'all', 'self'] },
+    };
+    return send(res, 200, { options });
+  }
   if (req.method === 'GET' && url.pathname === '/api/data/template') {
     const s = sectionByKey(url.searchParams.get('section'));
     if (!s) return send(res, 404, { error: 'unknown section' });
@@ -393,7 +419,7 @@ function unlock(){
     if(!r.ok){ document.getElementById('loginMsg').textContent='Wrong password.'; return; }
     document.getElementById('loginCard').classList.add('hide');
     document.getElementById('app').classList.remove('hide');
-    tick(); tickLog(); loadSections(); setInterval(tick,2000); setInterval(tickLog,2000);
+    tick(); tickLog(); loadOptions().then(loadSections); setInterval(tick,2000); setInterval(tickLog,2000);
   });
 }
 function fmt(s){ if(!s) return '0s'; var m=Math.floor(s/60), h=Math.floor(m/60); if(h) return h+'h '+(m%60)+'m'; if(m) return m+'m '+(s%60)+'s'; return s+'s'; }
@@ -489,6 +515,28 @@ function readTraits(prefix){
   for(var i=0;i<rows.length;i++){ var k=rows[i].getAttribute('data-key'); var v=rows[i].querySelector('.traitval').value; if(k) o[k]=(v===''?0:Number(v)); }
   return o;
 }
+var OPTIONS={};
+function loadOptions(){ return fetch('/api/data/options',{headers:h()}).then(function(r){return r.json();}).then(function(d){ OPTIONS=d.options||{}; }).catch(function(){}); }
+// Single-choice dropdown (with the current value kept + a Custom… escape hatch).
+function enumSelect(id,val,opts){
+  var has=opts.indexOf(val)>=0, o='';
+  for(var i=0;i<opts.length;i++){ o+='<option value="'+esc(opts[i])+'"'+(opts[i]===val?' selected':'')+'>'+esc(opts[i])+'</option>'; }
+  if(!has && val!=='' && val!=null) o+='<option value="'+esc(val)+'" selected>'+esc(val)+'</option>';
+  o+='<option value="__custom">Custom…</option>';
+  return '<select id="'+id+'" onchange="enumCustom(this)">'+o+'</select>';
+}
+function enumCustom(sel){ if(sel.value==='__custom'){ var v=prompt('Enter a custom value:'); if(v){ var o=document.createElement('option'); o.value=v; o.textContent=v; o.selected=true; sel.add(o,sel.options[sel.options.length-1]); } else sel.selectedIndex=0; } }
+// Multi-choice chips (e.g. a class's weapons list).
+function _chip(val){ return '<span class="chip" data-val="'+esc(val)+'" style="display:inline-flex;gap:4px;align-items:center;background:#14241c;border:1px solid var(--line);border-radius:12px;padding:2px 8px;margin:2px">'+esc(val)+' <button type="button" class="danger" style="padding:0 5px" onclick="this.parentNode.remove()">×</button></span>'; }
+function multiWidget(prefix,field,arr,opts){
+  var chips=(arr||[]).map(function(v){return _chip(v);}).join('');
+  var o='<option value="">— add —</option>'; for(var i=0;i<opts.length;i++){ o+='<option value="'+esc(opts[i])+'">'+esc(opts[i])+'</option>'; } o+='<option value="__custom">Custom…</option>';
+  return '<div id="'+prefix+field+'_box" class="chipbox" style="border:1px solid var(--line);border-radius:6px;padding:6px;margin-bottom:4px;min-height:16px">'+chips+'</div>'+
+    '<div style="display:flex;gap:8px"><select id="'+prefix+field+'_sel">'+o+'</select><button type="button" onclick="addChip(\\''+prefix+'\\',\\''+field+'\\')">＋ Add</button></div>';
+}
+function addChip(prefix,field){ var sel=document.getElementById(prefix+field+'_sel'); var v=sel.value; if(!v)return; if(v==='__custom'){ v=prompt(field+' value:'); if(!v)return; v=v.trim(); if(!v)return; } var box=document.getElementById(prefix+field+'_box'); if(box.querySelector('[data-val="'+v+'"]')){ sel.value=''; return; } box.insertAdjacentHTML('beforeend',_chip(v)); sel.value=''; }
+function readChips(prefix,field){ var box=document.getElementById(prefix+field+'_box'); var out=[]; if(box) box.querySelectorAll('.chip').forEach(function(c){ out.push(c.getAttribute('data-val')); }); return out; }
+
 function fieldsHtml(obj, prefix){
   var meta=[], html='';
   Object.keys(obj).forEach(function(k){
@@ -497,6 +545,17 @@ function fieldsHtml(obj, prefix){
     if(k==='traits' && typ==='object' && !Array.isArray(v)){
       meta.push({k:k,typ:'traits'});
       html+='<label>traits (pick from the dropdown, edit the numbers)</label>'+traitsWidget(prefix,v);
+      return;
+    }
+    var opt=OPTIONS[k];
+    if(opt && opt.multi && Array.isArray(v)){
+      meta.push({k:k,typ:'multi'});
+      html+='<label>'+esc(k)+' (pick from the list, add as many as you want)</label>'+multiWidget(prefix,k,v,opt.options);
+      return;
+    }
+    if(opt && (typ==='string')){
+      meta.push({k:k,typ:'enum'});
+      html+='<label>'+esc(k)+req+'</label>'+enumSelect(prefix+k,v,opt.options);
       return;
     }
     meta.push({k:k,typ:typ});
@@ -512,6 +571,8 @@ function collectFields(prefix, meta){
   var entry={}, err='';
   meta.forEach(function(m){
     if(m.typ==='traits'){ entry[m.k]=readTraits(prefix); return; }
+    if(m.typ==='multi'){ entry[m.k]=readChips(prefix,m.k); return; }
+    if(m.typ==='enum'){ var es=document.getElementById(prefix+m.k); entry[m.k]=es?es.value:''; return; }
     var el=document.getElementById(prefix+m.k); if(!el)return;
     if(m.typ==='boolean') entry[m.k]=el.checked;
     else if(m.typ==='number') entry[m.k]=(el.value===''?0:Number(el.value));

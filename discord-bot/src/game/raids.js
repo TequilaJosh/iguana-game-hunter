@@ -40,7 +40,8 @@ export function raidOverlayState() {
       phase: r.phase,
       startsInMs: r.phase === 'lobby' ? Math.max(0, r.startsAt - Date.now()) : 0,
       tier: zone ? zone.tier : 1,
-      boss: { name: r.boss.name, emoji: r.boss.emoji || '🐉', hp: Math.max(0, r.hp), maxhp: r.maxhp },
+      boss: { name: r.boss.name, emoji: r.boss.emoji || '🐉', hp: Math.max(0, r.hp), maxhp: r.maxhp,
+        id: r.boss.id, family: r.boss.family, element: r.boss.element, tier: r.boss.tier, rank: r.boss.rank },
       raiders: [...r.parts.values()].slice(0, 16).map((p) => ({
         id: p.discordId, name: p.name, hp: Math.max(0, p.hp), maxhp: p.maxhp, downed: !!p.downed,
       })),

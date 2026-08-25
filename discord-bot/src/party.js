@@ -23,6 +23,8 @@ export function mountParty(app) {
             monster: f.monster.name, emoji: f.monster.emoji || '👹',
             mhp: Math.max(0, f.mhp), mmaxhp: f.mmaxhp,
             php: Math.max(0, f.php), pmaxhp: (f.pd && f.pd.maxhp) || f.php,
+            // Identity for the procedural monster sprite.
+            foe: { id: f.monster.id, family: f.monster.family, element: f.monster.element, tier: f.monster.tier, rank: f.monster.rank, name: f.monster.name },
           };
         }
       }

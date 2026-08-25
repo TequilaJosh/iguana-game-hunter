@@ -1,4 +1,5 @@
-import { EmbedBuilder } from 'discord.js';
+import { EmbedBuilder, AttachmentBuilder } from 'discord.js';
+import { monsterPng } from './monsterImage.js';
 import {
   RACE_LIST, CLASS_LIST, ZONE_LIST, RACES, CLASSES, ZONES, RARITIES, STAT_KEYS, ITEMS,
   skillsForClass,
@@ -127,11 +128,11 @@ function sheetEmbed(char) {
     .setFooter({ text: 'Adventure with tt adventure · gear up with tt inv / tt equip' });
 }
 
-function fightEmbed(fight, extraLog = []) {
+function fightEmbed(fight, extraLog = [], withImage = false) {
   const m = fight.monster;
   const log = [...fight.log, ...extraLog].slice(-7).join('\n') || 'The battle begins!';
   const rankTag = m.rank && m.rank !== 'trash' ? ` (${m.rank.toUpperCase()})` : '';
-  return new EmbedBuilder()
+  const e = new EmbedBuilder()
     .setColor(m.rank === 'boss' ? 0xd64f4f : m.rank === 'elite' ? 0x9a4fd6 : 0x3f7fd6)
     .setTitle(`⚔️ ${m.name}${rankTag}`)
     .setDescription(
@@ -140,6 +141,14 @@ function fightEmbed(fight, extraLog = []) {
       `${log}`
     )
     .setFooter({ text: 'tt attack · tt skill <name> · tt use · tt flee' });
+  if (withImage) e.setImage('attachment://m.png');
+  return e;
+}
+
+// A PNG attachment of the monster's sprite (or null if it can't be drawn).
+function monsterFile(fight) {
+  try { const buf = monsterPng(fight.monster.id); return buf ? new AttachmentBuilder(buf, { name: 'm.png' }) : null; }
+  catch { return null; }
 }
 
 // ── command handlers ──────────────────────────────────────────────────────────
@@ -315,11 +324,13 @@ async function cmdAdventure(msg, args) {
 
   // Discord: show the encounter and WAIT. The live auto-battle starts on their first
   // action (registered but not armed yet).
+  const file = monsterFile(fight);
   const sent = await msg.reply({
     content: '⚔️ **Type `tt attack` to begin!** (or `tt skill <name>` · `tt flee`)',
-    embeds: [fightEmbed(fight)],
+    embeds: [fightEmbed(fight, [], !!file)],
+    files: file ? [file] : [],
   });
-  autos.set(msg.author.id, { message: sent, char, timer: null });
+  autos.set(msg.author.id, { message: sent, char, timer: null, img: !!file });
 }
 
 async function cmdBoss(msg, args) {
@@ -343,8 +354,9 @@ async function cmdBoss(msg, args) {
   if (msg._auto && msg._respond) return startTimedFight(msg, char);
   if (msg._auto) return autoFinish(msg, char);
   if (msg._chat) return msg.reply({ embeds: [fightEmbed(fight)] });
-  const sent = await msg.reply({ content: '👑 **BOSS FIGHT!** Type `tt attack` to begin!', embeds: [fightEmbed(fight)] });
-  autos.set(msg.author.id, { message: sent, char, timer: null });
+  const bfile = monsterFile(fight);
+  const sent = await msg.reply({ content: '👑 **BOSS FIGHT!** Type `tt attack` to begin!', embeds: [fightEmbed(fight, [], !!bfile)], files: bfile ? [bfile] : [] });
+  autos.set(msg.author.id, { message: sent, char, timer: null, img: !!bfile });
 }
 
 // Resolve the channel a manual raid should announce/refresh in.
@@ -442,11 +454,13 @@ async function autoTick(uid) {
 async function settleAuto(uid, fight, res, resume) {
   const a = autos.get(uid); if (!a) return;
   const char = a.char;
-  if (res.win) { stopAuto(uid); const reward = resolveWin(fight, char); questProgress(char, 'win', 1); endFight(uid); savePlayer(uid, char); await a.message.edit({ content: '', embeds: [victoryEmbed(fight, reward, char)] }).catch(() => {}); return; }
-  if (res.lose) { stopAuto(uid); const { lost } = resolveLoss(char); endFight(uid); savePlayer(uid, char); await a.message.edit({ content: '', embeds: [defeatEmbed(fight, lost)] }).catch(() => {}); return; }
-  if (res.fled) { stopAuto(uid); char.hp = fight.php; char.mp = fight.pmp; endFight(uid); savePlayer(uid, char); await a.message.edit({ content: '🏃 You fled the fight.', embeds: [] }).catch(() => {}); return; }
+  // Clear the sprite attachment on the terminal frames so it doesn't orphan below the result.
+  const drop = a.img ? { attachments: [] } : {};
+  if (res.win) { stopAuto(uid); const reward = resolveWin(fight, char); questProgress(char, 'win', 1); endFight(uid); savePlayer(uid, char); await a.message.edit({ content: '', embeds: [victoryEmbed(fight, reward, char)], ...drop }).catch(() => {}); return; }
+  if (res.lose) { stopAuto(uid); const { lost } = resolveLoss(char); endFight(uid); savePlayer(uid, char); await a.message.edit({ content: '', embeds: [defeatEmbed(fight, lost)], ...drop }).catch(() => {}); return; }
+  if (res.fled) { stopAuto(uid); char.hp = fight.php; char.mp = fight.pmp; endFight(uid); savePlayer(uid, char); await a.message.edit({ content: '🏃 You fled the fight.', embeds: [], ...drop }).catch(() => {}); return; }
   const foot = resume ? '' : '\n⏸️ Paused — type `tt attack` to resume auto-attacking.';
-  await a.message.edit({ content: foot, embeds: [fightEmbed(fight)] }).catch(() => {});
+  await a.message.edit({ content: foot, embeds: [fightEmbed(fight, [], a.img)] }).catch(() => {});
   if (resume) arm(uid);
 }
 

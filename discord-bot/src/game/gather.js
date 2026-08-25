@@ -71,7 +71,10 @@ export function gather(char, command) {
 
   const drop = weightedPick(drops);
   const mat = MATERIALS[drop.material];
-  let qty = drop.minQuantity + Math.floor(Math.random() * (drop.maxQuantity - drop.minQuantity + 1));
+  // Base gathering yield is 5, plus the drop's own spread for a little variance.
+  const BASE_YIELD = 5;
+  const spread = Math.max(0, drop.maxQuantity - drop.minQuantity);
+  let qty = BASE_YIELD + Math.floor(Math.random() * (spread + 1));
 
   const worker = ensureWorker(char);
   if (worker.level >= 20) qty += 1; // Worker milestone: +1 base yield at 20+

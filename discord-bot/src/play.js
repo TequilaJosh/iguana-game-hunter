@@ -7,7 +7,7 @@ import { getPlayer, savePlayer, allPlayers } from './game/store.js';
 import { ensureQuest } from './game/quests.js';
 import { merchantSale } from './game/professions.js';
 import { CLASSES, RACES, CLASS_LIST, RACE_LIST, ZONE_LIST, STAT_KEYS, skillsForClass, ITEMS } from './game/content.js';
-import { derive, xpToNext, shopInventory, sellValue, gearScore, isZoneUnlocked } from './game/engine.js';
+import { derive, xpToNext, shopInventory, sellValue, gearScore, isZoneUnlocked, TRAIT_PICK, availableTraitPicks, nextTraitLevel, combinedTraits } from './game/engine.js';
 import { getFight, addItem } from './game/fights.js';
 import { PROFESSIONS, getProf, profXpToNext } from './game/professions.js';
 import { WORKER_COMMANDS } from './game/gather.js';
@@ -168,6 +168,11 @@ function buildState(discordId) {
     })(),
     professions: PROF_KEYS.map((k) => ({ name: PROFESSIONS[k].name, emoji: PROFESSIONS[k].emoji, level: (c.professions?.[k]?.level) || 1 }))
       .filter((p) => p.level > 1 || p.name === 'Worker'),
+    traits: {
+      picks: availableTraitPicks(c), next: nextTraitLevel(c),
+      chosen: c.traits || {}, merged: combinedTraits(c),
+      catalog: Object.entries(TRAIT_PICK).map(([k, d]) => ({ key: k, label: d.label, mult: !!d.mult })),
+    },
     recipes: { crafter: recipesFor(c, 'crafter'), alchemist: recipesFor(c, 'alchemist') },
     craftProg: { crafter: profProg(c, 'crafter'), alchemist: profProg(c, 'alchemist'), enchanter: profProg(c, 'enchanter') },
     lootbox: { boxes: getBoxes(c), price: boxPrice(c) },
@@ -928,6 +933,7 @@ function bodyMore(){
   if(MORE_VIEW==='skills') return backBar('✨ Skills')+skillsPanel();
   if(MORE_VIEW==='leaderboard') return backBar('🏆 Leaderboard')+leaderboardPanel();
   if(MORE_VIEW==='quest') return backBar('📜 Quest')+questPanel();
+  if(MORE_VIEW==='traits') return backBar('🌟 Traits')+traitsPanel();
 
   var lb=S.lootbox||{boxes:0,price:0};
   var box='<h3>🎁 Mystery Boxes</h3>'+
@@ -942,6 +948,7 @@ function bodyMore(){
       '<button class="sm" title="Your daily quest and reward." onclick="moreView(\\'quest\\')">📜 Quest'+qtag+'</button>'+
       '<button class="sm" title="See the top heroes." onclick="moreView(\\'leaderboard\\')">🏆 Leaderboard</button>'+
       '<button class="sm" title="Your class skills and what unlocks next." onclick="moreView(\\'skills\\')">✨ Skills</button>'+
+      '<button class="sm" title="Spend trait picks earned every 4 levels." onclick="moreView(\\'traits\\')">🌟 Traits'+((S.traits&&S.traits.picks)?' <span class="rstat g">'+S.traits.picks+'</span>':'')+'</button>'+
       actBtn("⭐ Ascend","ascend","sm",false,"Prestige at high level: reset for a permanent +2% stats each time.")+
     '</div>';
   return box+other+
@@ -958,6 +965,27 @@ function skillsPanel(){
   var locked=sk.locked.length?('<h3>🔒 Unlocks next</h3><div class="chips">'+
     sk.locked.map(function(l){return '<span class="chip">'+esc(l.name)+' <span class="pill">Lv '+l.level+'</span></span>';}).join('')+'</div>'):'';
   return '<div class="muted" style="margin-bottom:6px">'+esc(sk.className)+' · Lv '+S.level+' — used in combat.</div><div class="recipeList">'+rows+'</div>'+locked;
+}
+
+function traitsPanel(){
+  var t=S.traits||{picks:0,next:4,chosen:{},merged:{},catalog:[]};
+  var head=t.picks
+    ? '<div class="rstat g" style="margin-bottom:8px">🌟 '+t.picks+' trait pick'+(t.picks===1?'':'s')+' available — click one to spend (pick again to boost).</div>'
+    : '<div class="muted" style="margin-bottom:8px">No picks right now — next at level '+t.next+'. You earn one every 4 levels.</div>';
+  // Current traits summary
+  var have=Object.keys(t.chosen||{}).filter(function(k){return t.chosen[k];});
+  var mine=have.length? ('<div class="chips" style="margin-bottom:10px">'+have.map(function(k){
+      var v=t.merged[k]; var def=(t.catalog.find(function(c){return c.key===k;})||{});
+      var disp=def.mult?('×'+v):('+'+v+(k.indexOf('resist')>=0||k.indexOf('bonus')>=0?'%':''));
+      return '<span class="chip">'+esc(k)+' '+disp+' <span class="pill">'+t.chosen[k]+'×</span></span>';
+    }).join('')+'</div>') : '<div class="muted" style="margin-bottom:10px">No traits chosen yet.</div>';
+  // Pickable buttons
+  var btns=t.catalog.map(function(c){
+    var cur=t.chosen[c.key]||0;
+    return '<button class="sm" '+((BUSY||!t.picks)?'disabled':'')+' title="'+esc(c.label)+'" onclick="cmd(\\'trait '+c.key+'\\')">'+esc(c.key)+(cur?' <span class="pill">'+cur+'×</span>':'')+'</button>';
+  }).join('');
+  return head+'<h3>Your traits</h3>'+mine+'<h3>Choose a trait</h3><div class="btns">'+btns+'</div>'+
+    '<div class="muted" style="margin-top:8px">Picking the same trait again makes it stronger.</div>';
 }
 
 function leaderboardPanel(){

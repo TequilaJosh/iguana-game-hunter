@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { config } from './config.js';
 import { getPlayer, savePlayer, allPlayers, deletePlayer } from './game/store.js';
 import { ITEMS, RARITIES, ZONE_LIST, CLASS_LIST } from './game/content.js';
-import { makeGear } from './game/engine.js';
+import { makeGear, TRAIT_PICK, availableTraitPicks } from './game/engine.js';
 import { giveStack } from './game/invutil.js';
 import { PROFESSIONS } from './game/professions.js';
 import { log } from './logger.js';
@@ -33,6 +33,7 @@ function catalog() {
     zones: ZONE_LIST.map((z) => ({ id: z.id, name: z.name })),
     slots: EQUIP_SLOTS,
     professions: PROF_KEYS.map((k) => ({ key: k, name: PROFESSIONS[k].name, emoji: PROFESSIONS[k].emoji })),
+    traits: Object.entries(TRAIT_PICK).map(([k, d]) => ({ key: k, label: d.label })),
   };
 }
 
@@ -87,6 +88,7 @@ export function mountAdmin(app) {
       inventory: summarizeInventory(c),
       equipped: summarizeEquipped(c),
       professions: c.professions || {},
+      traits: c.traits || {}, traitPicksUsed: c.traitPicksUsed || 0, traitPicksAvail: availableTraitPicks(c),
     });
   });
 
@@ -115,6 +117,12 @@ export function mountAdmin(app) {
         }
       }
     }
+    if (b.traits && typeof b.traits === 'object') {
+      const t = {};
+      for (const [k, n] of Object.entries(b.traits)) if (TRAIT_PICK[k] && +n > 0) t[k] = Math.round(+n);
+      c.traits = t;
+    }
+    if (b.traitPicksUsed != null && Number.isFinite(+b.traitPicksUsed)) c.traitPicksUsed = Math.max(0, Math.round(+b.traitPicksUsed));
     savePlayer(req.params.id, c);
     log.info(`Admin edited ${c.name} (${req.params.id}).`);
     res.json({ ok: true });
@@ -271,6 +279,9 @@ const ADMIN_HTML = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
       <div class="zones" id="zones"></div>
       <label style="margin-top:10px">Profession levels</label>
       <div class="row" id="profs"></div>
+      <label style="margin-top:10px">Traits <span id="traitAvail" class="pill"></span> · picks used <input type="number" id="traitPicksUsed" min="0" style="width:64px"/></label>
+      <div id="traitRows"></div>
+      <div class="row" style="margin-top:4px"><select id="traitSel"></select><button type="button" onclick="addTraitRow()">＋ Add trait</button></div>
       <div class="row" style="margin-top:12px"><button onclick="saveStats()">Save changes</button></div>
       <div class="status" id="statsStatus"></div>
     </div>
@@ -365,9 +376,22 @@ async function loadPlayer(){
       var lvl=(c.professions&&c.professions[p.key]&&c.professions[p.key].level)||1;
       return '<div><label>'+esc(p.emoji)+' '+esc(p.name)+'</label><input type="number" id="prof_'+esc(p.key)+'" value="'+lvl+'" min="1" style="width:70px"/></div>';
     }).join("");
+    document.getElementById("traitPicksUsed").value=c.traitPicksUsed||0;
+    document.getElementById("traitAvail").textContent=(c.traitPicksAvail||0)+" available";
+    document.getElementById("traitSel").innerHTML='<option value="">— add a trait —</option>'+(CAT.traits||[]).map(function(t){return '<option value="'+esc(t.key)+'" title="'+esc(t.label)+'">'+esc(t.key)+'</option>';}).join("");
+    var tr=c.traits||{};document.getElementById("traitRows").innerHTML=Object.keys(tr).map(function(k){return traitRowHtml(k,tr[k]);}).join("");
     renderEquipped(c.equipped);
     renderInv(c.inventory);
   }catch(e){ st.textContent="⚠ "+e.message; }
+}
+function traitRowHtml(key,count){
+  return '<div class="traitrow" data-key="'+esc(key)+'" style="display:flex;gap:8px;align-items:center;margin:3px 0"><span style="min-width:160px">'+esc(key)+'</span><input type="number" class="traitcount" min="1" value="'+(+count||1)+'" style="width:70px"/> <span style="color:var(--dim)">× picked</span><button class="danger" type="button" onclick="this.parentNode.remove()">×</button></div>';
+}
+function addTraitRow(){
+  var sel=document.getElementById("traitSel");var k=sel.value;if(!k)return;
+  var box=document.getElementById("traitRows");
+  if(box.querySelector('[data-key="'+k+'"]')){sel.value="";return;}
+  box.insertAdjacentHTML("beforeend",traitRowHtml(k,1));sel.value="";
 }
 
 var EQ=[];
@@ -393,12 +417,14 @@ async function saveStats(){
   var st=document.getElementById("statsStatus");
   var cleared={};document.querySelectorAll(".zc").forEach(function(cb){if(cb.checked)cleared[cb.value]=true;});
   var professions={};(CAT.professions||[]).forEach(function(p){var el=document.getElementById("prof_"+p.key);if(el)professions[p.key]={level:+el.value};});
+  var traits={};document.querySelectorAll("#traitRows .traitrow").forEach(function(r){var k=r.getAttribute("data-key");var n=+r.querySelector(".traitcount").value;if(k&&n>0)traits[k]=Math.round(n);});
   try{
     await api(purl(),{method:"POST",body:JSON.stringify({
       name:document.getElementById("name").value,
       level:+document.getElementById("level").value,xp:+document.getElementById("xp").value,
       gold:+document.getElementById("gold").value,stamina:+document.getElementById("stamina").value,
-      ascension:+document.getElementById("ascension").value,cleared:cleared,professions:professions})});
+      ascension:+document.getElementById("ascension").value,cleared:cleared,professions:professions,
+      traits:traits,traitPicksUsed:+document.getElementById("traitPicksUsed").value})});
     st.textContent="✓ Saved.";
     var opt=document.getElementById("player").selectedOptions[0];
     if(opt) opt.textContent=document.getElementById("name").value+" — Lv "+document.getElementById("level").value;

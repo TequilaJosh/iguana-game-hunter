@@ -8,6 +8,7 @@ import {
 import {
   derive, xpToNext, startingKit, gearScore, clamp, shopInventory, sellValue, makeGear,
   bossForZone, isZoneUnlocked, highestUnlockedZone, currentBossZone,
+  TRAIT_PICK, resolveTraitKey, availableTraitPicks, nextTraitLevel, combinedTraits,
 } from './engine.js';
 import { getPlayer, savePlayer, deletePlayer, allPlayers, nextStaminaMs, MAX_STAMINA } from './store.js';
 import {
@@ -130,6 +131,7 @@ function sheetEmbed(char, withImage = false) {
       { name: 'Professions', value: profsSummary(char), inline: true },
       { name: 'Power', value: `ATK ~${Math.round(pd.st[pd.scales] * 1.3 + pd.wpow * 1.4)} · DEF ${pd.def} · RES ${pd.res}`, inline: true },
       { name: 'Stats', value: stats },
+      { name: 'Traits', value: traitLines(char) + (availableTraitPicks(char) ? `\n🌟 **${availableTraitPicks(char)} trait pick(s) available** — \`tt trait\`` : '') },
       { name: 'Equipped', value: gear },
     )
     .setFooter({ text: 'Adventure with tt adventure · gear up with tt inv / tt equip' });
@@ -289,6 +291,43 @@ function cmdSkills(msg) {
   return msg.reply(out);
 }
 
+function traitLines(char) {
+  const picks = char.traits || {};
+  const keys = Object.keys(picks).filter((k) => picks[k]);
+  if (!keys.length) return '_none yet_';
+  const merged = combinedTraits(char);
+  return keys.map((k) => {
+    const d = TRAIT_PICK[k]; const v = merged[k];
+    const disp = d && d.mult ? `×${v}` : `+${v}${k.endsWith('_resist') || k.includes('bonus') ? '%' : ''}`;
+    return `**${k}** ${disp} _(${picks[k]}× picked)_`;
+  }).join('\n');
+}
+
+function cmdTrait(msg, args) {
+  const char = getPlayer(msg.author.id);
+  if (!char) return msg.reply('No hero yet — `tt create` first.');
+  const avail = availableTraitPicks(char);
+  if (!args[0]) {
+    const cat = Object.entries(TRAIT_PICK).map(([k, d]) => `\`${k}\` — ${d.label}`).join('\n');
+    return msg.reply(
+      '🌟 **Traits** — earn a pick every 4 levels; re-pick a trait to boost it.\n' +
+      `Picks available: **${avail}**${avail ? '' : ` (next at level ${nextTraitLevel(char)})`}\n\n` +
+      `**Your traits:**\n${traitLines(char)}\n\n` +
+      (avail ? `Choose with \`tt trait <name>\`:\n${cat}` : 'Level up to earn more picks.')
+    );
+  }
+  if (avail <= 0) return msg.reply(`No trait picks available — next at level **${nextTraitLevel(char)}**.`);
+  const key = resolveTraitKey(args.join(' '));
+  if (!key) return msg.reply(`Unknown trait "${args.join(' ')}". Options: ${Object.keys(TRAIT_PICK).join(', ')}.`);
+  char.traits = char.traits || {};
+  char.traits[key] = (char.traits[key] || 0) + 1;
+  char.traitPicksUsed = (char.traitPicksUsed || 0) + 1;
+  savePlayer(msg.author.id, char);
+  const merged = combinedTraits(char); const d = TRAIT_PICK[key];
+  const disp = d.mult ? `×${merged[key]}` : `+${merged[key]}${key.endsWith('_resist') || key.includes('bonus') ? '%' : ''}`;
+  return msg.reply(`🌟 **${key}** is now **${disp}** _(${char.traits[key]}× picked)_. Trait picks left: **${availableTraitPicks(char)}**.`);
+}
+
 function cmdZones(msg) {
   const char = getPlayer(msg.author.id);
   const lvl = char?.level ?? 1;
@@ -437,6 +476,7 @@ function victoryEmbed(fight, reward, char) {
     return `${RARITY_EMOJI[i.rarity] || '•'} ${i.name}${i.qty > 1 ? ` x${i.qty}` : ''}${stats ? ` — ${stats}` : ''}`;
   }).join('\n');
   if (reward.levels.length) desc += `\n\n🎉 **LEVEL UP!** You’re now level **${char.level}** (fully healed).`;
+  if (reward.levels.length && availableTraitPicks(char) > 0) desc += `\n🌟 **Trait pick available!** Use \`tt trait\` to choose (you have ${availableTraitPicks(char)}).`;
   if (reward.clearedBoss) desc += reward.unlocked
     ? `\n\n🗺️ **BOSS DEFEATED!** New zone unlocked: **${reward.unlocked}**!`
     : `\n\n👑 **BOSS DEFEATED!** You've conquered the final zone!`;
@@ -1159,6 +1199,7 @@ const COMMANDS = {
   ascend: cmdAscend, ascension: cmdAscend, prestige: cmdAscend,
   attack: cmdAttack, a: cmdAttack,
   skill: cmdSkill, cast: cmdSkill,
+  trait: cmdTrait, traits: cmdTrait, traitpick: cmdTrait, perk: cmdTrait,
   use: cmdUse, potion: cmdUse,
   flee: cmdFlee, run: cmdFlee,
   status: cmdStatus, fight: cmdStatus,

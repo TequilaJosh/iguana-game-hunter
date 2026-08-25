@@ -8,6 +8,57 @@ const rnd = (a, b) => a + Math.random() * (b - a);
 const randInt = (lo, hi) => lo + Math.floor(Math.random() * (hi - lo + 1));
 export const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 
+// ── Character-chosen traits (one pick every 4 levels; re-picking stacks) ──────
+// Each entry: per = value added per pick; mult = it's a multiplier trait (base 1).
+// Aliases let players type "crit", "hp", "fire", etc.
+export const TRAIT_PICK = {
+  hp_mod:        { per: 0.05, mult: true, label: 'Max HP +5% each', alias: ['hp', 'health'] },
+  mp_mod:        { per: 0.05, mult: true, label: 'Max MP +5% each', alias: ['mp', 'mana'] },
+  xp_mod:        { per: 0.05, mult: true, label: 'XP gain +5% each', alias: ['xp'] },
+  heal_received: { per: 0.05, mult: true, label: 'Healing +5% each', alias: ['heal', 'healing'] },
+  crit_bonus:    { per: 3, label: 'Crit chance +3% each', alias: ['crit'] },
+  flee_bonus:    { per: 5, label: 'Flee chance +5% each', alias: ['flee'] },
+  fire_resist:      { per: 8, label: 'Fire resist +8% each', alias: ['fire'] },
+  ice_resist:       { per: 8, label: 'Ice resist +8% each', alias: ['ice'] },
+  lightning_resist: { per: 8, label: 'Lightning resist +8% each', alias: ['lightning', 'bolt'] },
+  water_resist:     { per: 8, label: 'Water resist +8% each', alias: ['water'] },
+  earth_resist:     { per: 8, label: 'Earth resist +8% each', alias: ['earth'] },
+  wind_resist:      { per: 8, label: 'Wind resist +8% each', alias: ['wind'] },
+  poison_resist:    { per: 8, label: 'Poison resist +8% each', alias: ['poison'] },
+  dark_resist:      { per: 8, label: 'Dark resist +8% each', alias: ['dark'] },
+  holy_resist:      { per: 8, label: 'Holy resist +8% each', alias: ['holy'] },
+};
+
+// Resolve a user-typed trait name/alias to a canonical key, or null.
+export function resolveTraitKey(input) {
+  const q = String(input || '').toLowerCase().trim().replace(/\s+/g, '_');
+  if (TRAIT_PICK[q]) return q;
+  for (const [k, def] of Object.entries(TRAIT_PICK)) if ((def.alias || []).includes(q)) return k;
+  return null;
+}
+
+// Trait picks earned (1 per 4 levels) minus spent.
+export function availableTraitPicks(char) {
+  return Math.max(0, Math.floor((char.level || 1) / 4) - (char.traitPicksUsed || 0));
+}
+export function nextTraitLevel(char) {
+  return (Math.floor((char.level || 1) / 4) + 1) * 4;
+}
+
+// Merge the race's static traits with the character's chosen picks into one map,
+// in the units combat expects (multipliers vs additive %).
+export function combinedTraits(char) {
+  const out = { ...(RACES[char.race]?.traits || {}) };
+  const picks = char.traits || {};
+  for (const [k, n] of Object.entries(picks)) {
+    const def = TRAIT_PICK[k];
+    if (!def || !n) continue;
+    const base = out[k] ?? (def.mult ? 1 : 0);
+    out[k] = Math.round((base + def.per * n) * 1000) / 1000;
+  }
+  return out;
+}
+
 // ── Character stats (ported from sim.build_player) ──────────────────────────
 export function derive(char) {
   const c = CLASSES[char.cls];
@@ -43,8 +94,8 @@ export function derive(char) {
   if (asc) for (const k of STAT_KEYS) st[k] = Math.round(st[k] * (1 + 0.02 * asc));
   def += Math.round(st.vit * 0.8);
   res += Math.round(st.spr * 0.8);
-  const traits = r.traits || {};
-  critBonus += traits.crit_bonus || 0;      // race crit trait
+  const traits = combinedTraits(char);      // race traits + the character's picks
+  critBonus += traits.crit_bonus || 0;      // crit trait (race + picks)
   const maxhp = Math.round((60 + st.vit * 6.5 + char.level * 5) * (traits.hp_mod ?? 1)) + hpBonus;
   const maxmp = Math.round((15 + st.spr * 3 + char.level * 2) * (traits.mp_mod ?? 1)) + mpBonus;
   return { st, wpow, def, res, maxhp, maxmp, critBonus, lifesteal, elemDmg, regen, traits, scales: c.primary };

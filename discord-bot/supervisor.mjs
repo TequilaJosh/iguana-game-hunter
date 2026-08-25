@@ -210,6 +210,32 @@ const server = http.createServer((req, res) => {
     });
     return;
   }
+  // Append ONE new entry (from the add-form) to a list section.
+  if (req.method === 'POST' && url.pathname === '/api/data/add') {
+    readBody(req, (body) => {
+      if (!body) return send(res, 400, { error: 'Bad request body.' });
+      const s = sectionByKey(body.section);
+      if (!s || s.kind !== 'array') return send(res, 400, { error: 'Add works only on list sections.' });
+      const entry = body.entry;
+      if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return send(res, 400, { error: 'Entry must be an object.' });
+      let arr;
+      try { arr = getSection(s); } catch (e) { return send(res, 500, { error: e.message }); }
+      // What identifier does this section use? Ask the template, so a missing id is
+      // still rejected even if the submitted entry omitted the field entirely.
+      const tmpl = templateFor(s);
+      const idf = ('id' in tmpl) ? 'id' : ('key' in tmpl) ? 'key' : ('id' in entry) ? 'id' : ('key' in entry) ? 'key' : null;
+      if (idf) {
+        if (!entry[idf]) return send(res, 400, { error: `${idf} is required.` });
+        if (arr.some((x) => x && x[idf] === entry[idf])) return send(res, 409, { error: `${idf} "${entry[idf]}" already exists — pick a unique one.` });
+      }
+      arr.push(entry);
+      try { writeSection(s, arr); } catch (e) { return send(res, 400, { error: e.message }); }
+      pushLog(`＋ added ${idf ? entry[idf] : 'entry'} to ${s.key} (${arr.length} total)`);
+      if (body.restart) restartBot();
+      return send(res, 200, { ok: true, count: arr.length, restarted: !!body.restart });
+    });
+    return;
+  }
 
   send(res, 404, { error: 'not found' });
 });
@@ -291,8 +317,9 @@ const PAGE = `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"/>
           <select id="ds" onchange="loadSection()"></select>
         </div>
         <button onclick="loadSection()">↻ Reload</button>
-        <button onclick="addTemplate()">＋ Add entry</button>
+        <button class="amber" onclick="openAddForm()">＋ Add entry (form)</button>
       </div>
+      <div id="addform" class="hide" style="margin-top:12px;border:1px solid var(--amber);border-radius:8px;padding:12px"></div>
       <label style="margin-top:10px">JSON <span id="dcount" class="k"></span></label>
       <textarea id="djson" spellcheck="false" style="width:100%;height:360px;background:#08110b;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:10px;font-family:Consolas,'Courier New',monospace;font-size:12px;white-space:pre;overflow:auto"></textarea>
       <div class="row" style="margin-top:10px">
@@ -366,15 +393,50 @@ function validateJson(){
   try{ JSON.parse(document.getElementById('djson').value); document.getElementById('dmsg').textContent='✓ Valid JSON.'; return true; }
   catch(e){ document.getElementById('dmsg').textContent='✗ '+e.message; return false; }
 }
-function addTemplate(){
+function esc(s){ return String(s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+// Build a labelled form — one control per field of the section — for adding a new entry.
+function openAddForm(){
   var key=document.getElementById('ds').value;
+  var box=document.getElementById('addform');
   fetch('/api/data/template?section='+encodeURIComponent(key),{headers:h()}).then(function(r){return r.json();}).then(function(d){
-    var ta=document.getElementById('djson'); var arr;
-    try{ arr=JSON.parse(ta.value); }catch(e){ document.getElementById('dmsg').textContent='Fix JSON first: '+e.message; return; }
-    if(!Array.isArray(arr)){ document.getElementById('dmsg').textContent='Add-entry only works on list sections.'; return; }
-    arr.push(d.template||{}); ta.value=JSON.stringify(arr,null,2);
-    ta.scrollTop=ta.scrollHeight; document.getElementById('dmsg').textContent='＋ New entry appended at the bottom — edit its fields (esp. id/name), then Save.';
+    var t=d.template||{}; var keys=Object.keys(t);
+    if(!keys.length){ box.innerHTML='<p class="sub">This section has no add-form (edit its JSON directly below).</p>'; box.classList.remove('hide'); return; }
+    var meta=[];
+    var html='<h2 style="margin:0 0 8px">＋ New '+esc(key.replace(/s$/,''))+'</h2>';
+    keys.forEach(function(k){
+      var v=t[k]; var typ=(v===null?'string':typeof v); meta.push({k:k,typ:typ});
+      var id='af_'+k; var req=(k==='id'||k==='key'||k==='name')?' *':'';
+      html+='<label>'+esc(k)+req+'</label>';
+      if(typ==='boolean') html+='<input type="checkbox" id="'+id+'"'+(v?' checked':'')+'/>';
+      else if(typ==='number') html+='<input type="number" step="any" id="'+id+'" value="'+esc(v)+'"/>';
+      else if(typ==='object') html+='<textarea id="'+id+'" style="width:100%;height:64px;background:#08110b;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px;font-family:Consolas,monospace;font-size:12px">'+esc(JSON.stringify(v))+'</textarea>';
+      else html+='<input type="text" id="'+id+'" value="'+esc(v)+'" style="width:100%"/>';
+    });
+    html+='<div class="row" style="margin-top:12px"><button class="amber" onclick="submitAdd(false)">Add</button><button class="amber" onclick="submitAdd(true)">Add &amp; Restart</button><button onclick="document.getElementById(\\'addform\\').classList.add(\\'hide\\')">Cancel</button></div><div class="msg" id="afmsg"></div>';
+    box.innerHTML=html; box.classList.remove('hide');
+    box.setAttribute('data-meta',JSON.stringify(meta));
+    box.scrollIntoView({behavior:'smooth',block:'nearest'});
   });
+}
+function submitAdd(restart){
+  var box=document.getElementById('addform'); var meta=JSON.parse(box.getAttribute('data-meta')||'[]');
+  var entry={}, err='';
+  meta.forEach(function(m){ var el=document.getElementById('af_'+m.k); if(!el)return;
+    if(m.typ==='boolean') entry[m.k]=el.checked;
+    else if(m.typ==='number') entry[m.k]=(el.value===''?0:Number(el.value));
+    else if(m.typ==='object'){ try{ entry[m.k]=JSON.parse(el.value); }catch(e){ if(!err) err='Field "'+m.k+'" must be valid JSON — '+e.message; } }
+    else entry[m.k]=el.value;
+  });
+  var msg=document.getElementById('afmsg');
+  if(err){ msg.textContent='✗ '+err; return; }
+  msg.textContent='Adding…';
+  fetch('/api/data/add',{method:'POST',headers:Object.assign({'Content-Type':'application/json'},h()),body:JSON.stringify({section:document.getElementById('ds').value,entry:entry,restart:!!restart})})
+    .then(function(r){return r.json();}).then(function(d){
+      if(d.error){ msg.textContent='✗ '+d.error; return; }
+      msg.textContent='✓ Added — '+d.count+' total'+(d.restarted?' — bot restarting…':' — Restart to apply.');
+      loadSection(); loadSections();
+      setTimeout(function(){ box.classList.add('hide'); },1200);
+    }).catch(function(){ msg.textContent='Add failed.'; });
 }
 function saveData(restart){
   if(!validateJson()) return;

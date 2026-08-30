@@ -1,5 +1,26 @@
 [
-  { "key": "hollow_green", "name": "Hollow Green", "number": 1, "minLevel": 1, "maxLevel": 5, "gatherTier": 1 },
-  { "key": "mossvault_mine", "name": "Mossvault Mine", "number": 2, "minLevel": 5, "maxLevel": 10, "gatherTier": 1 },
-  { "key": "saltbrook_shore", "name": "Saltbrook Shore", "number": 3, "minLevel": 10, "maxLevel": 15, "gatherTier": 2 }
+  {
+    "key": "hollow_green",
+    "name": "Hollow Green",
+    "number": 1,
+    "minLevel": 1,
+    "maxLevel": 5,
+    "gatherTier": 1
+  },
+  {
+    "key": "mossvault_mine",
+    "name": "Mossvault Mine",
+    "number": 2,
+    "minLevel": 5,
+    "maxLevel": 10,
+    "gatherTier": 2
+  },
+  {
+    "key": "saltbrook_shore",
+    "name": "Saltbrook Shore",
+    "number": 3,
+    "minLevel": 10,
+    "maxLevel": 15,
+    "gatherTier": 2
+  }
 ]

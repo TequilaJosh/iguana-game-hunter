@@ -201,10 +201,12 @@
     padding: 4px 6px; font-size: 12px; box-sizing: border-box;
   }
   #editbar .ebsplit { border-top: 1px solid #2e4a30; margin-top: 10px; padding-top: 8px; }
+  #editbar #ebElems .ebElemRow { display: flex; align-items: center; gap: 6px; margin: 4px 0; }
   #editbar #ebElems label {
-    display: flex; align-items: center; gap: 6px; margin: 4px 0;
+    display: flex; align-items: center; gap: 6px; flex: 1 1 auto; min-width: 0;
     color: #e8e0c4; font-size: 12px; cursor: pointer;
   }
+  #editbar #ebElems .ebElemRst { padding: 1px 7px; flex: 0 0 auto; }
   #editbar #ebElems input { accent-color: #7cc44a; }
   #editbar .prow { display: flex; gap: 5px; }
   #editbar .prow input { flex: 1 1 auto; min-width: 0; }
@@ -1783,6 +1785,7 @@
     // Element on/off checkboxes (add or remove blocks from the overlay).
     const elemsBox = document.getElementById("ebElems");
     for (const k of ELEMENTS) {
+      const row = document.createElement("div"); row.className = "ebElemRow";
       const lab = document.createElement("label");
       const cb = document.createElement("input");
       cb.type = "checkbox";
@@ -1796,7 +1799,22 @@
       });
       lab.appendChild(cb);
       lab.appendChild(document.createTextNode(ELEMENT_NAMES[k]));
-      elemsBox.appendChild(lab);
+      // Per-element reset: restore just this element's position & size to the default.
+      const rst = document.createElement("button");
+      rst.className = "ebElemRst"; rst.textContent = "↺";
+      rst.title = "Reset " + ELEMENT_NAMES[k] + " to its default position & size";
+      rst.addEventListener("click", (function (key) {
+        return function () {
+          const d = DEFAULT_LAYOUT[key]; if (!d) return;
+          layout[key].x = d.x; layout[key].y = d.y; layout[key].w = d.w; layout[key].h = d.h;
+          applyBox(key);
+          if (selEl === key) selectEl(key);
+          scheduleSave();
+          flashSaved("Reset " + ELEMENT_NAMES[key] + " position");
+        };
+      })(k));
+      row.appendChild(lab); row.appendChild(rst);
+      elemsBox.appendChild(row);
     }
 
     document.getElementById("ebPresetSave").addEventListener("click", savePresetClick);

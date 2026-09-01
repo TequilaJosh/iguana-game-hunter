@@ -950,18 +950,29 @@ function cmdGather(msg, args, command) {
 function showRecipes(msg, char, prof, verb) {
   const recipes = listRecipes(prof);
   const lvl = getProf(char, prof).level;
-  const lines = recipes.map((r, i) => {
-    const locked = lvl < r.level;
-    const ready = !locked && hasMats(char, r.inputs);
-    const tag = locked ? ` 🔒Lv${r.level}` : ready ? ' ✅' : '';
-    return `\`${i + 1}\` ${recipeName(r)} — ${inputsLine(char, r)}${tag}`;
+  // There can be hundreds of recipes; a Discord message caps at 2000 chars. Show the
+  // relevant ones (unlocked + a few upcoming), keeping each recipe's REAL number so
+  // `tt craft <#>` still targets the right one.
+  const rel = recipes
+    .map((r, i) => ({ i, r }))
+    .filter((x) => x.r.level <= lvl + 4)
+    .sort((a, b) => a.r.level - b.r.level || a.i - b.i);
+  const CAP = 28;
+  const shown = rel.slice(0, CAP);
+  const lines = shown.map((x) => {
+    const locked = lvl < x.r.level;
+    const ready = !locked && hasMats(char, x.r.inputs);
+    const tag = locked ? ` 🔒Lv${x.r.level}` : ready ? ' ✅' : '';
+    return `\`${x.i + 1}\` ${recipeName(x.r)} — ${inputsLine(char, x.r)}${tag}`;
   });
   const meta = PROFESSIONS[prof];
-  return msg.reply(
-    `${meta.emoji} **${meta.name} recipes** (you're Lv ${lvl}) — make one with \`tt ${verb} <#>\`\n` +
+  const more = recipes.length - shown.length;
+  let out = `${meta.emoji} **${meta.name} recipes** (you're Lv ${lvl}) — make one with \`tt ${verb} <#>\`\n` +
     lines.join('\n') +
-    '\n\n✅ = ready · 🔒 = higher level needed. Gather materials with `tt chop` `tt mine` `tt fish` `tt forage` `tt dig` `tt scavenge`.'
-  );
+    (more > 0 ? `\n…and ${more} more (mostly higher-level). Level up ${meta.name} to see them.` : '') +
+    '\n\n✅ = ready · 🔒 = higher level. Gather with `tt chop` `tt mine` `tt fish` `tt forage` `tt dig` `tt scavenge`.';
+  if (out.length > 1990) out = out.slice(0, 1960) + '\n…(list trimmed — craft by number)';
+  return msg.reply(out);
 }
 
 // Shared handler for `tt craft` (Crafter) and `tt brew` (Alchemist).

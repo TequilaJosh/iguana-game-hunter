@@ -678,6 +678,12 @@ function cmdStatus(msg) {
   return msg.reply({ embeds: [fightEmbed(fight)] });
 }
 
+// Cap a section's lines and add an "…and N more" note (keeps replies under 2000).
+function capSection(lines, cap, noun) {
+  if (lines.length <= cap) return lines.join('\n');
+  return lines.slice(0, cap).join('\n') + `\n…and ${lines.length - cap} more ${noun}`;
+}
+
 function cmdInv(msg) {
   const char = getPlayer(msg.author.id);
   if (!char) return msg.reply('No hero yet — `tt create` first.');
@@ -686,16 +692,23 @@ function cmdInv(msg) {
   const other = inv.filter((i) => !GEAR_SLOTS.includes(i.slot));
   const junkValue = other.filter((i) => i.slot === 'material').reduce((s, m) => s + (m.value || 1) * (m.qty || 1), 0);
   let out = `🎒 **${char.name}'s bag** — ${char.gold || 0} 🪙\n`;
-  if (gear.length) out += '\n**Gear** (equip with `tt equip <#>`, sell with `tt sell <#>`)\n' + gear.map((i, n) => `\`${n + 1}\` ${RARITY_EMOJI[i.rarity] || '•'} ${i.name} — ${i.slot} · ${itemStats(i)}`).join('\n');
-  if (other.length) out += '\n\n**Items**\n' + other.map((i) => {
-    const tail = i.slot === 'material'
-      ? ` (${(i.value || 1) * (i.qty || 1)} 🪙)`
-      : i.slot === 'consumable' ? ` — ${effectDesc(i)}` : '';
-    return `• ${i.name}${i.qty > 1 ? ` x${i.qty}` : ''}${tail}`;
-  }).join('\n');
+  if (gear.length) {
+    const gl = gear.map((i, n) => `\`${n + 1}\` ${RARITY_EMOJI[i.rarity] || '•'} ${i.name} — ${i.slot} · ${itemStats(i)}`);
+    out += '\n**Gear** (equip with `tt equip <#>`, sell with `tt sell <#>`)\n' + capSection(gl, 22, 'gear (equip by number)');
+  }
+  if (other.length) {
+    const ol = other.map((i) => {
+      const tail = i.slot === 'material'
+        ? ` (${(i.value || 1) * (i.qty || 1)} 🪙)`
+        : i.slot === 'consumable' ? ` — ${effectDesc(i)}` : '';
+      return `• ${i.name}${i.qty > 1 ? ` x${i.qty}` : ''}${tail}`;
+    });
+    out += '\n\n**Items**\n' + capSection(ol, 25, 'items');
+  }
   if (junkValue > 0) out += `\n\n_Sell all materials with \`tt sell junk\` (+${junkValue} 🪙)_`;
   out += '\n_Inspect anything: `tt inspect <#>` (gear number from above)._';
   if (!gear.length && !other.length) out += '\n_Empty. Go adventuring!_';
+  if (out.length > 1990) out = out.slice(0, 1960) + '\n…';
   return msg.reply(out);
 }
 
@@ -1071,7 +1084,7 @@ function cmdEnchant(msg, args) {
     });
     return msg.reply(
       `✨ **Enchanting** (Enchanter Lv ${getProf(char, 'enchanter').level}, cap +${cap}) — upgrade with \`tt enchant <#>\`\n` +
-      lines.join('\n') +
+      capSection(lines, 24, 'items (enchant by its number)') +
       `\n\nEach enchant boosts the piece's stats. Reagent: **${REAGENT_NAME}** (mine it). You have ${countMat(char, 'quartz')}.`
     );
   }
@@ -1281,6 +1294,18 @@ export async function handleRpg(msg) {
   else if (low.startsWith(TT + ' ')) { body = raw.slice(3).trim(); viaTt = true; }
   else if (raw.startsWith(PREFIX)) { body = raw.slice(PREFIX.length).trim(); }
   else return;
+
+  // Safety net: Discord rejects messages over 2000 chars (which would silently throw
+  // and look like the command "did nothing"). Truncate any oversized text reply.
+  if (!msg._chat && typeof msg.reply === 'function') {
+    const orig = msg.reply.bind(msg);
+    const clip = (s) => (s.length > 2000 ? s.slice(0, 1980) + '\n… (truncated)' : s);
+    msg.reply = (payload) => {
+      if (typeof payload === 'string') payload = clip(payload);
+      else if (payload && typeof payload.content === 'string') payload = { ...payload, content: clip(payload.content) };
+      return orig(payload);
+    };
+  }
 
   const parts = body.split(/\s+/);
   const name = (parts.shift() || '').toLowerCase();

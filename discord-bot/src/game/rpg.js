@@ -18,7 +18,7 @@ import {
 import { getRaid, joinRaid, raidAction, startRaid, raidEmbed } from './raids.js';
 import { gather, getWorker, workerXpToNext } from './gather.js';
 import { PROFESSIONS, getProf, profXpToNext, merchantSale, merchantBuyPrice, merchantDiscountPct } from './professions.js';
-import { craft, listRecipes, recipeName, inputsLine } from './recipes.js';
+import { craft, listRecipes, recipeName, inputsLine, recipeSlot } from './recipes.js';
 import { registerPager } from './recipePager.js';
 import { hasMats, countMat } from './invutil.js';
 import { enchantList, enchantCap, nextCost, doEnchant, REAGENT_NAME } from './enchant.js';
@@ -948,44 +948,65 @@ function cmdGather(msg, args, command) {
 }
 
 // ── crafting (Crafter) & brewing (Alchemist) ─────────────────────────────────
-// Build the recipe book as one or more pages (each safely under Discord's 2000-char
-// cap). Real recipe numbers are kept so `tt craft <#>` still targets the right one.
+// Recipe categories per profession — each is one page, reached by its symbol.
+const RECIPE_CATS = {
+  crafter: [
+    { emoji: '⚔️', name: 'Weapons', test: (slot) => slot === 'weapon' },
+    { emoji: '🛡️', name: 'Armor', test: (slot) => slot === 'head' || slot === 'body' || slot === 'shield' || slot === 'feet' },
+    { emoji: '💍', name: 'Accessories', test: (slot) => slot === 'accessory' },
+  ],
+  alchemist: [
+    { emoji: '❤️', name: 'Potions', test: (slot, id) => /^potion_/.test(id) },
+    { emoji: '🔷', name: 'Ethers', test: (slot, id) => /^ether_/.test(id) },
+    { emoji: '💥', name: 'Flasks', test: (slot, id) => /_flask$/.test(id) },
+    { emoji: '✨', name: 'Tinctures', test: () => true },   // everything else
+  ],
+};
+
+// Build one page per non-empty category; returns { pages, emojis } for the pager.
+// Real recipe numbers are kept so `tt craft <#>` still targets the right recipe.
 function recipePages(char, prof, verb) {
   const recipes = listRecipes(prof);
   const lvl = getProf(char, prof).level;
   const meta = PROFESSIONS[prof];
-  const rel = recipes
-    .map((r, i) => ({ i, r }))
-    .filter((x) => x.r.level <= lvl + 4)
-    .sort((a, b) => a.r.level - b.r.level || a.i - b.i);
-  const PER = 16, MAXPAGES = 9;
-  const chunks = [];
-  for (let p = 0; p < rel.length && chunks.length < MAXPAGES; p += PER) chunks.push(rel.slice(p, p + PER));
-  if (!chunks.length) return [`${meta.emoji} No ${meta.name} recipes available to you yet — level up ${meta.name}.`];
-  const total = chunks.length;
-  const hidden = rel.length - chunks.reduce((s, c) => s + c.length, 0);
-  return chunks.map((chunk, pi) => {
-    const lines = chunk.map((x) => {
+  const cats = RECIPE_CATS[prof] || [{ emoji: meta.emoji, name: meta.name, test: () => true }];
+  const rel = recipes.map((r, i) => ({ i, r })).filter((x) => x.r.level <= lvl + 4);
+  const assigned = new Set();
+  const legend = cats.map((c) => c.emoji + ' ' + c.name).join(' · ');
+  const pages = [], emojis = [];
+  for (const cat of cats) {
+    const mine = rel
+      .filter((x) => !assigned.has(x.i) && cat.test(recipeSlot(x.r), x.r.output))
+      .sort((a, b) => a.r.level - b.r.level || a.i - b.i);
+    for (const x of mine) assigned.add(x.i);
+    if (!mine.length) continue;
+    const CAP = 24;
+    const shown = mine.slice(0, CAP);
+    const lines = shown.map((x) => {
       const locked = lvl < x.r.level;
       const ready = !locked && hasMats(char, x.r.inputs);
       const tag = locked ? ` 🔒Lv${x.r.level}` : ready ? ' ✅' : '';
       return `\`${x.i + 1}\` ${recipeName(x.r)} — ${inputsLine(char, x.r)}${tag}`;
     });
-    let out = `${meta.emoji} **${meta.name} recipes** — Lv ${lvl} · page ${pi + 1}/${total} — make one with \`tt ${verb} <#>\`\n` +
-      lines.join('\n');
-    if (pi === total - 1 && hidden > 0) out += `\n…and ${hidden} more at higher levels.`;
-    out += '\n\n✅ ready · 🔒 higher level' + (total > 1 ? ' · react 1️⃣2️⃣… to turn the page' : '');
-    return out.length > 1990 ? out.slice(0, 1960) + '\n…' : out;
-  });
+    const more = mine.length - shown.length;
+    let out = `${cat.emoji} **${cat.name}** — ${meta.name} Lv ${lvl} · make with \`tt ${verb} <#>\`\n` +
+      lines.join('\n') +
+      (more > 0 ? `\n…and ${more} more ${cat.name.toLowerCase()} (level up).` : '') +
+      `\n\n✅ ready · 🔒 higher level` + (cats.length > 1 ? `\nReact to switch: ${legend}` : '');
+    pages.push(out.length > 1990 ? out.slice(0, 1960) + '\n…' : out);
+    emojis.push(cat.emoji);
+  }
+  if (!pages.length) return { pages: [`${meta.emoji} No ${meta.name} recipes available to you yet — level up ${meta.name}.`], emojis: [] };
+  return { pages, emojis };
 }
 
 function showRecipes(msg, char, prof, verb) {
-  const pages = recipePages(char, prof, verb);
-  // Stream chat / web can't do reactions — just send the first page.
+  const { pages, emojis } = recipePages(char, prof, verb);
+  // Stream chat / web can't do reactions — just send the first category.
   if (msg._chat || msg._auto || pages.length < 2 || typeof msg.reply !== 'function') return msg.reply(pages[0]);
-  // Discord: post page 1, then make it a reaction pager.
+  // Discord: post the first category, then add category-symbol reactions.
   return Promise.resolve(msg.reply(pages[0])).then((sent) => {
-    if (sent && sent.id) registerPager(sent, pages);
+    if (sent && sent.id) registerPager(sent, pages, emojis);
     return sent;
   });
 }

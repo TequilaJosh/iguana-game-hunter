@@ -19,6 +19,7 @@ for (const m of load('gather-materials.json')) MAT_NAMES[m.key] = m.name;
 export const matName = (key) => MAT_NAMES[key] || key;
 
 export const recipeIsGear = (r) => GEAR_SLOTS.has(ITEMS[r.output]?.slot);
+export const recipeSlot = (r) => ITEMS[r.output]?.slot || '';
 export const recipeName = (r) => ITEMS[r.output]?.name || r.output;
 export const listRecipes = (prof) => RECIPES.filter((r) => r.prof === prof);
 export const findRecipe = (prof, id) => RECIPES.find((r) => r.prof === prof && r.id === id);

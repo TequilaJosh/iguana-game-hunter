@@ -5,17 +5,24 @@
 import { log } from '../logger.js';
 
 const KEYCAPS = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '6️⃣', '7️⃣', '8️⃣', '9️⃣'];
-const pagers = new Map();          // messageId -> { pages }
+const pagers = new Map();          // messageId -> { pages, emojis }
 const TTL_MS = 10 * 60 * 1000;     // stop tracking after 10 minutes
 
-/** Post-process a sent Discord message into a pager: add reactions, remember pages. */
-export async function registerPager(message, pages) {
+// Emoji names vary by a trailing variation selector (U+FE0F); compare without it.
+const norm = (s) => String(s || '').replace(/️/g, '');
+
+/**
+ * Turn a sent Discord message into a pager. `emojis` (one per page) are the reactions
+ * to add — pass category symbols, or omit for numbered pages. Whichever emoji has the
+ * most user reactions selects the shown page.
+ */
+export async function registerPager(message, pages, emojis) {
   if (!message || !message.id || !Array.isArray(pages) || pages.length < 2) return;
-  const n = Math.min(pages.length, KEYCAPS.length);
-  pagers.set(message.id, { pages });
+  const marks = (Array.isArray(emojis) && emojis.length === pages.length) ? emojis : KEYCAPS.slice(0, pages.length);
+  pagers.set(message.id, { pages, emojis: marks });
   setTimeout(() => pagers.delete(message.id), TTL_MS);
-  for (let i = 0; i < n; i++) {
-    try { await message.react(KEYCAPS[i]); } catch { break; }
+  for (let i = 0; i < marks.length; i++) {
+    try { await message.react(marks[i]); } catch { break; }
   }
 }
 
@@ -31,8 +38,9 @@ export async function handlePagerReaction(reaction, user) {
     const st = pagers.get(msg.id);
     const cache = msg.reactions.cache;
     let best = 0, bestCount = -1;
-    for (let i = 0; i < st.pages.length && i < KEYCAPS.length; i++) {
-      const r = cache.get(KEYCAPS[i]);
+    for (let i = 0; i < st.emojis.length; i++) {
+      const want = norm(st.emojis[i]);
+      const r = cache.find((rc) => norm(rc.emoji.name) === want);
       const count = r ? Math.max(0, (r.count || 0) - (r.me ? 1 : 0)) : 0;   // exclude the bot's own
       if (count > bestCount) { bestCount = count; best = i; }
     }

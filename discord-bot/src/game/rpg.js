@@ -684,32 +684,47 @@ function capSection(lines, cap, noun) {
   return lines.slice(0, cap).join('\n') + `\n…and ${lines.length - cap} more ${noun}`;
 }
 
+// Bag as category pages (⚔️ Gear / 🧪 Consumables / 🪨 Materials) for the reaction pager.
+function invPages(char) {
+  const inv = char.inventory || [];
+  const gear = inv.filter((i) => GEAR_SLOTS.includes(i.slot));
+  const cons = inv.filter((i) => i.slot === 'consumable');
+  const mats = inv.filter((i) => i.slot === 'material');
+  const junkValue = mats.reduce((s, m) => s + (m.value || 1) * (m.qty || 1), 0);
+  const head = `🎒 **${char.name}'s bag** — ${char.gold || 0} 🪙\n`;
+  const cats = [];
+  if (gear.length) cats.push({ emoji: '⚔️', name: 'Gear', build: () => {
+    const gl = gear.map((i, n) => `\`${n + 1}\` ${RARITY_EMOJI[i.rarity] || '•'} ${i.name} — ${i.slot} · ${itemStats(i)}`);
+    return '**Gear** — equip `tt equip <#>` · sell `tt sell <#>` · inspect `tt inspect <#>`\n' + capSection(gl, 26, 'gear (equip by number)');
+  } });
+  if (cons.length) cats.push({ emoji: '🧪', name: 'Consumables', build: () => {
+    const cl = cons.map((i) => `• ${i.name}${i.qty > 1 ? ` x${i.qty}` : ''} — ${effectDesc(i)}`);
+    return '**Consumables** — use potions in a fight with `tt use`\n' + capSection(cl, 30, 'consumables');
+  } });
+  if (mats.length) cats.push({ emoji: '🪨', name: 'Materials', build: () => {
+    const ml = mats.map((i) => `• ${i.name}${i.qty > 1 ? ` x${i.qty}` : ''} (${(i.value || 1) * (i.qty || 1)} 🪙)`);
+    return '**Materials** — craft with them, or `tt sell junk`\n' + capSection(ml, 30, 'materials') +
+      (junkValue > 0 ? `\n_Sell all materials: \`tt sell junk\` (+${junkValue} 🪙)_` : '');
+  } });
+  if (!cats.length) return { pages: [head + '\n_Empty. Go adventuring!_'], emojis: [] };
+  const legend = 'React to switch: ' + cats.map((c) => c.emoji + ' ' + c.name).join(' · ');
+  const pages = cats.map((c) => {
+    let out = head + '\n' + c.build();
+    if (cats.length > 1) out += '\n\n' + legend;
+    return out.length > 1990 ? out.slice(0, 1960) + '\n…' : out;
+  });
+  return { pages, emojis: cats.map((c) => c.emoji) };
+}
+
 function cmdInv(msg) {
   const char = getPlayer(msg.author.id);
   if (!char) return msg.reply('No hero yet — `tt create` first.');
-  const inv = char.inventory || [];
-  const gear = inv.filter((i) => GEAR_SLOTS.includes(i.slot));
-  const other = inv.filter((i) => !GEAR_SLOTS.includes(i.slot));
-  const junkValue = other.filter((i) => i.slot === 'material').reduce((s, m) => s + (m.value || 1) * (m.qty || 1), 0);
-  let out = `🎒 **${char.name}'s bag** — ${char.gold || 0} 🪙\n`;
-  if (gear.length) {
-    const gl = gear.map((i, n) => `\`${n + 1}\` ${RARITY_EMOJI[i.rarity] || '•'} ${i.name} — ${i.slot} · ${itemStats(i)}`);
-    out += '\n**Gear** (equip with `tt equip <#>`, sell with `tt sell <#>`)\n' + capSection(gl, 22, 'gear (equip by number)');
-  }
-  if (other.length) {
-    const ol = other.map((i) => {
-      const tail = i.slot === 'material'
-        ? ` (${(i.value || 1) * (i.qty || 1)} 🪙)`
-        : i.slot === 'consumable' ? ` — ${effectDesc(i)}` : '';
-      return `• ${i.name}${i.qty > 1 ? ` x${i.qty}` : ''}${tail}`;
-    });
-    out += '\n\n**Items**\n' + capSection(ol, 25, 'items');
-  }
-  if (junkValue > 0) out += `\n\n_Sell all materials with \`tt sell junk\` (+${junkValue} 🪙)_`;
-  out += '\n_Inspect anything: `tt inspect <#>` (gear number from above)._';
-  if (!gear.length && !other.length) out += '\n_Empty. Go adventuring!_';
-  if (out.length > 1990) out = out.slice(0, 1960) + '\n…';
-  return msg.reply(out);
+  const { pages, emojis } = invPages(char);
+  if (msg._chat || msg._auto || pages.length < 2 || typeof msg.reply !== 'function') return msg.reply(pages[0]);
+  return Promise.resolve(msg.reply(pages[0])).then((sent) => {
+    if (sent && sent.id) registerPager(sent, pages, emojis);
+    return sent;
+  });
 }
 
 function cmdInspect(msg, args) {

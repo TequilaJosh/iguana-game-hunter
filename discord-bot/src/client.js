@@ -1,4 +1,5 @@
 import { Client, GatewayIntentBits, Partials } from 'discord.js';
+// (intents/partials configured below)
 
 /**
  * Intents:
@@ -16,7 +17,8 @@ export function createClient() {
       GatewayIntentBits.GuildMessages,
       GatewayIntentBits.MessageContent,
       GatewayIntentBits.GuildVoiceStates, // voice TTS: join a channel & read chat aloud
+      GatewayIntentBits.GuildMessageReactions, // recipe pager: page via number reactions
     ],
-    partials: [Partials.Channel],
+    partials: [Partials.Channel, Partials.Message, Partials.Reaction],
   });
 }

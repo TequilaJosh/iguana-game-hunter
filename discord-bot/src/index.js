@@ -9,6 +9,7 @@ import { startRaidScheduler } from './game/raids.js';
 import { handleGhCommand, startUpdateWatcher } from './features/updates.js';
 import { startTwitch } from './features/twitch.js';
 import { handleVoiceCommand } from './features/voiceTts.js';
+import { handlePagerReaction } from './game/recipePager.js';
 import { log } from './logger.js';
 
 assertCoreConfig();
@@ -77,6 +78,10 @@ client.on(Events.MessageCreate, (msg) => {
   if (!isRpgCommand(msg.content)) return;
   handleRpg(msg).catch((e) => log.error('rpg command failed:', e));
 });
+
+// Recipe pager: turn pages via number reactions (most-reacted page wins).
+client.on(Events.MessageReactionAdd, (reaction, user) => handlePagerReaction(reaction, user).catch((e) => log.error('reaction add:', e)));
+client.on(Events.MessageReactionRemove, (reaction, user) => handlePagerReaction(reaction, user).catch((e) => log.error('reaction remove:', e)));
 
 // Slash commands.
 client.on(Events.InteractionCreate, async (interaction) => {

@@ -19,6 +19,7 @@ import { getRaid, joinRaid, raidAction, startRaid, raidEmbed } from './raids.js'
 import { gather, getWorker, workerXpToNext } from './gather.js';
 import { PROFESSIONS, getProf, profXpToNext, merchantSale, merchantBuyPrice, merchantDiscountPct } from './professions.js';
 import { craft, listRecipes, recipeName, inputsLine } from './recipes.js';
+import { registerPager } from './recipePager.js';
 import { hasMats, countMat } from './invutil.js';
 import { enchantList, enchantCap, nextCost, doEnchant, REAGENT_NAME } from './enchant.js';
 import { boxPrice, getBoxes, openBox } from './lootbox.js';
@@ -947,32 +948,46 @@ function cmdGather(msg, args, command) {
 }
 
 // ── crafting (Crafter) & brewing (Alchemist) ─────────────────────────────────
-function showRecipes(msg, char, prof, verb) {
+// Build the recipe book as one or more pages (each safely under Discord's 2000-char
+// cap). Real recipe numbers are kept so `tt craft <#>` still targets the right one.
+function recipePages(char, prof, verb) {
   const recipes = listRecipes(prof);
   const lvl = getProf(char, prof).level;
-  // There can be hundreds of recipes; a Discord message caps at 2000 chars. Show the
-  // relevant ones (unlocked + a few upcoming), keeping each recipe's REAL number so
-  // `tt craft <#>` still targets the right one.
+  const meta = PROFESSIONS[prof];
   const rel = recipes
     .map((r, i) => ({ i, r }))
     .filter((x) => x.r.level <= lvl + 4)
     .sort((a, b) => a.r.level - b.r.level || a.i - b.i);
-  const CAP = 28;
-  const shown = rel.slice(0, CAP);
-  const lines = shown.map((x) => {
-    const locked = lvl < x.r.level;
-    const ready = !locked && hasMats(char, x.r.inputs);
-    const tag = locked ? ` 🔒Lv${x.r.level}` : ready ? ' ✅' : '';
-    return `\`${x.i + 1}\` ${recipeName(x.r)} — ${inputsLine(char, x.r)}${tag}`;
+  const PER = 16, MAXPAGES = 9;
+  const chunks = [];
+  for (let p = 0; p < rel.length && chunks.length < MAXPAGES; p += PER) chunks.push(rel.slice(p, p + PER));
+  if (!chunks.length) return [`${meta.emoji} No ${meta.name} recipes available to you yet — level up ${meta.name}.`];
+  const total = chunks.length;
+  const hidden = rel.length - chunks.reduce((s, c) => s + c.length, 0);
+  return chunks.map((chunk, pi) => {
+    const lines = chunk.map((x) => {
+      const locked = lvl < x.r.level;
+      const ready = !locked && hasMats(char, x.r.inputs);
+      const tag = locked ? ` 🔒Lv${x.r.level}` : ready ? ' ✅' : '';
+      return `\`${x.i + 1}\` ${recipeName(x.r)} — ${inputsLine(char, x.r)}${tag}`;
+    });
+    let out = `${meta.emoji} **${meta.name} recipes** — Lv ${lvl} · page ${pi + 1}/${total} — make one with \`tt ${verb} <#>\`\n` +
+      lines.join('\n');
+    if (pi === total - 1 && hidden > 0) out += `\n…and ${hidden} more at higher levels.`;
+    out += '\n\n✅ ready · 🔒 higher level' + (total > 1 ? ' · react 1️⃣2️⃣… to turn the page' : '');
+    return out.length > 1990 ? out.slice(0, 1960) + '\n…' : out;
   });
-  const meta = PROFESSIONS[prof];
-  const more = recipes.length - shown.length;
-  let out = `${meta.emoji} **${meta.name} recipes** (you're Lv ${lvl}) — make one with \`tt ${verb} <#>\`\n` +
-    lines.join('\n') +
-    (more > 0 ? `\n…and ${more} more (mostly higher-level). Level up ${meta.name} to see them.` : '') +
-    '\n\n✅ = ready · 🔒 = higher level. Gather with `tt chop` `tt mine` `tt fish` `tt forage` `tt dig` `tt scavenge`.';
-  if (out.length > 1990) out = out.slice(0, 1960) + '\n…(list trimmed — craft by number)';
-  return msg.reply(out);
+}
+
+function showRecipes(msg, char, prof, verb) {
+  const pages = recipePages(char, prof, verb);
+  // Stream chat / web can't do reactions — just send the first page.
+  if (msg._chat || msg._auto || pages.length < 2 || typeof msg.reply !== 'function') return msg.reply(pages[0]);
+  // Discord: post page 1, then make it a reaction pager.
+  return Promise.resolve(msg.reply(pages[0])).then((sent) => {
+    if (sent && sent.id) registerPager(sent, pages);
+    return sent;
+  });
 }
 
 // Shared handler for `tt craft` (Crafter) and `tt brew` (Alchemist).

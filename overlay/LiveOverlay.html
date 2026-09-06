@@ -292,6 +292,7 @@
   .user { font-weight: 700; margin-right: 0.25em; }
   .msg { color: #ffffff; word-break: break-word; }
   .emote { height: 1.2em; vertical-align: middle; margin: 0 1px; }
+  .gif { display: block; max-width: 220px; max-height: 140px; border-radius: 6px; margin: 3px 0; }
 
   /* Boxed / bubble chat mode */
   .row.bubble {
@@ -960,7 +961,17 @@
     const segs = Array.isArray(m.segments) ? m.segments : [];
     for (let i = 0; i < segs.length; i++) {
       const seg = segs[i];
-      if (seg && seg.t === "emote" && seg.url) {
+      if (seg && seg.t === "gif" && seg.url) {
+        const img = document.createElement("img");
+        img.className = "gif";
+        img.src = seg.url;
+        img.alt = "GIF";
+        img.loading = "lazy";
+        img.addEventListener("error", function () {
+          if (img.parentNode) img.replaceWith(document.createTextNode("[gif]"));
+        });
+        body.appendChild(img);
+      } else if (seg && seg.t === "emote" && seg.url) {
         const img = document.createElement("img");
         img.className = "emote";
         img.src = seg.url;

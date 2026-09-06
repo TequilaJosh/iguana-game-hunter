@@ -1022,7 +1022,7 @@ namespace GameTracker.Services
 
             var segs = (m.Segments ?? new List<ChatSegment>()).Select(s => new
             {
-                t = s.Kind == ChatSegmentKind.Emote ? "emote" : "text",
+                t = s.Kind == ChatSegmentKind.Emote ? "emote" : s.Kind == ChatSegmentKind.Gif ? "gif" : "text",
                 text = s.Text ?? string.Empty,
                 url = s.Url ?? string.Empty,
             }).ToArray();

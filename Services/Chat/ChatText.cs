@@ -16,13 +16,59 @@ namespace GameTracker.Services.Chat
     {
         private static readonly Regex Tag = new("<[^>]+>", RegexOptions.Compiled);
         private static readonly Regex Whitespace = new(@"\s+", RegexOptions.Compiled);
+        private static readonly Regex UrlRx = new(@"https?://[^\s<>""]+", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+        // Giphy share/embed/media links (Twitch's GIF picker sends these). Captures the GIF id.
+        private static readonly Regex GiphyId = new(
+            @"(?:giphy\.com/(?:gifs|clips|embed)/(?:[a-z0-9]+-)*|giphy\.com/media/|i\.giphy\.com/(?:media/)?)([A-Za-z0-9]{6,})",
+            RegexOptions.Compiled | RegexOptions.IgnoreCase);
+
+        // Return a direct animated-image URL for a link, or null if it isn't a GIF.
+        private static string? GifUrlFor(string url)
+        {
+            var m = GiphyId.Match(url);
+            if (m.Success) return $"https://media.giphy.com/media/{m.Groups[1].Value}/giphy.gif";
+            var bare = url.Split('?')[0];
+            if (bare.EndsWith(".gif", System.StringComparison.OrdinalIgnoreCase)) return url;   // any direct .gif
+            return null;
+        }
+
+        // Pull GIF links out of text segments into their own Gif segments so they render
+        // as images. Non-GIF links stay as text (normal clickable/plain links).
+        public static List<ChatSegment> ExtractGifs(List<ChatSegment> segs)
+        {
+            var outSegs = new List<ChatSegment>();
+            void addPlain(string t)
+            {
+                if (string.IsNullOrEmpty(t)) return;
+                if (outSegs.Count > 0 && outSegs[^1].Kind == ChatSegmentKind.Text) outSegs[^1].Text += t;
+                else outSegs.Add(ChatSegment.PlainText(t));
+            }
+            foreach (var seg in segs)
+            {
+                if (seg.Kind != ChatSegmentKind.Text || seg.Text.IndexOf("http", System.StringComparison.OrdinalIgnoreCase) < 0)
+                { outSegs.Add(seg); continue; }
+                var text = seg.Text; int last = 0; bool any = false;
+                foreach (Match m in UrlRx.Matches(text))
+                {
+                    var gif = GifUrlFor(m.Value);
+                    if (gif == null) continue;
+                    any = true;
+                    if (m.Index > last) addPlain(text.Substring(last, m.Index - last));
+                    outSegs.Add(ChatSegment.Gif(gif));
+                    last = m.Index + m.Length;
+                }
+                if (!any) { outSegs.Add(seg); continue; }
+                if (last < text.Length) addPlain(text.Substring(last));
+            }
+            return outSegs;
+        }
 
         public static List<ChatSegment> Parse(string? s)
         {
             var segs = new List<ChatSegment>();
             if (string.IsNullOrEmpty(s)) return segs;
 
-            if (s.IndexOf('<') < 0) { AddText(segs, s); return segs; }
+            if (s.IndexOf('<') < 0) { AddText(segs, s); return ExtractGifs(segs); }
 
             int last = 0;
             foreach (Match m in Tag.Matches(s))
@@ -44,7 +90,7 @@ namespace GameTracker.Services.Chat
                 last = m.Index + m.Length;
             }
             if (last < s.Length) AddText(segs, s.Substring(last));
-            return segs;
+            return ExtractGifs(segs);
         }
 
         /// <summary>Flatten to plain text (emotes become their alt/name).</summary>
@@ -107,7 +153,7 @@ namespace GameTracker.Services.Chat
                 pos = end + 1;
             }
             if (pos < cps.Count) AddText(segs, Join(cps, pos, cps.Count - pos));
-            return segs;
+            return ExtractGifs(segs);
         }
 
         private static List<string> CodePoints(string s)

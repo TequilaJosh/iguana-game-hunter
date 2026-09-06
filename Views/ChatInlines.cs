@@ -61,11 +61,36 @@ namespace GameTracker.Views
 
             foreach (var seg in row.Segments)
             {
-                if (seg.Kind == ChatSegmentKind.Emote && !string.IsNullOrEmpty(seg.Url))
+                if (seg.Kind == ChatSegmentKind.Gif && !string.IsNullOrEmpty(seg.Url))
+                    tb.Inlines.Add(BuildGif(seg));
+                else if (seg.Kind == ChatSegmentKind.Emote && !string.IsNullOrEmpty(seg.Url))
                     tb.Inlines.Add(BuildEmote(seg));
                 else
                     tb.Inlines.Add(new Run(seg.Text) { Foreground = Body });
             }
+        }
+
+        // A GIF (Twitch's Giphy picker) — shown as an image in the app window (still frame;
+        // the OBS overlay animates it). Larger than an emote.
+        private static Inline BuildGif(ChatSegment seg)
+        {
+            try
+            {
+                var bmp = new BitmapImage();
+                bmp.BeginInit();
+                bmp.CacheOption = BitmapCacheOption.OnLoad;
+                bmp.UriSource = new Uri(seg.Url, UriKind.Absolute);
+                bmp.DecodePixelHeight = 160;
+                bmp.EndInit();
+                var img = new Image
+                {
+                    Source = bmp, Height = 80, Stretch = Stretch.Uniform,
+                    Margin = new Thickness(1, 2, 1, 2), ToolTip = "GIF",
+                };
+                img.ImageFailed += (_, _) => { };
+                return new InlineUIContainer(img) { BaselineAlignment = BaselineAlignment.Bottom };
+            }
+            catch { return new Run("[gif]") { Foreground = Body }; }
         }
 
         private static Inline BuildEmote(ChatSegment seg)
@@ -119,7 +144,9 @@ namespace GameTracker.Views
 
             foreach (var seg in row.Segments)
             {
-                if (seg.Kind == ChatSegmentKind.Emote && !string.IsNullOrEmpty(seg.Url))
+                if (seg.Kind == ChatSegmentKind.Gif && !string.IsNullOrEmpty(seg.Url))
+                    tb.Inlines.Add(BuildGif(seg));
+                else if (seg.Kind == ChatSegmentKind.Emote && !string.IsNullOrEmpty(seg.Url))
                     tb.Inlines.Add(BuildEmote(seg));
                 else
                     tb.Inlines.Add(new Run(seg.Text) { Foreground = Brushes.White });

@@ -118,10 +118,16 @@
                 </Grid>
             </Border>
 
-            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="16,4,16,8">
-                <StackPanel>
-
-                    <TextBlock Text="CHATTER COUNT" Style="{StaticResource SecHdr}"/>
+            <Grid Grid.Row="1">
+                <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                <StackPanel Orientation="Horizontal" Margin="14,8,14,2">
+                    <RadioButton x:Name="TabGeneral" GroupName="cfTab" Content="💬  Chat" Foreground="#e8e0c4" FontSize="13" FontWeight="Bold" Margin="0,0,18,0" Checked="CfTab_Changed"/>
+                    <RadioButton x:Name="TabPoints" GroupName="cfTab" Content="🪙  Points &amp; Redeems" Foreground="#e8e0c4" FontSize="13" FontWeight="Bold" Checked="CfTab_Changed"/>
+                </StackPanel>
+                <Grid Grid.Row="1">
+                    <ScrollViewer x:Name="PanelGeneral" VerticalScrollBarVisibility="Auto" Padding="16,4,16,8">
+                        <StackPanel>
+                            <TextBlock Text="CHATTER COUNT" Style="{StaticResource SecHdr}"/>
                     <CheckBox x:Name="ShowCountCb" Content="Show chatter count at the top of chat" Style="{StaticResource Chk}"/>
                     <CheckBox x:Name="PerSourceCb" Content="Show a count per source (instead of one total)" Style="{StaticResource Chk}"/>
                     <CheckBox x:Name="CountOverlayCb" Content="Also show the count on the OBS overlay" Style="{StaticResource Chk}"/>
@@ -173,30 +179,6 @@
                     <TextBlock Foreground="#7a9070" FontSize="11" Margin="0,2,0,0" TextWrapping="Wrap"
                                Text="Forwards ! game commands (!create, !adventure, !attack…) to the bot. First time, a viewer links with !play &lt;their Discord @username&gt; and !confirm &lt;code&gt; so their chat and Discord share one character."/>
 
-                    <TextBlock Text="POINTS" Style="{StaticResource SecHdr}"/>
-                    <CheckBox x:Name="PointsCb" Content="Give points to everyone on the chatters list" Style="{StaticResource Chk}"/>
-                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
-                        <TextBlock Text="Name" Style="{StaticResource Lbl}"/>
-                        <TextBox x:Name="PointsNameBox" Style="{StaticResource Txt}" Width="130" Margin="0,0,12,0"/>
-                        <TextBlock Text="every" Style="{StaticResource Lbl}"/>
-                        <TextBox x:Name="PointsIntervalBox" Style="{StaticResource Num}"/>
-                        <TextBlock Text="min give" Style="{StaticResource Lbl}" Margin="6,0,6,0"/>
-                        <TextBox x:Name="PointsAmountBox" Style="{StaticResource Num}"/>
-                        <TextBlock Text="balance cmd" Style="{StaticResource Lbl}" Margin="12,0,4,0"/>
-                        <TextBox x:Name="BalanceCmdBox" Style="{StaticResource Txt}" Width="110"
-                                 ToolTip="The command viewers use to check their balance. Change it (e.g. !gh) if another bot like StreamElements also answers !points with its own numbers."/>
-                    </StackPanel>
-                    <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                        <TextBlock Text="First-chatter bonus" Style="{StaticResource Lbl}"/>
-                        <TextBox x:Name="FirstBonusBox" Style="{StaticResource Num}" Margin="4,0,14,0"
-                                 ToolTip="Points for the very first person to chat each stream (0 = off)"/>
-                        <TextBlock Text="Streak bonus/day" Style="{StaticResource Lbl}"/>
-                        <TextBox x:Name="StreakBonusBox" Style="{StaticResource Num}" Margin="4,0,0,0"
-                                 ToolTip="Daily bonus × streak length for chatting on consecutive stream days (0 = off)"/>
-                    </StackPanel>
-                    <TextBlock Foreground="#7a9070" FontSize="11" Margin="0,4,0,0" TextWrapping="Wrap"
-                               Text="Viewers check their balance with !points (or !&lt;points name&gt;). Balance shows as a big toast on the overlay."/>
-
                     <TextBlock Text="CHAT STYLE" Style="{StaticResource SecHdr}"/>
                     <StackPanel Orientation="Horizontal">
                         <RadioButton x:Name="StyleLogRb" Content="Chat log (classic)" Foreground="#e8e0c4"
@@ -236,6 +218,33 @@
                     </ItemsControl>
                     <Button x:Name="AddColorBtn" Content="+ Add color" Click="AddColor_Click"
                             Style="{StaticResource Btn}" HorizontalAlignment="Left"/>
+                        </StackPanel>
+                    </ScrollViewer>
+                    <ScrollViewer x:Name="PanelPoints" VerticalScrollBarVisibility="Auto" Padding="16,4,16,8" Visibility="Collapsed">
+                        <StackPanel>
+                            <TextBlock Text="POINTS" Style="{StaticResource SecHdr}"/>
+                    <CheckBox x:Name="PointsCb" Content="Give points to everyone on the chatters list" Style="{StaticResource Chk}"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                        <TextBlock Text="Name" Style="{StaticResource Lbl}"/>
+                        <TextBox x:Name="PointsNameBox" Style="{StaticResource Txt}" Width="130" Margin="0,0,12,0"/>
+                        <TextBlock Text="every" Style="{StaticResource Lbl}"/>
+                        <TextBox x:Name="PointsIntervalBox" Style="{StaticResource Num}"/>
+                        <TextBlock Text="min give" Style="{StaticResource Lbl}" Margin="6,0,6,0"/>
+                        <TextBox x:Name="PointsAmountBox" Style="{StaticResource Num}"/>
+                        <TextBlock Text="balance cmd" Style="{StaticResource Lbl}" Margin="12,0,4,0"/>
+                        <TextBox x:Name="BalanceCmdBox" Style="{StaticResource Txt}" Width="110"
+                                 ToolTip="The command viewers use to check their balance. Change it (e.g. !gh) if another bot like StreamElements also answers !points with its own numbers."/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                        <TextBlock Text="First-chatter bonus" Style="{StaticResource Lbl}"/>
+                        <TextBox x:Name="FirstBonusBox" Style="{StaticResource Num}" Margin="4,0,14,0"
+                                 ToolTip="Points for the very first person to chat each stream (0 = off)"/>
+                        <TextBlock Text="Streak bonus/day" Style="{StaticResource Lbl}"/>
+                        <TextBox x:Name="StreakBonusBox" Style="{StaticResource Num}" Margin="4,0,0,0"
+                                 ToolTip="Daily bonus × streak length for chatting on consecutive stream days (0 = off)"/>
+                    </StackPanel>
+                    <TextBlock Foreground="#7a9070" FontSize="11" Margin="0,4,0,0" TextWrapping="Wrap"
+                               Text="Viewers check their balance with !points (or !&lt;points name&gt;). Balance shows as a big toast on the overlay."/>
 
                     <TextBlock Text="POINT REDEEMS (STREAM EFFECTS)" Style="{StaticResource SecHdr}"/>
                     <TextBlock Foreground="#7a9070" FontSize="11" Margin="0,0,0,6" TextWrapping="Wrap"
@@ -332,8 +341,10 @@
                     </ItemsControl>
                     <Button Content="+ Add redeem" Click="AddRedeem_Click" Style="{StaticResource Btn}"
                             HorizontalAlignment="Left"/>
-                </StackPanel>
-            </ScrollViewer>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Grid>
 
             <!-- Footer -->
             <Grid Grid.Row="2" Margin="14,8,14,12">

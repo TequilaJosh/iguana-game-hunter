@@ -716,9 +716,12 @@ namespace GameTracker.Views
                 profile?.Voice, profile?.Effect ?? "normal", (int)TtsRate.Value, (int)TtsVolume.Value);
         }
 
-        private void Features_Click(object sender, RoutedEventArgs e)
+        private void Features_Click(object sender, RoutedEventArgs e) => OpenFeatures(false);
+        private void PointsRedeems_Click(object sender, RoutedEventArgs e) => OpenFeatures(true);
+
+        private void OpenFeatures(bool pointsTab)
         {
-            var win = new ChatFeaturesWindow { Owner = this };
+            var win = new ChatFeaturesWindow(pointsTab) { Owner = this };
             if (win.ShowDialog() == true)
             {
                 ChatWindow.Current?.ReloadFeatures();

@@ -18,9 +18,19 @@ namespace GameTracker.Views
         private readonly ObservableCollection<RedeemItem> _redeems = new();
         private readonly SoundService _tester = new();
 
-        public ChatFeaturesWindow()
+        private void CfTab_Changed(object sender, RoutedEventArgs e)
+        {
+            if (PanelGeneral == null || PanelPoints == null) return;   // during init
+            bool points = TabPoints.IsChecked == true;
+            PanelGeneral.Visibility = points ? Visibility.Collapsed : Visibility.Visible;
+            PanelPoints.Visibility = points ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        // Open straight to the Points & Redeems tab when true.
+        public ChatFeaturesWindow(bool pointsTab = false)
         {
             InitializeComponent();
+            if (pointsTab) TabPoints.IsChecked = true; else TabGeneral.IsChecked = true;
             var f = SettingsService.LoadChatFeatures();
 
             ShowCountCb.IsChecked = f.ShowCount;

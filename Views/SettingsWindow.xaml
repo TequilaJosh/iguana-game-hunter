@@ -229,11 +229,15 @@
                                         ValueChanged="Opacity_Changed"
                                         ToolTip="Make the chat window see-through (applies live if it's open)"/>
                             </Grid>
-                                                        <TextBlock Text="CHAT DISPLAY" Style="{StaticResource SecHdr}"/>
+                                                        <TextBlock Text="CHAT DISPLAY &amp; POINTS" Style="{StaticResource SecHdr}"/>
                             <TextBlock Foreground="#7a9070" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8"
-                                       Text="Counts, points, chat style, GIFs and point redeems live in Chat Features."/>
-                            <Button Content="&#9881; Chat features" Click="Features_Click" Style="{StaticResource Btn}" HorizontalAlignment="Left"
-                                    ToolTip="Chatter counts, points, chat style, GIFs, and point redeems"/>
+                                       Text="Chat features covers chatter counts, replies, Discord and chat style. Points &amp; Redeems covers the points system and point-redeem effects."/>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="&#9881; Chat features" Click="Features_Click" Style="{StaticResource Btn}" Margin="0,0,8,0"
+                                        ToolTip="Chatter counts, active-chatters list, chat replies, Discord, and chat style"/>
+                                <Button Content="&#129689; Points &amp; Redeems" Click="PointsRedeems_Click" Style="{StaticResource Btn}"
+                                        ToolTip="The points system + point-redeem stream effects"/>
+                            </StackPanel>
                             <TextBlock Foreground="#7a9070" FontSize="11" Margin="0,8,0,0" TextWrapping="Wrap"
                                        Text="The live Chatters list stays in the chat window (it shows who's active right now)."/>
                         </StackPanel>

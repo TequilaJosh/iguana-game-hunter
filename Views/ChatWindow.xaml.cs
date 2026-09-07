@@ -153,6 +153,38 @@ namespace GameTracker.Views
             return b;
         }
 
+        // ── Duplicate suppression ──────────────────────────────────────────────
+        // Social Stream Ninja replays its recent-message buffer whenever its dock
+        // reconnects (an SSN "refresh"), so the same lines arrive again — read twice
+        // by TTS and, when the replay is a burst, flooding the small TTS queue so
+        // genuine new messages get dropped mid-stream (the "cutout"). We drop any
+        // chat line we've already seen from the same user within a short window.
+        // Only ordinary chat is deduped; stream events pass through untouched.
+        private readonly Dictionary<string, DateTime> _dedupSeen = new();
+        private DateTime _dedupPruned = DateTime.MinValue;
+        private static readonly TimeSpan DedupWindow = TimeSpan.FromMinutes(3);
+
+        private bool IsDuplicateChat(ChatMessage m)
+        {
+            var now = DateTime.UtcNow;
+            if (now - _dedupPruned > TimeSpan.FromMinutes(1))
+            {
+                _dedupPruned = now;
+                foreach (var k in _dedupSeen.Where(kv => now - kv.Value > DedupWindow)
+                                            .Select(kv => kv.Key).ToList())
+                    _dedupSeen.Remove(k);
+            }
+            // Content signature includes emote/GIF URLs so two different images from
+            // the same user aren't mistaken for a repeat.
+            var content = string.Concat(m.Segments.Select(s =>
+                (int)s.Kind + ":" + (s.Text.Length > 0 ? s.Text : s.Url) + "⁤"));
+            var key = m.Platform + "␟" + m.User + "␟" + content;
+            if (_dedupSeen.TryGetValue(key, out var t) && now - t <= DedupWindow)
+                return true;
+            _dedupSeen[key] = now;
+            return false;
+        }
+
         private void OnMessage(ChatMessage m)
         {
             Dispatcher.Invoke(() =>
@@ -160,6 +192,9 @@ namespace GameTracker.Views
                 // Stream events (gifts, follows, subs…) are handled separately — no chat row,
                 // TTS, points or command parsing; they drive alerts, the feed and the recap.
                 if (m.IsEvent) { HandleEvent(m); return; }
+
+                // Skip SSN reconnect replays / cross-connector echoes of the same line.
+                if (IsDuplicateChat(m)) return;
 
                 bool atBottom = MsgScroll.VerticalOffset >= MsgScroll.ScrollableHeight - 4;
 

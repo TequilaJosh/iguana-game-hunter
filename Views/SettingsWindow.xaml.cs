@@ -186,6 +186,13 @@ namespace GameTracker.Views
 
         private void Nav_Click(object sender, RoutedEventArgs e)
         {
+            // Editor entries open their own editor rather than switching an inline panel,
+            // so they keep the current page visible behind the editor window.
+            if (sender == NavPoints) { OpenFeatures(true); return; }
+            if (sender == NavGoals) { Goals_Click(sender, e); return; }
+            if (sender == NavCounters) { Counters_Click(sender, e); return; }
+            if (sender == NavTextOverlays) { TextPanels_Click(sender, e); return; }
+
             NavAppearance.Tag = NavChat.Tag = NavVoice.Tag = NavVoiceRedeems.Tag = NavAlerts.Tag = NavOverlay.Tag =
                 NavHelp.Tag = NavBackup.Tag = NavHotkeys.Tag = null;
             PanelAppearance.Visibility = PanelChat.Visibility = PanelVoice.Visibility = PanelVoiceRedeems.Visibility =

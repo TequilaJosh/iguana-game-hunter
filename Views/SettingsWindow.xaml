@@ -147,10 +147,14 @@
                         BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,0,1,0">
                     <StackPanel>
                         <Button x:Name="NavChat" Content="💬  Chat" Tag="active" Style="{StaticResource NavBtn}" Click="Nav_Click"/>
+                        <Button x:Name="NavPoints" Content="🪙  Points &amp; Redeems" Style="{StaticResource NavBtn}" Click="Nav_Click"/>
                         <Button x:Name="NavVoice" Content="🔊  Voice &amp; TTS" Style="{StaticResource NavBtn}" Click="Nav_Click"/>
                         <Button x:Name="NavVoiceRedeems" Content="🎙  Voice Redeems" Style="{StaticResource NavBtn}" Click="Nav_Click"/>
                         <Button x:Name="NavAlerts" Content="🔔  Alerts" Style="{StaticResource NavBtn}" Click="Nav_Click"/>
                         <Button x:Name="NavOverlay" Content="🖼  Overlays" Style="{StaticResource NavBtn}" Click="Nav_Click"/>
+                        <Button x:Name="NavGoals" Content="🎯  Goals" Style="{StaticResource NavBtn}" Click="Nav_Click"/>
+                        <Button x:Name="NavCounters" Content="🔢  Counters" Style="{StaticResource NavBtn}" Click="Nav_Click"/>
+                        <Button x:Name="NavTextOverlays" Content="📝  Text Overlays" Style="{StaticResource NavBtn}" Click="Nav_Click"/>
                         <Button x:Name="NavAppearance" Content="🎨  Appearance" Style="{StaticResource NavBtn}" Click="Nav_Click"/>
                         <Button x:Name="NavHotkeys" Content="⌨  Hotkeys" Style="{StaticResource NavBtn}" Click="Nav_Click"/>
                         <Button x:Name="NavBackup" Content="💾  Backup" Style="{StaticResource NavBtn}" Click="Nav_Click"/>

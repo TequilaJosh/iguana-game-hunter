@@ -92,11 +92,14 @@ namespace GameTracker.Views
 
         private void Nav_Click(object sender, RoutedEventArgs e)
         {
-            NavAppearance.Tag = NavChat.Tag = NavOverlay.Tag = NavHelp.Tag = NavBackup.Tag = NavHotkeys.Tag = null;
-            PanelAppearance.Visibility = PanelChat.Visibility = PanelOverlay.Visibility =
-                PanelHelp.Visibility = PanelBackup.Visibility = PanelHotkeys.Visibility = Visibility.Collapsed;
+            NavAppearance.Tag = NavChat.Tag = NavVoice.Tag = NavAlerts.Tag = NavOverlay.Tag =
+                NavHelp.Tag = NavBackup.Tag = NavHotkeys.Tag = null;
+            PanelAppearance.Visibility = PanelChat.Visibility = PanelVoice.Visibility = PanelAlerts.Visibility =
+                PanelOverlay.Visibility = PanelHelp.Visibility = PanelBackup.Visibility = PanelHotkeys.Visibility = Visibility.Collapsed;
 
-            if (sender == NavChat) { NavChat.Tag = "active"; PanelChat.Visibility = Visibility.Visible; }
+            if (sender == NavVoice) { NavVoice.Tag = "active"; PanelVoice.Visibility = Visibility.Visible; }
+            else if (sender == NavAlerts) { NavAlerts.Tag = "active"; PanelAlerts.Visibility = Visibility.Visible; }
+            else if (sender == NavAppearance) { NavAppearance.Tag = "active"; PanelAppearance.Visibility = Visibility.Visible; }
             else if (sender == NavOverlay) { NavOverlay.Tag = "active"; PanelOverlay.Visibility = Visibility.Visible; RenderTickerPreview(); }
             else if (sender == NavBackup) { NavBackup.Tag = "active"; PanelBackup.Visibility = Visibility.Visible; }
             else if (sender == NavHotkeys)
@@ -109,7 +112,7 @@ namespace GameTracker.Views
                 NavHelp.Tag = "active"; PanelHelp.Visibility = Visibility.Visible;
                 BuildHelp();
             }
-            else { NavAppearance.Tag = "active"; PanelAppearance.Visibility = Visibility.Visible; }
+            else { NavChat.Tag = "active"; PanelChat.Visibility = Visibility.Visible; }
         }
 
         // ---- how-to guides ----

@@ -85,19 +85,114 @@ namespace GameTracker.Views
             UpdateOverlayStatus();
             RenderTickerPreview();
 
+            LoadVoiceRedeems();
+
             _ready = true;
+        }
+
+        // ── Voice-morph point redeems (one place to define them) ──────────────
+        public class VoiceRedeemVm
+        {
+            public string Command { get; set; } = "!";
+            public int Cost { get; set; } = 500;
+            public string Effect { get; set; } = "none";
+            public int Pitch { get; set; }
+            public int Duration { get; set; } = 60;
+        }
+        private readonly System.Collections.ObjectModel.ObservableCollection<VoiceRedeemVm> _vr = new();
+
+        private void LoadVoiceRedeems()
+        {
+            _vr.Clear();
+            var f = SettingsService.LoadChatFeatures();
+            var m = SettingsService.LoadMorph();
+            foreach (var r in f.Redeems)
+            {
+                if (string.IsNullOrWhiteSpace(r.MorphPreset)) continue;   // only voice-morph redeems
+                var p = m.Presets.FirstOrDefault(x => x.Name.Equals(r.MorphPreset, StringComparison.OrdinalIgnoreCase));
+                _vr.Add(new VoiceRedeemVm
+                {
+                    Command = r.Command,
+                    Cost = r.Cost,
+                    Effect = p?.Effect ?? "none",
+                    Pitch = p?.PitchSemitones ?? 0,
+                    Duration = p?.TimerSeconds ?? 60,
+                });
+            }
+            VrList.ItemsSource = _vr;
+        }
+
+        private void VrAdd_Click(object sender, RoutedEventArgs e)
+            => _vr.Add(new VoiceRedeemVm { Command = "!voice" + (_vr.Count + 1), Cost = 500, Effect = "robot", Pitch = 0, Duration = 60 });
+
+        private void VrDelete_Click(object sender, RoutedEventArgs e)
+        {
+            if (sender is FrameworkElement fe && fe.Tag is VoiceRedeemVm vm) _vr.Remove(vm);
+        }
+
+        private void VrTest_Click(object sender, RoutedEventArgs e)
+        {
+            var vm = _vr.LastOrDefault();
+            if (vm == null) { VrStatus.Text = "Add a redeem first."; return; }
+            VoiceMorphService.Activate(new MorphPreset
+            { Name = "preview", Effect = vm.Effect, PitchSemitones = vm.Pitch, TimerSeconds = Math.Max(5, Math.Min(10, vm.Duration)) });
+            VrStatus.Text = VoiceMorphService.IsRunning
+                ? $"▶ Previewing “{vm.Effect}” (pitch {vm.Pitch:+#;-#;0}) on your mic…"
+                : "Couldn't start the mic — set your input on the Voice & TTS page.";
+        }
+
+        private void VrSave_Click(object sender, RoutedEventArgs e)
+        {
+            var f = SettingsService.LoadChatFeatures();
+            var m = SettingsService.LoadMorph();
+
+            // Names of presets currently owned by voice redeems — replace just those.
+            var owned = new HashSet<string>(
+                f.Redeems.Where(r => !string.IsNullOrWhiteSpace(r.MorphPreset)).Select(r => r.MorphPreset),
+                StringComparer.OrdinalIgnoreCase);
+            f.Redeems.RemoveAll(r => !string.IsNullOrWhiteSpace(r.MorphPreset));
+            m.Presets.RemoveAll(p => owned.Contains(p.Name));
+
+            int n = 0;
+            foreach (var vm in _vr)
+            {
+                var cmd = (vm.Command ?? "").Trim();
+                if (cmd.Length == 0) continue;
+                if (!cmd.StartsWith("!")) cmd = "!" + cmd;
+                var presetName = cmd.TrimStart('!').Trim();
+                if (presetName.Length == 0) continue;
+                m.Presets.RemoveAll(p => p.Name.Equals(presetName, StringComparison.OrdinalIgnoreCase));  // de-dupe
+                m.Presets.Add(new MorphPreset
+                {
+                    Name = presetName,
+                    Effect = string.IsNullOrWhiteSpace(vm.Effect) ? "none" : vm.Effect,
+                    PitchSemitones = Math.Clamp(vm.Pitch, -12, 12),
+                    TimerSeconds = Math.Max(5, vm.Duration),
+                });
+                f.Redeems.Add(new GameTracker.Models.EffectRedeem
+                {
+                    Command = cmd, Cost = Math.Max(0, vm.Cost), Effect = "none", MorphPreset = presetName,
+                });
+                n++;
+            }
+
+            SettingsService.SaveMorph(m);
+            SettingsService.SaveChatFeatures(f);
+            ChatWindow.Current?.ReloadFeatures();   // apply live if chat is open
+            VrStatus.Text = $"✓ Saved {n} voice redeem{(n == 1 ? "" : "s")}. Viewers can redeem them now.";
         }
 
         // ---- left nav ----
 
         private void Nav_Click(object sender, RoutedEventArgs e)
         {
-            NavAppearance.Tag = NavChat.Tag = NavVoice.Tag = NavAlerts.Tag = NavOverlay.Tag =
+            NavAppearance.Tag = NavChat.Tag = NavVoice.Tag = NavVoiceRedeems.Tag = NavAlerts.Tag = NavOverlay.Tag =
                 NavHelp.Tag = NavBackup.Tag = NavHotkeys.Tag = null;
-            PanelAppearance.Visibility = PanelChat.Visibility = PanelVoice.Visibility = PanelAlerts.Visibility =
-                PanelOverlay.Visibility = PanelHelp.Visibility = PanelBackup.Visibility = PanelHotkeys.Visibility = Visibility.Collapsed;
+            PanelAppearance.Visibility = PanelChat.Visibility = PanelVoice.Visibility = PanelVoiceRedeems.Visibility =
+                PanelAlerts.Visibility = PanelOverlay.Visibility = PanelHelp.Visibility = PanelBackup.Visibility = PanelHotkeys.Visibility = Visibility.Collapsed;
 
-            if (sender == NavVoice) { NavVoice.Tag = "active"; PanelVoice.Visibility = Visibility.Visible; }
+            if (sender == NavVoiceRedeems) { NavVoiceRedeems.Tag = "active"; PanelVoiceRedeems.Visibility = Visibility.Visible; }
+            else if (sender == NavVoice) { NavVoice.Tag = "active"; PanelVoice.Visibility = Visibility.Visible; }
             else if (sender == NavAlerts) { NavAlerts.Tag = "active"; PanelAlerts.Visibility = Visibility.Visible; }
             else if (sender == NavAppearance) { NavAppearance.Tag = "active"; PanelAppearance.Visibility = Visibility.Visible; }
             else if (sender == NavOverlay) { NavOverlay.Tag = "active"; PanelOverlay.Visibility = Visibility.Visible; RenderTickerPreview(); }

@@ -14,6 +14,8 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history + tags, so we can diff against the previous release
 
       - uses: actions/setup-dotnet@v4
         with:
@@ -43,8 +45,25 @@ jobs:
         run: |
           & "C:\Program Files (x86)\Inno Setup 6\ISCC.exe" /DMyAppVersion=${{ steps.ver.outputs.version }} GameTracker.iss
 
+      - name: Build release notes from commits
+        id: notes
+        shell: pwsh
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $prev = (git describe --tags --abbrev=0 "$tag^" 2>$null)
+          if ($LASTEXITCODE -ne 0) { $prev = $null }
+          if ($prev) { $lines = git log "$prev..$tag" --no-merges --pretty=format:"%s" }
+          else       { $lines = git log $tag --no-merges -n 20 --pretty=format:"%s" }
+          # Drop the version-bump commits; keep the real change descriptions.
+          $lines = @($lines | Where-Object { $_ -and ($_ -notmatch '^Release v\d') })
+          if ($lines.Count -eq 0) { $lines = @('Improvements and bug fixes.') }
+          $body = "## What's new in $tag`n`n" + (($lines | ForEach-Object { "- $_" }) -join "`n")
+          if ($prev) { $body += "`n`n**Full changelog:** $prev...$tag" }
+          $body | Out-File -FilePath release-notes.md -Encoding utf8
+          Write-Host $body
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           files: installer/*.exe
-          generate_release_notes: true
+          body_path: release-notes.md

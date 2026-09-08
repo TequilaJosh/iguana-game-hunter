@@ -442,7 +442,7 @@ namespace GameTracker.Views
             Section("Voice Morph — build a morphed voice");
             Img("voicemorph.png");
             Body("The morph runs your microphone through the app in real time and plays the changed voice back out. When no morph is active you sound normal; a redeem (or a click) switches your voice for a set number of seconds, then it reverts on its own.");
-            Step(1, "Settings → 🔊 Voice & TTS → 🎙 Voice Morph. Tick \"Enable mic morph\".");
+            Step(1, "Settings → 🔊 Voice & TTS → 🎙 Voice Morph. Tick \"Use the app as my audio source (always on)\" — this runs your mic through the app continuously (your normal voice) so OBS can capture it, and it stays live and auto-recovers while the app is open. No VoiceMeeter or virtual cable needed.");
             Step(2, "Input = your microphone (e.g. \"Microphone (Razer Kiyo)\"). Output = 🎧 System default. (Output is only what YOU hear back — see the OBS section below; OBS captures the morph no matter what Output is set to. Pick 🔇 None if you don't want to hear yourself at all.)");
             Step(3, "Build a voice: set the Pitch slider (−12 to +12 semitones) and choose an Effect (robot, whisper, echo, distortion, flanger, vibrato, tremolo, autowah). Click \"▶ Try it live\" and talk to hear it.");
             Step(4, "Give it a Name, set Timer (how many seconds it stays on when redeemed), and click \"💾 Save voice\". It now shows under YOUR SAVED MORPHS and can be attached to a point redeem on the 🪙 Points & Redeems page.");

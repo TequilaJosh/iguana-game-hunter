@@ -90,9 +90,11 @@
 
             <!-- Engine config -->
             <StackPanel Grid.Row="1" Margin="16,12,16,6">
-                <CheckBox x:Name="EnabledCb" Content="Enable mic morph (your mic runs through the app; normal voice when no morph is active)"
-                          Foreground="#e8e0c4" FontSize="12" Margin="0,0,0,8"
-                          Checked="Enabled_Changed" Unchecked="Enabled_Changed"/>
+                <CheckBox x:Name="EnabledCb" Margin="0,0,0,8" VerticalContentAlignment="Center"
+                          Checked="Enabled_Changed" Unchecked="Enabled_Changed">
+                    <TextBlock Foreground="#e8e0c4" FontSize="12" TextWrapping="Wrap" MaxWidth="520"
+                               Text="Use the app as my audio source (always on) — runs your mic through the app so OBS can capture it. Your normal voice by default; morphs apply when triggered. Stays live and auto-recovers while the app is open."/>
+                </CheckBox>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                     <TextBlock Text="Microphone" Style="{StaticResource Lbl}"/>
                     <ComboBox x:Name="InputBox" Width="200" Margin="0,0,10,0" SelectionChanged="Device_Changed"/>

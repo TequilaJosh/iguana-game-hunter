@@ -24,6 +24,9 @@ namespace GameTracker.Views
         /// <summary>Set when the user clicks "OBS help" — the owner opens the How-To section on close.</summary>
         public bool OpenObsHelpRequested { get; private set; }
 
+        // Refreshes the LIVE/off status while the window is open so watchdog recovery shows live.
+        private System.Windows.Threading.DispatcherTimer? _statusTimer;
+
         public VoiceMorphWindow()
         {
             InitializeComponent();
@@ -52,18 +55,42 @@ namespace GameTracker.Views
             RefreshEmpty();
             UpdateEngineStatus();
             _ready = true;
+
+            _statusTimer = new System.Windows.Threading.DispatcherTimer
+            { Interval = TimeSpan.FromSeconds(1) };
+            _statusTimer.Tick += (_, _) => UpdateEngineStatus();
+            _statusTimer.Start();
+            Closed += (_, _) => _statusTimer?.Stop();
         }
 
         private void RefreshEmpty() =>
             EmptyText.Visibility = _rows.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
 
-        private void UpdateEngineStatus() =>
-            EngineStatus.Text = VoiceMorphService.IsRunning
-                ? "Mic chain running" +
-                  (VoiceMorphService.ActiveMorph.Length > 0 ? $" — morph active: {VoiceMorphService.ActiveMorph}" : " (normal voice)")
-                : (string.IsNullOrEmpty(VoiceMorphService.LastError)
-                    ? "Mic chain off."
-                    : "Mic chain error: " + VoiceMorphService.LastError);
+        private void UpdateEngineStatus()
+        {
+            string text; string hex;
+            if (VoiceMorphService.IsRunning)
+            {
+                bool morph = VoiceMorphService.ActiveMorph.Length > 0;
+                text = morph
+                    ? $"🟢 LIVE — morph active: {VoiceMorphService.ActiveMorph}"
+                    : "🟢 LIVE — the app is your audio source (normal voice).";
+                hex = "#7fd47f";
+            }
+            else if (!string.IsNullOrEmpty(VoiceMorphService.LastError))
+            {
+                text = "⚠ Audio problem: " + VoiceMorphService.LastError + " — retrying…";
+                hex = "#e0a030";
+            }
+            else
+            {
+                text = "⚪ Off — tick the box above to go live as an audio source.";
+                hex = "#7a9070";
+            }
+            EngineStatus.Text = text;
+            EngineStatus.Foreground = new System.Windows.Media.SolidColorBrush(
+                (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(hex));
+        }
 
         // ---- engine config ----
 

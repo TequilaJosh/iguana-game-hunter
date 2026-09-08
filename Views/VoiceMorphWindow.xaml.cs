@@ -14,9 +14,9 @@ namespace GameTracker.Views
             { "none", "robot", "whisper", "echo", "distortion", "flanger", "vibrato", "tremolo", "autowah" };
 
         private const string NoneLabel = "🔇 None — don't play back to me";
-        // Routing to the Windows default render endpoint (empty OutputDevice) is what OBS
-        // "Application Audio Capture" can actually hear, so it's the recommended choice.
-        private const string DefaultLabel = "🎧 System default (best for OBS capture)";
+        // Empty OutputDevice = play back to the Windows default render endpoint. This is only
+        // what the streamer hears; OBS Application Audio Capture grabs the app regardless.
+        private const string DefaultLabel = "🎧 System default (recommended)";
 
         private readonly ObservableCollection<Row> _rows = new();
         private bool _ready;
@@ -76,13 +76,14 @@ namespace GameTracker.Views
             SettingsService.SaveMorph(s);
         }
 
-        // Warn when a specific device is chosen — OBS Application Audio Capture can't hear it.
+        // Warn only when 🔇 None is chosen: with no playback there's no audio session, so
+        // OBS Application Audio Capture has nothing to grab. Any real device (default or
+        // specific) is fine for OBS — App Audio Capture hears the app regardless of device.
         private void UpdateOutputWarning()
         {
             var output = OutputBox.SelectedItem as string ?? string.Empty;
-            bool specific = output != DefaultLabel && output != NoneLabel && output.Length > 0;
             if (OutputWarn != null)
-                OutputWarn.Visibility = specific ? Visibility.Visible : Visibility.Collapsed;
+                OutputWarn.Visibility = output == NoneLabel ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private void Enabled_Changed(object sender, RoutedEventArgs e)

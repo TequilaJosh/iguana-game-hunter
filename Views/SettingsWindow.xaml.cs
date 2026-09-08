@@ -424,12 +424,24 @@ namespace GameTracker.Views
             Step(2, "Type any phrase and ▶ Test to hear it.");
             Step(3, "Name it and Save — it joins the voice list and the random per-chatter pool, marked with a ★.");
 
-            Section("Voice Morph — morph YOUR voice");
+            Section("Voice Morph — build a morphed voice");
             Img("voicemorph.png");
-            Step(1, "Settings → Chat → 🎙 Voice Morph. Pick your mic as Input. For OBS, set Output to '🎧 System default' — OBS Application Audio Capture only hears audio sent to your default device, so a specific device (e.g. certain headphones) makes OBS get silence. Use 🔇 None only if you don't want any of it in OBS.");
-            Step(2, "Build a morph: pitch slider (±12 semitones) + an effect, then \"Try it live\" and talk. Name it, set how long it lasts, and Save.");
-            Step(3, "To get the morphed voice on stream: in OBS add an Application Audio Capture source pointed at Game Tracker, mute your raw mic, and (see step 1) make sure the morph Output is '🎧 System default'. If it's still silent, route the morph to a virtual audio cable and add it as an Audio Input Capture instead.");
-            Step(4, "Attach saved morphs to point redeems in Features — viewers spend points to change YOUR voice. The overlay shows the morph name with a countdown, and your voice reverts automatically at zero.");
+            Body("The morph runs your microphone through the app in real time and plays the changed voice back out. When no morph is active you sound normal; a redeem (or a click) switches your voice for a set number of seconds, then it reverts on its own.");
+            Step(1, "Settings → 🔊 Voice & TTS → 🎙 Voice Morph. Tick \"Enable mic morph\".");
+            Step(2, "Input = your microphone (e.g. \"Microphone (Razer Kiyo)\"). Output = 🎧 System default. (Output is only what YOU hear back — see the OBS section below; OBS captures the morph no matter what Output is set to. Pick 🔇 None if you don't want to hear yourself at all.)");
+            Step(3, "Build a voice: set the Pitch slider (−12 to +12 semitones) and choose an Effect (robot, whisper, echo, distortion, flanger, vibrato, tremolo, autowah). Click \"▶ Try it live\" and talk to hear it.");
+            Step(4, "Give it a Name, set Timer (how many seconds it stays on when redeemed), and click \"💾 Save voice\". It now shows under YOUR SAVED MORPHS and can be attached to a point redeem on the 🪙 Points & Redeems page.");
+
+            Section("Voice Morph → OBS (get it on stream)");
+            Body("This is the part that trips people up. Your morphed voice comes out of Game Tracker as an application, so OBS must capture the APP — not a microphone. Using the wrong OBS source is the #1 reason the morph never reaches your stream.");
+            Step(1, "In OBS, under Sources click ➕ and choose \"Application Audio Capture (BETA)\" — NOT \"Audio Input Capture\" and NOT \"Audio Output Capture\". Audio Input Capture only grabs a physical mic and will sit silent forever; it's the usual mistake.");
+            Step(2, "Create new, name it something like \"Morphed Voice\", and click OK.");
+            Step(3, "In its Properties, set Window to \"[GameTracker.exe]: Game Tracker\". (Game Tracker must be running for it to appear in the list.) Leave Window Match Priority on its default. Click OK.");
+            Step(4, "Turn a morph on in the app (click ▶ Activate on a saved morph, or ▶ Try it live) and talk. The new \"Morphed Voice\" channel in OBS's Audio Mixer should now bounce. If it moves, you're done.");
+            Step(5, "Mute your raw mic in OBS. Your normal \"Mic/Aux\" source is still live and un-morphed — click its speaker icon to mute it, otherwise viewers hear your real voice on top of the morph. (Only the morphed capture should be unmuted while you're morphing.)");
+            Step(6, "You do NOT need to hear the morph yourself for OBS to get it — Application Audio Capture grabs the app's sound regardless of which Output device you picked or whether it's your default. If you WANT to monitor it, set Output to the headphones you're actually wearing.");
+            Body("Gotchas: (a) Keep a morph active while testing — a redeem/preview auto-reverts after its Timer and then there's nothing distinctive to hear. (b) \"Application Audio Capture (BETA)\" needs Windows 10 (2004+) or Windows 11 and OBS 28 or newer; if it isn't in the source list, that's why — use a free virtual audio cable instead (send the morph Output to the cable and capture it with an Audio Input Capture source). (c) If the meter still won't move, confirm Game Tracker is the selected Window and that a morph is actually active (the Voice Morph window shows \"morph active\").");
+            Step(7, "Attach saved morphs to point redeems on the 🪙 Points & Redeems page — viewers spend points to change YOUR voice. The overlay shows the morph name with a live countdown, and your voice reverts automatically at zero.");
 
             Section("Appearance — themes");
             Img("settings-appearance.png");

@@ -100,10 +100,10 @@
                     <ComboBox x:Name="OutputBox" Width="200" SelectionChanged="Device_Changed"/>
                 </StackPanel>
                 <TextBlock Foreground="#7a9070" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,6"
-                           Text="To get this into your stream: in OBS add an 'Application Audio Capture' source pointed at Game Tracker, and mute your raw Mic source. For OBS to actually hear it, set Output to '🎧 System default' — OBS App Capture only picks up audio sent to your default device. Pick a specific device only to preview privately (OBS won't get it), or 🔇 None for no playback at all."/>
+                           Text="To get this into your stream: in OBS add an 'Application Audio Capture (BETA)' source (NOT 'Audio Input Capture') with its Window set to Game Tracker, then mute your raw Mic source. Output here is only what YOU hear back — OBS captures the app no matter which device you pick. See Settings → How to → 'Voice Morph → OBS' for the full walkthrough."/>
                 <TextBlock x:Name="OutputWarn" Foreground="#e0a030" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8"
                            Visibility="Collapsed"
-                           Text="⚠ This Output is a specific device, not your system default. OBS 'Application Audio Capture' usually only hears audio sent to the default device — so OBS will likely get silence. Switch Output to '🎧 System default' (or route to a virtual audio cable and capture that)."/>
+                           Text="⚠ Output is set to 🔇 None, so nothing plays and there's no audio for OBS to capture. Pick a real device (🎧 System default is fine) if you want the morph on stream."/>
                 <TextBlock x:Name="EngineStatus" Foreground="{DynamicResource ThemeAccent2}" FontSize="11" Margin="0,0,0,4"/>
 
                 <Border Background="{DynamicResource ThemeBorder}" Height="1" Margin="0,4,0,10"/>

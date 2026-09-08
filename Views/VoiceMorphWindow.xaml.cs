@@ -21,6 +21,9 @@ namespace GameTracker.Views
         private readonly ObservableCollection<Row> _rows = new();
         private bool _ready;
 
+        /// <summary>Set when the user clicks "OBS help" — the owner opens the How-To section on close.</summary>
+        public bool OpenObsHelpRequested { get; private set; }
+
         public VoiceMorphWindow()
         {
             InitializeComponent();
@@ -174,6 +177,13 @@ namespace GameTracker.Views
             SettingsService.SaveMorph(s);
             _rows.Remove(r);
             RefreshEmpty();
+        }
+
+        private void Help_Click(object sender, RoutedEventArgs e)
+        {
+            // Close this modal and let the owner Control Center jump to the OBS guide.
+            OpenObsHelpRequested = true;
+            Close();
         }
 
         private void Close_Click(object sender, RoutedEventArgs e) => Close();

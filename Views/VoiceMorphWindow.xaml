@@ -98,6 +98,8 @@
                     <ComboBox x:Name="InputBox" Width="200" Margin="0,0,10,0" SelectionChanged="Device_Changed"/>
                     <TextBlock Text="Output" Style="{StaticResource Lbl}" Width="50"/>
                     <ComboBox x:Name="OutputBox" Width="200" SelectionChanged="Device_Changed"/>
+                    <Button Content="&#10067; OBS help" Click="Help_Click" Style="{StaticResource Btn}"
+                            Margin="10,0,0,0" ToolTip="Open the step-by-step OBS setup guide (with screenshots)"/>
                 </StackPanel>
                 <TextBlock Foreground="#7a9070" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,6"
                            Text="To get this into your stream: in OBS add an 'Application Audio Capture (BETA)' source (NOT 'Audio Input Capture') with its Window set to Game Tracker, then mute your raw Mic source. Output here is only what YOU hear back — OBS captures the app no matter which device you pick. See Settings → How to → 'Voice Morph → OBS' for the full walkthrough."/>

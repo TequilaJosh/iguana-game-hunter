@@ -220,6 +220,19 @@ namespace GameTracker.Views
         // ---- how-to guides ----
 
         private bool _helpBuilt;
+        // Section title → an action that expands it and scrolls it into view (for deep-links).
+        private readonly Dictionary<string, Action> _helpSections =
+            new(StringComparer.OrdinalIgnoreCase);
+        public const string VoiceMorphObsSection = "Voice Morph → OBS (get it on stream)";
+
+        /// <summary>Open the How-To page and jump to a section by title (used by editors' help buttons).</summary>
+        public void ShowHelpSection(string title)
+        {
+            Nav_Click(NavHelp, new RoutedEventArgs());   // switch to the How-To page + build it
+            Activate();
+            if (_helpSections.TryGetValue(title, out var open))
+                Dispatcher.BeginInvoke(open, System.Windows.Threading.DispatcherPriority.Loaded);
+        }
 
         private void BuildHelp()
         {
@@ -258,6 +271,8 @@ namespace GameTracker.Views
                 HelpContent.Children.Add(header);
                 HelpContent.Children.Add(panel);
                 current = panel;
+                // Register a deep-link opener: expand this section and scroll it into view.
+                _helpSections[title] = () => { SetOpen(entry, true); header.BringIntoView(); };
             }
 
             void Add(UIElement el)
@@ -435,8 +450,11 @@ namespace GameTracker.Views
             Section("Voice Morph → OBS (get it on stream)");
             Body("This is the part that trips people up. Your morphed voice comes out of Game Tracker as an application, so OBS must capture the APP — not a microphone. Using the wrong OBS source is the #1 reason the morph never reaches your stream.");
             Step(1, "In OBS, under Sources click ➕ and choose \"Application Audio Capture (BETA)\" — NOT \"Audio Input Capture\" and NOT \"Audio Output Capture\". Audio Input Capture only grabs a physical mic and will sit silent forever; it's the usual mistake.");
+            Img("obs-1-add-source.png");
             Step(2, "Create new, name it something like \"Morphed Voice\", and click OK.");
-            Step(3, "In its Properties, set Window to \"[GameTracker.exe]: Game Tracker\". (Game Tracker must be running for it to appear in the list.) Leave Window Match Priority on its default. Click OK.");
+            Img("obs-2-create-source.png");
+            Step(3, "In its Properties, open the Window dropdown and pick \"[GameTracker.exe]: Game Tracker\". (Game Tracker must be running for it to appear in the list.) Leave Window Match Priority on its default. Click OK.");
+            Img("obs-3-window.png");
             Step(4, "Turn a morph on in the app (click ▶ Activate on a saved morph, or ▶ Try it live) and talk. The new \"Morphed Voice\" channel in OBS's Audio Mixer should now bounce. If it moves, you're done.");
             Step(5, "Mute your raw mic in OBS. Your normal \"Mic/Aux\" source is still live and un-morphed — click its speaker icon to mute it, otherwise viewers hear your real voice on top of the morph. (Only the morphed capture should be unmuted while you're morphing.)");
             Step(6, "You do NOT need to hear the morph yourself for OBS to get it — Application Audio Capture grabs the app's sound regardless of which Output device you picked or whether it's your default. If you WANT to monitor it, set Output to the headphones you're actually wearing.");
@@ -722,8 +740,12 @@ namespace GameTracker.Views
                 ?? _profiles.FirstOrDefault();
         }
 
-        private void VoiceMorph_Click(object sender, RoutedEventArgs e) =>
-            new VoiceMorphWindow { Owner = this }.ShowDialog();
+        private void VoiceMorph_Click(object sender, RoutedEventArgs e)
+        {
+            var w = new VoiceMorphWindow { Owner = this };
+            w.ShowDialog();
+            if (w.OpenObsHelpRequested) ShowHelpSection(VoiceMorphObsSection);
+        }
 
         private void TtsTest_Click(object sender, RoutedEventArgs e)
         {

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
@@ -19,8 +20,8 @@ namespace GameTracker.Services
         private const string Owner = "TequilaJosh";
         private const string Repo = "iguana-game-hunter";
 
-        private static readonly string LatestReleaseApi =
-            $"https://api.github.com/repos/{Owner}/{Repo}/releases/latest";
+        private static readonly string ReleasesListApi =
+            $"https://api.github.com/repos/{Owner}/{Repo}/releases?per_page=30";
         private static readonly string ReleasesPage =
             $"https://github.com/{Owner}/{Repo}/releases/latest";
 
@@ -40,14 +41,21 @@ namespace GameTracker.Services
                 http.DefaultRequestHeaders.UserAgent.ParseAdd("GameTracker-Updater");
                 http.DefaultRequestHeaders.Accept.ParseAdd("application/vnd.github+json");
 
-                var json = await http.GetStringAsync(LatestReleaseApi);
-                var release = JObject.Parse(json);
-
-                var tag = (string?)release["tag_name"] ?? string.Empty;
-                var latest = ParseVersion(tag);
+                var json = await http.GetStringAsync(ReleasesListApi);
                 var current = CurrentVersion();
 
-                if (latest == null || latest <= current)
+                // Parse the release list (skip drafts/pre-releases), newest first.
+                var releases = new List<(Version ver, string tag, string body, JObject obj)>();
+                foreach (var r in JArray.Parse(json).OfType<JObject>())
+                {
+                    if ((bool?)r["draft"] == true || (bool?)r["prerelease"] == true) continue;
+                    var t = (string?)r["tag_name"] ?? string.Empty;
+                    var v = ParseVersion(t);
+                    if (v != null) releases.Add((v, t, ((string?)r["body"] ?? string.Empty).Trim(), r));
+                }
+                releases.Sort((a, b) => b.ver.CompareTo(a.ver));
+
+                if (releases.Count == 0 || releases[0].ver <= current)
                 {
                     if (!silent)
                         MessageBox.Show($"You're on the latest version (v{current.ToString(3)}).",
@@ -55,17 +63,24 @@ namespace GameTracker.Services
                     return;
                 }
 
-                var notes = ((string?)release["body"] ?? string.Empty).Trim();
-                var prompt =
-                    $"A new version of LazerGuanas Game Hunter is available.\n\n" +
-                    $"Installed:  v{current.ToString(3)}\n" +
-                    $"Available:  {tag}\n\n" +
-                    (notes.Length > 0 ? $"{Truncate(notes, 400)}\n\n" : string.Empty) +
-                    "Download and install it now? The app will update and reopen automatically.";
+                var latestRel = releases[0];
+                var release = latestRel.obj;
 
-                if (MessageBox.Show(prompt, "Update Available",
-                        MessageBoxButton.YesNo, MessageBoxImage.Information) != MessageBoxResult.Yes)
-                    return;
+                // Everything the user hasn't seen yet: notes for each version above theirs.
+                var entries = releases
+                    .Where(x => x.ver > current)
+                    .Select(x => (x.tag, x.body))
+                    .ToList();
+
+                bool doUpdate = false;
+                Application.Current.Dispatcher.Invoke(() =>
+                {
+                    var dlg = new Views.UpdateAvailableWindow(current.ToString(3), latestRel.tag, entries);
+                    var owner = Application.Current.MainWindow;
+                    if (owner != null && owner.IsLoaded && owner.IsVisible) dlg.Owner = owner;
+                    doUpdate = dlg.ShowDialog() == true;
+                });
+                if (!doUpdate) return;
 
                 var asset = ((JArray?)release["assets"] ?? new JArray())
                     .FirstOrDefault(a => ((string?)a["name"] ?? "")
@@ -155,9 +170,6 @@ namespace GameTracker.Services
             if (!Version.TryParse(cleaned, out var v)) return null;
             return new Version(v.Major, v.Minor, Math.Max(0, v.Build));
         }
-
-        private static string Truncate(string s, int max) =>
-            s.Length <= max ? s : s.Substring(0, max).TrimEnd() + "…";
 
         private static void OpenInBrowser(string url)
         {

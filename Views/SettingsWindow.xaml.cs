@@ -426,9 +426,9 @@ namespace GameTracker.Views
 
             Section("Voice Morph — morph YOUR voice");
             Img("voicemorph.png");
-            Step(1, "Settings → Chat → 🎙 Voice Morph. Pick your mic as Input and choose an Output (headphones to preview; 🔇 None to not hear yourself).");
+            Step(1, "Settings → Chat → 🎙 Voice Morph. Pick your mic as Input. For OBS, set Output to '🎧 System default' — OBS Application Audio Capture only hears audio sent to your default device, so a specific device (e.g. certain headphones) makes OBS get silence. Use 🔇 None only if you don't want any of it in OBS.");
             Step(2, "Build a morph: pitch slider (±12 semitones) + an effect, then \"Try it live\" and talk. Name it, set how long it lasts, and Save.");
-            Step(3, "To get the morphed voice on stream: in OBS add an Application Audio Capture source pointed at Game Tracker and mute your raw mic.");
+            Step(3, "To get the morphed voice on stream: in OBS add an Application Audio Capture source pointed at Game Tracker, mute your raw mic, and (see step 1) make sure the morph Output is '🎧 System default'. If it's still silent, route the morph to a virtual audio cable and add it as an Audio Input Capture instead.");
             Step(4, "Attach saved morphs to point redeems in Features — viewers spend points to change YOUR voice. The overlay shows the morph name with a countdown, and your voice reverts automatically at zero.");
 
             Section("Appearance — themes");

@@ -14,6 +14,9 @@ namespace GameTracker.Views
             { "none", "robot", "whisper", "echo", "distortion", "flanger", "vibrato", "tremolo", "autowah" };
 
         private const string NoneLabel = "🔇 None — don't play back to me";
+        // Routing to the Windows default render endpoint (empty OutputDevice) is what OBS
+        // "Application Audio Capture" can actually hear, so it's the recommended choice.
+        private const string DefaultLabel = "🎧 System default (best for OBS capture)";
 
         private readonly ObservableCollection<Row> _rows = new();
         private bool _ready;
@@ -26,15 +29,17 @@ namespace GameTracker.Views
             EnabledCb.IsChecked = s.Enabled;
 
             InputBox.ItemsSource = VoiceMorphService.InputDevices();
-            var outputs = new System.Collections.Generic.List<string> { NoneLabel };
+            var outputs = new System.Collections.Generic.List<string> { DefaultLabel, NoneLabel };
             outputs.AddRange(VoiceMorphService.OutputDevices());
             OutputBox.ItemsSource = outputs;
             InputBox.SelectedItem = InputBox.Items.OfType<string>().FirstOrDefault(d => d == s.InputDevice)
                                     ?? InputBox.Items.OfType<string>().FirstOrDefault();
             OutputBox.SelectedItem = s.OutputDevice == VoiceMorphService.NoneOutput
                 ? NoneLabel
-                : outputs.FirstOrDefault(d => d == s.OutputDevice)
-                  ?? outputs.Skip(1).FirstOrDefault() ?? NoneLabel;
+                : string.IsNullOrEmpty(s.OutputDevice)
+                    ? DefaultLabel
+                    : outputs.FirstOrDefault(d => d == s.OutputDevice) ?? DefaultLabel;
+            UpdateOutputWarning();
 
             EffectBox.ItemsSource = EffectKeys;
             EffectBox.SelectedIndex = 0;
@@ -65,8 +70,19 @@ namespace GameTracker.Views
             s.Enabled = EnabledCb.IsChecked == true;
             s.InputDevice = InputBox.SelectedItem as string ?? string.Empty;
             var output = OutputBox.SelectedItem as string ?? string.Empty;
-            s.OutputDevice = output == NoneLabel ? VoiceMorphService.NoneOutput : output;
+            s.OutputDevice = output == NoneLabel ? VoiceMorphService.NoneOutput
+                           : output == DefaultLabel ? string.Empty   // empty = Windows default render endpoint
+                           : output;
             SettingsService.SaveMorph(s);
+        }
+
+        // Warn when a specific device is chosen — OBS Application Audio Capture can't hear it.
+        private void UpdateOutputWarning()
+        {
+            var output = OutputBox.SelectedItem as string ?? string.Empty;
+            bool specific = output != DefaultLabel && output != NoneLabel && output.Length > 0;
+            if (OutputWarn != null)
+                OutputWarn.Visibility = specific ? Visibility.Visible : Visibility.Collapsed;
         }
 
         private void Enabled_Changed(object sender, RoutedEventArgs e)
@@ -82,6 +98,7 @@ namespace GameTracker.Views
         {
             if (!_ready) return;
             SaveEngineSettings();
+            UpdateOutputWarning();
             if (EnabledCb.IsChecked == true) { VoiceMorphService.Start(); UpdateEngineStatus(); }
         }
 

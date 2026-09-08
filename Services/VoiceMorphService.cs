@@ -28,6 +28,18 @@ namespace GameTracker.Services
         private static Timer? _revert;
         private static string _activeName = string.Empty;
 
+        // Keep-alive: the mic chain should behave like a permanent microphone, so a watchdog
+        // restarts it whenever the audio path dies (device unplugged, VoiceMeeter/driver
+        // restarted, default device switched, the stream stalls). _desired = the user wants
+        // it running; _faulted = an unexpected stop needs recovery; _lastDataUtc = last time
+        // capture delivered a buffer (silence still counts — WASAPI delivers during silence).
+        private static volatile bool _desired;
+        private static volatile bool _faulted;
+        private static DateTime _lastDataUtc = DateTime.MinValue;
+        private static DateTime _lastStartUtc = DateTime.MinValue;
+        private static Timer? _watchdog;
+        private static readonly TimeSpan StallAfter = TimeSpan.FromSeconds(5);
+
         public static bool IsRunning { get; private set; }
         public static string LastError { get; private set; } = string.Empty;
         public static string ActiveMorph => _activeName;
@@ -88,15 +100,44 @@ namespace GameTracker.Services
 
         // ---- engine ----
 
-        /// <summary>Start (or restart) the mic chain with the saved settings.</summary>
+        /// <summary>Start the always-on mic chain from the saved settings (and keep it alive).</summary>
         public static bool Start()
         {
-            Stop();
             var s = SettingsService.LoadMorph();
-            if (!s.Enabled) return false;
+            _desired = s.Enabled;
+            EnsureWatchdog();               // watchdog runs for the app's lifetime once started
+            if (!s.Enabled) { Stop(); return false; }
+            return StartInternal(s);
+        }
 
+        // The watchdog keeps the pipeline running like a real microphone: while the user wants
+        // it on, restart whenever it isn't running, faulted, or the capture stream has stalled.
+        private static void EnsureWatchdog()
+        {
+            if (_watchdog != null) return;
+            _watchdog = new Timer(_ => WatchdogTick(), null,
+                TimeSpan.FromSeconds(2), TimeSpan.FromSeconds(2));
+        }
+
+        private static void WatchdogTick()
+        {
+            if (!_desired) return;
+            bool stalled = IsRunning && DateTime.UtcNow - _lastDataUtc > StallAfter;
+            if (!IsRunning || _faulted || stalled)
+            {
+                if (DateTime.UtcNow - _lastStartUtc < TimeSpan.FromSeconds(2)) return; // don't hammer
+                try { StartInternal(SettingsService.LoadMorph()); } catch { /* try again next tick */ }
+            }
+        }
+
+        // Bring the device chain up (tearing down any previous one first). Safe to call
+        // repeatedly — this is what both Start() and the watchdog use.
+        private static bool StartInternal(MorphSettings s)
+        {
             lock (Gate)
             {
+                StopCore();
+                _lastStartUtc = DateTime.UtcNow;
                 try
                 {
                     bool silent = s.OutputDevice == NoneOutput;
@@ -116,14 +157,18 @@ namespace GameTracker.Services
                             BufferDuration = TimeSpan.FromSeconds(2),
                         };
                         _out = new WasapiOut(spk, AudioClientShareMode.Shared, true, 60);
+                        _out.PlaybackStopped += OnPlaybackStopped;
                         _out.Init(_buf);
                         _out.Play();
                     }
                     // silent: _buf stays null; OnAudio still runs the chain but discards output.
 
                     _capture.DataAvailable += OnAudio;
+                    _capture.RecordingStopped += OnRecordingStopped;
                     _capture.StartRecording();
 
+                    _lastDataUtc = DateTime.UtcNow;
+                    _faulted = false;
                     IsRunning = true;
                     LastError = string.Empty;
                     return true;
@@ -137,8 +182,15 @@ namespace GameTracker.Services
             }
         }
 
+        // Unexpected stops (device removed, driver restart, format change) flag a fault so the
+        // watchdog rebuilds the chain. Our own teardown unsubscribes first, so these only fire
+        // for genuine failures, not for StopCore().
+        private static void OnPlaybackStopped(object? sender, StoppedEventArgs e) { if (_desired) _faulted = true; }
+        private static void OnRecordingStopped(object? sender, StoppedEventArgs e) { if (_desired) _faulted = true; }
+
         private static void OnAudio(object? sender, WaveInEventArgs e)
         {
+            _lastDataUtc = DateTime.UtcNow;   // liveness — updated even in silent mode
             var chain = _chain;
             var buf = _buf;
             if (buf == null) return;
@@ -163,15 +215,37 @@ namespace GameTracker.Services
             catch { /* keep the stream alive */ }
         }
 
+        /// <summary>User-initiated stop: the mic chain should stay down (watchdog won't revive it).</summary>
         public static void Stop()
         {
+            _desired = false;
             lock (Gate) StopCore();
         }
 
+        // Tear down the device chain. Unsubscribes the fault handlers FIRST so our own stop
+        // doesn't look like a failure to the watchdog. Does not change _desired.
         private static void StopCore()
         {
-            try { if (_capture != null) { _capture.DataAvailable -= OnAudio; _capture.StopRecording(); _capture.Dispose(); } } catch { }
-            try { _out?.Dispose(); } catch { }
+            try
+            {
+                if (_capture != null)
+                {
+                    _capture.DataAvailable -= OnAudio;
+                    _capture.RecordingStopped -= OnRecordingStopped;
+                    _capture.StopRecording();
+                    _capture.Dispose();
+                }
+            }
+            catch { }
+            try
+            {
+                if (_out != null)
+                {
+                    _out.PlaybackStopped -= OnPlaybackStopped;
+                    _out.Dispose();
+                }
+            }
+            catch { }
             _capture = null; _out = null; _buf = null;
             IsRunning = false;
             ClearMorph(broadcast: false);

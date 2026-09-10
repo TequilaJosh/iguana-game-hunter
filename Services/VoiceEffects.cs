@@ -3,13 +3,13 @@ using NAudio.Wave;
 
 namespace GameTracker.Services
 {
-    // Runs any NWaves streaming effect over an NAudio sample stream.
+    // Runs one or more NWaves streaming effects (in order) over an NAudio sample stream.
     internal sealed class NWavesProvider : ISampleProvider
     {
         private readonly ISampleProvider _src;
-        private readonly NWaves.Filters.Base.IOnlineFilter _fx;
+        private readonly NWaves.Filters.Base.IOnlineFilter[] _fx;
 
-        public NWavesProvider(ISampleProvider src, NWaves.Filters.Base.IOnlineFilter fx)
+        public NWavesProvider(ISampleProvider src, params NWaves.Filters.Base.IOnlineFilter[] fx)
         {
             _src = src;
             _fx = fx;
@@ -21,8 +21,103 @@ namespace GameTracker.Services
         {
             int n = _src.Read(buffer, offset, count);
             for (int i = 0; i < n; i++)
-                buffer[offset + i] = Math.Clamp(_fx.Process(buffer[offset + i]), -1f, 1f);
+            {
+                float s = buffer[offset + i];
+                foreach (var f in _fx) s = f.Process(s);
+                buffer[offset + i] = Math.Clamp(s, -1f, 1f);
+            }
             return n;
+        }
+    }
+
+    // A compact mono reverb (Freeverb-style: parallel comb filters into series allpass
+    // filters). NWaves has no reverb of its own, so this provides the big, spacious tail
+    // used by the "heaven"/"cathedral"/"angelic" voices — implemented as an NWaves
+    // IOnlineFilter so it drops into the same effect chains as everything else.
+    internal sealed class ReverbFilter : NWaves.Filters.Base.IOnlineFilter
+    {
+        private readonly Comb[] _combs;
+        private readonly Allpass[] _allpasses;
+        private readonly float _wet;
+        private readonly float _dry;
+
+        // roomSize 0..1 (bigger = longer tail), damp 0..1 (more = darker), wet 0..1 (mix).
+        public ReverbFilter(int sampleRate, float roomSize = 0.85f, float damp = 0.25f, float wet = 0.5f)
+        {
+            float scale = sampleRate / 44100f;
+            int[] combTuning = { 1116, 1188, 1277, 1356, 1422, 1491, 1557, 1617 };
+            int[] apTuning = { 556, 441, 341, 225 };
+            float feedback = roomSize * 0.28f + 0.7f;   // Freeverb room mapping
+            float d = damp * 0.4f;
+
+            _combs = new Comb[combTuning.Length];
+            for (int i = 0; i < combTuning.Length; i++)
+                _combs[i] = new Comb((int)(combTuning[i] * scale) + 1, feedback, d);
+
+            _allpasses = new Allpass[apTuning.Length];
+            for (int i = 0; i < apTuning.Length; i++)
+                _allpasses[i] = new Allpass((int)(apTuning[i] * scale) + 1, 0.5f);
+
+            _wet = Math.Clamp(wet, 0f, 1f);
+            _dry = 1f - _wet * 0.5f;   // keep the voice present under the tail
+        }
+
+        public float Process(float x)
+        {
+            float input = x * 0.015f;   // Freeverb fixed input gain
+            float wet = 0f;
+            for (int i = 0; i < _combs.Length; i++) wet += _combs[i].Process(input);
+            for (int i = 0; i < _allpasses.Length; i++) wet = _allpasses[i].Process(wet);
+            return _dry * x + _wet * 3f * wet;
+        }
+
+        public void Reset()
+        {
+            foreach (var c in _combs) c.Reset();
+            foreach (var a in _allpasses) a.Reset();
+        }
+
+        private sealed class Comb
+        {
+            private readonly float[] _buf;
+            private readonly float _feedback, _damp1, _damp2;
+            private int _pos;
+            private float _store;
+            public Comb(int size, float feedback, float damp)
+            {
+                _buf = new float[Math.Max(1, size)];
+                _feedback = feedback; _damp1 = damp; _damp2 = 1f - damp;
+            }
+            public float Process(float x)
+            {
+                float y = _buf[_pos];
+                _store = y * _damp2 + _store * _damp1;
+                _buf[_pos] = x + _store * _feedback;
+                if (++_pos >= _buf.Length) _pos = 0;
+                return y;
+            }
+            public void Reset() { Array.Clear(_buf, 0, _buf.Length); _store = 0; _pos = 0; }
+        }
+
+        private sealed class Allpass
+        {
+            private readonly float[] _buf;
+            private readonly float _feedback;
+            private int _pos;
+            public Allpass(int size, float feedback)
+            {
+                _buf = new float[Math.Max(1, size)];
+                _feedback = feedback;
+            }
+            public float Process(float x)
+            {
+                float bufout = _buf[_pos];
+                float y = -x + bufout;
+                _buf[_pos] = x + bufout * _feedback;
+                if (++_pos >= _buf.Length) _pos = 0;
+                return y;
+            }
+            public void Reset() { Array.Clear(_buf, 0, _buf.Length); _pos = 0; }
         }
     }
 

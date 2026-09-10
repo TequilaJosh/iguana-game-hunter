@@ -234,6 +234,10 @@ namespace GameTracker.Services
             new("underwater","underwater",0.95, 0.95, "nw:autowah"),
             new("wobbly",   "wobbly",   1.00, 1.00, "nw:flanger"),
             new("haunted",  "haunted",  0.75, 0.90, "nw:vibrato"),
+            // "Voice of God" family — deep + reverberant space, big cathedral, ethereal choir.
+            new("heaven",   "heaven",   0.78, 0.92, "nw:heaven",    Pool: false),
+            new("cathedral","cathedral",0.82, 0.95, "nw:cathedral", Pool: false),
+            new("angelic",  "angelic",  1.15, 1.02, "nw:angelic",   Pool: false),
         };
 
         private static Effect Find(string? key) =>
@@ -340,6 +344,16 @@ namespace GameTracker.Services
                     "nw:autowah" => new NWavesProvider(sp, new NWaves.Effects.AutowahEffect(sr)),
                     "nw:flanger" => new NWavesProvider(sp, new NWaves.Effects.FlangerEffect(sr)),
                     "nw:vibrato" => new NWavesProvider(sp, new NWaves.Effects.VibratoEffect(sr)),
+                    "nw:heaven" => new NWavesProvider(sp,
+                        new NWaves.Effects.ChorusEffect(sr, new[] { 0.5f, 0.9f }, new[] { 0.002f, 0.0025f }),
+                        new ReverbFilter(sr, roomSize: 0.90f, damp: 0.20f, wet: 0.55f),
+                        new NWaves.Effects.EchoEffect(sr, 0.25f, 0.3f)),
+                    "nw:cathedral" => new NWavesProvider(sp,
+                        new ReverbFilter(sr, roomSize: 0.94f, damp: 0.15f, wet: 0.60f),
+                        new NWaves.Effects.EchoEffect(sr, 0.35f, 0.35f)),
+                    "nw:angelic" => new NWavesProvider(sp,
+                        new NWaves.Effects.ChorusEffect(sr, new[] { 0.8f, 1.2f, 1.6f }, new[] { 0.0025f, 0.003f, 0.0035f }),
+                        new ReverbFilter(sr, roomSize: 0.85f, damp: 0.30f, wet: 0.50f)),
                     _ => sp,
                 };
 

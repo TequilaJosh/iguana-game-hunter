@@ -50,11 +50,11 @@ namespace GameTracker.Services
         private sealed class Chain
         {
             public PitchShiftVocoderEffect? Pitch;
-            public IOnlineFilter? Fx;
+            public IOnlineFilter[]? Fx;      // effects applied in order (some voices layer several)
             public float Process(float s)
             {
                 if (Pitch != null) s = Pitch.Process(s);
-                if (Fx != null) s = Fx.Process(s);
+                if (Fx != null) foreach (var f in Fx) s = f.Process(s);
                 return s;
             }
         }
@@ -259,18 +259,37 @@ namespace GameTracker.Services
             var chain = new Chain();
             if (p.PitchSemitones != 0)
                 chain.Pitch = new PitchShiftVocoderEffect(sampleRate, Math.Pow(2, p.PitchSemitones / 12.0));
-            chain.Fx = (IOnlineFilter?)(p.Effect switch
+            chain.Fx = p.Effect switch
             {
-                "robot" => new RobotEffect(hopSize: 128, fftSize: 512),
-                "whisper" => new WhisperEffect(hopSize: 128, fftSize: 512),
-                "echo" => new EchoEffect(sampleRate, 0.22f, 0.5f),
-                "distortion" => new DistortionEffect(DistortionMode.SoftClipping, 18),
-                "flanger" => new FlangerEffect(sampleRate),
-                "vibrato" => new VibratoEffect(sampleRate),
-                "tremolo" => new TremoloEffect(sampleRate, 0.7f, 7),
-                "autowah" => new AutowahEffect(sampleRate),
-                _ => (object?)null,
-            });
+                "robot" => new IOnlineFilter[] { new RobotEffect(hopSize: 128, fftSize: 512) },
+                "whisper" => new IOnlineFilter[] { new WhisperEffect(hopSize: 128, fftSize: 512) },
+                "echo" => new IOnlineFilter[] { new EchoEffect(sampleRate, 0.22f, 0.5f) },
+                "distortion" => new IOnlineFilter[] { new DistortionEffect(DistortionMode.SoftClipping, 18) },
+                "flanger" => new IOnlineFilter[] { new FlangerEffect(sampleRate) },
+                "vibrato" => new IOnlineFilter[] { new VibratoEffect(sampleRate) },
+                "tremolo" => new IOnlineFilter[] { new TremoloEffect(sampleRate, 0.7f, 7) },
+                "autowah" => new IOnlineFilter[] { new AutowahEffect(sampleRate) },
+
+                // The "voice of God" family — deep pitch (set via the preset) plus a big
+                // reverberant space, a layered chorus and a booming echo.
+                "heaven" => new IOnlineFilter[]
+                {
+                    new ChorusEffect(sampleRate, new[] { 0.5f, 0.9f }, new[] { 0.002f, 0.0025f }),
+                    new ReverbFilter(sampleRate, roomSize: 0.90f, damp: 0.20f, wet: 0.55f),
+                    new EchoEffect(sampleRate, 0.25f, 0.3f),
+                },
+                "cathedral" => new IOnlineFilter[]
+                {
+                    new ReverbFilter(sampleRate, roomSize: 0.94f, damp: 0.15f, wet: 0.60f),
+                    new EchoEffect(sampleRate, 0.35f, 0.35f),
+                },
+                "angelic" => new IOnlineFilter[]
+                {
+                    new ChorusEffect(sampleRate, new[] { 0.8f, 1.2f, 1.6f }, new[] { 0.0025f, 0.003f, 0.0035f }),
+                    new ReverbFilter(sampleRate, roomSize: 0.85f, damp: 0.30f, wet: 0.50f),
+                },
+                _ => null,
+            };
             return chain;
         }
 

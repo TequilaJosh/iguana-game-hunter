@@ -11,7 +11,8 @@ namespace GameTracker.Views
     public partial class VoiceMorphWindow : Window
     {
         private static readonly string[] EffectKeys =
-            { "none", "robot", "whisper", "echo", "distortion", "flanger", "vibrato", "tremolo", "autowah" };
+            { "none", "robot", "whisper", "echo", "distortion", "flanger", "vibrato", "tremolo", "autowah",
+              "heaven", "cathedral", "angelic" };
 
         private const string NoneLabel = "🔇 None — don't play back to me";
         // Empty OutputDevice = play back to the Windows default render endpoint. This is only

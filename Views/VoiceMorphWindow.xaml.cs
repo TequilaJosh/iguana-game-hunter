@@ -200,7 +200,9 @@ namespace GameTracker.Views
 
             switch (fe.Tag as string)
             {
-                case "heaven":    PitchSlider.Value = -5; Set("reverb", 70); Set("chorus", 40); Set("echo", 30); break;
+                // The Lord Almighty: deep, commanding, huge reverberant space with a booming
+                // echo, a touch of chorus for the "many voices as one", and a little grit for power.
+                case "yhwh":      PitchSlider.Value = -6; Set("tone", 12); Set("chorus", 30); Set("reverb", 80); Set("echo", 40); break;
                 case "cathedral": PitchSlider.Value = -4; Set("reverb", 85); Set("echo", 45); break;
                 case "angelic":   PitchSlider.Value =  3; Set("chorus", 60); Set("reverb", 55); break;
                 case "clear":     PitchSlider.Value =  0; break;

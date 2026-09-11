@@ -355,13 +355,11 @@ namespace GameTracker.Services
                     new ChorusEffect(sampleRate, new[] { 0.8f, 1.2f, 1.6f }, new[] { 0.0025f, 0.003f, 0.0035f }),
                     new ReverbFilter(sampleRate, roomSize: 0.85f, damp: 0.30f, wet: 0.50f),
                 },
-                // Skeletor — raspy grit, a menacing wobble, and a cavernous Snake-Mountain tail.
+                // Skeletor — matches the mixer preset: heavy raspy grit + a strong wobble.
                 "skeletor" => new IOnlineFilter[]
                 {
-                    new DistortionEffect(DistortionMode.SoftClipping, 22),
-                    new TremoloEffect(sampleRate, 0.35f, 5),
-                    new ReverbFilter(sampleRate, roomSize: 0.85f, damp: 0.35f, wet: 0.35f),
-                    new EchoEffect(sampleRate, 0.20f, 0.25f),
+                    new WetDryFilter(new DistortionEffect(DistortionMode.SoftClipping, 22), 0.76f),
+                    new WetDryFilter(new TremoloEffect(sampleRate, 0.7f, 6), 0.69f),
                 },
                 _ => null,
             };

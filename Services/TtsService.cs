@@ -239,7 +239,7 @@ namespace GameTracker.Services
             new("yhwh",     "yhwh",     0.89, 0.95, "nw:yhwh",      Pool: false),
             new("cathedral","cathedral",0.82, 0.95, "nw:cathedral", Pool: false),
             new("angelic",  "angelic",  1.15, 1.02, "nw:angelic",   Pool: false),
-            new("skeletor", "skeletor", 0.92, 1.00, "nw:skeletor",  Pool: false),
+            new("skeletor", "skeletor", 1.41, 1.00, "nw:skeletor",  Pool: false),
         };
 
         private static Effect Find(string? key) =>
@@ -380,12 +380,10 @@ namespace GameTracker.Services
                     "nw:angelic" => new NWavesProvider(sp,
                         new NWaves.Effects.ChorusEffect(sr, new[] { 0.8f, 1.2f, 1.6f }, new[] { 0.0025f, 0.003f, 0.0035f }),
                         new ReverbFilter(sr, roomSize: 0.85f, damp: 0.30f, wet: 0.50f)),
-                    // Skeletor — raspy grit + a menacing wobble + cavern reverb and a little echo.
+                    // Skeletor — matches the mixer preset: heavy raspy grit + a strong wobble.
                     "nw:skeletor" => new NWavesProvider(sp,
-                        new NWaves.Effects.DistortionEffect(NWaves.Effects.DistortionMode.SoftClipping, 22),
-                        new WetDryFilter(new NWaves.Effects.TremoloEffect(sr, 0.35f, 5), 0.5f),
-                        new WetDryFilter(new ReverbFilter(sr, roomSize: 0.85f, damp: 0.35f, wet: 0.85f), 0.30f),
-                        new WetDryFilter(new NWaves.Effects.EchoEffect(sr, 0.20f, 0.25f), 0.15f)),
+                        new WetDryFilter(new NWaves.Effects.DistortionEffect(NWaves.Effects.DistortionMode.SoftClipping, 22), 0.76f),
+                        new WetDryFilter(new NWaves.Effects.TremoloEffect(sr, 0.7f, 6), 0.69f)),
                     _ => sp,
                 };
 

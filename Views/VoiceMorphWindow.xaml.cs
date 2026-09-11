@@ -256,8 +256,8 @@ namespace GameTracker.Views
                 case "yhwh":      PitchSlider.Value = -2; Set("tone", -30); Set("wobble", 4); Set("chorus", 19); Set("reverb", 10); Set("echo", 10); break;
                 case "cathedral": PitchSlider.Value = -4; Set("reverb", 85); Set("echo", 45); break;
                 case "angelic":   PitchSlider.Value =  3; Set("chorus", 60); Set("reverb", 55); break;
-                // Skeletor — raspy grit, a menacing wobble, and a cavernous tail.
-                case "skeletor":  PitchSlider.Value = -2; Set("tone", 45); Set("wobble", 12); Set("reverb", 30); Set("echo", 12); break;
+                // Skeletor — tuned from the streamer's mix: higher raspy grit with a strong wobble.
+                case "skeletor":  PitchSlider.Value = 6; Set("tone", 76); Set("robot", 1); Set("wobble", 69); Set("reverb", 2); Set("echo", 4); break;
                 case "clear":     PitchSlider.Value =  0; break;
             }
         }

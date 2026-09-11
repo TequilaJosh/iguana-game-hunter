@@ -30,6 +30,25 @@ namespace GameTracker.Services
         }
     }
 
+    // Wraps an effect with a wet/dry mix so a mixer fader can dial its intensity 0..1
+    // (0 = dry/off, 1 = full effect). Used by the Voice Mixer's per-effect bars.
+    internal sealed class WetDryFilter : NWaves.Filters.Base.IOnlineFilter
+    {
+        private readonly NWaves.Filters.Base.IOnlineFilter _inner;
+        private readonly float _wet;
+        private readonly float _dry;
+
+        public WetDryFilter(NWaves.Filters.Base.IOnlineFilter inner, float mix)
+        {
+            _inner = inner;
+            _wet = Math.Clamp(mix, 0f, 1f);
+            _dry = 1f - _wet;
+        }
+
+        public float Process(float x) => _dry * x + _wet * _inner.Process(x);
+        public void Reset() => _inner.Reset();
+    }
+
     // A compact mono reverb (Freeverb-style: parallel comb filters into series allpass
     // filters). NWaves has no reverb of its own, so this provides the big, spacious tail
     // used by the "heaven"/"cathedral"/"angelic" voices — implemented as an NWaves

@@ -1,19 +1,18 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Media;
 using GameTracker.Models;
 using GameTracker.Services;
 
 namespace GameTracker.Views
 {
-    /// <summary>Configure the live mic morph engine and build/save morph voices with timers.</summary>
+    /// <summary>Configure the live mic morph engine and build/save morph voices with a mixer.</summary>
     public partial class VoiceMorphWindow : Window
     {
-        private static readonly string[] EffectKeys =
-            { "none", "robot", "whisper", "echo", "distortion", "flanger", "vibrato", "tremolo", "autowah",
-              "heaven", "cathedral", "angelic" };
-
         private const string NoneLabel = "🔇 None — don't play back to me";
         // Empty OutputDevice = play back to the Windows default render endpoint. This is only
         // what the streamer hears; OBS Application Audio Capture grabs the app regardless.
@@ -27,6 +26,10 @@ namespace GameTracker.Views
 
         // Refreshes the LIVE/off status while the window is open so watchdog recovery shows live.
         private System.Windows.Threading.DispatcherTimer? _statusTimer;
+
+        // Mixer faders, keyed by effect (VoiceMorphService.MixBars).
+        private readonly Dictionary<string, Slider> _mixSliders = new();
+        private readonly Dictionary<string, TextBlock> _mixVals = new();
 
         public VoiceMorphWindow()
         {
@@ -48,8 +51,7 @@ namespace GameTracker.Views
                     : outputs.FirstOrDefault(d => d == s.OutputDevice) ?? DefaultLabel;
             UpdateOutputWarning();
 
-            EffectBox.ItemsSource = EffectKeys;
-            EffectBox.SelectedIndex = 0;
+            BuildMixer();
 
             foreach (var p in s.Presets) _rows.Add(Row.From(p));
             PresetList.ItemsSource = _rows;
@@ -134,20 +136,87 @@ namespace GameTracker.Views
             if (EnabledCb.IsChecked == true) { VoiceMorphService.Start(); UpdateEngineStatus(); }
         }
 
-        // ---- builder ----
+        // ---- builder / mixer ----
+
+        private static SolidColorBrush Brush(string hex) =>
+            new((Color)ColorConverter.ConvertFromString(hex));
+
+        // Build one fader per effect. Centered at 0 = off; drag right to add (0..100%).
+        private void BuildMixer()
+        {
+            foreach (var bar in VoiceMorphService.MixBars)
+            {
+                var row = new StackPanel { Orientation = Orientation.Horizontal, Margin = new Thickness(0, 0, 0, 4) };
+                var lbl = new TextBlock
+                {
+                    Text = bar.Label, Foreground = Brush("#a8c488"), FontSize = 12,
+                    VerticalAlignment = VerticalAlignment.Center, Width = 120,
+                };
+                var slider = new Slider
+                {
+                    Width = 330, Minimum = -100, Maximum = 100, Value = 0,
+                    VerticalAlignment = VerticalAlignment.Center,
+                    TickFrequency = 10, IsSnapToTickEnabled = false,
+                };
+                slider.SetResourceReference(Control.ForegroundProperty, "ThemeAccent");
+                var val = new TextBlock
+                {
+                    Text = "off", Foreground = Brush("#e8e0c4"), FontSize = 12,
+                    VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(8, 0, 0, 0), Width = 44,
+                };
+                var key = bar.Key;
+                slider.ValueChanged += (_, _) =>
+                {
+                    int v = (int)Math.Round(slider.Value);
+                    val.Text = v > 0 ? v + "%" : "off";
+                };
+                _mixSliders[key] = slider;
+                _mixVals[key] = val;
+                row.Children.Add(lbl);
+                row.Children.Add(slider);
+                row.Children.Add(val);
+                MixHost.Children.Add(row);
+            }
+        }
 
         private void Pitch_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
             if (PitchVal != null) PitchVal.Text = (int)PitchSlider.Value + " st";
         }
 
-        private MorphPreset BuildFromUi(string name) => new()
+        // One-tap voices set the bars. "clear" resets everything to neutral.
+        private void Preset_Click(object sender, RoutedEventArgs e)
         {
-            Name = name,
-            PitchSemitones = (int)PitchSlider.Value,
-            Effect = EffectBox.SelectedItem as string ?? "none",
-            TimerSeconds = int.TryParse(TimerBox.Text.Trim(), out var t) ? Math.Clamp(t, 5, 3600) : 60,
-        };
+            if (sender is not FrameworkElement fe) return;
+            foreach (var sl in _mixSliders.Values) sl.Value = 0;
+            void Set(string k, int v) { if (_mixSliders.TryGetValue(k, out var sl)) sl.Value = v; }
+
+            switch (fe.Tag as string)
+            {
+                case "heaven":    PitchSlider.Value = -5; Set("reverb", 70); Set("chorus", 40); Set("echo", 30); break;
+                case "cathedral": PitchSlider.Value = -4; Set("reverb", 85); Set("echo", 45); break;
+                case "angelic":   PitchSlider.Value =  3; Set("chorus", 60); Set("reverb", 55); break;
+                case "clear":     PitchSlider.Value =  0; break;
+            }
+        }
+
+        private MorphPreset BuildFromUi(string name)
+        {
+            var mix = new Dictionary<string, int>();
+            foreach (var kv in _mixSliders)
+            {
+                int amt = (int)Math.Round(kv.Value.Value);
+                if (amt > 0) mix[kv.Key] = amt;      // left of centre = off
+            }
+            return new MorphPreset
+            {
+                Name = name,
+                PitchSemitones = (int)PitchSlider.Value,
+                Effect = "none",
+                Mix = mix,
+                TimerSeconds = int.TryParse(TimerBox.Text.Trim(), out var t) ? Math.Clamp(t, 5, 3600) : 60,
+            };
+        }
 
         private void Try_Click(object sender, RoutedEventArgs e)
         {
@@ -220,11 +289,17 @@ namespace GameTracker.Views
         {
             public string Name { get; set; } = string.Empty;
             public string Detail { get; set; } = string.Empty;
-            public static Row From(MorphPreset p) => new()
+            public static Row From(MorphPreset p)
             {
-                Name = p.Name,
-                Detail = $"pitch {(p.PitchSemitones >= 0 ? "+" : "")}{p.PitchSemitones} st · {p.Effect} · {p.TimerSeconds}s timer",
-            };
+                string fx = (p.Mix != null && p.Mix.Any(kv => kv.Value > 0))
+                    ? string.Join(", ", p.Mix.Where(kv => kv.Value > 0).Select(kv => $"{kv.Key} {kv.Value}%"))
+                    : p.Effect;
+                return new Row
+                {
+                    Name = p.Name,
+                    Detail = $"pitch {(p.PitchSemitones >= 0 ? "+" : "")}{p.PitchSemitones} st · {fx} · {p.TimerSeconds}s timer",
+                };
+            }
         }
     }
 }

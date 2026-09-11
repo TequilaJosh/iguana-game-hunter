@@ -114,22 +114,36 @@
                 <Border Background="{DynamicResource ThemeBorder}" Height="1" Margin="0,4,0,10"/>
 
                 <!-- Builder -->
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,8">
                     <TextBlock Text="Name" Style="{StaticResource Lbl}"/>
-                    <TextBox x:Name="NameBox" Width="150" Style="{StaticResource In}" Margin="0,0,10,0"/>
-                    <TextBlock Text="Effect" Style="{StaticResource Lbl}" Width="44"/>
-                    <ComboBox x:Name="EffectBox" Width="120"/>
+                    <TextBox x:Name="NameBox" Width="180" Style="{StaticResource In}" Margin="0,0,10,0"/>
                     <TextBlock Text="Timer (s)" Style="{StaticResource Lbl}" Width="58" Margin="10,0,4,0"/>
                     <TextBox x:Name="TimerBox" Width="48" Style="{StaticResource In}" Text="60"
                              ToolTip="How long a redeem keeps this voice on before auto-reverting"/>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
-                    <TextBlock Text="Pitch" Style="{StaticResource Lbl}"/>
-                    <Slider x:Name="PitchSlider" Width="240" Minimum="-12" Maximum="12" Value="0"
+
+                <TextBlock Text="VOICE MIXER — push a bar right to add that effect; Pitch goes both ways"
+                           Foreground="{DynamicResource ThemeAccent}" FontSize="11" FontWeight="Bold" Margin="0,0,0,6"/>
+
+                <!-- Pitch bar (bidirectional: left = deeper, right = higher) -->
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,4">
+                    <TextBlock Text="Pitch" Foreground="#a8c488" FontSize="12" VerticalAlignment="Center" Width="120"/>
+                    <Slider x:Name="PitchSlider" Width="330" Minimum="-12" Maximum="12" Value="0"
                             IsSnapToTickEnabled="True" TickFrequency="1" VerticalAlignment="Center"
                             Foreground="{DynamicResource ThemeAccent}" ValueChanged="Pitch_Changed"/>
                     <TextBlock x:Name="PitchVal" Text="0 st" Foreground="#e8e0c4" FontSize="12"
                                VerticalAlignment="Center" Margin="8,0,0,0" Width="44"/>
+                </StackPanel>
+
+                <!-- Effect bars are built in code from VoiceMorphService.MixBars -->
+                <StackPanel x:Name="MixHost" Margin="0,0,0,4"/>
+
+                <StackPanel Orientation="Horizontal" Margin="0,4,0,8">
+                    <TextBlock Text="Presets" Foreground="#a8c488" FontSize="12" VerticalAlignment="Center" Width="120"/>
+                    <Button Content="😇 Heaven" Click="Preset_Click" Tag="heaven" Style="{StaticResource Btn}" Margin="0,0,6,0"/>
+                    <Button Content="⛪ Cathedral" Click="Preset_Click" Tag="cathedral" Style="{StaticResource Btn}" Margin="0,0,6,0"/>
+                    <Button Content="👼 Angelic" Click="Preset_Click" Tag="angelic" Style="{StaticResource Btn}" Margin="0,0,6,0"/>
+                    <Button Content="🧹 Clear" Click="Preset_Click" Tag="clear" Style="{StaticResource Btn}"/>
                 </StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <Button x:Name="TryBtn" Content="&#127897; Try it live" Click="Try_Click" Style="{StaticResource Btn}" Margin="0,0,8,0"

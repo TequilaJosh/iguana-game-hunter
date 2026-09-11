@@ -47,6 +47,33 @@ namespace GameTracker.Services
         /// <summary>Sentinel output meaning "process but play nothing back to the streamer".</summary>
         public const string NoneOutput = "(none)";
 
+        /// <summary>One fader in the Voice Mixer.</summary>
+        public sealed record MixBar(string Key, string Label);
+
+        /// <summary>The mixer's effect faders, in the order they're shown and processed.</summary>
+        // Order is both the display order and the processing order (tone/grit first, space last).
+        public static readonly MixBar[] MixBars =
+        {
+            new("grit",   "Grit (distortion)"),
+            new("robot",  "Robot"),
+            new("wobble", "Wobble"),
+            new("chorus", "Chorus (shimmer)"),
+            new("reverb", "Reverb (space)"),
+            new("echo",   "Echo"),
+        };
+
+        // Build one mixer effect at full strength; the WetDry wrapper scales it by the fader.
+        private static IOnlineFilter? MakeEffect(string key, int sr) => key switch
+        {
+            "reverb" => new ReverbFilter(sr, roomSize: 0.90f, damp: 0.20f, wet: 0.90f),
+            "echo"   => new EchoEffect(sr, 0.28f, 0.40f),
+            "chorus" => new ChorusEffect(sr, new[] { 0.6f, 1.1f }, new[] { 0.002f, 0.0025f }),
+            "grit"   => new DistortionEffect(DistortionMode.SoftClipping, 18),
+            "robot"  => new RobotEffect(hopSize: 128, fftSize: 512),
+            "wobble" => new TremoloEffect(sr, 0.7f, 6),
+            _        => null,
+        };
+
         private sealed class Chain
         {
             public PitchShiftVocoderEffect? Pitch;
@@ -259,6 +286,22 @@ namespace GameTracker.Services
             var chain = new Chain();
             if (p.PitchSemitones != 0)
                 chain.Pitch = new PitchShiftVocoderEffect(sampleRate, Math.Pow(2, p.PitchSemitones / 12.0));
+
+            // Mixer voices: blend every fader that's above zero, in a fixed processing order.
+            if (p.Mix != null && p.Mix.Values.Any(v => v > 0))
+            {
+                var list = new List<IOnlineFilter>();
+                foreach (var bar in MixBars)
+                {
+                    if (!p.Mix.TryGetValue(bar.Key, out var amt) || amt <= 0) continue;
+                    var fx = MakeEffect(bar.Key, sampleRate);
+                    if (fx != null) list.Add(new WetDryFilter(fx, Math.Clamp(amt, 0, 100) / 100f));
+                }
+                chain.Fx = list.Count > 0 ? list.ToArray() : null;
+                return chain;
+            }
+
+            // Legacy single-effect voices (the Voice Redeems editor and older saved presets).
             chain.Fx = p.Effect switch
             {
                 "robot" => new IOnlineFilter[] { new RobotEffect(hopSize: 128, fftSize: 512) },

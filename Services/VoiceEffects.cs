@@ -65,7 +65,7 @@ namespace GameTracker.Services
 
     // A compact mono reverb (Freeverb-style: parallel comb filters into series allpass
     // filters). NWaves has no reverb of its own, so this provides the big, spacious tail
-    // used by the "heaven"/"cathedral"/"angelic" voices — implemented as an NWaves
+    // used by the "yhwh"/"cathedral"/"angelic"/"skeletor" voices — implemented as an NWaves
     // IOnlineFilter so it drops into the same effect chains as everything else.
     internal sealed class ReverbFilter : NWaves.Filters.Base.IOnlineFilter
     {

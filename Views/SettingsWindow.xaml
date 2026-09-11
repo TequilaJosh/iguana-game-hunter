@@ -34,9 +34,10 @@
             <sys:String>vibrato</sys:String>
             <sys:String>tremolo</sys:String>
             <sys:String>autowah</sys:String>
-            <sys:String>heaven</sys:String>
+            <sys:String>yhwh</sys:String>
             <sys:String>cathedral</sys:String>
             <sys:String>angelic</sys:String>
+            <sys:String>skeletor</sys:String>
         </x:Array>
         <Style x:Key="Lbl" TargetType="TextBlock">
             <Setter Property="Foreground" Value="#a8c488"/>

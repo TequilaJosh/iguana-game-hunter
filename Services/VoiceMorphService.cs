@@ -328,7 +328,7 @@ namespace GameTracker.Services
 
                 // The "voice of God" family — deep pitch (set via the preset) plus a big
                 // reverberant space, a layered chorus and a booming echo.
-                "heaven" => new IOnlineFilter[]
+                "yhwh" => new IOnlineFilter[]
                 {
                     new ChorusEffect(sampleRate, new[] { 0.5f, 0.9f }, new[] { 0.002f, 0.0025f }),
                     new ReverbFilter(sampleRate, roomSize: 0.90f, damp: 0.20f, wet: 0.55f),
@@ -343,6 +343,14 @@ namespace GameTracker.Services
                 {
                     new ChorusEffect(sampleRate, new[] { 0.8f, 1.2f, 1.6f }, new[] { 0.0025f, 0.003f, 0.0035f }),
                     new ReverbFilter(sampleRate, roomSize: 0.85f, damp: 0.30f, wet: 0.50f),
+                },
+                // Skeletor — raspy grit, a menacing wobble, and a cavernous Snake-Mountain tail.
+                "skeletor" => new IOnlineFilter[]
+                {
+                    new DistortionEffect(DistortionMode.SoftClipping, 22),
+                    new TremoloEffect(sampleRate, 0.35f, 5),
+                    new ReverbFilter(sampleRate, roomSize: 0.85f, damp: 0.35f, wet: 0.35f),
+                    new EchoEffect(sampleRate, 0.20f, 0.25f),
                 },
                 _ => null,
             };

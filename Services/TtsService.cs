@@ -235,9 +235,10 @@ namespace GameTracker.Services
             new("wobbly",   "wobbly",   1.00, 1.00, "nw:flanger"),
             new("haunted",  "haunted",  0.75, 0.90, "nw:vibrato"),
             // "Voice of God" family — deep + reverberant space, big cathedral, ethereal choir.
-            new("heaven",   "heaven",   0.78, 0.92, "nw:heaven",    Pool: false),
+            new("yhwh",     "yhwh",     0.89, 0.95, "nw:yhwh",      Pool: false),
             new("cathedral","cathedral",0.82, 0.95, "nw:cathedral", Pool: false),
             new("angelic",  "angelic",  1.15, 1.02, "nw:angelic",   Pool: false),
+            new("skeletor", "skeletor", 0.92, 1.00, "nw:skeletor",  Pool: false),
         };
 
         private static Effect Find(string? key) =>
@@ -344,16 +345,24 @@ namespace GameTracker.Services
                     "nw:autowah" => new NWavesProvider(sp, new NWaves.Effects.AutowahEffect(sr)),
                     "nw:flanger" => new NWavesProvider(sp, new NWaves.Effects.FlangerEffect(sr)),
                     "nw:vibrato" => new NWavesProvider(sp, new NWaves.Effects.VibratoEffect(sr)),
-                    "nw:heaven" => new NWavesProvider(sp,
-                        new NWaves.Effects.ChorusEffect(sr, new[] { 0.5f, 0.9f }, new[] { 0.002f, 0.0025f }),
-                        new ReverbFilter(sr, roomSize: 0.90f, damp: 0.20f, wet: 0.55f),
-                        new NWaves.Effects.EchoEffect(sr, 0.25f, 0.3f)),
+                    // Matches the YHWH mixer default: warm tone + light chorus, reverb and echo.
+                    "nw:yhwh" => new NWavesProvider(sp,
+                        new WetDryFilter(new OnePoleLowpassFilter(sr, 1100f), 0.30f),
+                        new WetDryFilter(new NWaves.Effects.ChorusEffect(sr, new[] { 0.6f, 1.1f }, new[] { 0.002f, 0.0025f }), 0.19f),
+                        new WetDryFilter(new ReverbFilter(sr, roomSize: 0.90f, damp: 0.20f, wet: 0.90f), 0.10f),
+                        new WetDryFilter(new NWaves.Effects.EchoEffect(sr, 0.28f, 0.40f), 0.10f)),
                     "nw:cathedral" => new NWavesProvider(sp,
                         new ReverbFilter(sr, roomSize: 0.94f, damp: 0.15f, wet: 0.60f),
                         new NWaves.Effects.EchoEffect(sr, 0.35f, 0.35f)),
                     "nw:angelic" => new NWavesProvider(sp,
                         new NWaves.Effects.ChorusEffect(sr, new[] { 0.8f, 1.2f, 1.6f }, new[] { 0.0025f, 0.003f, 0.0035f }),
                         new ReverbFilter(sr, roomSize: 0.85f, damp: 0.30f, wet: 0.50f)),
+                    // Skeletor — raspy grit + a menacing wobble + cavern reverb and a little echo.
+                    "nw:skeletor" => new NWavesProvider(sp,
+                        new NWaves.Effects.DistortionEffect(NWaves.Effects.DistortionMode.SoftClipping, 22),
+                        new WetDryFilter(new NWaves.Effects.TremoloEffect(sr, 0.35f, 5), 0.5f),
+                        new WetDryFilter(new ReverbFilter(sr, roomSize: 0.85f, damp: 0.35f, wet: 0.85f), 0.30f),
+                        new WetDryFilter(new NWaves.Effects.EchoEffect(sr, 0.20f, 0.25f), 0.15f)),
                     _ => sp,
                 };
 

@@ -139,13 +139,17 @@
                 <!-- Effect bars are built in code from VoiceMorphService.MixBars -->
                 <StackPanel x:Name="MixHost" Margin="0,0,0,4"/>
 
-                <StackPanel Orientation="Horizontal" Margin="0,4,0,8">
-                    <TextBlock Text="Presets" Foreground="#a8c488" FontSize="12" VerticalAlignment="Center" Width="120"/>
-                    <Button Content="🕊 YHWH" Click="Preset_Click" Tag="yhwh" Style="{StaticResource Btn}" Margin="0,0,6,0"
-                            ToolTip="The Lord Almighty — deep, booming, reverberant voice of God"/>
-                    <Button Content="⛪ Cathedral" Click="Preset_Click" Tag="cathedral" Style="{StaticResource Btn}" Margin="0,0,6,0"/>
-                    <Button Content="👼 Angelic" Click="Preset_Click" Tag="angelic" Style="{StaticResource Btn}" Margin="0,0,6,0"/>
-                    <Button Content="🧹 Clear" Click="Preset_Click" Tag="clear" Style="{StaticResource Btn}"/>
+                <StackPanel Orientation="Horizontal" Margin="0,4,0,4">
+                    <TextBlock Text="Presets" Foreground="#a8c488" FontSize="12" VerticalAlignment="Top" Width="120" Margin="0,6,0,0"/>
+                    <WrapPanel Width="410">
+                        <Button Content="🕊 YHWH" Click="Preset_Click" Tag="yhwh" Style="{StaticResource Btn}" Margin="0,0,6,6"
+                                ToolTip="The Lord Almighty — deep, booming, reverberant voice of God"/>
+                        <Button Content="⛪ Cathedral" Click="Preset_Click" Tag="cathedral" Style="{StaticResource Btn}" Margin="0,0,6,6"/>
+                        <Button Content="👼 Angelic" Click="Preset_Click" Tag="angelic" Style="{StaticResource Btn}" Margin="0,0,6,6"/>
+                        <Button Content="💀 Skeletor" Click="Preset_Click" Tag="skeletor" Style="{StaticResource Btn}" Margin="0,0,6,6"
+                                ToolTip="Raspy, menacing He-Man villain — grit, wobble and a cavern tail"/>
+                        <Button Content="🧹 Clear" Click="Preset_Click" Tag="clear" Style="{StaticResource Btn}" Margin="0,0,6,6"/>
+                    </WrapPanel>
                 </StackPanel>
 
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,6">

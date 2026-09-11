@@ -30,6 +30,20 @@ namespace GameTracker.Services
         }
     }
 
+    // Simple one-pole low-pass — the "warm/mellow" opposite of grit/brightness on a
+    // bidirectional Tone fader (rolls off highs as intensity increases).
+    internal sealed class OnePoleLowpassFilter : NWaves.Filters.Base.IOnlineFilter
+    {
+        private readonly float _a;
+        private float _y;
+        public OnePoleLowpassFilter(int sampleRate, float cutoffHz = 1100f)
+        {
+            _a = (float)(1.0 - Math.Exp(-2.0 * Math.PI * cutoffHz / Math.Max(1, sampleRate)));
+        }
+        public float Process(float x) { _y += _a * (x - _y); return _y; }
+        public void Reset() => _y = 0f;
+    }
+
     // Wraps an effect with a wet/dry mix so a mixer fader can dial its intensity 0..1
     // (0 = dry/off, 1 = full effect). Used by the Voice Mixer's per-effect bars.
     internal sealed class WetDryFilter : NWaves.Filters.Base.IOnlineFilter

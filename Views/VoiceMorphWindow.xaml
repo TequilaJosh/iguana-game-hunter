@@ -122,8 +122,9 @@
                              ToolTip="How long a redeem keeps this voice on before auto-reverting"/>
                 </StackPanel>
 
-                <TextBlock Text="VOICE MIXER — push a bar right to add that effect; Pitch goes both ways"
-                           Foreground="{DynamicResource ThemeAccent}" FontSize="11" FontWeight="Bold" Margin="0,0,0,6"/>
+                <TextBlock Text="VOICE MIXER — push a bar right to add an effect. Pitch and Tone also go LEFT for the opposite (deeper / warmer)."
+                           Foreground="{DynamicResource ThemeAccent}" FontSize="11" FontWeight="Bold"
+                           TextWrapping="Wrap" Margin="0,0,0,6"/>
 
                 <!-- Pitch bar (bidirectional: left = deeper, right = higher) -->
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,4">

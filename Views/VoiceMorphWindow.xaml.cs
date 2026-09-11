@@ -141,7 +141,8 @@ namespace GameTracker.Views
         private static SolidColorBrush Brush(string hex) =>
             new((Color)ColorConverter.ConvertFromString(hex));
 
-        // Build one fader per effect. Centered at 0 = off; drag right to add (0..100%).
+        // Build one fader per effect. Centre = neutral; drag right to add. Bidirectional
+        // faders (e.g. Tone) also do the opposite effect when dragged left.
         private void BuildMixer()
         {
             foreach (var bar in VoiceMorphService.MixBars)
@@ -157,26 +158,32 @@ namespace GameTracker.Views
                     Width = 330, Minimum = -100, Maximum = 100, Value = 0,
                     VerticalAlignment = VerticalAlignment.Center,
                     TickFrequency = 10, IsSnapToTickEnabled = false,
+                    ToolTip = bar.Bidir
+                        ? $"Right = {bar.Right}, left = {bar.Left}. Centre = neutral."
+                        : "Right = more of this effect. Centre/left = off.",
                 };
                 slider.SetResourceReference(Control.ForegroundProperty, "ThemeAccent");
                 var val = new TextBlock
                 {
-                    Text = "off", Foreground = Brush("#e8e0c4"), FontSize = 12,
-                    VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(8, 0, 0, 0), Width = 44,
+                    Text = FormatBar(bar, 0), Foreground = Brush("#e8e0c4"), FontSize = 12,
+                    VerticalAlignment = VerticalAlignment.Center, Margin = new Thickness(8, 0, 0, 0), Width = 70,
                 };
-                var key = bar.Key;
-                slider.ValueChanged += (_, _) =>
-                {
-                    int v = (int)Math.Round(slider.Value);
-                    val.Text = v > 0 ? v + "%" : "off";
-                };
-                _mixSliders[key] = slider;
-                _mixVals[key] = val;
+                var b = bar;
+                slider.ValueChanged += (_, _) => val.Text = FormatBar(b, (int)Math.Round(slider.Value));
+                _mixSliders[bar.Key] = slider;
+                _mixVals[bar.Key] = val;
                 row.Children.Add(lbl);
                 row.Children.Add(slider);
                 row.Children.Add(val);
                 MixHost.Children.Add(row);
             }
+        }
+
+        private static string FormatBar(VoiceMorphService.MixBar bar, int v)
+        {
+            if (bar.Bidir)
+                return v > 0 ? $"{bar.Right} {v}%" : v < 0 ? $"{bar.Left} {-v}%" : "—";
+            return v > 0 ? $"{v}%" : "off";
         }
 
         private void Pitch_Changed(object sender, RoutedPropertyChangedEventArgs<double> e)
@@ -203,10 +210,12 @@ namespace GameTracker.Views
         private MorphPreset BuildFromUi(string name)
         {
             var mix = new Dictionary<string, int>();
-            foreach (var kv in _mixSliders)
+            foreach (var bar in VoiceMorphService.MixBars)
             {
-                int amt = (int)Math.Round(kv.Value.Value);
-                if (amt > 0) mix[kv.Key] = amt;      // left of centre = off
+                if (!_mixSliders.TryGetValue(bar.Key, out var sl)) continue;
+                int amt = (int)Math.Round(sl.Value);
+                // Right adds the effect; left is kept only for bidirectional faders (the opposite).
+                if (amt > 0 || (bar.Bidir && amt < 0)) mix[bar.Key] = amt;
             }
             return new MorphPreset
             {

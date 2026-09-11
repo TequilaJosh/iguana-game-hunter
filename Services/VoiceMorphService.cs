@@ -47,14 +47,16 @@ namespace GameTracker.Services
         /// <summary>Sentinel output meaning "process but play nothing back to the streamer".</summary>
         public const string NoneOutput = "(none)";
 
-        /// <summary>One fader in the Voice Mixer.</summary>
-        public sealed record MixBar(string Key, string Label);
+        /// <summary>One fader in the Voice Mixer. Bidir faders also do something to the LEFT
+        /// (an "opposite" effect); Left/Right name the two directions for the readout.</summary>
+        public sealed record MixBar(string Key, string Label, bool Bidir = false,
+                                    string Left = "", string Right = "");
 
         /// <summary>The mixer's effect faders, in the order they're shown and processed.</summary>
-        // Order is both the display order and the processing order (tone/grit first, space last).
+        // Order is both the display order and the processing order (tone first, space last).
         public static readonly MixBar[] MixBars =
         {
-            new("grit",   "Grit (distortion)"),
+            new("tone",   "Tone", Bidir: true, Left: "warm", Right: "grit"),
             new("robot",  "Robot"),
             new("wobble", "Wobble"),
             new("chorus", "Chorus (shimmer)"),
@@ -62,16 +64,23 @@ namespace GameTracker.Services
             new("echo",   "Echo"),
         };
 
-        // Build one mixer effect at full strength; the WetDry wrapper scales it by the fader.
+        // Right-of-centre (positive) effect at full strength; the WetDry wrapper scales it.
         private static IOnlineFilter? MakeEffect(string key, int sr) => key switch
         {
             "reverb" => new ReverbFilter(sr, roomSize: 0.90f, damp: 0.20f, wet: 0.90f),
             "echo"   => new EchoEffect(sr, 0.28f, 0.40f),
             "chorus" => new ChorusEffect(sr, new[] { 0.6f, 1.1f }, new[] { 0.002f, 0.0025f }),
-            "grit"   => new DistortionEffect(DistortionMode.SoftClipping, 18),
+            "tone"   => new DistortionEffect(DistortionMode.SoftClipping, 18),   // grit / bright
             "robot"  => new RobotEffect(hopSize: 128, fftSize: 512),
             "wobble" => new TremoloEffect(sr, 0.7f, 6),
             _        => null,
+        };
+
+        // Left-of-centre (negative) "opposite" effect for bidirectional faders.
+        private static IOnlineFilter? MakeEffectInverse(string key, int sr) => key switch
+        {
+            "tone" => new OnePoleLowpassFilter(sr, 1100f),   // warm / mellow — the opposite of grit
+            _      => null,
         };
 
         private sealed class Chain
@@ -287,15 +296,19 @@ namespace GameTracker.Services
             if (p.PitchSemitones != 0)
                 chain.Pitch = new PitchShiftVocoderEffect(sampleRate, Math.Pow(2, p.PitchSemitones / 12.0));
 
-            // Mixer voices: blend every fader that's above zero, in a fixed processing order.
-            if (p.Mix != null && p.Mix.Values.Any(v => v > 0))
+            // Mixer voices: blend every fader that's off-centre, in a fixed processing order.
+            // Positive = the effect; negative (bidirectional faders only) = its opposite.
+            if (p.Mix != null && p.Mix.Values.Any(v => v != 0))
             {
                 var list = new List<IOnlineFilter>();
                 foreach (var bar in MixBars)
                 {
-                    if (!p.Mix.TryGetValue(bar.Key, out var amt) || amt <= 0) continue;
-                    var fx = MakeEffect(bar.Key, sampleRate);
-                    if (fx != null) list.Add(new WetDryFilter(fx, Math.Clamp(amt, 0, 100) / 100f));
+                    if (!p.Mix.TryGetValue(bar.Key, out var amt) || amt == 0) continue;
+                    IOnlineFilter? fx = amt > 0
+                        ? MakeEffect(bar.Key, sampleRate)
+                        : (bar.Bidir ? MakeEffectInverse(bar.Key, sampleRate) : null);
+                    if (fx != null)
+                        list.Add(new WetDryFilter(fx, Math.Clamp(Math.Abs(amt), 0, 100) / 100f));
                 }
                 chain.Fx = list.Count > 0 ? list.ToArray() : null;
                 return chain;

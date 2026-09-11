@@ -52,6 +52,8 @@ namespace GameTracker.Views
             UpdateOutputWarning();
 
             BuildMixer();
+            SaveTargetBox.ItemsSource = new[] { "YHWH", "Cathedral", "Angelic" };
+            SaveTargetBox.SelectedIndex = 0;
 
             foreach (var p in s.Presets) _rows.Add(Row.From(p));
             PresetList.ItemsSource = _rows;
@@ -191,18 +193,64 @@ namespace GameTracker.Views
             if (PitchVal != null) PitchVal.Text = (int)PitchSlider.Value + " st";
         }
 
-        // One-tap voices set the bars. "clear" resets everything to neutral.
+        // Push the bars to match a saved MorphPreset (pitch + mix).
+        private void ApplyToMixer(MorphPreset p)
+        {
+            foreach (var sl in _mixSliders.Values) sl.Value = 0;
+            PitchSlider.Value = Math.Clamp(p.PitchSemitones, -12, 12);
+            if (p.Mix != null)
+                foreach (var kv in p.Mix)
+                    if (_mixSliders.TryGetValue(kv.Key, out var sl))
+                        sl.Value = Math.Clamp(kv.Value, -100, 100);
+        }
+
+        // Save the current bars as a preset button's default (persists in settings).
+        private void SaveDefault_Click(object sender, RoutedEventArgs e)
+        {
+            var name = SaveTargetBox.SelectedItem as string ?? "YHWH";
+            var s = SettingsService.LoadMorph();
+            s.PresetDefaults ??= new System.Collections.Generic.Dictionary<string, MorphPreset>();
+            s.PresetDefaults[name.ToLowerInvariant()] = BuildFromUi("(default)");
+            SettingsService.SaveMorph(s);
+            Status.Text = $"Saved current mix as the {name} preset — that button now loads it.";
+        }
+
+        // Restore a preset button to its built-in default.
+        private void ResetDefault_Click(object sender, RoutedEventArgs e)
+        {
+            var name = SaveTargetBox.SelectedItem as string ?? "YHWH";
+            var s = SettingsService.LoadMorph();
+            if (s.PresetDefaults != null && s.PresetDefaults.Remove(name.ToLowerInvariant()))
+                SettingsService.SaveMorph(s);
+            Status.Text = $"{name} preset reset to the built-in default.";
+        }
+
+        // One-tap voices set the bars. A saved custom default (if any) wins over the built-in.
+        // "clear" resets everything to neutral.
         private void Preset_Click(object sender, RoutedEventArgs e)
         {
             if (sender is not FrameworkElement fe) return;
+            string tag = fe.Tag as string ?? "";
+
+            if (tag != "clear")
+            {
+                var saved = SettingsService.LoadMorph();
+                if (saved.PresetDefaults != null && saved.PresetDefaults.TryGetValue(tag, out var def) && def != null)
+                {
+                    ApplyToMixer(def);
+                    Status.Text = $"Loaded your saved {tag} preset.";
+                    return;
+                }
+            }
+
             foreach (var sl in _mixSliders.Values) sl.Value = 0;
             void Set(string k, int v) { if (_mixSliders.TryGetValue(k, out var sl)) sl.Value = v; }
 
-            switch (fe.Tag as string)
+            switch (tag)
             {
-                // The Lord Almighty: deep, commanding, huge reverberant space with a booming
-                // echo, a touch of chorus for the "many voices as one", and a little grit for power.
-                case "yhwh":      PitchSlider.Value = -6; Set("tone", 12); Set("chorus", 30); Set("reverb", 80); Set("echo", 40); break;
+                // The Lord Almighty — tuned from the streamer's own mix: gently deep and warm
+                // with light wobble, chorus, reverb and echo (subtle, not overblown).
+                case "yhwh":      PitchSlider.Value = -2; Set("tone", -30); Set("wobble", 4); Set("chorus", 19); Set("reverb", 10); Set("echo", 10); break;
                 case "cathedral": PitchSlider.Value = -4; Set("reverb", 85); Set("echo", 45); break;
                 case "angelic":   PitchSlider.Value =  3; Set("chorus", 60); Set("reverb", 55); break;
                 case "clear":     PitchSlider.Value =  0; break;

@@ -147,6 +147,15 @@
                     <Button Content="👼 Angelic" Click="Preset_Click" Tag="angelic" Style="{StaticResource Btn}" Margin="0,0,6,0"/>
                     <Button Content="🧹 Clear" Click="Preset_Click" Tag="clear" Style="{StaticResource Btn}"/>
                 </StackPanel>
+
+                <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
+                    <TextBlock Text="Save current as" Foreground="#a8c488" FontSize="12" VerticalAlignment="Center" Width="120"/>
+                    <ComboBox x:Name="SaveTargetBox" Width="130" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <Button Content="&#128190; Save over default" Click="SaveDefault_Click" Style="{StaticResource Btn}"
+                            ToolTip="Overwrite this preset button so it loads your current bars from now on"/>
+                    <Button Content="&#8635; Reset preset" Click="ResetDefault_Click" Style="{StaticResource Btn}" Margin="8,0,0,0"
+                            ToolTip="Restore this preset button to the built-in default"/>
+                </StackPanel>
                 <StackPanel Orientation="Horizontal">
                     <Button x:Name="TryBtn" Content="&#127897; Try it live" Click="Try_Click" Style="{StaticResource Btn}" Margin="0,0,8,0"
                             ToolTip="Hear this morph on your mic right now (30s, or Revert)"/>

@@ -25,5 +25,9 @@ namespace GameTracker.Models
         public string InputDevice { get; set; } = string.Empty;   // "" = default mic
         public string OutputDevice { get; set; } = string.Empty;  // "" = default output
         public List<MorphPreset> Presets { get; set; } = new();
+
+        /// <summary>Custom overrides for the mixer's one-tap preset buttons (key = "yhwh" /
+        /// "cathedral" / "angelic"). When set, the button loads this instead of the built-in.</summary>
+        public Dictionary<string, MorphPreset> PresetDefaults { get; set; } = new();
     }
 }

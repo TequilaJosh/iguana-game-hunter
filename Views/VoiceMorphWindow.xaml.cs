@@ -31,6 +31,9 @@ namespace GameTracker.Views
         private readonly Dictionary<string, Slider> _mixSliders = new();
         private readonly Dictionary<string, TextBlock> _mixVals = new();
 
+        // A TTS engine used only for the "Test with TTS" button (hear the mix without a mic).
+        private readonly TtsService _ttsTest = new();
+
         public VoiceMorphWindow()
         {
             InitializeComponent();
@@ -65,7 +68,7 @@ namespace GameTracker.Views
             { Interval = TimeSpan.FromSeconds(1) };
             _statusTimer.Tick += (_, _) => UpdateEngineStatus();
             _statusTimer.Start();
-            Closed += (_, _) => _statusTimer?.Stop();
+            Closed += (_, _) => { _statusTimer?.Stop(); try { _ttsTest.Dispose(); } catch { } };
         }
 
         private void RefreshEmpty() =>
@@ -287,6 +290,21 @@ namespace GameTracker.Views
             if (VoiceMorphService.Activate(p)) Status.Text = "Live for 30s — speak into your mic.";
             else Status.Text = "Couldn't start: " + VoiceMorphService.LastError;
             UpdateEngineStatus();
+        }
+
+        // Play a spoken test line through the current mixer bars — no microphone needed.
+        private void TtsTest_Click(object sender, RoutedEventArgs e)
+        {
+            var preset = BuildFromUi("(tts-test)");
+            var s = SettingsService.LoadMorph();
+            _ttsTest.OutputDevice = string.IsNullOrEmpty(s.OutputDevice) || s.OutputDevice == VoiceMorphService.NoneOutput
+                ? string.Empty : s.OutputDevice;
+            _ttsTest.StopAll();
+            var voice = TtsService.InstalledVoices()
+                            .FirstOrDefault(v => v.Contains("David", StringComparison.OrdinalIgnoreCase))
+                        ?? TtsService.InstalledVoices().FirstOrDefault();
+            _ttsTest.SpeakMorphTest("Well well well, look who it is. This is how your voice sounds.", voice, preset);
+            Status.Text = "Playing a TTS test through your current bars…";
         }
 
         private void Revert_Click(object sender, RoutedEventArgs e)

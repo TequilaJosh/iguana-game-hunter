@@ -160,12 +160,14 @@
                     <Button Content="&#8635; Reset preset" Click="ResetDefault_Click" Style="{StaticResource Btn}" Margin="8,0,0,0"
                             ToolTip="Restore this preset button to the built-in default"/>
                 </StackPanel>
-                <StackPanel Orientation="Horizontal">
-                    <Button x:Name="TryBtn" Content="&#127897; Try it live" Click="Try_Click" Style="{StaticResource Btn}" Margin="0,0,8,0"
-                            ToolTip="Hear this morph on your mic right now (30s, or Revert)"/>
-                    <Button Content="&#8634; Revert to normal" Click="Revert_Click" Style="{StaticResource Btn}" Margin="0,0,8,0"/>
-                    <Button Content="&#128190; Save voice" Click="Save_Click" Style="{StaticResource Btn}"/>
-                </StackPanel>
+                <WrapPanel>
+                    <Button x:Name="TryBtn" Content="&#127897; Try it live" Click="Try_Click" Style="{StaticResource Btn}" Margin="0,0,8,6"
+                            ToolTip="Hear this morph on your MIC right now (30s, or Revert)"/>
+                    <Button Content="&#128266; Test with TTS" Click="TtsTest_Click" Style="{StaticResource Btn}" Margin="0,0,8,6"
+                            ToolTip="Play a spoken test line through the current bars — no mic needed"/>
+                    <Button Content="&#8634; Revert to normal" Click="Revert_Click" Style="{StaticResource Btn}" Margin="0,0,8,6"/>
+                    <Button Content="&#128190; Save voice" Click="Save_Click" Style="{StaticResource Btn}" Margin="0,0,0,6"/>
+                </WrapPanel>
                 <TextBlock x:Name="Status" Foreground="{DynamicResource ThemeAccent}" FontSize="11" Height="14" Margin="86,4,0,0"/>
             </StackPanel>
 

@@ -208,7 +208,8 @@ namespace GameTracker.Services
             };
         }
 
-        private readonly record struct Item(string Text, string Voice, string Effect, int Rate, int Volume);
+        private readonly record struct Item(string Text, string Voice, string Effect, int Rate, int Volume,
+                                            Models.MorphPreset? Morph = null);
 
         // The effect palette. Pitch/Rate feed the engine; Dsp is applied to the audio.
         // Pool = included in the shipped defaults (voice picker + per-chatter random pool).
@@ -299,6 +300,19 @@ namespace GameTracker.Services
             Pump();
         }
 
+        /// <summary>Speak a line through a live voice-morph preset's exact modulation (pitch +
+        /// mixer effects) — lets the Voice Morph window test a modulation without using the mic.</summary>
+        public void SpeakMorphTest(string text, string? voice, Models.MorphPreset morph, int volume = 100)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return;
+            lock (_gate)
+            {
+                if (_q.Count >= MaxBacklog) return;
+                _q.Enqueue(new Item(text, voice ?? string.Empty, "normal", 0, volume, morph));
+            }
+            Pump();
+        }
+
         private async void Pump()
         {
             Item it;
@@ -316,12 +330,15 @@ namespace GameTracker.Services
                     var v = SpeechSynthesizer.AllVoices.FirstOrDefault(x => x.DisplayName == it.Voice);
                     if (v != null) _synth.Voice = v;
                 }
-                _synth.Options.AudioPitch = Math.Clamp(fx.Pitch, 0.0, 2.0);
-                _synth.Options.SpeakingRate = Math.Clamp(fx.Rate * (1.0 + it.Rate * 0.05), 0.5, 6.0);
+                bool morphMode = it.Morph != null;
+                // In morph-test mode the modulation (incl. pitch) comes from the morph chain,
+                // so synthesize a clean, neutral voice and let the filters do the work.
+                _synth.Options.AudioPitch = morphMode ? 1.0 : Math.Clamp(fx.Pitch, 0.0, 2.0);
+                _synth.Options.SpeakingRate = morphMode ? 1.0 : Math.Clamp(fx.Rate * (1.0 + it.Rate * 0.05), 0.5, 6.0);
                 _synth.Options.AudioVolume = Math.Clamp(it.Volume, 0, 100) / 100.0;
 
                 ISampleProvider sp;
-                var parts = (BleepBadWords && _bleep.Count > 0) ? Segment(it.Text) : null;
+                var parts = (!morphMode && BleepBadWords && _bleep.Count > 0) ? Segment(it.Text) : null;
                 if (parts != null && parts.Any(p => p.beep))
                 {
                     sp = await BuildBleepedAsync(parts);
@@ -334,6 +351,12 @@ namespace GameTracker.Services
                     sp = reader.ToSampleProvider();
                 }
                 int sr = sp.WaveFormat.SampleRate;
+                if (morphMode)
+                {
+                    var filters = VoiceMorphService.BuildFilters(it.Morph!, sr);
+                    if (filters.Length > 0) sp = new NWavesProvider(sp, filters);
+                }
+                else
                 sp = fx.Dsp switch
                 {
                     "robot" => new RingModProvider(sp),

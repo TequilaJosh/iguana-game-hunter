@@ -289,6 +289,17 @@ namespace GameTracker.Services
 
         // ---- morph activation ----
 
+        /// <summary>The preset's full effect chain (pitch + effects) as a flat filter list, so a
+        /// TTS preview can run synthesized speech through the exact same modulation.</summary>
+        public static IOnlineFilter[] BuildFilters(MorphPreset p, int sampleRate)
+        {
+            var chain = BuildChain(p, sampleRate);
+            var list = new List<IOnlineFilter>();
+            if (chain.Pitch != null) list.Add(chain.Pitch);
+            if (chain.Fx != null) list.AddRange(chain.Fx);
+            return list.ToArray();
+        }
+
         /// <summary>Build the DSP chain for a preset (shared with previews).</summary>
         private static Chain BuildChain(MorphPreset p, int sampleRate)
         {

@@ -85,162 +85,7 @@ namespace GameTracker.Views
             UpdateOverlayStatus();
             RenderTickerPreview();
 
-            LoadVoiceRedeems();
-
-            // Real-time sharing: refresh the redeem voice list whenever the window regains focus
-            // (e.g. after saving a voice in the morph lab), so lab voices appear without a reopen.
-            Activated += (_, _) => BuildVrEffectChoices();
-
             _ready = true;
-        }
-
-        // ── Voice-morph point redeems (one place to define them) ──────────────
-        public class VoiceRedeemVm
-        {
-            public string Command { get; set; } = "!";
-            public int Cost { get; set; } = 500;
-            // A built-in effect key (e.g. "robot") OR a lab voice shown as "★ Name".
-            public string Effect { get; set; } = "none";
-            public int Pitch { get; set; }
-            public int Duration { get; set; } = 60;
-        }
-        private readonly System.Collections.ObjectModel.ObservableCollection<VoiceRedeemVm> _vr = new();
-
-        // Built-in single effects available to a redeem (mirrors the morph engine).
-        private static readonly string[] BuiltInMorphEffects =
-            { "none", "robot", "whisper", "echo", "distortion", "flanger", "vibrato", "tremolo", "autowah",
-              "yhwh", "cathedral", "angelic", "skeletor" };
-
-        // The shared, live voice list bound by every redeem row's dropdown: built-in effects
-        // plus every voice saved in the morph lab (shown as "★ Name"). Rebuilt on demand so a
-        // voice saved in the lab appears here in real time.
-        public System.Collections.ObjectModel.ObservableCollection<string> VrEffectChoices { get; } = new();
-
-        private const string LabMark = "★ ";
-        private static bool IsLabChoice(string? s) => s != null && s.StartsWith(LabMark);
-        private static string LabNameOf(string s) => s.Substring(LabMark.Length);
-
-        public void BuildVrEffectChoices()
-        {
-            var desired = new System.Collections.Generic.List<string>(BuiltInMorphEffects);
-            try
-            {
-                foreach (var p in SettingsService.LoadMorph().Presets)
-                    if (!p.RedeemOwned && !string.IsNullOrWhiteSpace(p.Name))
-                        desired.Add(LabMark + p.Name);
-            }
-            catch { }
-
-            // Merge in place so existing selections aren't cleared out from under the combos.
-            for (int i = VrEffectChoices.Count - 1; i >= 0; i--)
-                if (!desired.Contains(VrEffectChoices[i])) VrEffectChoices.RemoveAt(i);
-            foreach (var d in desired)
-                if (!VrEffectChoices.Contains(d)) VrEffectChoices.Add(d);
-        }
-
-        private void LoadVoiceRedeems()
-        {
-            BuildVrEffectChoices();
-            _vr.Clear();
-            var f = SettingsService.LoadChatFeatures();
-            var m = SettingsService.LoadMorph();
-            foreach (var r in f.Redeems)
-            {
-                if (string.IsNullOrWhiteSpace(r.MorphPreset)) continue;   // only voice-morph redeems
-                var p = m.Presets.FirstOrDefault(x => x.Name.Equals(r.MorphPreset, StringComparison.OrdinalIgnoreCase));
-                bool lab = p != null && !p.RedeemOwned;
-                _vr.Add(new VoiceRedeemVm
-                {
-                    Command = r.Command,
-                    Cost = r.Cost,
-                    Effect = lab ? LabMark + p!.Name : (p?.Effect ?? "none"),
-                    Pitch = p?.PitchSemitones ?? 0,
-                    Duration = p?.TimerSeconds ?? 60,
-                });
-            }
-            VrList.ItemsSource = _vr;
-        }
-
-        private void VrAdd_Click(object sender, RoutedEventArgs e)
-            => _vr.Add(new VoiceRedeemVm { Command = "!voice" + (_vr.Count + 1), Cost = 500, Effect = "robot", Pitch = 0, Duration = 60 });
-
-        private void VrDelete_Click(object sender, RoutedEventArgs e)
-        {
-            if (sender is FrameworkElement fe && fe.Tag is VoiceRedeemVm vm) _vr.Remove(vm);
-        }
-
-        private void VrTest_Click(object sender, RoutedEventArgs e)
-        {
-            var vm = _vr.LastOrDefault();
-            if (vm == null) { VrStatus.Text = "Add a redeem first."; return; }
-
-            bool ok;
-            if (IsLabChoice(vm.Effect))
-            {
-                ok = VoiceMorphService.ActivateByName(LabNameOf(vm.Effect));
-                VrStatus.Text = ok ? $"▶ Previewing “{LabNameOf(vm.Effect)}” on your mic…"
-                                   : "Couldn't start the mic — set your input on the Voice & TTS page.";
-            }
-            else
-            {
-                ok = VoiceMorphService.Activate(new MorphPreset
-                { Name = "preview", Effect = vm.Effect, PitchSemitones = vm.Pitch, TimerSeconds = Math.Max(5, Math.Min(10, vm.Duration)) });
-                VrStatus.Text = ok ? $"▶ Previewing “{vm.Effect}” (pitch {vm.Pitch:+#;-#;0}) on your mic…"
-                                   : "Couldn't start the mic — set your input on the Voice & TTS page.";
-            }
-        }
-
-        private void VrSave_Click(object sender, RoutedEventArgs e)
-        {
-            var f = SettingsService.LoadChatFeatures();
-            var m = SettingsService.LoadMorph();
-
-            // Rebuild only redeem-owned presets and the morph redeems; lab voices are left alone.
-            f.Redeems.RemoveAll(r => !string.IsNullOrWhiteSpace(r.MorphPreset));
-            m.Presets.RemoveAll(p => p.RedeemOwned);
-
-            int n = 0;
-            foreach (var vm in _vr)
-            {
-                var cmd = (vm.Command ?? "").Trim();
-                if (cmd.Length == 0) continue;
-                if (!cmd.StartsWith("!")) cmd = "!" + cmd;
-
-                string presetName;
-                if (IsLabChoice(vm.Effect))
-                {
-                    // Reference an existing morph-lab voice — never rebuild or delete it.
-                    presetName = LabNameOf(vm.Effect);
-                    if (!m.Presets.Any(p => !p.RedeemOwned && p.Name.Equals(presetName, StringComparison.OrdinalIgnoreCase)))
-                        continue;   // voice was deleted in the lab
-                }
-                else
-                {
-                    presetName = cmd.TrimStart('!').Trim();
-                    if (presetName.Length == 0) continue;
-                    m.Presets.RemoveAll(p => p.Name.Equals(presetName, StringComparison.OrdinalIgnoreCase));  // de-dupe
-                    m.Presets.Add(new MorphPreset
-                    {
-                        Name = presetName,
-                        Effect = string.IsNullOrWhiteSpace(vm.Effect) ? "none" : vm.Effect,
-                        PitchSemitones = Math.Clamp(vm.Pitch, -12, 12),
-                        TimerSeconds = Math.Max(5, vm.Duration),
-                        RedeemOwned = true,
-                    });
-                }
-
-                f.Redeems.Add(new GameTracker.Models.EffectRedeem
-                {
-                    Command = cmd, Cost = Math.Max(0, vm.Cost), Effect = "none", MorphPreset = presetName,
-                });
-                n++;
-            }
-
-            SettingsService.SaveMorph(m);
-            SettingsService.SaveChatFeatures(f);
-            ChatWindow.Current?.ReloadFeatures();   // apply live if chat is open
-            BuildVrEffectChoices();
-            VrStatus.Text = $"✓ Saved {n} voice redeem{(n == 1 ? "" : "s")}. Viewers can redeem them now.";
         }
 
         // ---- left nav ----
@@ -250,17 +95,17 @@ namespace GameTracker.Views
             // Editor entries open their own editor rather than switching an inline panel,
             // so they keep the current page visible behind the editor window.
             if (sender == NavPoints) { OpenFeatures(true); return; }
+            if (sender == NavVoiceMorph) { VoiceMorph_Click(sender, e); return; }
             if (sender == NavGoals) { Goals_Click(sender, e); return; }
             if (sender == NavCounters) { Counters_Click(sender, e); return; }
             if (sender == NavTextOverlays) { TextPanels_Click(sender, e); return; }
 
-            NavAppearance.Tag = NavChat.Tag = NavVoice.Tag = NavVoiceRedeems.Tag = NavAlerts.Tag = NavOverlay.Tag =
+            NavAppearance.Tag = NavChat.Tag = NavVoice.Tag = NavAlerts.Tag = NavOverlay.Tag =
                 NavHelp.Tag = NavBackup.Tag = NavHotkeys.Tag = null;
-            PanelAppearance.Visibility = PanelChat.Visibility = PanelVoice.Visibility = PanelVoiceRedeems.Visibility =
+            PanelAppearance.Visibility = PanelChat.Visibility = PanelVoice.Visibility =
                 PanelAlerts.Visibility = PanelOverlay.Visibility = PanelHelp.Visibility = PanelBackup.Visibility = PanelHotkeys.Visibility = Visibility.Collapsed;
 
-            if (sender == NavVoiceRedeems) { NavVoiceRedeems.Tag = "active"; PanelVoiceRedeems.Visibility = Visibility.Visible; BuildVrEffectChoices(); }
-            else if (sender == NavVoice) { NavVoice.Tag = "active"; PanelVoice.Visibility = Visibility.Visible; }
+            if (sender == NavVoice) { NavVoice.Tag = "active"; PanelVoice.Visibility = Visibility.Visible; }
             else if (sender == NavAlerts) { NavAlerts.Tag = "active"; PanelAlerts.Visibility = Visibility.Visible; }
             else if (sender == NavAppearance) { NavAppearance.Tag = "active"; PanelAppearance.Visibility = Visibility.Visible; }
             else if (sender == NavOverlay) { NavOverlay.Tag = "active"; PanelOverlay.Visibility = Visibility.Visible; RenderTickerPreview(); }
@@ -503,7 +348,7 @@ namespace GameTracker.Views
             Section("Voice Morph — build a morphed voice");
             Img("voicemorph.png");
             Body("The morph runs your microphone through the app in real time and plays the changed voice back out. When no morph is active you sound normal; a redeem (or a click) switches your voice for a set number of seconds, then it reverts on its own.");
-            Step(1, "Settings → 🔊 Voice & TTS → 🎙 Voice Morph. Tick \"Use the app as my audio source (always on)\" — this runs your mic through the app continuously (your normal voice) so OBS can capture it, and it stays live and auto-recovers while the app is open. No VoiceMeeter or virtual cable needed.");
+            Step(1, "Settings → 🎙 Voice Morph (left menu). Tick \"Use the app as my audio source (always on)\" — this runs your mic through the app continuously (your normal voice) so OBS can capture it, and it stays live and auto-recovers while the app is open. No VoiceMeeter or virtual cable needed.");
             Step(2, "Input = your microphone (e.g. \"Microphone (Razer Kiyo)\"). Output = 🎧 System default. (Output is only what YOU hear back — see the OBS section below; OBS captures the morph no matter what Output is set to. Pick 🔇 None if you don't want to hear yourself at all.)");
             Step(3, "Build a voice with the Voice Mixer: each effect has a bar that rests at neutral — push it right to add that effect (Reverb, Echo, Chorus, Robot, Wobble). Two bars go BOTH ways: Pitch (deeper ↔ higher) and Tone (drag left = warm/mellow, right = grit/bright). Or tap a preset — 🕊 YHWH, ⛪ Cathedral, 👼 Angelic, 💀 Skeletor — to set the bars instantly, then tweak. You can even save your own bars over any preset button (Save over default). Click \"▶ Try it live\" and talk to hear it on your mic, or \"🔊 Test with TTS\" to hear the modulation on a spoken line without touching your mic.");
             Step(4, "Give it a Name, set Timer (how many seconds it stays on when redeemed), and click \"💾 Save voice\". It now shows under YOUR SAVED MORPHS and can be attached to a point redeem on the 🪙 Points & Redeems page.");
@@ -819,7 +664,6 @@ namespace GameTracker.Views
         }
 
         private void Features_Click(object sender, RoutedEventArgs e) => OpenFeatures(false);
-        private void PointsRedeems_Click(object sender, RoutedEventArgs e) => OpenFeatures(true);
 
         private void OpenFeatures(bool pointsTab)
         {

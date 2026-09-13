@@ -18,6 +18,26 @@ namespace GameTracker.Views
         private readonly ObservableCollection<RedeemItem> _redeems = new();
         private readonly SoundService _tester = new();
 
+        // Shared, live list of morph voices ("" + every saved voice) that all redeem rows'
+        // "Voice morph" dropdowns bind to. Refreshed on Activated so a voice saved in the morph
+        // lab shows up here in real time without reopening the window.
+        public ObservableCollection<string> MorphChoicesShared { get; } = new();
+
+        private void RefreshMorphChoices()
+        {
+            var desired = new System.Collections.Generic.List<string> { "" };
+            try
+            {
+                foreach (var p in SettingsService.LoadMorph().Presets)
+                    if (!p.RedeemOwned && !string.IsNullOrWhiteSpace(p.Name)) desired.Add(p.Name);
+            }
+            catch { }
+            for (int i = MorphChoicesShared.Count - 1; i >= 0; i--)
+                if (!desired.Contains(MorphChoicesShared[i])) MorphChoicesShared.RemoveAt(i);
+            foreach (var d in desired)
+                if (!MorphChoicesShared.Contains(d)) MorphChoicesShared.Add(d);
+        }
+
         private void CfTab_Changed(object sender, RoutedEventArgs e)
         {
             if (PanelGeneral == null || PanelPoints == null) return;   // during init
@@ -66,6 +86,9 @@ namespace GameTracker.Views
                     MorphPreset = r.MorphPreset, Volume = r.Volume, Hotkey = r.Hotkey,
                 });
             RedeemList.ItemsSource = _redeems;
+
+            RefreshMorphChoices();
+            Activated += (_, _) => RefreshMorphChoices();   // pick up lab voices live
         }
 
         // ---- colors ----
@@ -293,20 +316,6 @@ namespace GameTracker.Views
             private string _morph = "";
             private int _cost = 100;
             private double _volume = 1.0;
-
-            /// <summary>"(none)" + the streamer's saved morph names, for the per-redeem picker.</summary>
-            public System.Collections.Generic.List<string> MorphChoices { get; } = BuildMorphChoices();
-
-            private static System.Collections.Generic.List<string> BuildMorphChoices()
-            {
-                var list = new System.Collections.Generic.List<string> { "" };
-                try
-                {
-                    foreach (var p in SettingsService.LoadMorph().Presets) list.Add(p.Name);
-                }
-                catch { }
-                return list;
-            }
 
             public string MorphPreset
             {

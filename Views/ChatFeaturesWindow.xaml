@@ -331,7 +331,8 @@
                                             <TextBlock Text="&#127897; Voice morph" Foreground="#a8c488" FontSize="11"
                                                        VerticalAlignment="Center" Margin="0,0,6,0"
                                                        ToolTip="Morph the streamer's voice when redeemed (build morphs in Settings → Chat → Voice Morph)"/>
-                                            <ComboBox Width="150" ItemsSource="{Binding MorphChoices}"
+                                            <ComboBox Width="150"
+                                                      ItemsSource="{Binding MorphChoicesShared, RelativeSource={RelativeSource AncestorType=Window}}"
                                                       SelectedItem="{Binding MorphPreset}"/>
                                         </StackPanel>
                                     </StackPanel>

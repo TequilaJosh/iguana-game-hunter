@@ -55,12 +55,9 @@ namespace GameTracker.Views
             UpdateOutputWarning();
 
             BuildMixer();
-            SaveTargetBox.ItemsSource = new[] { "YHWH", "Cathedral", "Angelic", "Skeletor" };
-            SaveTargetBox.SelectedIndex = 0;
-
-            foreach (var p in s.Presets) _rows.Add(Row.From(p));
+            EnsureStarterVoices();
             PresetList.ItemsSource = _rows;
-            RefreshEmpty();
+            RefreshList();
             UpdateEngineStatus();
             _ready = true;
 
@@ -207,59 +204,44 @@ namespace GameTracker.Views
                         sl.Value = Math.Clamp(kv.Value, -100, 100);
         }
 
-        // Save the current bars as a preset button's default (persists in settings).
-        private void SaveDefault_Click(object sender, RoutedEventArgs e)
+        // Seed the built-in starter voices into the single voice list, once. Deleting one
+        // afterwards makes it stay gone (we don't re-seed).
+        private static void EnsureStarterVoices()
         {
-            var name = SaveTargetBox.SelectedItem as string ?? "YHWH";
             var s = SettingsService.LoadMorph();
-            s.PresetDefaults ??= new System.Collections.Generic.Dictionary<string, MorphPreset>();
-            s.PresetDefaults[name.ToLowerInvariant()] = BuildFromUi("(default)");
+            if (s.StartersSeeded) return;
+            void Add(string name, int pitch, params (string k, int v)[] mix)
+            {
+                if (s.Presets.Any(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase))) return;
+                var d = new Dictionary<string, int>();
+                foreach (var m in mix) d[m.k] = m.v;
+                s.Presets.Add(new MorphPreset { Name = name, PitchSemitones = pitch, Effect = "none", Mix = d, TimerSeconds = 60 });
+            }
+            Add("YHWH", -2, ("tone", -30), ("wobble", 4), ("chorus", 19), ("reverb", 10), ("echo", 10));
+            Add("Cathedral", -4, ("reverb", 85), ("echo", 45));
+            Add("Angelic", 3, ("chorus", 60), ("reverb", 55));
+            Add("Skeletor", 6, ("tone", 76), ("robot", 1), ("wobble", 69), ("reverb", 2), ("echo", 4));
+            s.StartersSeeded = true;
             SettingsService.SaveMorph(s);
-            Status.Text = $"Saved current mix as the {name} preset — that button now loads it.";
         }
 
-        // Restore a preset button to its built-in default.
-        private void ResetDefault_Click(object sender, RoutedEventArgs e)
+        private void RefreshList()
         {
-            var name = SaveTargetBox.SelectedItem as string ?? "YHWH";
-            var s = SettingsService.LoadMorph();
-            if (s.PresetDefaults != null && s.PresetDefaults.Remove(name.ToLowerInvariant()))
-                SettingsService.SaveMorph(s);
-            Status.Text = $"{name} preset reset to the built-in default.";
+            _rows.Clear();
+            foreach (var p in SettingsService.LoadMorph().Presets) _rows.Add(Row.From(p));
+            RefreshEmpty();
         }
 
-        // One-tap voices set the bars. A saved custom default (if any) wins over the built-in.
-        // "clear" resets everything to neutral.
-        private void Preset_Click(object sender, RoutedEventArgs e)
+        // Load a saved voice into the bars to edit it (Save then overwrites it by name).
+        private void Load_Click(object sender, RoutedEventArgs e)
         {
-            if (sender is not FrameworkElement fe) return;
-            string tag = fe.Tag as string ?? "";
-
-            if (tag != "clear")
-            {
-                var saved = SettingsService.LoadMorph();
-                if (saved.PresetDefaults != null && saved.PresetDefaults.TryGetValue(tag, out var def) && def != null)
-                {
-                    ApplyToMixer(def);
-                    Status.Text = $"Loaded your saved {tag} preset.";
-                    return;
-                }
-            }
-
-            foreach (var sl in _mixSliders.Values) sl.Value = 0;
-            void Set(string k, int v) { if (_mixSliders.TryGetValue(k, out var sl)) sl.Value = v; }
-
-            switch (tag)
-            {
-                // The Lord Almighty — tuned from the streamer's own mix: gently deep and warm
-                // with light wobble, chorus, reverb and echo (subtle, not overblown).
-                case "yhwh":      PitchSlider.Value = -2; Set("tone", -30); Set("wobble", 4); Set("chorus", 19); Set("reverb", 10); Set("echo", 10); break;
-                case "cathedral": PitchSlider.Value = -4; Set("reverb", 85); Set("echo", 45); break;
-                case "angelic":   PitchSlider.Value =  3; Set("chorus", 60); Set("reverb", 55); break;
-                // Skeletor — tuned from the streamer's mix: higher raspy grit with a strong wobble.
-                case "skeletor":  PitchSlider.Value = 6; Set("tone", 76); Set("robot", 1); Set("wobble", 69); Set("reverb", 2); Set("echo", 4); break;
-                case "clear":     PitchSlider.Value =  0; break;
-            }
+            if (sender is not FrameworkElement fe || fe.Tag is not Row r) return;
+            var p = SettingsService.LoadMorph().Presets.FirstOrDefault(x => x.Name == r.Name);
+            if (p == null) return;
+            ApplyToMixer(p);
+            NameBox.Text = p.Name;
+            TimerBox.Text = p.TimerSeconds.ToString();
+            Status.Text = $"Loaded “{p.Name}” — tweak the bars, then Save to overwrite it.";
         }
 
         private MorphPreset BuildFromUi(string name)
@@ -317,18 +299,18 @@ namespace GameTracker.Views
         private void Save_Click(object sender, RoutedEventArgs e)
         {
             var name = (NameBox.Text ?? string.Empty).Trim();
-            if (name.Length == 0) { Status.Text = "Give it a name first."; return; }
+            if (name.Length == 0) { Status.Text = "Type a name above first, then Save."; return; }
 
             var s = SettingsService.LoadMorph();
+            bool existed = s.Presets.Any(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
             s.Presets.RemoveAll(p => p.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
             s.Presets.Add(BuildFromUi(name));
             SettingsService.SaveMorph(s);
 
-            _rows.Clear();
-            foreach (var p in s.Presets) _rows.Add(Row.From(p));
-            RefreshEmpty();
-            NameBox.Clear();
-            Status.Text = $"Saved \"{name}\" — usable in point redeems now.";
+            RefreshList();
+            Status.Text = existed
+                ? $"Updated “{name}”."
+                : $"Saved “{name}” — attach it to a redeem in 🪙 Points & Redeems.";
         }
 
         // ---- saved list ----
@@ -370,9 +352,19 @@ namespace GameTracker.Views
             public string Detail { get; set; } = string.Empty;
             public static Row From(MorphPreset p)
             {
-                string fx = (p.Mix != null && p.Mix.Any(kv => kv.Value > 0))
-                    ? string.Join(", ", p.Mix.Where(kv => kv.Value > 0).Select(kv => $"{kv.Key} {kv.Value}%"))
-                    : p.Effect;
+                string fx = p.Effect;
+                if (p.Mix != null && p.Mix.Any(kv => kv.Value != 0))
+                {
+                    var parts = new System.Collections.Generic.List<string>();
+                    foreach (var bar in VoiceMorphService.MixBars)
+                    {
+                        if (!p.Mix.TryGetValue(bar.Key, out var v) || v == 0) continue;
+                        parts.Add(bar.Bidir
+                            ? (v > 0 ? $"{bar.Right} {v}%" : $"{bar.Left} {-v}%")
+                            : $"{bar.Key} {v}%");
+                    }
+                    if (parts.Count > 0) fx = string.Join(", ", parts);
+                }
                 return new Row
                 {
                     Name = p.Name,

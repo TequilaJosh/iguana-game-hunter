@@ -31,8 +31,12 @@ namespace GameTracker.Models
         public string OutputDevice { get; set; } = string.Empty;  // "" = default output
         public List<MorphPreset> Presets { get; set; } = new();
 
-        /// <summary>Custom overrides for the mixer's one-tap preset buttons (key = "yhwh" /
-        /// "cathedral" / "angelic"). When set, the button loads this instead of the built-in.</summary>
+        /// <summary>Legacy: custom overrides for the old one-tap preset buttons. Kept for
+        /// backward compatibility with older saves; no longer written.</summary>
         public Dictionary<string, MorphPreset> PresetDefaults { get; set; } = new();
+
+        /// <summary>True once the built-in starter voices (YHWH/Cathedral/Angelic/Skeletor) have
+        /// been added to <see cref="Presets"/>, so deleting one makes it stay gone.</summary>
+        public bool StartersSeeded { get; set; } = false;
     }
 }

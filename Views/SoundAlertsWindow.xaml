@@ -51,7 +51,7 @@
         </Style>
         <Style x:Key="InputBox" TargetType="TextBox">
             <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/>
-            <Setter Property="Foreground" Value="#e8e0c4"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeText}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CaretBrush" Value="#7cc44a"/>
@@ -92,7 +92,7 @@
             </Border>
 
             <!-- Hint -->
-            <TextBlock Grid.Row="1" Margin="14,12,14,0" Foreground="#7a9070" FontSize="11" TextWrapping="Wrap"
+            <TextBlock Grid.Row="1" Margin="14,12,14,0" Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" TextWrapping="Wrap"
                        Text="When a viewer types a command in chat (across any connected source), its sound plays. Commands usually start with ! — e.g. !airhorn"/>
 
             <!-- Column headers -->
@@ -127,10 +127,10 @@
                                          ToolTip="The chat command, e.g. !airhorn"/>
                                 <TextBox Grid.Column="1" Text="{Binding FilePath}" IsReadOnly="True"
                                          Style="{StaticResource InputBox}" Margin="0,0,6,0"
-                                         Foreground="#a8c488" ToolTip="{Binding FilePath}"/>
+                                         Foreground="{DynamicResource ThemeTextDim}" ToolTip="{Binding FilePath}"/>
                                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center"
                                             Margin="0,0,6,0">
-                                    <TextBlock Text="&#128266;" FontSize="12" Foreground="#a8c488"
+                                    <TextBlock Text="&#128266;" FontSize="12" Foreground="{DynamicResource ThemeTextDim}"
                                                VerticalAlignment="Center" Margin="0,0,3,0"/>
                                     <Slider Width="66" Minimum="0" Maximum="1" SmallChange="0.05" LargeChange="0.1"
                                             Value="{Binding Volume, Mode=TwoWay}" VerticalAlignment="Center"
@@ -158,7 +158,7 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock x:Name="TestStatus" Grid.Column="0" Foreground="#7a9070" FontSize="11"
+                <TextBlock x:Name="TestStatus" Grid.Column="0" Foreground="{DynamicResource ThemeTextFaint}" FontSize="11"
                            VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="2,0,8,0"/>
                 <StackPanel Grid.Column="1" Orientation="Horizontal">
                     <Button Content="Cancel" Click="Cancel_Click" Style="{StaticResource SmallBtn}"/>

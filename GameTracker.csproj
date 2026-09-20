@@ -45,4 +45,11 @@
     <!-- Chicken "bawk" used to censor bad words in TTS. -->
     <EmbeddedResource Include="Assets\chicken.wav" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- Bundled per-theme overlay artwork: any image dropped in overlay\ThemeArt ships with
+         the app and serves as the default (a runtime folder in AppData can override it). -->
+    <Content Include="overlay\ThemeArt\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
 </Project>

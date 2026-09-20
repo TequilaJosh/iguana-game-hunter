@@ -75,8 +75,13 @@ namespace GameTracker.Services
         private static readonly List<object> _activity = new(); // live activity feed (gifts/follows/subs…)
         private static readonly Dictionary<string, object> _latestByKind = new(); // newest item per kind (ticker)
         private static JToken? _ticker;   // ticker banner config (edited live in /ticker?edit)
+        private static object? _theme;    // active app theme colors + slug (styles the overlay)
         private const int ActivityMax = 25;
         private static string? _panelHtml; // PanelOverlay.html template (index injected per request)
+
+        // Watches the ThemeArt folders so newly-dropped artwork appears live (no restart).
+        private static readonly List<FileSystemWatcher> _artWatchers = new();
+        private static System.Threading.Timer? _artDebounce;
 
         // The overlay HTML (loaded once, from the embedded resource or disk).
         private static string _html = string.Empty;
@@ -114,6 +119,7 @@ namespace GameTracker.Services
                 _running = true;
                 LastError = null;
                 _ = AcceptLoop(_cts.Token);
+                StartArtWatchers();                 // live-reload theme art dropped into either folder
                 return true;
             }
             catch (Exception ex)
@@ -136,6 +142,7 @@ namespace GameTracker.Services
         public static void Stop()
         {
             _running = false;
+            StopArtWatchers();
             try { _cts?.Cancel(); } catch { }
             try { _listener?.Stop(); } catch { }
             lock (Gate)
@@ -216,6 +223,10 @@ namespace GameTracker.Services
                 else if (method == "GET" && route.StartsWith("/pimg/", StringComparison.Ordinal))
                 {
                     await ServePanelImage(stream, route, ct);
+                }
+                else if (method == "GET" && route.StartsWith("/themeart/", StringComparison.Ordinal))
+                {
+                    await ServeThemeArt(stream, route, ct);
                 }
                 else if (method == "GET" && route.StartsWith("/fxvideo/", StringComparison.Ordinal))
                 {
@@ -339,6 +350,35 @@ namespace GameTracker.Services
                                  int.TryParse(key.AsSpan(4), out int li) &&
                                  li >= 0 && li < panel.Lines.Count)
                             path = panel.Lines[li].Image;
+                    }
+                }
+            }
+            catch { }
+            await ServeImageFile(stream, path, ct);
+        }
+
+        // Serves the streamer's per-theme artwork: /themeart/<slug> → ThemeArt/<slug>.<ext>.
+        private static async Task ServeThemeArt(NetworkStream stream, string route, CancellationToken ct)
+        {
+            string? path = null;
+            try
+            {
+                var parts = route.Split('/', StringSplitOptions.RemoveEmptyEntries); // themeart, slug
+                if (parts.Length >= 2)
+                {
+                    var slug = parts[1].Split('?')[0];
+                    slug = ThemeSlug(slug);   // sanitise (no path traversal)
+                    // The streamer's AppData folder wins (their override); otherwise fall back to
+                    // the artwork bundled with the app (overlay\ThemeArt next to the exe).
+                    var dirs = new[] { ThemeArtDir, BundledThemeArtDir };
+                    foreach (var dir in dirs)
+                    {
+                        foreach (var ext in new[] { ".png", ".jpg", ".jpeg", ".gif", ".webp" })
+                        {
+                            var candidate = Path.Combine(dir, slug + ext);
+                            if (File.Exists(candidate)) { path = candidate; break; }
+                        }
+                        if (path != null) break;
                     }
                 }
             }
@@ -650,7 +690,8 @@ namespace GameTracker.Services
             lock (Gate) snapshot = new
             {
                 type = "snapshot", state = _state, chat = _chat,
-                layout = _layout, presets = _presets, style = _style, chatters = _chatters,
+                layout = _layout, presets = _presets, style = _style, theme = _theme,
+                themeList = Models.ThemeSettings.Presets.Select(p => p.PresetName).ToArray(), chatters = _chatters,
                 panels = _panels, morph = MorphSnapshot(), goals = _goals, counters = _counters, poll = _poll,
                 activity = _activity.ToArray(),
                 activityLatest = new Dictionary<string, object>(_latestByKind),
@@ -754,6 +795,25 @@ namespace GameTracker.Services
                         lock (Gate) _presets = presets;
                     }
                 }
+
+                // Theme dropdown in the overlay editor -> switch the whole app+overlay theme.
+                if (msg.Contains("\"setTheme\""))
+                {
+                    var o = JObject.Parse(msg);
+                    if ((string?)o["type"] == "setTheme")
+                    {
+                        var name = (string?)o["name"];
+                        var preset = Models.ThemeSettings.Presets.FirstOrDefault(p => p.PresetName == name);
+                        if (preset != null)
+                        {
+                            var clone = JsonConvert.DeserializeObject<Models.ThemeSettings>(
+                                JsonConvert.SerializeObject(preset));
+                            var app = System.Windows.Application.Current;
+                            if (app != null && clone != null)
+                                app.Dispatcher.Invoke(() => ThemeService.Apply(clone));
+                        }
+                    }
+                }
             }
             catch { /* ignore malformed client messages */ }
         }
@@ -809,6 +869,109 @@ namespace GameTracker.Services
             var style = new { mode, colors = (colors ?? Array.Empty<string>()).ToArray() };
             lock (Gate) _style = style;
             Broadcast(new { type = "style", style });
+        }
+
+        // ── App theme → overlay ────────────────────────────────────────────────
+        /// <summary>Folder where the streamer drops per-theme artwork (one image per theme,
+        /// named after the theme's slug, e.g. "kingdom-hearts.png").</summary>
+        public static string ThemeArtDir => Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "LazerGuanas Game Hunter", "ThemeArt");
+
+        /// <summary>Artwork bundled with the app (shipped in the installer). Used as the default
+        /// when the streamer hasn't dropped an override into <see cref="ThemeArtDir"/>.</summary>
+        public static string BundledThemeArtDir =>
+            Path.Combine(AppContext.BaseDirectory, "overlay", "ThemeArt");
+
+        /// <summary>A theme name → filename-safe slug, e.g. "Kingdom Hearts" → "kingdom-hearts".</summary>
+        public static string ThemeSlug(string? name)
+        {
+            var s = (name ?? "").Trim().ToLowerInvariant();
+            var sb = new StringBuilder();
+            foreach (var ch in s)
+                sb.Append(char.IsLetterOrDigit(ch) ? ch : '-');
+            var slug = sb.ToString();
+            while (slug.Contains("--")) slug = slug.Replace("--", "-");
+            return slug.Trim('-');
+        }
+
+        /// <summary>Push the active app theme (colors + slug) so the overlay recolours to match
+        /// and can load the matching per-theme artwork.</summary>
+        public static void SetTheme(Models.ThemeSettings t)
+        {
+            if (t == null) return;
+            var theme = new
+            {
+                slug = ThemeSlug(t.PresetName),
+                name = t.PresetName,
+                accent = t.Accent,
+                accentDeep = t.AccentDeep,
+                accent2 = t.Accent2,
+                bg = t.BgBase,
+                tile = t.BgTile,
+                text = t.Text,
+                textDim = t.TextDim,
+                textFaint = t.TextFaint,
+            };
+            lock (Gate) _theme = theme;
+            if (_running) Broadcast(new { type = "theme", theme });
+        }
+
+        // ── Live theme-art reload ──────────────────────────────────────────────
+        // Watch both ThemeArt folders (the streamer's AppData override AND the artwork
+        // bundled next to the .exe in the install folder) so that dropping a new image
+        // in — while the app is running — shows up in the overlay without a restart.
+        private static void StartArtWatchers()
+        {
+            StopArtWatchers();
+            foreach (var dir in new[] { ThemeArtDir, BundledThemeArtDir })
+            {
+                try
+                {
+                    if (!Directory.Exists(dir))
+                    {
+                        if (dir == ThemeArtDir) { try { Directory.CreateDirectory(dir); } catch { continue; } }
+                        else continue;
+                    }
+                    var w = new FileSystemWatcher(dir)
+                    {
+                        NotifyFilter = NotifyFilters.FileName | NotifyFilters.LastWrite | NotifyFilters.Size,
+                        IncludeSubdirectories = false,
+                        EnableRaisingEvents = true,
+                    };
+                    w.Created += OnArtChanged;
+                    w.Changed += OnArtChanged;
+                    w.Deleted += OnArtChanged;
+                    w.Renamed += OnArtChanged;
+                    _artWatchers.Add(w);
+                }
+                catch { /* watching is best-effort */ }
+            }
+        }
+
+        private static void StopArtWatchers()
+        {
+            foreach (var w in _artWatchers)
+            {
+                try { w.EnableRaisingEvents = false; w.Dispose(); } catch { }
+            }
+            _artWatchers.Clear();
+            try { _artDebounce?.Dispose(); } catch { }
+            _artDebounce = null;
+        }
+
+        // File writes fire several events in a row; debounce so we broadcast once things settle.
+        private static void OnArtChanged(object sender, FileSystemEventArgs e)
+        {
+            try
+            {
+                _artDebounce?.Dispose();
+                _artDebounce = new System.Threading.Timer(_ =>
+                {
+                    if (_running) Broadcast(new { type = "themeart", rev = Environment.TickCount });
+                }, null, 300, System.Threading.Timeout.Infinite);
+            }
+            catch { }
         }
 
         /// <summary>Push chatter counts + the active chatters list to all clients.</summary>

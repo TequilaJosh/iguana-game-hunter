@@ -18,14 +18,14 @@
 
     <Window.Resources>
         <Style x:Key="Lbl" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#a8c488"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeTextDim}"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Width" Value="80"/>
         </Style>
         <Style x:Key="In" TargetType="TextBox">
             <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/>
-            <Setter Property="Foreground" Value="#e8e0c4"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeText}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CaretBrush" Value="{DynamicResource ThemeAccent}"/>
@@ -90,7 +90,7 @@
 
             <!-- Builder -->
             <StackPanel Grid.Row="1" Margin="16,12,16,6">
-                <TextBlock Foreground="#7a9070" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,10"
+                <TextBlock Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,10"
                            Text="Build a voice: pick a base voice + effect, type a phrase, and Test. Give it a name and Save to add it to your voice list (and the per-chatter pool)."/>
                 <StackPanel Orientation="Horizontal" Margin="0,0,0,6">
                     <TextBlock Text="Base voice" Style="{StaticResource Lbl}"/>
@@ -134,8 +134,8 @@
                                                 <ColumnDefinition Width="Auto"/>
                                             </Grid.ColumnDefinitions>
                                             <StackPanel Grid.Column="0" VerticalAlignment="Center">
-                                                <TextBlock Text="{Binding Name}" Foreground="#e8e0c4" FontSize="13" FontWeight="Bold"/>
-                                                <TextBlock Text="{Binding Detail}" Foreground="#7a9070" FontSize="11"/>
+                                                <TextBlock Text="{Binding Name}" Foreground="{DynamicResource ThemeText}" FontSize="13" FontWeight="Bold"/>
+                                                <TextBlock Text="{Binding Detail}" Foreground="{DynamicResource ThemeTextFaint}" FontSize="11"/>
                                             </StackPanel>
                                             <Button Grid.Column="1" Content="&#9654; Play" Tag="{Binding}" Click="Play_Click"
                                                     Style="{StaticResource Btn}" Margin="0,0,6,0"/>

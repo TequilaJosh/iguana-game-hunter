@@ -24,14 +24,14 @@
             <Setter Property="Margin" Value="0,4,0,8"/>
         </Style>
         <Style x:Key="Lbl" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#a8c488"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeTextDim}"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Width" Value="120"/>
         </Style>
         <Style x:Key="In" TargetType="TextBox">
             <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/>
-            <Setter Property="Foreground" Value="#e8e0c4"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeText}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CaretBrush" Value="{DynamicResource ThemeAccent}"/>
@@ -68,7 +68,7 @@
         <!-- Left-nav item -->
         <Style x:Key="NavBtn" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#c4d4a8"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeTextDim}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="14,10"/>
             <Setter Property="FontSize" Value="13"/>
@@ -156,7 +156,7 @@
                     <ScrollViewer x:Name="PanelAppearance" VerticalScrollBarVisibility="Auto" Padding="18,14,18,16" Visibility="Collapsed">
                         <StackPanel>
                             <TextBlock Text="THEME" Style="{StaticResource SecHdr}"/>
-                            <TextBlock Foreground="#7a9070" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8"
+                            <TextBlock Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8"
                                        Text="Pick a preset or set your own colors. Applies to the whole app instantly."/>
                             <ItemsControl x:Name="PresetList" Margin="0,0,0,10">
                                 <ItemsControl.ItemsPanel>
@@ -181,7 +181,7 @@
                                                                     <Border.Background><SolidColorBrush Color="{Binding BgColor}"/></Border.Background>
                                                                 </Border>
                                                             </StackPanel>
-                                                            <TextBlock Text="{Binding PresetName}" Foreground="#e8e0c4" FontSize="11"
+                                                            <TextBlock Text="{Binding PresetName}" Foreground="{DynamicResource ThemeText}" FontSize="11"
                                                                        HorizontalAlignment="Center"/>
                                                         </StackPanel>
                                                     </Border>
@@ -196,7 +196,7 @@
                                     </DataTemplate>
                                 </ItemsControl.ItemTemplate>
                             </ItemsControl>
-                            <TextBlock Text="Custom colors" Foreground="#a8c488" FontSize="12" Margin="0,0,0,6"/>
+                            <TextBlock Text="Custom colors" Foreground="{DynamicResource ThemeTextDim}" FontSize="12" Margin="0,0,0,6"/>
                             <StackPanel x:Name="CustomColors"/>
                             <Button Content="&#8635; Reset to default (Reptile)" Click="ResetTheme_Click"
                                     Style="{StaticResource Btn}" HorizontalAlignment="Left" Margin="0,4,0,0"/>
@@ -208,14 +208,14 @@
                         <StackPanel>
                             <TextBlock Text="CHAT" Style="{StaticResource SecHdr}"/>
                             <CheckBox x:Name="AutoConnectCheck" Content="Auto-connect chats when a game session starts"
-                                      Foreground="#e8e0c4" FontSize="12" Margin="0,0,0,12"
+                                      Foreground="{DynamicResource ThemeText}" FontSize="12" Margin="0,0,0,12"
                                       Checked="AutoConnect_Changed" Unchecked="AutoConnect_Changed"/>
                             <Grid Margin="0,0,0,12">
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="120"/>
                                     <ColumnDefinition Width="*"/>
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Text="Chat window transparency" Foreground="#a8c488" FontSize="12"
+                                <TextBlock Text="Chat window transparency" Foreground="{DynamicResource ThemeTextDim}" FontSize="12"
                                            VerticalAlignment="Center" TextWrapping="Wrap"/>
                                 <Slider x:Name="OpacitySlider" Grid.Column="1" Minimum="0.25" Maximum="1.0" Value="1.0"
                                         VerticalAlignment="Center" Foreground="{DynamicResource ThemeAccent}"
@@ -223,13 +223,13 @@
                                         ToolTip="Make the chat window see-through (applies live if it's open)"/>
                             </Grid>
                                                         <TextBlock Text="CHAT DISPLAY" Style="{StaticResource SecHdr}"/>
-                            <TextBlock Foreground="#7a9070" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8"
+                            <TextBlock Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8"
                                        Text="Chat features covers chatter counts, replies, Discord and chat style. (Points and point-redeems live in the 🪙 Points &amp; Redeems section.)"/>
                             <StackPanel Orientation="Horizontal">
                                 <Button Content="&#9881; Chat features" Click="Features_Click" Style="{StaticResource Btn}"
                                         ToolTip="Chatter counts, active-chatters list, chat replies, Discord, and chat style"/>
                             </StackPanel>
-                            <TextBlock Foreground="#7a9070" FontSize="11" Margin="0,8,0,0" TextWrapping="Wrap"
+                            <TextBlock Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" Margin="0,8,0,0" TextWrapping="Wrap"
                                        Text="The live Chatters list stays in the chat window (it shows who's active right now)."/>
                         </StackPanel>
                     </ScrollViewer>
@@ -239,7 +239,7 @@
                         <StackPanel>
                             <TextBlock Text="TEXT TO SPEECH" Style="{StaticResource SecHdr}"/>
                             <CheckBox x:Name="TtsEnabled" Content="Read incoming chat messages aloud"
-                                      Foreground="#e8e0c4" FontSize="12" Margin="0,0,0,8"
+                                      Foreground="{DynamicResource ThemeText}" FontSize="12" Margin="0,0,0,8"
                                       Checked="Tts_Changed" Unchecked="Tts_Changed"/>
                             <Grid Margin="0,0,0,3">
                                 <Grid.ColumnDefinitions>
@@ -250,10 +250,10 @@
                                            ToolTip="Which output device reads chat aloud."/>
                                 <ComboBox x:Name="TtsOutput" Grid.Column="1" SelectionChanged="Tts_Changed"/>
                             </Grid>
-                            <TextBlock Foreground="#7a9070" FontSize="11" Margin="0,0,0,8" TextWrapping="Wrap"
+                            <TextBlock Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" Margin="0,0,0,8" TextWrapping="Wrap"
                                        Text="TTS plays on the device you pick here — your speakers, headset, or any other output."/>
                             <CheckBox x:Name="TtsPerChatter" Content="Give each chatter their own random voice (saved per person)"
-                                      Foreground="#a8c488" FontSize="12" Margin="0,0,0,8"
+                                      Foreground="{DynamicResource ThemeTextDim}" FontSize="12" Margin="0,0,0,8"
                                       Checked="TtsPerChatter_Changed" Unchecked="TtsPerChatter_Changed"/>
                             <Grid Margin="0,0,0,6">
                                 <Grid.ColumnDefinitions>
@@ -271,7 +271,7 @@
                                 <Button Content="&#127908; Voice Lab — TTS chat voices" Click="VoiceLab_Click"
                                         Style="{StaticResource Btn}" HorizontalAlignment="Left"
                                         ToolTip="Build, test and save custom voices for reading chat aloud (base voice + effect)"/>
-                                <TextBlock Foreground="#7a9070" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0"
+                                <TextBlock Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" TextWrapping="Wrap" Margin="0,6,0,0"
                                            Text="To morph YOUR live voice (mic) and build morph voices, use the 🎙 Voice Morph section in the left menu."/>
                             </StackPanel>
                             <Grid Margin="0,0,0,6">
@@ -295,21 +295,21 @@
                                         ValueChanged="Tts_Slider"/>
                             </Grid>
                             <CheckBox x:Name="TtsReadName" Content="Say the sender's name (&quot;Name says: …&quot;)"
-                                      Foreground="#a8c488" FontSize="12" Margin="0,0,0,4"
+                                      Foreground="{DynamicResource ThemeTextDim}" FontSize="12" Margin="0,0,0,4"
                                       Checked="Tts_Changed" Unchecked="Tts_Changed"/>
                             <CheckBox x:Name="TtsSkipCommands" Content="Skip ! commands"
-                                      Foreground="#a8c488" FontSize="12" Margin="0,0,0,4"
+                                      Foreground="{DynamicResource ThemeTextDim}" FontSize="12" Margin="0,0,0,4"
                                       Checked="Tts_Changed" Unchecked="Tts_Changed"/>
                             <CheckBox x:Name="TtsSkipRedeems" Content="Skip point-redeem messages (&quot;user redeemed …&quot;)"
-                                      Foreground="#a8c488" FontSize="12" Margin="0,0,0,4"
+                                      Foreground="{DynamicResource ThemeTextDim}" FontSize="12" Margin="0,0,0,4"
                                       Checked="Tts_Changed" Unchecked="Tts_Changed"
                                       ToolTip="Ignores Twitch channel-point announcements like 'morgan2333 redeemed AVALANCHE TIME 50' — the person's normal chats still read"/>
                             <CheckBox x:Name="TtsSkipLinks" Content="Don't read links"
-                                      Foreground="#a8c488" FontSize="12" Margin="0,0,0,4"
+                                      Foreground="{DynamicResource ThemeTextDim}" FontSize="12" Margin="0,0,0,4"
                                       Checked="Tts_Changed" Unchecked="Tts_Changed"
                                       ToolTip="URLs are removed from the spoken message; messages that are only a link are skipped entirely"/>
                             <CheckBox x:Name="TtsSkipEmotes" Content="Ignore chat emotes"
-                                      Foreground="#a8c488" FontSize="12" Margin="0,0,0,6"
+                                      Foreground="{DynamicResource ThemeTextDim}" FontSize="12" Margin="0,0,0,6"
                                       Checked="Tts_Changed" Unchecked="Tts_Changed"
                                       ToolTip="Emotes are removed from the spoken message; messages that are only emotes are skipped entirely"/>
                             <Grid Margin="0,0,0,6">
@@ -346,11 +346,11 @@
                                          ToolTip="Comma-separated words or phrases — any message containing one is skipped"/>
                             </Grid>
                             <CheckBox x:Name="TtsBleepBadWords" Content="Censor bad words with a chicken 🐔 bawk"
-                                      Foreground="#a8c488" FontSize="12" Margin="0,4,0,4"
+                                      Foreground="{DynamicResource ThemeTextDim}" FontSize="12" Margin="0,4,0,4"
                                       Checked="Tts_Changed" Unchecked="Tts_Changed"
                                       ToolTip="Profanity is replaced with a chicken squawk in the spoken audio. Edit the word list below."/>
                             <TextBlock Text="Censored words — edit freely (comma- or line-separated). Whole words only, not case-sensitive."
-                                       Foreground="#7a9070" FontSize="11" Margin="0,0,0,3" TextWrapping="Wrap"/>
+                                       Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" Margin="0,0,0,3" TextWrapping="Wrap"/>
                             <TextBox x:Name="TtsBadWords" Style="{StaticResource In}"
                                      AcceptsReturn="True" TextWrapping="Wrap" Height="110"
                                      VerticalScrollBarVisibility="Auto" LostFocus="Tts_Changed"
@@ -361,7 +361,7 @@
                                 <Button Content="Reset to defaults" Click="ResetBadWords_Click" Style="{StaticResource Btn}"
                                         ToolTip="Restore the built-in starter word list"/>
                             </StackPanel>
-                            <TextBlock Foreground="#7a9070" FontSize="11" Margin="0,4,0,0" TextWrapping="Wrap"
+                            <TextBlock Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" Margin="0,4,0,0" TextWrapping="Wrap"
                                        Text="Reads all connected chats. On busy streams, extra messages are skipped so it can't fall behind. The chat window's 🔇 panic button also stops speech."/>
                         </StackPanel>
                     </ScrollViewer>
@@ -370,7 +370,7 @@
                     <ScrollViewer x:Name="PanelAlerts" VerticalScrollBarVisibility="Auto" Padding="18,14,18,16" Visibility="Collapsed">
                         <StackPanel>
                             <TextBlock Text="ALERTS" Style="{StaticResource SecHdr}"/>
-                            <TextBlock Foreground="#7a9070" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,10"
+                            <TextBlock Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,10"
                                        Text="On-stream reactions: sounds for chat commands, and tiered alerts for gifts."/>
                             <StackPanel Orientation="Horizontal">
                                 <Button Content="&#128266; Sound Alerts" Click="SoundAlerts_Click" Style="{StaticResource Btn}" Margin="0,0,8,0"
@@ -414,14 +414,14 @@
                                         ToolTip="On-stream tallies per game (deaths, catchphrases…) with +/- hotkeys"/>
                             </WrapPanel>
                             <TextBlock Text="EFFECTS OVERLAY" Style="{StaticResource SecHdr}"/>
-                            <TextBlock Foreground="#7a9070" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,6"
+                            <TextBlock Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,6"
                                        Text="A transparent overlay just for video and image redeems. Add it as its own OBS Browser source and size/position it wherever you want redeems to play — when it's connected, videos and images play there instead of on the main overlay."/>
                             <Button Content="&#128203; Copy effects overlay URL" Click="CopyEffectsUrl_Click"
                                     Style="{StaticResource Btn}" HorizontalAlignment="Left"
                                     ToolTip="Copy the /effects URL for a transparent redeem-playback Browser source"/>
 
                             <TextBlock Text="ACTIVITY TICKER" Style="{StaticResource SecHdr}"/>
-                            <TextBlock Foreground="#7a9070" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8"
+                            <TextBlock Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8"
                                        Text="A separate banner overlay showing the latest of each event — it swaps the name in place when a new one happens. Add the ticker URL as its own OBS Browser source, then design it live (pick slots, size, scroll, colour…) by opening the editor URL in a browser — just like the main overlay's edit mode. Changes save and update OBS instantly."/>
                             <StackPanel Orientation="Horizontal">
                                 <Button Content="&#128203; Copy ticker URL" Click="CopyTickerUrl_Click"
@@ -441,12 +441,12 @@
                                     <Border Background="#14241c" CornerRadius="8" Padding="2" HorizontalAlignment="Left">
                                         <StackPanel x:Name="TickerPreviewBar" Orientation="Horizontal"/>
                                     </Border>
-                                    <TextBlock Foreground="#7a9070" FontSize="10" Margin="0,6,0,0" TextWrapping="Wrap"
+                                    <TextBlock Foreground="{DynamicResource ThemeTextFaint}" FontSize="10" Margin="0,6,0,0" TextWrapping="Wrap"
                                                Text="Shows your saved slots &amp; colour. Design it live via 'Copy editor URL'; reopen Settings to refresh here."/>
                                 </StackPanel>
                             </Border>
 
-                            <TextBlock x:Name="OverlayStatus" Foreground="#7a9070" FontSize="11" Margin="0,10,0,0"
+                            <TextBlock x:Name="OverlayStatus" Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" Margin="0,10,0,0"
                                        TextWrapping="Wrap"/>
                         </StackPanel>
                     </ScrollViewer>
@@ -462,13 +462,13 @@
                                   Visibility="Collapsed">
                         <StackPanel>
                             <TextBlock Text="BACKUP &amp; RESTORE" Style="{StaticResource SecHdr}"/>
-                            <TextBlock Foreground="#7a9070" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,10"
+                            <TextBlock Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,10"
                                        Text="Everything in one file: your games, settings, themes, overlays, custom voices, morphs, points, and chatter voices. Great for reinstalls or moving to another PC."/>
                             <Button Content="&#128190; Export backup…" Click="ExportBackup_Click"
                                     Style="{StaticResource Btn}" HorizontalAlignment="Left" Margin="0,0,0,8"/>
                             <Button Content="&#128194; Import backup…" Click="ImportBackup_Click"
                                     Style="{StaticResource Btn}" HorizontalAlignment="Left"/>
-                            <TextBlock Foreground="#7a9070" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0"
+                            <TextBlock Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" TextWrapping="Wrap" Margin="0,8,0,0"
                                        Text="Importing first saves your current data to a safety backup, then restores the file and restarts the app."/>
                             <TextBlock x:Name="BackupStatus" Foreground="{DynamicResource ThemeAccent}" FontSize="11"
                                        TextWrapping="Wrap" Margin="0,10,0,0"/>

@@ -22,6 +22,10 @@
         <SolidColorBrush x:Key="ThemeAccent"     Color="#7cc44a"/>
         <SolidColorBrush x:Key="ThemeAccentDeep" Color="#4a7c3a"/>
         <SolidColorBrush x:Key="ThemeAccent2"    Color="#d4a437"/>
+        <!-- Text family (flips to dark text under the Light theme) -->
+        <SolidColorBrush x:Key="ThemeText"       Color="#e8e0c4"/>
+        <SolidColorBrush x:Key="ThemeTextDim"    Color="#a8c488"/>
+        <SolidColorBrush x:Key="ThemeTextFaint"  Color="#7a9070"/>
         <!-- Background surface family (derived from the theme's background color) -->
         <SolidColorBrush x:Key="ThemeBg"         Color="#0a1410"/>
         <SolidColorBrush x:Key="ThemeSurface"    Color="#142016"/>
@@ -69,7 +73,7 @@
         <!-- Custom title bar controls -->
         <Style x:Key="WindowControlButton" TargetType="Button">
             <Setter Property="Background" Value="Transparent"/>
-            <Setter Property="Foreground" Value="#7a9070"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeTextFaint}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Width" Value="44"/>
             <Setter Property="Height" Value="36"/>
@@ -102,7 +106,7 @@
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
                                 <Setter Property="Background" Value="#9a3a2a"/>
-                                <Setter Property="Foreground" Value="#e8e0c4"/>
+                                <Setter Property="Foreground" Value="{DynamicResource ThemeText}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -204,7 +208,7 @@
 
         <!-- ============ Themed combo boxes ============ -->
         <Style TargetType="{x:Type ComboBoxItem}">
-            <Setter Property="Foreground" Value="#e8e0c4"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeText}"/>
             <Setter Property="Padding" Value="8,5"/>
             <Setter Property="SnapsToDevicePixels" Value="True"/>
             <Setter Property="Template">
@@ -294,7 +298,7 @@
         </ControlTemplate>
 
         <Style TargetType="{x:Type ComboBox}">
-            <Setter Property="Foreground" Value="#e8e0c4"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeText}"/>
             <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorder}"/>
             <Setter Property="FontSize" Value="13"/>
@@ -306,7 +310,7 @@
         <!-- ============ Themed context menus ============ -->
         <Style TargetType="{x:Type ContextMenu}">
             <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/>
-            <Setter Property="Foreground" Value="#e8e0c4"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeText}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccentDeep}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Template">
@@ -325,7 +329,7 @@
         </Style>
 
         <Style TargetType="{x:Type MenuItem}">
-            <Setter Property="Foreground" Value="#e8e0c4"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeText}"/>
             <Setter Property="Background" Value="Transparent"/>
             <Setter Property="Padding" Value="12,7"/>
             <Setter Property="FontSize" Value="13"/>

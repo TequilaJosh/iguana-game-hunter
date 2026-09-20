@@ -18,7 +18,7 @@
 
     <Window.Resources>
         <Style x:Key="Step" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#e8e0c4"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeText}"/>
             <Setter Property="FontSize" Value="13"/>
             <Setter Property="TextWrapping" Value="Wrap"/>
             <Setter Property="Margin" Value="0,0,0,10"/>
@@ -80,7 +80,7 @@
             <!-- Steps -->
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="18,16,18,8">
                 <StackPanel>
-                    <TextBlock Foreground="#a8c488" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,14"
+                    <TextBlock Foreground="{DynamicResource ThemeTextDim}" FontSize="12" TextWrapping="Wrap" Margin="0,0,0,14"
                                Text="To read chat here, Social Stream Ninja must be told to send chat to its API server. Do this once:"/>
 
                     <TextBlock Style="{StaticResource Step}">
@@ -110,8 +110,8 @@
                     <TextBlock Style="{StaticResource Step}">
                         <Run Foreground="{DynamicResource ThemeAccent}" FontWeight="Bold">6.</Run>
                         Copy your <Run FontWeight="Bold">session ID</Run> from the dock URL — the part after
-                        <Run FontFamily="Consolas" Foreground="#a8c488">session=</Run>
-                        (e.g. <Run FontFamily="Consolas" Foreground="#a8c488">…dock.html?session=4zqP2cuW4i</Run>
+                        <Run FontFamily="Consolas" Foreground="{DynamicResource ThemeTextDim}">session=</Run>
+                        (e.g. <Run FontFamily="Consolas" Foreground="{DynamicResource ThemeTextDim}">…dock.html?session=4zqP2cuW4i</Run>
                         → <Run FontFamily="Consolas" Foreground="{DynamicResource ThemeAccent}">4zqP2cuW4i</Run>).
                     </TextBlock>
                     <TextBlock Style="{StaticResource Step}">
@@ -121,7 +121,7 @@
                         messages appear as chat comes in.
                     </TextBlock>
 
-                    <TextBlock Foreground="#7a9070" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"
+                    <TextBlock Foreground="{DynamicResource ThemeTextFaint}" FontSize="12" TextWrapping="Wrap" Margin="0,4,0,0"
                                Text="Still quiet? Re-check step 4 and that at least one chat source is live in SSN."/>
                 </StackPanel>
             </ScrollViewer>

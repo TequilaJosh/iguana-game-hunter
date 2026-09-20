@@ -80,7 +80,7 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock x:Name="ShareStatus" Grid.Column="0" Foreground="#7a9070" FontSize="11"
+                <TextBlock x:Name="ShareStatus" Grid.Column="0" Foreground="{DynamicResource ThemeTextFaint}" FontSize="11"
                            VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="2,0,8,0"/>
                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                     <Button Content="&#8635; Refresh" Click="Refresh_Click" Style="{StaticResource Btn}" Margin="0,0,7,0"/>

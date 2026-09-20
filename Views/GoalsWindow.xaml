@@ -19,7 +19,7 @@
     <Window.Resources>
         <Style x:Key="In" TargetType="TextBox">
             <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/>
-            <Setter Property="Foreground" Value="#e8e0c4"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeText}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CaretBrush" Value="{DynamicResource ThemeAccent}"/>
@@ -86,7 +86,7 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Foreground="#7a9070" FontSize="11" TextWrapping="Wrap" VerticalAlignment="Center"
+                <TextBlock Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" TextWrapping="Wrap" VerticalAlignment="Center"
                            Text="Progress bars on the overlay (turn on the Goals block in the layout editor). Changes go live instantly — keep this window open during the stream and tap +1 as things happen."/>
                 <Button Grid.Column="1" Content="+ Add goal" Click="AddGoal_Click"
                         Style="{StaticResource Btn}" Margin="10,0,0,0" VerticalAlignment="Center"/>
@@ -122,7 +122,7 @@
                                              ToolTip="Current progress"/>
                                     <Button Grid.Column="4" Content="+1" Tag="{Binding}" Click="Plus_Click"
                                             Style="{StaticResource Btn}" Margin="0,0,8,0"/>
-                                    <TextBlock Grid.Column="5" Text="of" Foreground="#a8c488" FontSize="12"
+                                    <TextBlock Grid.Column="5" Text="of" Foreground="{DynamicResource ThemeTextDim}" FontSize="12"
                                                VerticalAlignment="Center" Margin="0,0,4,0"/>
                                     <TextBox Grid.Column="6" Width="52" Text="{Binding Target, UpdateSourceTrigger=PropertyChanged}"
                                              Style="{StaticResource In}" Margin="0,0,8,0" TextAlignment="Center"

@@ -51,7 +51,7 @@
         </Style>
         <Style x:Key="InputBox" TargetType="TextBox">
             <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/>
-            <Setter Property="Foreground" Value="#e8e0c4"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeText}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CaretBrush" Value="#7cc44a"/>
@@ -60,7 +60,7 @@
             <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
         <Style x:Key="Chk" TargetType="CheckBox">
-            <Setter Property="Foreground" Value="#c4d4a8"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeTextDim}"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
@@ -99,7 +99,7 @@
             </Border>
 
             <!-- Hint + toggles -->
-            <TextBlock Grid.Row="1" Margin="14,12,14,0" Foreground="#7a9070" FontSize="11" TextWrapping="Wrap"
+            <TextBlock Grid.Row="1" Margin="14,12,14,0" Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" TextWrapping="Wrap"
                        Text="When a viewer sends a gift (e.g. a TikTok Rose), the highest tier its coin value reaches plays its sound + effect. Tiers are matched by coin value — highest wins."/>
             <StackPanel Grid.Row="2" Orientation="Horizontal" Margin="14,10,14,0">
                 <CheckBox x:Name="EnabledChk" Content="Play gift sound alerts" Style="{StaticResource Chk}" Margin="0,0,20,0"/>
@@ -141,9 +141,9 @@
                                 <TextBox Grid.Column="1" Text="{Binding MinCoins, UpdateSourceTrigger=PropertyChanged}"
                                          Style="{StaticResource InputBox}" Margin="0,0,6,0" ToolTip="Coin value needed to hit this tier"/>
                                 <TextBox Grid.Column="2" Text="{Binding SoundPath}" IsReadOnly="True"
-                                         Style="{StaticResource InputBox}" Margin="0,0,6,0" Foreground="#a8c488" ToolTip="{Binding SoundPath}"/>
+                                         Style="{StaticResource InputBox}" Margin="0,0,6,0" Foreground="{DynamicResource ThemeTextDim}" ToolTip="{Binding SoundPath}"/>
                                 <StackPanel Grid.Column="3" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,6,0">
-                                    <TextBlock Text="&#128266;" FontSize="12" Foreground="#a8c488" VerticalAlignment="Center" Margin="0,0,3,0"/>
+                                    <TextBlock Text="&#128266;" FontSize="12" Foreground="{DynamicResource ThemeTextDim}" VerticalAlignment="Center" Margin="0,0,3,0"/>
                                     <Slider Width="56" Minimum="0" Maximum="1" SmallChange="0.05" LargeChange="0.1"
                                             Value="{Binding Volume, Mode=TwoWay}" VerticalAlignment="Center"
                                             Foreground="{DynamicResource ThemeAccent}" ToolTip="Alert volume"/>
@@ -172,14 +172,14 @@
             <Border Grid.Row="6" Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource ThemeBorder}"
                     BorderThickness="0,1,0,0" Padding="12,8">
                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <TextBlock Text="Try it:" Foreground="#c4d4a8" FontSize="12" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,8,0"/>
-                    <TextBlock Text="coins" Foreground="#7a9070" FontSize="11" VerticalAlignment="Center" Margin="0,0,4,0"/>
+                    <TextBlock Text="Try it:" Foreground="{DynamicResource ThemeTextDim}" FontSize="12" FontWeight="Bold" VerticalAlignment="Center" Margin="0,0,8,0"/>
+                    <TextBlock Text="coins" Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" VerticalAlignment="Center" Margin="0,0,4,0"/>
                     <TextBox x:Name="TestCoins" Text="100" Width="60" Style="{StaticResource InputBox}" Margin="0,0,6,0"
                              ToolTip="Coin value to simulate — the matching tier fires"/>
                     <Button Content="&#127873; Send test gift" Click="TestGift_Click" Style="{StaticResource SmallBtn}"/>
                     <Button Content="&#10133; Follow" Click="TestFollow_Click" Style="{StaticResource SmallBtn}"/>
                     <Button Content="&#11088; Sub" Click="TestSub_Click" Style="{StaticResource SmallBtn}"/>
-                    <TextBlock x:Name="TestStatus" Foreground="#7a9070" FontSize="11" VerticalAlignment="Center"
+                    <TextBlock x:Name="TestStatus" Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" VerticalAlignment="Center"
                                TextTrimming="CharacterEllipsis" MaxWidth="230" Margin="6,0,0,0"/>
                 </StackPanel>
             </Border>
@@ -190,7 +190,7 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Grid.Column="0" Foreground="#7a9070" FontSize="11" VerticalAlignment="Center" TextWrapping="Wrap"
+                <TextBlock Grid.Column="0" Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" VerticalAlignment="Center" TextWrapping="Wrap"
                            Text="Test buttons fire the real alert path — you'll hear the tier sound and see it on your overlay feed (open the overlay in OBS or a browser first)."/>
                 <StackPanel Grid.Column="1" Orientation="Horizontal">
                     <Button Content="Cancel" Click="Cancel_Click" Style="{StaticResource SmallBtn}"/>

@@ -140,8 +140,7 @@ namespace GameTracker.Views
 
         // ---- builder / mixer ----
 
-        private static SolidColorBrush Brush(string hex) =>
-            new((Color)ColorConverter.ConvertFromString(hex));
+        private static SolidColorBrush Brush(string hex) => GameTracker.Services.ThemeService.MapBrush(hex);
 
         // Build one fader per effect. Centre = neutral; drag right to add. Bidirectional
         // faders (e.g. Tone) also do the opposite effect when dragged left.

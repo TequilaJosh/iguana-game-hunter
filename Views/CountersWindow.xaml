@@ -20,7 +20,7 @@
         <BooleanToVisibilityConverter x:Key="B2V"/>
         <Style x:Key="In" TargetType="TextBox">
             <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/>
-            <Setter Property="Foreground" Value="#e8e0c4"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeText}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CaretBrush" Value="{DynamicResource ThemeAccent}"/>
@@ -89,10 +89,10 @@
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
                 <StackPanel VerticalAlignment="Center">
-                    <TextBlock Foreground="#7a9070" FontSize="11" TextWrapping="Wrap"
+                    <TextBlock Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" TextWrapping="Wrap"
                                Text="On-stream tallies (deaths, catchphrases, anything). Each counter keeps a SEPARATE count per game and only shows for the game you're playing. Pick its games (multi-select) and set +/- hotkeys per counter below."/>
                     <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
-                        <TextBlock Text="Editing counts for:" Foreground="#a8c488" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock Text="Editing counts for:" Foreground="{DynamicResource ThemeTextDim}" FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"/>
                         <ComboBox x:Name="EditGameCombo" Width="190" VerticalAlignment="Center"
                                   ItemsSource="{Binding EditingGames, RelativeSource={RelativeSource AncestorType=Window}}"
                                   SelectionChanged="EditGame_Changed"
@@ -155,7 +155,7 @@
 
                                     <!-- +/- hotkeys -->
                                     <StackPanel Orientation="Horizontal" Margin="26,7,0,0">
-                                        <TextBlock Text="&#9000; Hotkeys:" Foreground="#7a9070" FontSize="11"
+                                        <TextBlock Text="&#9000; Hotkeys:" Foreground="{DynamicResource ThemeTextFaint}" FontSize="11"
                                                    VerticalAlignment="Center" Margin="0,0,8,0"/>
                                         <Button Content="{Binding IncHotkeyDisplay}" Tag="{Binding}" Click="IncHotkey_Click"
                                                 Style="{StaticResource Btn}" Margin="0,0,2,0" MinWidth="96"

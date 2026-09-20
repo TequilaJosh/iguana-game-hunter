@@ -55,7 +55,7 @@
         </Style>
         <Style x:Key="InputBox" TargetType="TextBox">
             <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/>
-            <Setter Property="Foreground" Value="#e8e0c4"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeText}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CaretBrush" Value="#7cc44a"/>
@@ -96,7 +96,7 @@
             </Border>
 
             <!-- Hint -->
-            <TextBlock Grid.Row="1" Margin="14,12,14,0" Foreground="#7a9070" FontSize="11" TextWrapping="Wrap"
+            <TextBlock Grid.Row="1" Margin="14,12,14,0" Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" TextWrapping="Wrap"
                        Text="Edit the suggestion types below. The top entry is the default for new games."/>
 
             <!-- Editable list -->
@@ -113,7 +113,7 @@
                 <ListBox.ItemTemplate>
                     <DataTemplate>
                         <TextBox Text="{Binding Name, UpdateSourceTrigger=PropertyChanged}"
-                                 Background="{DynamicResource ThemeSurface}" Foreground="#e8e0c4" BorderBrush="{DynamicResource ThemeBorder}"
+                                 Background="{DynamicResource ThemeSurface}" Foreground="{DynamicResource ThemeText}" BorderBrush="{DynamicResource ThemeBorder}"
                                  BorderThickness="1" CaretBrush="{DynamicResource ThemeAccent}" Padding="6,4" FontSize="13"/>
                     </DataTemplate>
                 </ListBox.ItemTemplate>

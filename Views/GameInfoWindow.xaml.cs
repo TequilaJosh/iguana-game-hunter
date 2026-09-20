@@ -79,8 +79,7 @@ namespace GameTracker.Views
             }
         }
 
-        private static SolidColorBrush Brush(string hex) =>
-            new((Color)ColorConverter.ConvertFromString(hex));
+        private static SolidColorBrush Brush(string hex) => GameTracker.Services.ThemeService.MapBrush(hex);
 
         private void Edit_Click(object sender, RoutedEventArgs e)
         {

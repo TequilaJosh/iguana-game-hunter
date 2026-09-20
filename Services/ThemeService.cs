@@ -28,6 +28,11 @@ namespace GameTracker.Services
             res["ThemeAccentDeep"] = Solid(Current.AccentDeep, "#4a7c3a");
             res["ThemeAccent2"] = Solid(Current.Accent2, "#d4a437");
 
+            // Text family — lets the Light theme use dark text on a light background.
+            res["ThemeText"] = Solid(Current.Text, "#e8e0c4");
+            res["ThemeTextDim"] = Solid(Current.TextDim, "#a8c488");
+            res["ThemeTextFaint"] = Solid(Current.TextFaint, "#7a9070");
+
             // Surface family: lift the background base toward the tile colour (same hue),
             // so panels/borders match whatever background the theme uses.
             var baseC = ParseColor(Current.BgBase, "#0a1410");
@@ -39,7 +44,27 @@ namespace GameTracker.Services
 
             res["ScaleBrush"] = BuildScaleBrush(Current.BgBase, Current.BgTile);
 
+            // Recolour the OBS overlay to match (and let it load per-theme artwork).
+            try { OverlayServer.SetTheme(Current); } catch { /* overlay optional */ }
+
             if (save) SettingsService.SaveTheme(Current);
+        }
+
+        /// <summary>Map an app text hex to the live theme brush so code-built UI follows the
+        /// theme (and stays readable under the Light theme). Non-text hexes pass through as
+        /// their literal color. Views' Brush()/Brush2()/TryBrush() helpers delegate here.</summary>
+        public static SolidColorBrush MapBrush(string hex)
+        {
+            var key = (hex ?? "").ToLowerInvariant() switch
+            {
+                "#e8e0c4" => "ThemeText",
+                "#a8c488" or "#c4d4a8" => "ThemeTextDim",
+                "#7a9070" => "ThemeTextFaint",
+                _ => null,
+            };
+            if (key != null && Application.Current?.Resources[key] is SolidColorBrush tb) return tb;
+            try { return new SolidColorBrush(ParseColor(hex, "#e8e0c4")); }
+            catch { return new SolidColorBrush(Colors.Gray); }
         }
 
         private static SolidColorBrush Solid(string hex, string fallback)

@@ -52,14 +52,14 @@
             <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
         <Style x:Key="ChanLb" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#a8c488"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeTextDim}"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="FontWeight" Value="Bold"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Width" Value="16"/>
         </Style>
         <Style x:Key="ChanVal" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#e8e0c4"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeText}"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="FontFamily" Value="Consolas"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
@@ -104,7 +104,7 @@
                     <Border x:Name="Preview" Width="56" Height="40" CornerRadius="6"
                             BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" Margin="0,0,10,0"/>
                     <TextBox x:Name="HexBox" Grid.Column="1" FontFamily="Consolas" FontSize="15"
-                             Background="{DynamicResource ThemeSurface}" Foreground="#e8e0c4" BorderBrush="{DynamicResource ThemeBorder}"
+                             Background="{DynamicResource ThemeSurface}" Foreground="{DynamicResource ThemeText}" BorderBrush="{DynamicResource ThemeBorder}"
                              BorderThickness="1" CaretBrush="{DynamicResource ThemeAccent}" Padding="8,7"
                              VerticalContentAlignment="Center" TextChanged="Hex_Changed"/>
                 </Grid>

@@ -12,7 +12,7 @@
             <TextBlock Text="&#128204; QUICK CLIP NOTE" Foreground="{DynamicResource ThemeAccent2}"
                        FontSize="12" FontWeight="Bold" Margin="0,0,0,8"/>
             <TextBox x:Name="NoteInput" KeyDown="NoteInput_KeyDown"
-                     Background="{DynamicResource ThemeSurface}" Foreground="#e8e0c4" BorderBrush="{DynamicResource ThemeBorder}"
+                     Background="{DynamicResource ThemeSurface}" Foreground="{DynamicResource ThemeText}" BorderBrush="{DynamicResource ThemeBorder}"
                      BorderThickness="1" CaretBrush="{DynamicResource ThemeAccent}" Padding="8,7" FontSize="14"
                      VerticalContentAlignment="Center"/>
             <TextBlock Text="Enter to save · Esc to cancel" Foreground="#506050"

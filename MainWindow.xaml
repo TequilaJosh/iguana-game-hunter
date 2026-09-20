@@ -52,7 +52,7 @@
 
         <Style x:Key="SecondaryButton" TargetType="Button">
             <Setter Property="Background" Value="{DynamicResource ThemeSurface2}"/>
-            <Setter Property="Foreground" Value="#c4d4a8"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeTextDim}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="14,9"/>
             <Setter Property="FontSize" Value="13"/>
@@ -94,7 +94,7 @@
 
         <Style x:Key="SearchBox" TargetType="TextBox">
             <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/>
-            <Setter Property="Foreground" Value="#c4d4a8"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeTextDim}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="10,7"/>
@@ -147,7 +147,7 @@
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="{Binding Title}"
-                                   Foreground="#e8e0c4" FontSize="14" FontWeight="SemiBold"
+                                   Foreground="{DynamicResource ThemeText}" FontSize="14" FontWeight="SemiBold"
                                    TextWrapping="Wrap" VerticalAlignment="Center"/>
                         <Button Grid.Column="1" Content="&#9201;"
                                 Tag="{Binding Id}" Click="OpenHltb_Click"
@@ -219,13 +219,13 @@
                                 BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1"
                                 Visibility="{Binding Platform, Converter={StaticResource NonEmptyVisConverter}}"
                                 Margin="0,0,4,0">
-                            <TextBlock Text="{Binding Platform}" Foreground="#7a9070" FontSize="11"/>
+                            <TextBlock Text="{Binding Platform}" Foreground="{DynamicResource ThemeTextFaint}" FontSize="11"/>
                         </Border>
                         <Border CornerRadius="3" Padding="6,2" Background="{DynamicResource ThemeBg}"
                                 BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1"
                                 Visibility="{Binding Genre, Converter={StaticResource NonEmptyVisConverter}}"
                                 Margin="0,0,4,0">
-                            <TextBlock Text="{Binding Genre}" Foreground="#7a9070" FontSize="11"/>
+                            <TextBlock Text="{Binding Genre}" Foreground="{DynamicResource ThemeTextFaint}" FontSize="11"/>
                         </Border>
                         <Border CornerRadius="3" Padding="6,2" Background="#1a1408"
                                 BorderBrush="#5a3a1a" BorderThickness="1"
@@ -316,7 +316,7 @@
                         <TextBlock Text="&#9201;" Foreground="{DynamicResource ThemeAccent}" FontSize="11"
                                    VerticalAlignment="Center" Margin="0,0,4,0"/>
                         <TextBlock Grid.Column="1" VerticalAlignment="Center"
-                                   Foreground="#a8c488" FontSize="11"
+                                   Foreground="{DynamicResource ThemeTextDim}" FontSize="11"
                                    Text="{Binding TotalPlayTimeDisplay, StringFormat='{}{0} played'}"/>
                     </Grid>
                 </Grid>
@@ -399,7 +399,7 @@
                            Margin="0,0,12,0" VerticalAlignment="Center"
                            RenderOptions.BitmapScalingMode="HighQuality"/>
                     <TextBlock Text="LazerGuanas Game Hunter"
-                               Foreground="#e8e0c4" FontSize="20" FontWeight="Bold"
+                               Foreground="{DynamicResource ThemeText}" FontSize="20" FontWeight="Bold"
                                VerticalAlignment="Center"/>
                 </StackPanel>
                 <TextBox x:Name="SearchBox" Grid.Column="1"
@@ -542,7 +542,7 @@
         <!-- Status bar -->
         <Border Grid.Row="4" Background="{DynamicResource ThemeBg}" Padding="20,8" Margin="0,8,0,0"
                 BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,1,0,0">
-            <TextBlock x:Name="StatusText" Foreground="#7a9070" FontSize="11"/>
+            <TextBlock x:Name="StatusText" Foreground="{DynamicResource ThemeTextFaint}" FontSize="11"/>
         </Border>
     </Grid>
     </Border>

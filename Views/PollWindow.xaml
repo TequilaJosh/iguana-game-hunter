@@ -19,7 +19,7 @@
     <Window.Resources>
         <Style x:Key="In" TargetType="TextBox">
             <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/>
-            <Setter Property="Foreground" Value="#e8e0c4"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeText}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CaretBrush" Value="{DynamicResource ThemeAccent}"/>
@@ -86,12 +86,12 @@
 
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="16,12,16,4">
                 <StackPanel>
-                    <TextBlock Foreground="#7a9070" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,10"
+                    <TextBlock Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,10"
                                Text="Viewers vote with !vote 1, !vote 2, … One vote each; revoting switches. Results show live in the overlay's Poll block (enable it in the layout editor)."/>
-                    <TextBlock Text="Question" Foreground="#a8c488" FontSize="12" Margin="0,0,0,3"/>
+                    <TextBlock Text="Question" Foreground="{DynamicResource ThemeTextDim}" FontSize="12" Margin="0,0,0,3"/>
                     <TextBox x:Name="QuestionBox" Style="{StaticResource In}" Margin="0,0,0,10"
                              Text="Which game next?"/>
-                    <TextBlock Text="Options (2–6)" Foreground="#a8c488" FontSize="12" Margin="0,0,0,3"/>
+                    <TextBlock Text="Options (2–6)" Foreground="{DynamicResource ThemeTextDim}" FontSize="12" Margin="0,0,0,3"/>
                     <StackPanel x:Name="OptionBoxes"/>
                     <Button x:Name="AddOptBtn" Content="+ Add option" Click="AddOption_Click"
                             Style="{StaticResource Btn}" HorizontalAlignment="Left" Margin="0,2,0,0"/>

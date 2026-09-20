@@ -67,7 +67,7 @@
                 <!-- Left: info -->
                 <ScrollViewer Grid.Column="0" VerticalScrollBarVisibility="Auto">
                     <StackPanel>
-                        <TextBlock x:Name="TitleText" Foreground="#e8e0c4" FontSize="22"
+                        <TextBlock x:Name="TitleText" Foreground="{DynamicResource ThemeText}" FontSize="22"
                                    FontWeight="Bold" TextWrapping="Wrap"/>
 
                         <Border x:Name="StatusBadge" CornerRadius="10" Padding="10,3"
@@ -78,11 +78,11 @@
                         <StackPanel x:Name="ChipPanel" Orientation="Horizontal" Margin="0,10,0,0">
                             <Border x:Name="PlatformChip" CornerRadius="3" Padding="7,2" Background="{DynamicResource ThemeBg}"
                                     BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" Margin="0,0,5,0">
-                                <TextBlock x:Name="PlatformText" Foreground="#7a9070" FontSize="11"/>
+                                <TextBlock x:Name="PlatformText" Foreground="{DynamicResource ThemeTextFaint}" FontSize="11"/>
                             </Border>
                             <Border x:Name="GenreChip" CornerRadius="3" Padding="7,2" Background="{DynamicResource ThemeBg}"
                                     BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1" Margin="0,0,5,0">
-                                <TextBlock x:Name="GenreText" Foreground="#7a9070" FontSize="11"/>
+                                <TextBlock x:Name="GenreText" Foreground="{DynamicResource ThemeTextFaint}" FontSize="11"/>
                             </Border>
                             <Border x:Name="RequesterChip" CornerRadius="3" Padding="7,2" Background="#1a1408"
                                     BorderBrush="#5a3a1a" BorderThickness="1">
@@ -94,14 +94,14 @@
                         <TextBlock x:Name="RatingText" Foreground="{DynamicResource ThemeAccent2}" FontSize="14"/>
 
                         <TextBlock Text="TIME PLAYED" Style="{StaticResource Label}"/>
-                        <TextBlock x:Name="TotalText" Foreground="#a8c488" FontSize="14"/>
-                        <TextBlock x:Name="LastPlayedText" Foreground="#7a9070" FontSize="12" Margin="0,2,0,0"/>
+                        <TextBlock x:Name="TotalText" Foreground="{DynamicResource ThemeTextDim}" FontSize="14"/>
+                        <TextBlock x:Name="LastPlayedText" Foreground="{DynamicResource ThemeTextFaint}" FontSize="12" Margin="0,2,0,0"/>
                         <TextBlock x:Name="DateAddedText" Foreground="#506050" FontSize="12" Margin="0,2,0,0"/>
 
                         <TextBlock Text="NOTES" Style="{StaticResource Label}"/>
                         <Border Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1"
                                 CornerRadius="4" Padding="8,6">
-                            <TextBlock x:Name="NotesText" Foreground="#c4d4a8" FontSize="13"
+                            <TextBlock x:Name="NotesText" Foreground="{DynamicResource ThemeTextDim}" FontSize="13"
                                        TextWrapping="Wrap"/>
                         </Border>
                     </StackPanel>
@@ -143,7 +143,7 @@
                                                             <ColumnDefinition Width="Auto"/>
                                                         </Grid.ColumnDefinitions>
                                                         <TextBlock Text="{Binding StartDisplay}"
-                                                                   Foreground="#c4d4a8" FontSize="12"
+                                                                   Foreground="{DynamicResource ThemeTextDim}" FontSize="12"
                                                                    VerticalAlignment="Center"/>
                                                         <Border Grid.Column="1" CornerRadius="8" Padding="7,1"
                                                                 Background="{DynamicResource ThemeSurface2}">

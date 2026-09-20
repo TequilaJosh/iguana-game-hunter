@@ -104,8 +104,7 @@ namespace GameTracker.Views
             Margin = new Thickness(0, 1, 0, 3),
         };
 
-        private static SolidColorBrush Brush(string hex) =>
-            new((Color)ColorConverter.ConvertFromString(hex));
+        private static SolidColorBrush Brush(string hex) => GameTracker.Services.ThemeService.MapBrush(hex);
 
         private void Update_Click(object sender, RoutedEventArgs e) { DialogResult = true; Close(); }
         private void Later_Click(object sender, RoutedEventArgs e) { DialogResult = false; Close(); }

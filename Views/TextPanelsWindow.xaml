@@ -44,7 +44,7 @@
         </Style>
         <Style x:Key="In" TargetType="TextBox">
             <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/>
-            <Setter Property="Foreground" Value="#e8e0c4"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeText}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CaretBrush" Value="#7cc44a"/>
@@ -53,7 +53,7 @@
             <Setter Property="VerticalContentAlignment" Value="Center"/>
         </Style>
         <Style x:Key="Lb" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#7a9070"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeTextFaint}"/>
             <Setter Property="FontSize" Value="11"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Margin" Value="0,0,4,0"/>
@@ -93,7 +93,7 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock Foreground="#a8c488" FontSize="12" TextWrapping="Wrap" VerticalAlignment="Center"
+                <TextBlock Foreground="{DynamicResource ThemeTextDim}" FontSize="12" TextWrapping="Wrap" VerticalAlignment="Center"
                            Text="Custom OBS text panels (up to 5). Changes save and update OBS live as you type. Add each panel's URL as a Browser source."/>
                 <Button Grid.Column="1" x:Name="AddPanelBtn" Content="+ Add overlay" Click="AddPanel_Click"
                         Style="{StaticResource Btn}" Margin="10,0,0,0" VerticalAlignment="Center"/>
@@ -116,7 +116,7 @@
                                         </Grid.ColumnDefinitions>
                                         <TextBlock Grid.Column="0" Text="{Binding Title}" Foreground="{DynamicResource ThemeAccent2}"
                                                    FontSize="12" FontWeight="Bold" VerticalAlignment="Center"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding Url}" Foreground="#7a9070"
+                                        <TextBlock Grid.Column="1" Text="{Binding Url}" Foreground="{DynamicResource ThemeTextFaint}"
                                                    FontSize="11" VerticalAlignment="Center" Margin="10,0,0,0"
                                                    TextTrimming="CharacterEllipsis"/>
                                         <Button Grid.Column="2" Content="Copy URL" Tag="{Binding}" Click="CopyUrl_Click"
@@ -167,7 +167,7 @@
                                         <Slider Grid.Column="1" Minimum="0" Maximum="100" SmallChange="5"
                                                 Value="{Binding Opacity}" VerticalAlignment="Center"
                                                 Foreground="{DynamicResource ThemeAccent}" ToolTip="Background opacity (100 = solid)"/>
-                                        <TextBlock Grid.Column="2" Text="{Binding OpacityLabel}" Foreground="#a8c488"
+                                        <TextBlock Grid.Column="2" Text="{Binding OpacityLabel}" Foreground="{DynamicResource ThemeTextDim}"
                                                    FontSize="11" VerticalAlignment="Center" Width="38"
                                                    TextAlignment="Right"/>
                                     </Grid>
@@ -216,7 +216,7 @@
                                         <Button Grid.Column="0" Content="&#128444; Image" Tag="{Binding}" Click="PickLeftImage_Click"
                                                 Style="{StaticResource Btn}" Margin="0,0,6,0"
                                                 ToolTip="Optional image shown in the left block"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding LeftImageName}" Foreground="#7a9070"
+                                        <TextBlock Grid.Column="1" Text="{Binding LeftImageName}" Foreground="{DynamicResource ThemeTextFaint}"
                                                    FontSize="11" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
                                                    ToolTip="{Binding LeftImage}"/>
                                         <TextBlock Grid.Column="2" Text="width" Style="{StaticResource Lb}" Margin="8,0,4,0"/>
@@ -232,7 +232,7 @@
                                             <ComboBoxItem Tag="v" Content="Vertical"/>
                                             <ComboBoxItem Tag="h" Content="Horizontal"/>
                                         </ComboBox>
-                                        <CheckBox Content="scroll" IsChecked="{Binding LeftScroll}" Foreground="#a8c488"
+                                        <CheckBox Content="scroll" IsChecked="{Binding LeftScroll}" Foreground="{DynamicResource ThemeTextDim}"
                                                   FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"
                                                   ToolTip="Scroll the block (up if Vertical, sideways if Horizontal)"/>
                                         <Slider Width="90" Minimum="20" Maximum="300" Value="{Binding LeftSpeed}"
@@ -282,7 +282,7 @@
                                         <Button Grid.Column="0" Content="&#128444; Image" Tag="{Binding}" Click="PickRightImage_Click"
                                                 Style="{StaticResource Btn}" Margin="0,0,6,0"
                                                 ToolTip="Optional image shown in the right block"/>
-                                        <TextBlock Grid.Column="1" Text="{Binding RightImageName}" Foreground="#7a9070"
+                                        <TextBlock Grid.Column="1" Text="{Binding RightImageName}" Foreground="{DynamicResource ThemeTextFaint}"
                                                    FontSize="11" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
                                                    ToolTip="{Binding RightImage}"/>
                                         <TextBlock Grid.Column="2" Text="width" Style="{StaticResource Lb}" Margin="8,0,4,0"/>
@@ -298,7 +298,7 @@
                                             <ComboBoxItem Tag="v" Content="Vertical"/>
                                             <ComboBoxItem Tag="h" Content="Horizontal"/>
                                         </ComboBox>
-                                        <CheckBox Content="scroll" IsChecked="{Binding RightScroll}" Foreground="#a8c488"
+                                        <CheckBox Content="scroll" IsChecked="{Binding RightScroll}" Foreground="{DynamicResource ThemeTextDim}"
                                                   FontSize="11" VerticalAlignment="Center" Margin="0,0,6,0"
                                                   ToolTip="Scroll the block (up if Vertical, sideways if Horizontal)"/>
                                         <Slider Width="90" Minimum="20" Maximum="300" Value="{Binding RightSpeed}"
@@ -343,7 +343,7 @@
                                                     <TextBox Grid.Column="4" Width="62" Text="{Binding Color, UpdateSourceTrigger=PropertyChanged}"
                                                              Style="{StaticResource In}" Margin="0,0,8,0" ToolTip="Hex color"/>
                                                     <CheckBox Grid.Column="5" Content="scroll" IsChecked="{Binding Scroll}"
-                                                              Foreground="#a8c488" FontSize="11" VerticalAlignment="Center"
+                                                              Foreground="{DynamicResource ThemeTextDim}" FontSize="11" VerticalAlignment="Center"
                                                               Margin="0,0,4,0" ToolTip="Marquee-scroll this line"/>
                                                     <Slider Grid.Column="6" Width="70" Minimum="20" Maximum="300"
                                                             Value="{Binding Speed}" VerticalAlignment="Center"
@@ -363,7 +363,7 @@
                                                     <Button Grid.Column="0" Content="&#128444; Image" Tag="{Binding}" Click="PickLineImage_Click"
                                                             Style="{StaticResource Btn}" Margin="0,0,6,0"
                                                             ToolTip="Optional image shown before this line"/>
-                                                    <TextBlock Grid.Column="1" Text="{Binding ImageName}" Foreground="#7a9070"
+                                                    <TextBlock Grid.Column="1" Text="{Binding ImageName}" Foreground="{DynamicResource ThemeTextFaint}"
                                                                FontSize="11" VerticalAlignment="Center" TextTrimming="CharacterEllipsis"
                                                                ToolTip="{Binding Image}"/>
                                                     <TextBlock Grid.Column="2" Text="width" Style="{StaticResource Lb}" Margin="8,0,4,0"/>

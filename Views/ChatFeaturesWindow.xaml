@@ -24,19 +24,19 @@
             <Setter Property="Margin" Value="0,14,0,6"/>
         </Style>
         <Style x:Key="Lbl" TargetType="TextBlock">
-            <Setter Property="Foreground" Value="#a8c488"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeTextDim}"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="VerticalAlignment" Value="Center"/>
             <Setter Property="Margin" Value="0,0,8,0"/>
         </Style>
         <Style x:Key="Chk" TargetType="CheckBox">
-            <Setter Property="Foreground" Value="#e8e0c4"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeText}"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="Margin" Value="0,3,0,3"/>
         </Style>
         <Style x:Key="Num" TargetType="TextBox">
             <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/>
-            <Setter Property="Foreground" Value="#e8e0c4"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeText}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CaretBrush" Value="#7cc44a"/>
@@ -51,7 +51,7 @@
         <!-- Same look as Txt, for secrets that must not be readable on stream. -->
         <Style x:Key="Secret" TargetType="PasswordBox">
             <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/>
-            <Setter Property="Foreground" Value="#e8e0c4"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeText}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CaretBrush" Value="#7cc44a"/>
@@ -121,8 +121,8 @@
             <Grid Grid.Row="1">
                 <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
                 <StackPanel Orientation="Horizontal" Margin="14,8,14,2">
-                    <RadioButton x:Name="TabGeneral" GroupName="cfTab" Content="💬  Chat" Foreground="#e8e0c4" FontSize="13" FontWeight="Bold" Margin="0,0,18,0" Checked="CfTab_Changed"/>
-                    <RadioButton x:Name="TabPoints" GroupName="cfTab" Content="🪙  Points &amp; Redeems" Foreground="#e8e0c4" FontSize="13" FontWeight="Bold" Checked="CfTab_Changed"/>
+                    <RadioButton x:Name="TabGeneral" GroupName="cfTab" Content="💬  Chat" Foreground="{DynamicResource ThemeText}" FontSize="13" FontWeight="Bold" Margin="0,0,18,0" Checked="CfTab_Changed"/>
+                    <RadioButton x:Name="TabPoints" GroupName="cfTab" Content="🪙  Points &amp; Redeems" Foreground="{DynamicResource ThemeText}" FontSize="13" FontWeight="Bold" Checked="CfTab_Changed"/>
                 </StackPanel>
                 <Grid Grid.Row="1">
                     <ScrollViewer x:Name="PanelGeneral" VerticalScrollBarVisibility="Auto" Padding="16,4,16,8">
@@ -146,7 +146,7 @@
                     <TextBlock Text="CHAT REPLIES" Style="{StaticResource SecHdr}"/>
                     <CheckBox x:Name="ReplyCb" Style="{StaticResource Chk}"
                               Content="Reply in chat with @mentions (via SSN) for requests, points and redeems"/>
-                    <TextBlock Foreground="#7a9070" FontSize="11" Margin="0,2,0,0" TextWrapping="Wrap"
+                    <TextBlock Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" Margin="0,2,0,0" TextWrapping="Wrap"
                                Text="Posts from your account through Social Stream Ninja, so SSN must be connected. Overlay toasts always show either way."/>
 
                     <TextBlock Text="DISCORD" Style="{StaticResource SecHdr}"/>
@@ -157,9 +157,9 @@
                         <PasswordBox x:Name="DiscordWebhookBox" Style="{StaticResource Secret}" Width="320" Margin="4,0,0,0"
                                      ToolTip="In Discord: Channel → Edit → Integrations → Webhooks → New Webhook → Copy Webhook URL. That webhook decides which channel clips post to."/>
                     </StackPanel>
-                    <TextBlock Foreground="#7a9070" FontSize="11" Margin="0,2,0,0" TextWrapping="Wrap"
+                    <TextBlock Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" Margin="0,2,0,0" TextWrapping="Wrap"
                                Text="Create a webhook on the Discord channel you want (Channel settings → Integrations → Webhooks), paste its URL here. Viewers typing !clip — or dropping a Twitch clip link — get posted there automatically."/>
-                    <TextBlock Foreground="#7a9070" FontSize="11" Margin="0,8,0,2" TextWrapping="Wrap"
+                    <TextBlock Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" Margin="0,8,0,2" TextWrapping="Wrap"
                                Text="Using the LazerGuanas bot instead of a webhook? Fill these in and clips go to the bot (which can do more — welcome messages, moderation, commands). Leave blank to use the webhook above."/>
                     <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
                         <TextBlock Text="Bot ingest URL" Style="{StaticResource Lbl}"/>
@@ -176,17 +176,17 @@
                             ToolTip="Checks the bot is reachable and your token/clips channel are set, then posts a short test message to the channel"/>
                     <CheckBox x:Name="RpgEnabledCb" Style="{StaticResource Chk}" Margin="0,10,0,0"
                               Content="Let chatters play Tavern Tales (the bot's RPG) from chat"/>
-                    <TextBlock Foreground="#7a9070" FontSize="11" Margin="0,2,0,0" TextWrapping="Wrap"
+                    <TextBlock Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" Margin="0,2,0,0" TextWrapping="Wrap"
                                Text="Forwards ! game commands (!create, !adventure, !attack…) to the bot. First time, a viewer links with !play &lt;their Discord @username&gt; and !confirm &lt;code&gt; so their chat and Discord share one character."/>
 
                     <TextBlock Text="CHAT STYLE" Style="{StaticResource SecHdr}"/>
                     <StackPanel Orientation="Horizontal">
-                        <RadioButton x:Name="StyleLogRb" Content="Chat log (classic)" Foreground="#e8e0c4"
+                        <RadioButton x:Name="StyleLogRb" Content="Chat log (classic)" Foreground="{DynamicResource ThemeText}"
                                      FontSize="12" Margin="0,0,16,0"/>
-                        <RadioButton x:Name="StyleBoxRb" Content="Boxes (colored bubbles)" Foreground="#e8e0c4"
+                        <RadioButton x:Name="StyleBoxRb" Content="Boxes (colored bubbles)" Foreground="{DynamicResource ThemeText}"
                                      FontSize="12"/>
                     </StackPanel>
-                    <TextBlock Text="Box colors (rotate per message, up to 10):" Foreground="#a8c488"
+                    <TextBlock Text="Box colors (rotate per message, up to 10):" Foreground="{DynamicResource ThemeTextDim}"
                                FontSize="11" Margin="0,8,0,4"/>
                     <ItemsControl x:Name="ColorList">
                         <ItemsControl.ItemsPanel>
@@ -243,11 +243,11 @@
                         <TextBox x:Name="StreakBonusBox" Style="{StaticResource Num}" Margin="4,0,0,0"
                                  ToolTip="Daily bonus × streak length for chatting on consecutive stream days (0 = off)"/>
                     </StackPanel>
-                    <TextBlock Foreground="#7a9070" FontSize="11" Margin="0,4,0,0" TextWrapping="Wrap"
+                    <TextBlock Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" Margin="0,4,0,0" TextWrapping="Wrap"
                                Text="Viewers check their balance with !points (or !&lt;points name&gt;). Balance shows as a big toast on the overlay."/>
 
                     <TextBlock Text="POINT REDEEMS (STREAM EFFECTS)" Style="{StaticResource SecHdr}"/>
-                    <TextBlock Foreground="#7a9070" FontSize="11" Margin="0,0,0,6" TextWrapping="Wrap"
+                    <TextBlock Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" Margin="0,0,0,6" TextWrapping="Wrap"
                                Text="Chat commands that spend points to fire an effect on the overlay. Custom = your own sound and/or image. ▶ tests the effect (no points needed)."/>
                     <ItemsControl x:Name="RedeemList">
                         <ItemsControl.ItemTemplate>
@@ -280,7 +280,7 @@
                                             <TextBox Grid.Column="3" Text="{Binding Cost, UpdateSourceTrigger=PropertyChanged}"
                                                      Style="{StaticResource Num}" Width="52" Margin="0,0,6,0"/>
                                             <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
-                                                <TextBlock Text="&#128266;" FontSize="12" Foreground="#a8c488"
+                                                <TextBlock Text="&#128266;" FontSize="12" Foreground="{DynamicResource ThemeTextDim}"
                                                            VerticalAlignment="Center" Margin="0,0,3,0"/>
                                                 <Slider Width="70" Minimum="0" Maximum="1" Value="{Binding Volume, Mode=TwoWay}"
                                                         VerticalAlignment="Center" Foreground="{DynamicResource ThemeAccent}"
@@ -302,13 +302,13 @@
                                             <Button Grid.Column="0" Content="&#9835; Sound" Tag="{Binding}" Click="PickSound_Click"
                                                     Style="{StaticResource Btn}" Margin="0,0,5,0"
                                                     ToolTip="Optional sound file (any effect can have one)"/>
-                                            <TextBlock Grid.Column="1" Text="{Binding SoundName}" Foreground="#a8c488"
+                                            <TextBlock Grid.Column="1" Text="{Binding SoundName}" Foreground="{DynamicResource ThemeTextDim}"
                                                        FontSize="11" VerticalAlignment="Center" Margin="0,0,10,0"
                                                        TextTrimming="CharacterEllipsis" ToolTip="{Binding SoundPath}"/>
                                             <Button Grid.Column="2" Content="&#128444; Image" Tag="{Binding}" Click="PickImage_Click"
                                                     Style="{StaticResource Btn}" Margin="0,0,5,0"
                                                     ToolTip="Optional image shown on the overlay (used by Custom)"/>
-                                            <TextBlock Grid.Column="3" Text="{Binding ImageName}" Foreground="#a8c488"
+                                            <TextBlock Grid.Column="3" Text="{Binding ImageName}" Foreground="{DynamicResource ThemeTextDim}"
                                                        FontSize="11" VerticalAlignment="Center"
                                                        TextTrimming="CharacterEllipsis" ToolTip="{Binding ImagePath}"/>
                                         </Grid>
@@ -321,14 +321,14 @@
                                             <Button Grid.Column="0" Content="&#127909; Video" Tag="{Binding}" Click="PickVideo_Click"
                                                     Style="{StaticResource Btn}" Margin="0,0,5,0"
                                                     ToolTip="Optional video to play on the overlay (mp4 / webm best). Set effect to Video."/>
-                                            <TextBlock Grid.Column="1" Text="{Binding VideoName}" Foreground="#a8c488"
+                                            <TextBlock Grid.Column="1" Text="{Binding VideoName}" Foreground="{DynamicResource ThemeTextDim}"
                                                        FontSize="11" VerticalAlignment="Center" Margin="0,0,10,0"
                                                        TextTrimming="CharacterEllipsis" ToolTip="{Binding VideoPath}"/>
                                             <Button Grid.Column="2" Content="&#x2715; video" Tag="{Binding}" Click="ClearVideo_Click"
                                                     Style="{StaticResource Btn}" ToolTip="Remove the video"/>
                                         </Grid>
                                         <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
-                                            <TextBlock Text="&#127897; Voice morph" Foreground="#a8c488" FontSize="11"
+                                            <TextBlock Text="&#127897; Voice morph" Foreground="{DynamicResource ThemeTextDim}" FontSize="11"
                                                        VerticalAlignment="Center" Margin="0,0,6,0"
                                                        ToolTip="Morph the streamer's voice when redeemed (build morphs in Settings → Chat → Voice Morph)"/>
                                             <ComboBox Width="150"
@@ -353,7 +353,7 @@
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <TextBlock x:Name="StatusText" Foreground="#7a9070" FontSize="11" VerticalAlignment="Center"
+                <TextBlock x:Name="StatusText" Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" VerticalAlignment="Center"
                            TextTrimming="CharacterEllipsis"/>
                 <StackPanel Grid.Column="1" Orientation="Horizontal">
                     <Button Content="Cancel" Click="Cancel_Click" Style="{StaticResource Btn}" Margin="0,0,7,0"/>

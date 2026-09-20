@@ -50,7 +50,7 @@
         </Style>
         <Style x:Key="ChanBox" TargetType="TextBox">
             <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/>
-            <Setter Property="Foreground" Value="#e8e0c4"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeText}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="CaretBrush" Value="#7cc44a"/>
@@ -124,7 +124,7 @@
                         <Button x:Name="TwitchBtn" Grid.Row="0" Grid.Column="2" Content="Connect"
                                 Style="{StaticResource ConnectBtn}" Click="Twitch_Click"/>
                         <TextBlock x:Name="TwitchStatus" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
-                                   Text="Twitch — channel name, no login" Foreground="#7a9070" FontSize="11"
+                                   Text="Twitch — channel name, no login" Foreground="{DynamicResource ThemeTextFaint}" FontSize="11"
                                    Margin="0,3,0,0" TextTrimming="CharacterEllipsis"/>
                     </Grid>
 
@@ -149,7 +149,7 @@
                                 Style="{StaticResource ConnectBtn}" Click="Ssn_Click"/>
                         <TextBlock x:Name="SsnStatus" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
                                    Text="Social Stream Ninja — session ID brings in all platforms"
-                                   Foreground="#7a9070" FontSize="11" Margin="0,3,0,0"
+                                   Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" Margin="0,3,0,0"
                                    TextTrimming="CharacterEllipsis"/>
                     </Grid>
                     <TextBlock Margin="42,-3,0,9" FontSize="11" TextWrapping="Wrap">
@@ -179,7 +179,7 @@
                                 Style="{StaticResource ConnectBtn}" Click="Restream_Click"/>
                         <TextBlock x:Name="RestreamStatus" Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2"
                                    Text="Restream — paste an access token (needs a Restream app)"
-                                   Foreground="#7a9070" FontSize="11" Margin="0,3,0,0"
+                                   Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" Margin="0,3,0,0"
                                    TextTrimming="CharacterEllipsis"/>
                     </Grid>
 
@@ -190,7 +190,7 @@
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Grid.Column="0" VerticalAlignment="Center" Foreground="#7a9070" FontSize="11"
+                        <TextBlock Grid.Column="0" VerticalAlignment="Center" Foreground="{DynamicResource ThemeTextFaint}" FontSize="11"
                                    TextWrapping="Wrap"
                                    Text="Viewers: !request &lt;game&gt; adds to Dormant, !ghhelp shows all commands. Overlay, sound alerts, points &amp; theme are in Settings (⚙)."/>
                         <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
@@ -215,7 +215,7 @@
             <Border x:Name="CountBar" Grid.Row="2" Background="{DynamicResource ThemeSurface}"
                     BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,0,0,1" Padding="10,4"
                     Visibility="Collapsed">
-                <TextBlock x:Name="CountText" FontSize="12" Foreground="#a8c488"/>
+                <TextBlock x:Name="CountText" FontSize="12" Foreground="{DynamicResource ThemeTextDim}"/>
             </Border>
 
             <!-- Messages -->

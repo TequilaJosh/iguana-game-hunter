@@ -525,11 +525,7 @@ namespace GameTracker.Views
 
         private void ApplyLive() => ThemeService.Apply(_theme);
 
-        private static SolidColorBrush Brush(string hex)
-        {
-            try { return new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex)); }
-            catch { return new SolidColorBrush(Colors.Gray); }
-        }
+        private static SolidColorBrush Brush(string hex) => GameTracker.Services.ThemeService.MapBrush(hex);
 
         // ---- chat ----
 

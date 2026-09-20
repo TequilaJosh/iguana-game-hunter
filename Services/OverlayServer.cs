@@ -691,7 +691,7 @@ namespace GameTracker.Services
             {
                 type = "snapshot", state = _state, chat = _chat,
                 layout = _layout, presets = _presets, style = _style, theme = _theme,
-                themeList = Models.ThemeSettings.Presets.Select(p => p.PresetName).ToArray(), chatters = _chatters,
+                themeList = AllThemeNames(), customThemes = CustomThemeWire(), chatters = _chatters,
                 panels = _panels, morph = MorphSnapshot(), goals = _goals, counters = _counters, poll = _poll,
                 activity = _activity.ToArray(),
                 activityLatest = new Dictionary<string, object>(_latestByKind),
@@ -802,21 +802,100 @@ namespace GameTracker.Services
                     var o = JObject.Parse(msg);
                     if ((string?)o["type"] == "setTheme")
                     {
-                        var name = (string?)o["name"];
-                        var preset = Models.ThemeSettings.Presets.FirstOrDefault(p => p.PresetName == name);
+                        var preset = FindTheme((string?)o["name"]);
                         if (preset != null)
                         {
                             var clone = JsonConvert.DeserializeObject<Models.ThemeSettings>(
                                 JsonConvert.SerializeObject(preset));
-                            var app = System.Windows.Application.Current;
-                            if (app != null && clone != null)
-                                app.Dispatcher.Invoke(() => ThemeService.Apply(clone));
+                            ApplyThemeOnUi(clone);
                         }
+                    }
+                }
+
+                // Theme Builder: live preview of hand-picked colors (applied, not persisted).
+                if (msg.Contains("\"setThemeColors\""))
+                {
+                    var o = JObject.Parse(msg);
+                    if ((string?)o["type"] == "setThemeColors" && o["colors"] is JObject c)
+                        ApplyThemeOnUi(ThemeFromWire(c, (string?)o["name"] ?? "Custom"), save: false);
+                }
+
+                // Theme Builder: save the current palette as a named custom theme.
+                if (msg.Contains("\"saveCustomTheme\""))
+                {
+                    var o = JObject.Parse(msg);
+                    if ((string?)o["type"] == "saveCustomTheme" && o["colors"] is JObject c)
+                    {
+                        var name = ((string?)o["name"] ?? "").Trim();
+                        if (name.Length > 0)
+                        {
+                            var theme = ThemeFromWire(c, name);
+                            SettingsService.SaveCustomTheme(theme);
+                            ApplyThemeOnUi(theme);   // apply + persist as the active theme
+                            BroadcastThemeList();
+                        }
+                    }
+                }
+
+                // Theme Builder: delete a saved custom theme.
+                if (msg.Contains("\"deleteCustomTheme\""))
+                {
+                    var o = JObject.Parse(msg);
+                    if ((string?)o["type"] == "deleteCustomTheme")
+                    {
+                        var name = ((string?)o["name"] ?? "").Trim();
+                        if (name.Length > 0) { SettingsService.DeleteCustomTheme(name); BroadcastThemeList(); }
                     }
                 }
             }
             catch { /* ignore malformed client messages */ }
         }
+
+        // All selectable theme names: built-in presets first, then user-built custom palettes.
+        private static string[] AllThemeNames() =>
+            Models.ThemeSettings.Presets.Select(p => p.PresetName)
+                .Concat(SettingsService.LoadCustomThemes().Select(t => t.PresetName))
+                .ToArray();
+
+        // Custom themes in wire form so the Theme Builder can load a saved palette for editing.
+        private static object[] CustomThemeWire() =>
+            SettingsService.LoadCustomThemes().Select(ThemeToWire).ToArray();
+
+        private static object ThemeToWire(Models.ThemeSettings t) => new
+        {
+            name = t.PresetName,
+            accent = t.Accent, accentDeep = t.AccentDeep, accent2 = t.Accent2,
+            bg = t.BgBase, tile = t.BgTile,
+            text = t.Text, textDim = t.TextDim, textFaint = t.TextFaint,
+        };
+
+        private static Models.ThemeSettings? FindTheme(string? name) =>
+            Models.ThemeSettings.Presets.Concat(SettingsService.LoadCustomThemes())
+                .FirstOrDefault(p => string.Equals(p.PresetName, name, StringComparison.OrdinalIgnoreCase));
+
+        private static Models.ThemeSettings ThemeFromWire(JObject c, string name) => new()
+        {
+            PresetName = name,
+            Accent      = (string?)c["accent"]     ?? "#7cc44a",
+            AccentDeep  = (string?)c["accentDeep"] ?? "#4a7c3a",
+            Accent2     = (string?)c["accent2"]    ?? "#d4a437",
+            BgBase      = (string?)c["bg"]         ?? "#0a1410",
+            BgTile      = (string?)c["tile"]       ?? "#1c2a1e",
+            Text        = (string?)c["text"]       ?? "#e8e0c4",
+            TextDim     = (string?)c["textDim"]    ?? "#a8c488",
+            TextFaint   = (string?)c["textFaint"]  ?? "#7a9070",
+        };
+
+        private static void ApplyThemeOnUi(Models.ThemeSettings? t, bool save = true)
+        {
+            if (t == null) return;
+            var app = System.Windows.Application.Current;
+            if (app != null) app.Dispatcher.Invoke(() => ThemeService.Apply(t, save));
+        }
+
+        // Push the updated theme list to every editor so the dropdown refreshes live.
+        private static void BroadcastThemeList() =>
+            Broadcast(new { type = "themeList", themeList = AllThemeNames(), customThemes = CustomThemeWire() });
 
         private static JToken? ParseLayout(string? json)
         {

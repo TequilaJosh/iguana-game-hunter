@@ -97,6 +97,43 @@
 ================================================================================
 -->
 <style>
+  /* Theme variables — defaults match the app's green theme; applyTheme() overrides them
+     live from the active app theme. */
+  :root {
+    --accent: #7cc44a;
+    --accent-deep: #4a7c3a;
+    --accent2: #d4a437;
+    --bg: #0a1410;
+    --tile: #1c2a1e;
+    --surface: #152118;
+    --surface2: #273726;
+    --border: #394d34;
+    --text: #e8e0c4;
+    --text-dim: #a8c488;
+    --text-faint: #7a9070;
+    --box-grad-a: #273726;   /* box gradient top (surface2) */
+    --box-grad-b: #0a1410;   /* box gradient bottom (bg) */
+    --box-edge: #7cc44a;     /* box border (accent) */
+    --box-glow: #4a7c3a;     /* inner glow (accentDeep) */
+  }
+
+  /* Per-theme artwork the streamer drops in (positionable in the overlay editor).
+     Four slots: Theme Art 1 shows <slug>.png, slots 2-4 show <slug>-2.png … <slug>-4.png. */
+  .themeart {
+    position: absolute; display: none; z-index: 60; pointer-events: none;
+    overflow: hidden;
+  }
+  .themeart.show { display: block; }
+  .themeart img { width: 100%; height: 100%; object-fit: contain; display: block; }
+  body.editing .themeart { cursor: move; pointer-events: auto; outline: 1px dashed rgba(124, 196, 74, 0.55); }
+  body.editing .themeart.sel { outline: 2px solid var(--accent); }
+  .themeart .themeart-empty {
+    position: absolute; inset: 0; display: none; align-items: center; justify-content: center;
+    text-align: center; font-size: 12px; color: var(--text-faint); padding: 6px;
+  }
+  /* The placeholder only marks an empty slot while editing; once the image is in, it goes. */
+  body.editing .themeart:not(.has-img) .themeart-empty { display: flex; }
+
   /* ---- Optional web font stub: if you add one, keep font-display:block ----
   @font-face {
     font-family: 'OverlayFont';
@@ -132,11 +169,11 @@
   .box {
     position: absolute; box-sizing: border-box;
     display: flex; flex-direction: column; overflow: hidden;
-    background: rgb(10, 20, 16);   /* opaque default; per-element opacity set from layout */
-    border: 2px solid #4a7c3a; border-radius: 12px;
-    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.55);
+    background: linear-gradient(180deg, var(--box-grad-a) 0%, var(--box-grad-b) 100%);   /* opaque default; per-element opacity/fill set from layout in JS */
+    border: 2px solid var(--box-edge); border-radius: 12px;
+    box-shadow: inset 0 0 0 2px var(--box-glow), 0 6px 22px rgba(0, 0, 0, 0.55);
     padding: 10px 14px;
-    color: #e8e0c4;
+    color: var(--text);
     font-size: 22px;                 /* per-element size from the layout; inner text uses em */
     transform: translateZ(0);
   }
@@ -165,7 +202,7 @@
                text-align: center; padding: 8px; font-size: 13px; color: #9fb59a; }
   body.editing #party .partyHint { display: flex; }
   body.editing .box { cursor: move; outline: 1px dashed rgba(124, 196, 74, 0.55); }
-  body.editing .box.sel { outline: 2px solid #7cc44a; }
+  body.editing .box.sel { outline: 2px solid var(--accent); }
   .rz {
     display: none; position: absolute; right: -7px; bottom: -7px;
     width: 15px; height: 15px; border-radius: 3px;
@@ -200,6 +237,20 @@
     background: #142016; color: #e8e0c4; border: 1px solid #2e4a30; border-radius: 4px;
     padding: 4px 6px; font-size: 12px; box-sizing: border-box;
   }
+  /* Theme Builder + per-element color grid */
+  #editbar .ebcolgrid { display: grid; grid-template-columns: auto 1fr auto; gap: 4px 6px; align-items: center; margin: 2px 0 4px; }
+  #editbar .ebcolgrid span { color: #a8c488; font-size: 11px; }
+  #editbar .ebcolgrid input[type=color] { height: 22px; }
+  #editbar .ebclr {
+    background: #142016; color: #a8c488; border: 1px solid #2e4a30; border-radius: 4px;
+    width: 22px; height: 22px; line-height: 1; padding: 0; font-size: 13px; cursor: pointer;
+  }
+  #editbar .ebclr:hover { background: #4a7c3a; color: #0a1410; }
+  #editbar .ebbtn { width: 100%; margin-top: 6px; }
+  #editbar #ebBuilder { border: 1px solid #2e4a30; border-radius: 6px; padding: 6px; margin-top: 6px; background: rgba(0,0,0,0.2); }
+  #editbar #ebCustomList { margin-top: 6px; }
+  #editbar #ebCustomList .cth { display: flex; align-items: center; gap: 6px; margin: 3px 0; }
+  #editbar #ebCustomList .cth .nm { flex: 1; color: #e8e0c4; font-size: 12px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   #editbar .ebsplit { border-top: 1px solid #2e4a30; margin-top: 10px; padding-top: 8px; }
   #editbar #ebElems .ebElemRow { display: flex; align-items: center; gap: 6px; margin: 4px 0; }
   #editbar #ebElems label {
@@ -220,7 +271,7 @@
   #editbar #ebReset { width: 100%; margin-top: 4px; }
 
   .hd {
-    color: #7cc44a; font-size: 0.55em; font-weight: 700; letter-spacing: 1px;
+    color: var(--el-accent, var(--accent2)); font-size: 0.55em; font-weight: 700; letter-spacing: 1px;
     margin-bottom: 0.35em; display: flex; align-items: center; gap: 0.3em; flex: 0 0 auto;
   }
 
@@ -324,7 +375,7 @@
   .bar-label .val { color: #a8c488; font-weight: 600; }
   .bar-track {
     height: 0.75em; border-radius: 0.4em; overflow: hidden;
-    background: rgba(0, 0, 0, 0.45); border: 1px solid #2e4a30;
+    background: rgba(0, 0, 0, 0.45); border: 1px solid var(--border);
   }
   .bar-fill {
     height: 100%; border-radius: 0.4em 0 0 0.4em;
@@ -338,9 +389,11 @@
   #toast {
     position: fixed; left: 50%; top: 18%; transform: translateX(-50%) scale(0.8);
     max-width: 84vw; text-align: center; z-index: 8000; pointer-events: none;
-    background: rgba(10, 20, 16, 0.94); border: 3px solid #7cc44a; border-radius: 16px;
-    color: #e8e0c4; font-weight: 800; font-size: 44px; line-height: 1.25;
-    padding: 18px 34px; box-shadow: 0 10px 40px rgba(0, 0, 0, 0.7);
+    background: linear-gradient(180deg, var(--box-grad-a) 0%, var(--box-grad-b) 100%);
+    border: 3px solid var(--box-edge); border-radius: 16px;
+    color: var(--text); font-weight: 800; font-size: 44px; line-height: 1.25;
+    padding: 18px 34px;
+    box-shadow: inset 0 0 0 2px var(--box-glow), 0 10px 40px rgba(0, 0, 0, 0.7);
     opacity: 0; transition: opacity 0.25s ease, transform 0.25s ease;
   }
   #toast.show { opacity: 1; transform: translateX(-50%) scale(1); }
@@ -364,12 +417,13 @@
   #morph {
     position: absolute; z-index: 7900; pointer-events: none; display: none;
     white-space: nowrap;
-    background: rgba(10, 20, 16, 0.94); border: 2px solid #d4a437; border-radius: 999px;
-    color: #e8e0c4; font-weight: 700; font-size: 26px; padding: 10px 26px;
-    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6);
+    background: linear-gradient(180deg, var(--box-grad-a) 0%, var(--box-grad-b) 100%);
+    border: 3px solid var(--box-edge); border-radius: 999px;
+    color: var(--text); font-weight: 700; font-size: 26px; padding: 10px 26px;
+    box-shadow: inset 0 0 0 2px var(--box-glow), 0 6px 24px rgba(0, 0, 0, 0.6);
   }
   #morph.show { display: inline-block; }
-  #morph .mt { color: #d4a437; font-variant-numeric: tabular-nums; margin-left: 10px; }
+  #morph .mt { color: var(--accent2); font-variant-numeric: tabular-nums; margin-left: 10px; }
   body.editing #morph { cursor: move; pointer-events: auto; outline: 1px dashed rgba(124, 196, 74, 0.55); }
   body.editing #morph.sel { outline: 2px solid #7cc44a; }
   @keyframes shake {
@@ -477,6 +531,10 @@
 
     <div id="status" class="status"></div>
     <div id="morph">🎙 <span class="mn"></span><span class="mt"></span></div>
+    <div id="themeart" class="themeart"><img alt=""/><div class="themeart-empty">Theme Art — drop an image in the ThemeArt folder</div><div class="rz" data-el="themeart"></div></div>
+    <div id="themeart2" class="themeart"><img alt=""/><div class="themeart-empty">Theme Art 2 — drop &lt;theme&gt;-2.png in the ThemeArt folder</div><div class="rz" data-el="themeart2"></div></div>
+    <div id="themeart3" class="themeart"><img alt=""/><div class="themeart-empty">Theme Art 3 — drop &lt;theme&gt;-3.png in the ThemeArt folder</div><div class="rz" data-el="themeart3"></div></div>
+    <div id="themeart4" class="themeart"><img alt=""/><div class="themeart-empty">Theme Art 4 — drop &lt;theme&gt;-4.png in the ThemeArt folder</div><div class="rz" data-el="themeart4"></div></div>
   </div>
 
   <div id="toast"></div>
@@ -485,13 +543,39 @@
 
   <div id="editbar">
     <h4>OVERLAY EDITOR</h4>
+    <label>Theme (app + overlay)</label>
+    <select id="ebTheme"></select>
+    <button id="ebBuilderToggle" class="ebbtn">🎨 Theme Builder</button>
+    <div id="ebBuilder" style="display:none">
+      <div class="hint">Pick colors for the whole overlay + app. Preview is live; Save to keep it as a named theme.</div>
+      <div class="ebcolgrid">
+        <span>Accent</span><input data-th="accent" type="color"/><span></span>
+        <span>Accent deep</span><input data-th="accentDeep" type="color"/><span></span>
+        <span>Accent 2</span><input data-th="accent2" type="color"/><span></span>
+        <span>Background</span><input data-th="bg" type="color"/><span></span>
+        <span>Panel tile</span><input data-th="tile" type="color"/><span></span>
+        <span>Text</span><input data-th="text" type="color"/><span></span>
+        <span>Text dim</span><input data-th="textDim" type="color"/><span></span>
+        <span>Text faint</span><input data-th="textFaint" type="color"/><span></span>
+      </div>
+      <div class="prow">
+        <input id="ebThemeName" type="text" placeholder="theme name" maxlength="24"/>
+        <button id="ebThemeSave">Save theme</button>
+      </div>
+      <div id="ebCustomList"></div>
+    </div>
     <div id="ebSel">Now Playing</div>
     <label>Font</label>
     <select id="ebFont"></select>
     <label>Text size (px)</label>
     <input id="ebSize" type="number" min="8" max="200" step="1"/>
-    <label>Text color</label>
-    <input id="ebColor" type="color"/>
+    <label>Element colors (selected box)</label>
+    <div class="ebcolgrid">
+      <span>Text</span><input id="ebColor" type="color"/><button class="ebclr" data-clr="color" title="Use theme color">×</button>
+      <span>Background</span><input id="ebBg" type="color"/><button class="ebclr" data-clr="bgCol" title="Use theme color">×</button>
+      <span>Border</span><input id="ebBorder" type="color"/><button class="ebclr" data-clr="borderCol" title="Use theme color">×</button>
+      <span>Header</span><input id="ebHeader" type="color"/><button class="ebclr" data-clr="headerCol" title="Use theme color">×</button>
+    </div>
     <label>Background opacity: <span id="ebBgoVal">100%</span></label>
     <input id="ebBgo" type="range" min="0" max="100" step="5" style="width:100%; accent-color:#7cc44a;"/>
     <div class="hint">Click a block to select it. Drag to move, drag the green corner to resize. Changes save automatically.</div>
@@ -791,6 +875,9 @@
         clearChat();
         if (data.layout) applyLayout(data.layout);
         if (Array.isArray(data.presets)) { presets = data.presets; if (EDIT) renderPresets(); }
+        if (EDIT && Array.isArray(data.themeList)) populateThemeDropdown(data.themeList);
+        if (EDIT && Array.isArray(data.customThemes)) { customThemes = data.customThemes; renderCustomThemes(); }
+        if (data.theme) applyTheme(data.theme);
         if (data.style) applyStyle(data.style);
         if (data.chatters) renderChatters(data.chatters);
         if (data.morph) showMorph(data.morph.name, data.morph.seconds);
@@ -840,6 +927,18 @@
         break;
       case "morph":
         showMorph(data.name, data.seconds);
+        break;
+      case "theme":
+        applyTheme(data.theme);
+        break;
+      case "themeList":
+        if (EDIT) {
+          if (Array.isArray(data.themeList)) populateThemeDropdown(data.themeList);
+          if (Array.isArray(data.customThemes)) { customThemes = data.customThemes; renderCustomThemes(); }
+        }
+        break;
+      case "themeart":
+        setThemeArt(themeSlug);   // art dropped into the ThemeArt folder — reload live
         break;
       case "chat":
         if (Array.isArray(data.messages)) {
@@ -1539,10 +1638,17 @@
   // =========================================================================
   //  Layout (per-element position / size / font) + in-browser editor (?edit)
   // =========================================================================
-  const ELEMENTS = ["np", "ch", "chat", "cl", "gl", "poll", "feed", "cnt", "party", "morph"];
+  // Theme-art slots: slot 1 loads /themeart/<slug>, slot n loads /themeart/<slug>-n.
+  const THEME_ART = ["themeart", "themeart2", "themeart3", "themeart4"];
+  const ELEMENTS = ["np", "ch", "chat", "cl", "gl", "poll", "feed", "cnt", "party", "morph"].concat(THEME_ART);
   const ELEMENT_NAMES = { np: "Now Playing", ch: "Challenges", chat: "Live Chat", cl: "Chatters",
                           gl: "Goals", poll: "Poll", feed: "Activity Feed", cnt: "Counters",
-                          party: "Party (Tavern Tales)", morph: "Voice Morph timer" };
+                          party: "Party (Tavern Tales)", morph: "Voice Morph timer",
+                          themeart: "Theme Art", themeart2: "Theme Art 2",
+                          themeart3: "Theme Art 3", themeart4: "Theme Art 4" };
+  function isThemeArt(k) { return THEME_ART.indexOf(k) >= 0; }
+  // File suffix for a slot: "" for the first, "-2" … "-4" for the rest.
+  function themeArtSuffix(k) { const i = THEME_ART.indexOf(k); return i > 0 ? "-" + (i + 1) : ""; }
   const DEFAULT_LAYOUT = {
     np:   { x: 246, y: 48,  w: 618, h: 72,  font: "", size: 22, color: "#e8e0c4", bgo: 100 },
     ch:   { x: 246, y: 128, w: 294, h: 372, font: "", size: 18, color: "#e8e0c4", bgo: 100 },
@@ -1553,7 +1659,11 @@
     feed: { x: 872, y: 512, w: 200, h: 160, font: "", size: 16, color: "#e8e0c4", bgo: 100, on: false },
     cnt:  { x: 40,  y: 128, w: 196, h: 200, font: "", size: 20, color: "#e8e0c4", bgo: 100, on: false },
     party:{ x: 246, y: 556, w: 788, h: 128, font: "", size: 16, color: "#e8e0c4", bgo: 0,   on: false },
-    morph:{ x: 520, y: 636, w: 240, h: 48,  font: "", size: 26, color: "#e8e0c4", bgo: 94 }
+    morph:{ x: 520, y: 636, w: 240, h: 48,  font: "", size: 26, color: "#e8e0c4", bgo: 94 },
+    themeart:{ x: 1048, y: 470, w: 210, h: 210, font: "", size: 16, color: "#e8e0c4", bgo: 0, on: false },
+    themeart2:{ x: 1048, y: 250, w: 210, h: 210, font: "", size: 16, color: "#e8e0c4", bgo: 0, on: false },
+    themeart3:{ x: 1048, y: 30,  w: 210, h: 210, font: "", size: 16, color: "#e8e0c4", bgo: 0, on: false },
+    themeart4:{ x: 820,  y: 30,  w: 210, h: 210, font: "", size: 16, color: "#e8e0c4", bgo: 0, on: false }
   };
   const FONTS = ["", "MR. Saturn", "Segoe UI", "Arial", "Verdana", "Tahoma", "Trebuchet MS",
                  "Georgia", "Times New Roman", "Courier New", "Consolas",
@@ -1612,6 +1722,11 @@
           morphEd.classList.remove("show");
         }
       }
+      // Theme-art boxes are always shown while editing (an empty one shows its placeholder).
+      for (const k of THEME_ART) {
+        const artEd = document.getElementById(k);
+        if (artEd) artEd.classList.toggle("show", isOn(k));
+      }
       syncElemChecks();
       return;
     }
@@ -1619,6 +1734,12 @@
     // element is turned off, make sure any active pill is hidden.
     const morphLive = document.getElementById("morph");
     if (morphLive && !isOn("morph")) morphLive.classList.remove("show");
+    // Theme art shows only if enabled and its image loaded.
+    for (const k of THEME_ART) {
+      const artLive = document.getElementById(k);
+      if (artLive && !isOn(k)) artLive.classList.remove("show");
+    }
+    setThemeArt(themeSlug);
     // Enabled elements are always on screen; only their content changes with state.
     const np = document.getElementById("np");
     const ch = document.getElementById("ch");
@@ -1639,18 +1760,146 @@
     lastStateSig = "";   // let the next state frame re-fill content
   }
 
+  // ---- theme (colours + per-theme art) ----
+  // Box gradient RGB (surface2 → bg); defaults match the green theme.
+  let TH = { gradA: "39, 55, 38", gradB: "10, 20, 16" };
+  let themeSlug = "";
+  let currentThemeName = "";
+  let themeDropdownWired = false;
+  // Theme Builder state: the live palette, saved custom palettes, one-time wiring guard.
+  let currentThemeColors = { accent:"#7cc44a", accentDeep:"#4a7c3a", accent2:"#d4a437", bg:"#0a1410", tile:"#1c2a1e", text:"#e8e0c4", textDim:"#a8c488", textFaint:"#7a9070" };
+  let customThemes = [];
+  let builderWired = false;
+  const THEME_KEYS = ["accent","accentDeep","accent2","bg","tile","text","textDim","textFaint"];
+
+  // Populate the editor's theme dropdown and wire it to switch the app+overlay theme.
+  function populateThemeDropdown(list) {
+    const sel = document.getElementById("ebTheme");
+    if (!sel) return;
+    sel.innerHTML = "";
+    (list || []).forEach(function (name) {
+      const o = document.createElement("option");
+      o.value = name; o.textContent = name;
+      sel.appendChild(o);
+    });
+    if (currentThemeName) sel.value = currentThemeName;
+    if (!themeDropdownWired) {
+      themeDropdownWired = true;
+      sel.addEventListener("change", function () { send({ type: "setTheme", name: sel.value }); });
+    }
+  }
+
+  function hexToRgb(hex) {
+    try {
+      const h = (hex || "").replace("#", "");
+      const n = parseInt(h.length === 3 ? h.split("").map(c => c + c).join("") : h, 16);
+      return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
+    } catch (e) { return [0, 0, 0]; }
+  }
+  function mixHex(a, b, f) {
+    const A = hexToRgb(a), B = hexToRgb(b);
+    const ch = i => Math.max(0, Math.min(255, Math.round(A[i] + (B[i] - A[i]) * f)));
+    return "#" + [ch(0), ch(1), ch(2)].map(x => x.toString(16).padStart(2, "0")).join("");
+  }
+
+  function applyTheme(t) {
+    if (!t) return;
+    if (t.name) {
+      currentThemeName = t.name;
+      const sel = document.getElementById("ebTheme");
+      if (sel && sel.value !== t.name) sel.value = t.name;
+    }
+    const r = document.documentElement.style;
+    const set = (k, v) => { if (v) r.setProperty(k, v); };
+    set("--accent", t.accent); set("--accent-deep", t.accentDeep); set("--accent2", t.accent2);
+    set("--bg", t.bg); set("--tile", t.tile);
+    set("--text", t.text); set("--text-dim", t.textDim); set("--text-faint", t.textFaint);
+    if (t.bg && t.tile) {
+      const surface2 = mixHex(t.bg, t.tile, 1.6);
+      set("--surface", mixHex(t.bg, t.tile, 0.6));
+      set("--surface2", surface2);
+      set("--border", mixHex(t.bg, t.tile, 2.6));
+      set("--box-grad-a", surface2);
+      set("--box-grad-b", t.bg);
+      TH.gradA = hexToRgb(surface2).join(", ");
+      TH.gradB = hexToRgb(t.bg).join(", ");
+    }
+    set("--box-edge", t.accent);
+    set("--box-glow", t.accentDeep);
+    for (const k of ELEMENTS) applyBox(k);   // box fills are inline with the theme RGB
+    if (t.slug !== undefined) setThemeArt(t.slug);
+    // Remember the live palette and refresh the Theme Builder swatches to match.
+    THEME_KEYS.forEach(function (k) { if (t[k]) currentThemeColors[k] = t[k]; });
+    syncBuilderPickers();
+  }
+
+  // ---- Theme Builder ----
+  // Reflect the active palette into the builder's color inputs.
+  function syncBuilderPickers() {
+    const box = document.getElementById("ebBuilder");
+    if (!box) return;
+    THEME_KEYS.forEach(function (k) {
+      const inp = box.querySelector('input[data-th="' + k + '"]');
+      if (inp && isHex(currentThemeColors[k])) inp.value = currentThemeColors[k];
+    });
+  }
+
+  // Render the saved custom-theme list (load / delete).
+  function renderCustomThemes() {
+    const list = document.getElementById("ebCustomList");
+    if (!list) return;
+    list.innerHTML = "";
+    (customThemes || []).forEach(function (t) {
+      const row = document.createElement("div"); row.className = "cth";
+      const nm = document.createElement("span"); nm.className = "nm"; nm.textContent = t.name; nm.title = t.name;
+      const load = document.createElement("button"); load.textContent = "Load";
+      load.addEventListener("click", function () { send({ type: "setTheme", name: t.name }); });
+      const del = document.createElement("button"); del.textContent = "✕"; del.title = "Delete";
+      del.addEventListener("click", function () { send({ type: "deleteCustomTheme", name: t.name }); });
+      row.appendChild(nm); row.appendChild(load); row.appendChild(del);
+      list.appendChild(row);
+    });
+  }
+
+  function setThemeArt(slug) {
+    themeSlug = slug || "";
+    for (const k of THEME_ART) setThemeArtSlot(k);
+  }
+
+  function setThemeArtSlot(k) {
+    const wrap = document.getElementById(k);
+    if (!wrap) return;
+    const img = wrap.querySelector("img");
+    const empty = wrap.querySelector(".themeart-empty");
+    const file = themeSlug ? (themeSlug + themeArtSuffix(k)) : "";
+    if (empty) empty.textContent = ELEMENT_NAMES[k] + " — drop " +
+      (file ? file + ".png" : "<theme>" + themeArtSuffix(k) + ".png") + " in the ThemeArt folder";
+    if (!themeSlug || !isOn(k)) {
+      wrap.classList.remove("has-img");
+      if (!EDIT) wrap.classList.remove("show");
+      return;
+    }
+    img.onload = function () { wrap.classList.add("has-img"); wrap.classList.add("show"); };
+    img.onerror = function () { wrap.classList.remove("has-img"); if (!EDIT) wrap.classList.remove("show"); };
+    img.src = "/themeart/" + encodeURIComponent(file) + "?v=" + Date.now();
+  }
+
   function applyBox(k) {
     const el = document.getElementById(k);
     if (!el) return;
     const c = layout[k];
     el.style.left = c.x + "px";
     el.style.top = c.y + "px";
-    // The morph pill auto-sizes to its text — position, font and colour only (no width/height).
+    // The morph pill auto-sizes to its text and keeps its own gradient — position only.
     if (k === "morph") {
       el.style.fontSize = (c.size || 26) + "px";
       el.style.color = c.color || "";
-      const mbgo = (typeof c.bgo === "number" ? Math.max(0, Math.min(100, c.bgo)) : 94) / 100;
-      el.style.background = "rgba(10, 20, 16, " + mbgo + ")";
+      return;
+    }
+    // Theme-art images — position + size only (no panel fill).
+    if (isThemeArt(k)) {
+      el.style.width = c.w + "px";
+      el.style.height = c.h + "px";
       return;
     }
     el.style.width = c.w + "px";
@@ -1658,10 +1907,24 @@
     el.style.fontFamily = c.font ? ("'" + c.font + "', 'Segoe UI', sans-serif") : "";
     el.style.fontSize = (c.size || 22) + "px";
     el.style.color = c.color || "";
-    // Background opacity: 0–100, missing = fully opaque.
+    // Themed menu fill (from the active theme's surface→bg); opacity 0–100.
     const bgo = (typeof c.bgo === "number" ? Math.max(0, Math.min(100, c.bgo)) : 100) / 100;
-    el.style.background = "rgba(10, 20, 16, " + bgo + ")";
+    // Per-element background override (Theme Builder) — solid color; else the theme gradient.
+    if (isHex(c.bgCol)) {
+      const rgb = hexToRgb(c.bgCol).join(", ");
+      el.style.background = "linear-gradient(180deg, rgba(" + rgb + ", " + bgo +
+                            ") 0%, rgba(" + rgb + ", " + bgo + ") 100%)";
+    } else {
+      el.style.background = "linear-gradient(180deg, rgba(" + TH.gradA + ", " + bgo +
+                            ") 0%, rgba(" + TH.gradB + ", " + bgo + ") 100%)";
+    }
+    // Per-element border + header/accent overrides (blank reverts to the theme).
+    el.style.borderColor = isHex(c.borderCol) ? c.borderCol : "";
+    el.style.setProperty("--el-accent", isHex(c.headerCol) ? c.headerCol : "");
   }
+
+  // True for a valid #rrggbb string.
+  function isHex(s) { return typeof s === "string" && /^#[0-9a-fA-F]{6}$/.test(s); }
 
   // ---- editor ----
   let saveTimer = null;
@@ -1733,7 +1996,18 @@
     const bgoVal = document.getElementById("ebBgoVal");
     if (bgoVal) bgoVal.textContent = bgo + "%";
     document.getElementById("ebSize").value = c.size || 22;
-    document.getElementById("ebColor").value = /^#[0-9a-fA-F]{6}$/.test(c.color) ? c.color : "#e8e0c4";
+    // Per-element color pickers: show the override if set, else the theme's colour.
+    setPicker("ebColor",  c.color,     currentThemeColors.text);
+    setPicker("ebBg",     c.bgCol,     mixHex(currentThemeColors.bg, currentThemeColors.tile, 1.6));
+    setPicker("ebBorder", c.borderCol, currentThemeColors.accent);
+    setPicker("ebHeader", c.headerCol, currentThemeColors.accent2);
+  }
+
+  // Set a color <input> to an override hex if valid, otherwise to the theme fallback.
+  function setPicker(id, override, fallback) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.value = isHex(override) ? override : (isHex(fallback) ? fallback : "#ffffff");
   }
 
   function initEditor() {
@@ -1812,6 +2086,54 @@
     document.getElementById("ebColor").addEventListener("input", function () {
       if (!selEl) return; layout[selEl].color = this.value; applyBox(selEl); scheduleSave();
     });
+    // Per-element background / border / header overrides.
+    const elColorInputs = { ebBg: "bgCol", ebBorder: "borderCol", ebHeader: "headerCol" };
+    Object.keys(elColorInputs).forEach(function (id) {
+      const prop = elColorInputs[id];
+      const inp = document.getElementById(id);
+      if (inp) inp.addEventListener("input", function () {
+        if (!selEl) return; layout[selEl][prop] = this.value; applyBox(selEl); scheduleSave();
+      });
+    });
+    // "×" buttons clear an override so that part follows the theme again.
+    Array.prototype.forEach.call(document.querySelectorAll("#editbar .ebclr"), function (btn) {
+      btn.addEventListener("click", function () {
+        if (!selEl) return;
+        const prop = btn.dataset.clr;
+        delete layout[selEl][prop];
+        applyBox(selEl); selectEl(selEl); scheduleSave();
+      });
+    });
+
+    // Theme Builder: toggle, live color pickers, save + delete.
+    const bToggle = document.getElementById("ebBuilderToggle");
+    const bPanel = document.getElementById("ebBuilder");
+    if (bToggle && bPanel) {
+      bToggle.addEventListener("click", function () {
+        const open = bPanel.style.display === "none";
+        bPanel.style.display = open ? "block" : "none";
+        if (open) syncBuilderPickers();
+      });
+    }
+    if (!builderWired && bPanel) {
+      builderWired = true;
+      Array.prototype.forEach.call(bPanel.querySelectorAll('input[data-th]'), function (inp) {
+        inp.addEventListener("input", function () {
+          currentThemeColors[inp.dataset.th] = inp.value;
+          applyTheme(Object.assign({ name: currentThemeName || "Custom" }, currentThemeColors)); // instant local preview
+          send({ type: "setThemeColors", name: currentThemeName || "Custom", colors: currentThemeColors });
+        });
+      });
+      const saveBtn = document.getElementById("ebThemeSave");
+      if (saveBtn) saveBtn.addEventListener("click", function () {
+        const nameInp = document.getElementById("ebThemeName");
+        const name = (nameInp.value || "").trim();
+        if (!name) { flashSaved("Name your theme first"); return; }
+        send({ type: "saveCustomTheme", name: name, colors: currentThemeColors });
+        nameInp.value = "";
+        flashSaved("Saved theme " + name);
+      });
+    }
     document.getElementById("ebBgo").addEventListener("input", function () {
       if (!selEl) return;
       const v = parseInt(this.value, 10) || 0;

@@ -39,6 +39,7 @@ namespace GameTracker.Services
             public ChatFeatureSettings Features { get; set; } = new(); // counts/chatters/points/style/redeems
             public List<TextPanel> TextPanels { get; set; } = new();   // custom OBS text overlays (max 5)
             public ThemeSettings Theme { get; set; } = new();          // app colour theme
+            public List<ThemeSettings> CustomThemes { get; set; } = new(); // user-built palettes (Theme Builder)
             public ChatTtsSettings Tts { get; set; } = new();          // read chat aloud
             public List<StreamGoal> Goals { get; set; } = new();       // overlay goal bars
             public List<GameCounter> Counters { get; set; } = new();   // per-game on-stream counters
@@ -259,6 +260,30 @@ namespace GameTracker.Services
         {
             var s = LoadAll();
             s.Theme = theme;
+            SaveAll(s);
+        }
+
+        /// <summary>User-built palettes from the overlay Theme Builder.</summary>
+        public static List<ThemeSettings> LoadCustomThemes() => LoadAll().CustomThemes ?? new();
+
+        /// <summary>Add or replace a custom theme by name (case-insensitive) and persist.</summary>
+        public static void SaveCustomTheme(ThemeSettings theme)
+        {
+            if (theme == null || string.IsNullOrWhiteSpace(theme.PresetName)) return;
+            var s = LoadAll();
+            s.CustomThemes ??= new();
+            s.CustomThemes.RemoveAll(t => string.Equals(t.PresetName, theme.PresetName, StringComparison.OrdinalIgnoreCase));
+            s.CustomThemes.Add(theme);
+            SaveAll(s);
+        }
+
+        /// <summary>Remove a custom theme by name and persist.</summary>
+        public static void DeleteCustomTheme(string name)
+        {
+            if (string.IsNullOrWhiteSpace(name)) return;
+            var s = LoadAll();
+            if (s.CustomThemes == null) return;
+            s.CustomThemes.RemoveAll(t => string.Equals(t.PresetName, name, StringComparison.OrdinalIgnoreCase));
             SaveAll(s);
         }
 

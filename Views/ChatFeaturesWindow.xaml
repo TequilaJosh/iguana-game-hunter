@@ -39,7 +39,7 @@
             <Setter Property="Foreground" Value="{DynamicResource ThemeText}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CaretBrush" Value="#7cc44a"/>
+            <Setter Property="CaretBrush" Value="{DynamicResource ThemeAccent}"/>
             <Setter Property="Padding" Value="5,3"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="Width" Value="56"/>
@@ -54,7 +54,7 @@
             <Setter Property="Foreground" Value="{DynamicResource ThemeText}"/>
             <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorder}"/>
             <Setter Property="BorderThickness" Value="1"/>
-            <Setter Property="CaretBrush" Value="#7cc44a"/>
+            <Setter Property="CaretBrush" Value="{DynamicResource ThemeAccent}"/>
             <Setter Property="Padding" Value="5,3"/>
             <Setter Property="FontSize" Value="12"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>

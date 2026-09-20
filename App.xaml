@@ -31,6 +31,15 @@
         <SolidColorBrush x:Key="ThemeSurface"    Color="#142016"/>
         <SolidColorBrush x:Key="ThemeSurface2"   Color="#243a26"/>
         <SolidColorBrush x:Key="ThemeBorder"     Color="#2e4a30"/>
+        <!-- Accent tints over the background (ThemeService recomputes these per theme):
+             column headers / chips (Soft), badges + hovers (Mid), borders (Edge). -->
+        <SolidColorBrush x:Key="ThemeAccentSoft"   Color="#233b1d"/>
+        <SolidColorBrush x:Key="ThemeAccentMid"    Color="#355726"/>
+        <SolidColorBrush x:Key="ThemeAccentEdge"   Color="#45702e"/>
+        <SolidColorBrush x:Key="ThemeAccentBright" Color="#aad989"/>
+        <SolidColorBrush x:Key="ThemeAccent2Soft"  Color="#363419"/>
+        <SolidColorBrush x:Key="ThemeAccent2Mid"   Color="#574b1f"/>
+        <SolidColorBrush x:Key="ThemeAccent2Edge"  Color="#735f24"/>
 
         <!-- Snake-scale tile pattern: staggered fish-scale arcs -->
         <DrawingBrush x:Key="ScaleBrush" TileMode="Tile"
@@ -246,7 +255,7 @@
             <ControlTemplate.Triggers>
                 <Trigger Property="IsMouseOver" Value="True">
                     <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource ThemeAccentDeep}"/>
-                    <Setter TargetName="arrow" Property="Fill" Value="#a8e060"/>
+                    <Setter TargetName="arrow" Property="Fill" Value="{DynamicResource ThemeAccentBright}"/>
                 </Trigger>
                 <Trigger Property="IsChecked" Value="True">
                     <Setter TargetName="bd" Property="BorderBrush" Value="{DynamicResource ThemeAccent}"/>
@@ -346,7 +355,7 @@
                                 <Setter TargetName="bd" Property="Background" Value="{DynamicResource ThemeBorder}"/>
                             </Trigger>
                             <Trigger Property="IsEnabled" Value="False">
-                                <Setter Property="Foreground" Value="#506050"/>
+                                <Setter Property="Foreground" Value="{DynamicResource ThemeTextFaint}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>

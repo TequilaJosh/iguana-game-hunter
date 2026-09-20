@@ -211,6 +211,10 @@
   body.editing .rz { display: block; }
   #editbar {
     display: none; position: fixed; left: 12px; top: 12px; z-index: 10000; width: 250px;
+    /* Fixed panels don't scroll with the page, so cap the height to the viewport and
+       scroll inside — otherwise the element list runs off the bottom on short screens. */
+    max-height: calc(100vh - 24px); overflow-y: auto; overflow-x: hidden; box-sizing: border-box;
+    scrollbar-width: thin; scrollbar-color: #4a7c3a transparent;
     background: rgba(10, 20, 16, 0.96); border: 1px solid #4a7c3a; border-radius: 8px;
     padding: 10px 12px; color: #e8e0c4; font-family: 'Segoe UI', sans-serif; font-size: 13px;
     box-shadow: 0 4px 18px rgba(0, 0, 0, 0.6);
@@ -584,6 +588,7 @@
     <div class="ebsplit">
       <label>Elements (on the overlay)</label>
       <div id="ebElems"></div>
+      <button id="ebOpenArt" class="ebbtn" title="Open the ThemeArt folder in Explorer — drop per-theme images there">📁 Open ThemeArt folder</button>
     </div>
 
     <div class="ebsplit">
@@ -2106,6 +2111,12 @@
     });
 
     // Theme Builder: toggle, live color pickers, save + delete.
+    // Theme Art folder shortcut: the page can't open Explorer itself, so it asks the
+    // app's (loopback-only) server to do it.
+    const bOpenArt = document.getElementById("ebOpenArt");
+    if (bOpenArt) bOpenArt.onclick = function () {
+      fetch("/themeart/open", { cache: "no-store" }).catch(function () {});
+    };
     const bToggle = document.getElementById("ebBuilderToggle");
     const bPanel = document.getElementById("ebBuilder");
     if (bToggle && bPanel) {

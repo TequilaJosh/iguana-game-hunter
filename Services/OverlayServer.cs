@@ -224,6 +224,13 @@ namespace GameTracker.Services
                 {
                     await ServePanelImage(stream, route, ct);
                 }
+                else if (method == "GET" && route == "/themeart/open")
+                {
+                    // Editor sidebar button. The listener is loopback-only, so only this
+                    // machine can trigger it.
+                    OpenThemeArtFolder();
+                    await WriteSimple(stream, "200 OK", "text/plain", "ok", ct);
+                }
                 else if (method == "GET" && route.StartsWith("/themeart/", StringComparison.Ordinal))
                 {
                     await ServeThemeArt(stream, route, ct);
@@ -956,6 +963,18 @@ namespace GameTracker.Services
         public static string ThemeArtDir => Path.Combine(
             Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
             "LazerGuanas Game Hunter", "ThemeArt");
+
+        /// <summary>Opens the per-user ThemeArt folder in Explorer, creating it first. Shared by
+        /// the Settings window button and the overlay editor's "/themeart/open" route.</summary>
+        public static void OpenThemeArtFolder()
+        {
+            try
+            {
+                Directory.CreateDirectory(ThemeArtDir);
+                System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(ThemeArtDir) { UseShellExecute = true });
+            }
+            catch { /* best-effort */ }
+        }
 
         /// <summary>Artwork bundled with the app (shipped in the installer). Used as the default
         /// when the streamer hasn't dropped an override into <see cref="ThemeArtDir"/>.</summary>

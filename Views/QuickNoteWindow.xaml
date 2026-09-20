@@ -15,7 +15,7 @@
                      Background="{DynamicResource ThemeSurface}" Foreground="{DynamicResource ThemeText}" BorderBrush="{DynamicResource ThemeBorder}"
                      BorderThickness="1" CaretBrush="{DynamicResource ThemeAccent}" Padding="8,7" FontSize="14"
                      VerticalContentAlignment="Center"/>
-            <TextBlock Text="Enter to save · Esc to cancel" Foreground="#506050"
+            <TextBlock Text="Enter to save · Esc to cancel" Foreground="{DynamicResource ThemeTextFaint}"
                        FontSize="11" Margin="2,6,0,0"/>
         </StackPanel>
     </Border>

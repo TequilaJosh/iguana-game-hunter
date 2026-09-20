@@ -119,7 +119,7 @@
                 <DockPanel>
                     <TextBlock DockPanel.Dock="Top" Text="YOUR CUSTOM VOICES" Foreground="{DynamicResource ThemeAccent}"
                                FontSize="11" FontWeight="Bold" Margin="10,8,10,4"/>
-                    <TextBlock x:Name="EmptyText" DockPanel.Dock="Top" Foreground="#506050" FontSize="11"
+                    <TextBlock x:Name="EmptyText" DockPanel.Dock="Top" Foreground="{DynamicResource ThemeTextFaint}" FontSize="11"
                                Margin="10,0,10,0" Text="None yet — build one above and Save."/>
                     <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="10,4,10,10">
                         <ItemsControl x:Name="CustomList">

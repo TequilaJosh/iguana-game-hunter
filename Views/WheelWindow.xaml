@@ -175,7 +175,7 @@
                                                                            Foreground="{DynamicResource ThemeTextDim}" FontSize="12"
                                                                            TextTrimming="CharacterEllipsis"/>
                                                                 <TextBlock Grid.Column="2" Text="{Binding Tag}"
-                                                                           Foreground="#506050" FontSize="10"
+                                                                           Foreground="{DynamicResource ThemeTextFaint}" FontSize="10"
                                                                            Margin="6,0,0,0" VerticalAlignment="Center"/>
                                                             </Grid>
                                                         </Border>
@@ -310,7 +310,7 @@
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
                                 <StackPanel>
                                     <TextBlock x:Name="NoResultsText" Text="Spin to add challenges"
-                                               Foreground="#506050" FontSize="11" Margin="8,8"/>
+                                               Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" Margin="8,8"/>
                                     <ItemsControl x:Name="ResultsList">
                                         <ItemsControl.ItemTemplate>
                                             <DataTemplate>
@@ -413,7 +413,7 @@
                 </Button>
                 <Button x:Name="ChooseButton" Grid.Column="2" Content="Choose" Click="Choose_Click"
                         IsEnabled="False" Visibility="Collapsed"
-                        Foreground="{DynamicResource ThemeAccent2}" Background="#3a2a10" BorderThickness="0"
+                        Foreground="{DynamicResource ThemeAccent2}" Background="{DynamicResource ThemeAccent2Soft}" BorderThickness="0"
                         Padding="14,11" FontSize="15" FontWeight="Bold" Cursor="Hand">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
@@ -424,7 +424,7 @@
                             </Border>
                             <ControlTemplate.Triggers>
                                 <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter Property="Background" Value="#5a3a1a"/>
+                                    <Setter Property="Background" Value="{DynamicResource ThemeAccent2Edge}"/>
                                 </Trigger>
                                 <Trigger Property="IsEnabled" Value="False">
                                     <Setter Property="Opacity" Value="0.4"/>

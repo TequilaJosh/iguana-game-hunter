@@ -42,6 +42,19 @@ namespace GameTracker.Services
             res["ThemeSurface2"] = Frozen(Extrapolate(baseC, tileC, 1.6));
             res["ThemeBorder"] = Frozen(Extrapolate(baseC, tileC, 2.6));
 
+            // Accent tints over the background: column headers, badges, chips and the
+            // wheel slices use these, so they follow the theme instead of staying the
+            // Reptile greens/ambers they were originally drawn in.
+            var accentC  = ParseColor(Current.Accent, "#7cc44a");
+            var accent2C = ParseColor(Current.Accent2, "#d4a437");
+            res["ThemeAccentSoft"]   = Frozen(Extrapolate(baseC, accentC, 0.22));
+            res["ThemeAccentMid"]    = Frozen(Extrapolate(baseC, accentC, 0.38));
+            res["ThemeAccentEdge"]   = Frozen(Extrapolate(baseC, accentC, 0.52));
+            res["ThemeAccentBright"] = Frozen(Extrapolate(accentC, Colors.White, 0.35));
+            res["ThemeAccent2Soft"]  = Frozen(Extrapolate(baseC, accent2C, 0.22));
+            res["ThemeAccent2Mid"]   = Frozen(Extrapolate(baseC, accent2C, 0.38));
+            res["ThemeAccent2Edge"]  = Frozen(Extrapolate(baseC, accent2C, 0.52));
+
             res["ScaleBrush"] = BuildScaleBrush(Current.BgBase, Current.BgTile);
 
             // Recolour the OBS overlay to match (and let it load per-theme artwork).
@@ -59,7 +72,21 @@ namespace GameTracker.Services
             {
                 "#e8e0c4" => "ThemeText",
                 "#a8c488" or "#c4d4a8" => "ThemeTextDim",
-                "#7a9070" => "ThemeTextFaint",
+                "#7a9070" or "#506050" => "ThemeTextFaint",
+                // Reptile accent/surface constants used by code-built UI — same mapping
+                // the XAML sweep applied, so views that build brushes in code follow too.
+                "#7cc44a" => "ThemeAccent",
+                "#4a7c3a" => "ThemeAccentDeep",
+                "#d4a437" => "ThemeAccent2",
+                "#0a1410" => "ThemeBg",
+                "#142016" => "ThemeSurface",
+                "#1c2a1e" or "#243a26" => "ThemeSurface2",
+                "#2e4a30" => "ThemeBorder",
+                "#1e3a1e" or "#0f1810" => "ThemeAccentSoft",
+                "#3a5a2a" => "ThemeAccentMid",
+                "#a8e060" => "ThemeAccentBright",
+                "#3a2a10" or "#1a1408" => "ThemeAccent2Soft",
+                "#5a3a1a" => "ThemeAccent2Edge",
                 _ => null,
             };
             if (key != null && Application.Current?.Resources[key] is SolidColorBrush tb) return tb;

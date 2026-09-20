@@ -48,7 +48,7 @@
             <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="10,8">
                 <StackPanel>
                     <TextBlock x:Name="EmptyText" Text="No one yet — chatters appear when they chat."
-                               Foreground="#506050" FontSize="11" TextWrapping="Wrap"/>
+                               Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" TextWrapping="Wrap"/>
                     <ItemsControl x:Name="List">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>

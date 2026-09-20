@@ -126,7 +126,7 @@
                         <ColumnDefinition Width="*"/>
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
-                    <TextBlock Text="G" Style="{StaticResource ChanLb}" Foreground="#8ac47a"/>
+                    <TextBlock Text="G" Style="{StaticResource ChanLb}" Foreground="{DynamicResource ThemeAccent}"/>
                     <Slider x:Name="GSlider" Grid.Column="1" Style="{StaticResource Chan}" ValueChanged="Rgb_Changed"/>
                     <TextBlock x:Name="GVal" Grid.Column="2" Style="{StaticResource ChanVal}"/>
                 </Grid>

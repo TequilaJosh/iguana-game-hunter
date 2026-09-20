@@ -200,6 +200,12 @@
                             <StackPanel x:Name="CustomColors"/>
                             <Button Content="&#8635; Reset to default (Reptile)" Click="ResetTheme_Click"
                                     Style="{StaticResource Btn}" HorizontalAlignment="Left" Margin="0,4,0,0"/>
+
+                            <TextBlock Text="OVERLAY THEME ART" Style="{StaticResource SecHdr}"/>
+                            <TextBlock Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,6"
+                                       Text="Drop a PNG (or JPG/GIF) into the ThemeArt folder, named after the theme, to show it on your OBS overlay when that theme is active. Add a 'Theme Art' element in the overlay editor and drag it where you like. Up to four images per theme: 'Theme Art 1' shows mario.png, 'Theme Art 2' shows mario-2.png, then mario-3.png and mario-4.png. Theme names: kingdom-hearts, legend-of-zelda, mario, dark, light, reptile, amber, ocean, royal, crimson, mono"/>
+                            <Button Content="&#128193; Open ThemeArt folder" Click="OpenThemeArt_Click"
+                                    Style="{StaticResource Btn}" HorizontalAlignment="Left"/>
                         </StackPanel>
                     </ScrollViewer>
 
@@ -396,7 +402,7 @@
                                 <TextBlock Text="Chat lines" Style="{StaticResource Lbl}"/>
                                 <TextBox x:Name="ChatLinesBox" Style="{StaticResource In}" Width="70" MaxLength="3"
                                          LostFocus="ChatLines_Changed"/>
-                                <TextBlock Text="5–100 (refresh OBS source to apply)" Foreground="#506050"
+                                <TextBlock Text="5–100 (refresh OBS source to apply)" Foreground="{DynamicResource ThemeTextFaint}"
                                            FontSize="11" VerticalAlignment="Center" Margin="8,0,0,0"/>
                             </StackPanel>
                             <WrapPanel>
@@ -433,12 +439,12 @@
                             </StackPanel>
 
                             <!-- Ticker preview (reflects the saved config) -->
-                            <Border Margin="0,10,0,0" Background="#0a1410" BorderBrush="{DynamicResource ThemeAccentDeep}"
+                            <Border Margin="0,10,0,0" Background="{DynamicResource ThemeBg}" BorderBrush="{DynamicResource ThemeAccentDeep}"
                                     BorderThickness="1" CornerRadius="8" Padding="10,8">
                                 <StackPanel>
                                     <TextBlock Text="TICKER PREVIEW" Foreground="{DynamicResource ThemeAccent}" FontSize="9"
                                                FontWeight="Bold" Margin="0,0,0,6"/>
-                                    <Border Background="#14241c" CornerRadius="8" Padding="2" HorizontalAlignment="Left">
+                                    <Border Background="{DynamicResource ThemeAccentSoft}" CornerRadius="8" Padding="2" HorizontalAlignment="Left">
                                         <StackPanel x:Name="TickerPreviewBar" Orientation="Horizontal"/>
                                     </Border>
                                     <TextBlock Foreground="{DynamicResource ThemeTextFaint}" FontSize="10" Margin="0,6,0,0" TextWrapping="Wrap"

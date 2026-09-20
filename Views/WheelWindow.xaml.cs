@@ -46,12 +46,17 @@ namespace GameTracker.Views
         private double _currentAngle;
         private int _winnerIndex = -1;
 
-        private static readonly Brush[] SliceBrushes =
+        // Slice shades are accent tints from the live theme, read at draw time, so the
+        // wheel matches whatever theme is active instead of staying Reptile green.
+        private static Brush ThemeBrush(string key, string fallback) =>
+            Application.Current?.Resources[key] as Brush ?? Brush2(fallback);
+        private static Brush[] SliceBrushes => new[]
         {
-            Brush2("#2e4a30"), Brush2("#1a2e1c"), Brush2("#3a5a2a"), Brush2("#14241a"),
+            ThemeBrush("ThemeAccentMid",  "#2e4a30"), ThemeBrush("ThemeAccentSoft", "#1a2e1c"),
+            ThemeBrush("ThemeAccentEdge", "#3a5a2a"), ThemeBrush("ThemeSurface2",   "#14241a"),
         };
-        private static readonly Brush SliceRim = Brush2("#0a1410");
-        private static readonly Brush LabelBrush = Brush2("#e8e0c4");
+        private static Brush SliceRim   => ThemeBrush("ThemeBg",   "#0a1410");
+        private static Brush LabelBrush => ThemeBrush("ThemeText", "#e8e0c4");
 
         public WheelWindow(string header, IEnumerable<string> items, bool editable,
                            Action<List<string>>? onItemsChanged, Action<int>? onChosen,
@@ -703,8 +708,8 @@ namespace GameTracker.Views
             _pinned = !_pinned;
             Topmost = _pinned;
             PinButton.Foreground = _pinned
-                ? new SolidColorBrush(Color.FromRgb(0xd4, 0xa4, 0x37))
-                : new SolidColorBrush(Color.FromRgb(0x7a, 0x90, 0x70));
+                ? ThemeBrush("ThemeAccent2",   "#d4a437")
+                : ThemeBrush("ThemeTextFaint", "#7a9070");
             PinButton.ToolTip = _pinned ? "Unpin" : "Pin on top";
         }
 

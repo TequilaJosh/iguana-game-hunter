@@ -33,7 +33,7 @@
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="8,6"/>
             <Setter Property="FontSize" Value="13"/>
-            <Setter Property="CaretBrush" Value="#7cc44a"/>
+            <Setter Property="CaretBrush" Value="{DynamicResource ThemeAccent}"/>
             <Style.Triggers>
                 <Trigger Property="IsFocused" Value="True">
                     <Setter Property="BorderBrush" Value="{DynamicResource ThemeAccent}"/>
@@ -66,7 +66,7 @@
             </Setter>
         </Style>
         <Style x:Key="SessionButton" TargetType="Button">
-            <Setter Property="Background" Value="#3a2a10"/>
+            <Setter Property="Background" Value="{DynamicResource ThemeAccent2Soft}"/>
             <Setter Property="Foreground" Value="{DynamicResource ThemeAccent2}"/>
             <Setter Property="BorderThickness" Value="0"/>
             <Setter Property="Padding" Value="12,7"/>
@@ -83,7 +83,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsMouseOver" Value="True">
-                                <Setter Property="Background" Value="#5a3a1a"/>
+                                <Setter Property="Background" Value="{DynamicResource ThemeAccent2Edge}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -215,12 +215,12 @@
                     <TextBlock Text="PLAY SESSIONS" Style="{StaticResource LabelStyle}"
                                VerticalAlignment="Center" Margin="0"/>
                     <Border Grid.Column="1" CornerRadius="10" Padding="9,2"
-                            Background="#1e3a1e" BorderBrush="{DynamicResource ThemeAccentDeep}" BorderThickness="1">
+                            Background="{DynamicResource ThemeAccentSoft}" BorderBrush="{DynamicResource ThemeAccentDeep}" BorderThickness="1">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="&#9201; " Foreground="{DynamicResource ThemeAccent}" FontSize="11"
                                        VerticalAlignment="Center"/>
                             <TextBlock x:Name="TotalTimeText" Text="0m"
-                                       Foreground="#c4e090" FontSize="11" FontWeight="Bold"
+                                       Foreground="{DynamicResource ThemeText}" FontSize="11" FontWeight="Bold"
                                        VerticalAlignment="Center"/>
                         </StackPanel>
                     </Border>
@@ -277,11 +277,11 @@
                     <ScrollViewer VerticalScrollBarVisibility="Auto">
                         <StackPanel>
                             <TextBlock x:Name="NoSessionsText" Text="No sessions logged yet"
-                                       Foreground="#506050" FontSize="12" Margin="10,12"/>
+                                       Foreground="{DynamicResource ThemeTextFaint}" FontSize="12" Margin="10,12"/>
                             <ItemsControl x:Name="SessionsItems">
                                 <ItemsControl.ItemTemplate>
                                     <DataTemplate>
-                                        <Border BorderBrush="#1e2a20" BorderThickness="0,0,0,1" Padding="8,7">
+                                        <Border BorderBrush="{DynamicResource ThemeSurface2}" BorderThickness="0,0,0,1" Padding="8,7">
                                             <Grid>
                                                 <Grid.RowDefinitions>
                                                     <RowDefinition Height="Auto"/>
@@ -326,10 +326,10 @@
                                                 <Grid Grid.Row="1" Margin="0,5,0,0">
                                                     <TextBox Text="{Binding Note, UpdateSourceTrigger=PropertyChanged}"
                                                              Background="{DynamicResource ThemeSurface}" Foreground="{DynamicResource ThemeTextDim}"
-                                                             BorderBrush="#1e2a20" BorderThickness="1"
+                                                             BorderBrush="{DynamicResource ThemeSurface2}" BorderThickness="1"
                                                              CaretBrush="{DynamicResource ThemeAccent}" Padding="6,3" FontSize="11"/>
                                                     <TextBlock Text="What did you do? (optional note)"
-                                                               Foreground="#3e5040" FontSize="11"
+                                                               Foreground="{DynamicResource ThemeSurface2}" FontSize="11"
                                                                Margin="8,0,0,0" VerticalAlignment="Center"
                                                                IsHitTestVisible="False"
                                                                Visibility="{Binding Note, Converter={StaticResource EmptyVisConverter}}"/>
@@ -360,7 +360,7 @@
                                                                         </MultiBinding>
                                                                     </TextBlock.Text>
                                                                 </TextBlock>
-                                                                <TextBlock Grid.Column="2" Foreground="#506050"
+                                                                <TextBlock Grid.Column="2" Foreground="{DynamicResource ThemeTextFaint}"
                                                                            FontSize="10" Margin="0,0,8,0"
                                                                            VerticalAlignment="Center"
                                                                            Text="{Binding At, StringFormat='h:mm tt'}"/>

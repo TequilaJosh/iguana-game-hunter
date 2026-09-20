@@ -176,7 +176,7 @@
             </ScrollViewer>
 
             <!-- Live overlay preview -->
-            <Border Grid.Row="3" Margin="14,0,14,12" Background="#0a1410"
+            <Border Grid.Row="3" Margin="14,0,14,12" Background="{DynamicResource ThemeBg}"
                     BorderBrush="{DynamicResource ThemeAccentDeep}" BorderThickness="1" CornerRadius="8" Padding="12,8">
                 <StackPanel>
                     <TextBlock Text="OVERLAY PREVIEW" Foreground="{DynamicResource ThemeAccent}" FontSize="9"
@@ -188,9 +188,9 @@
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
                                 <Border Visibility="{Binding Show, Converter={StaticResource B2V}}"
-                                        Background="#12241a" CornerRadius="6" Padding="10,5" Margin="0,0,8,6">
+                                        Background="{DynamicResource ThemeAccentSoft}" CornerRadius="6" Padding="10,5" Margin="0,0,8,6">
                                     <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="{Binding Name}" Foreground="#cfe0bd" FontSize="12"
+                                        <TextBlock Text="{Binding Name}" Foreground="{DynamicResource ThemeText}" FontSize="12"
                                                    VerticalAlignment="Center" Margin="0,0,10,0"/>
                                         <TextBlock Text="{Binding Value}" Foreground="{Binding ColorBrush}"
                                                    FontSize="17" FontWeight="Bold"/>

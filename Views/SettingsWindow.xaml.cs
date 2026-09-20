@@ -525,6 +525,13 @@ namespace GameTracker.Views
 
         private void ApplyLive() => ThemeService.Apply(_theme);
 
+        /// <summary>Opens (creating if needed) the per-user ThemeArt folder in Explorer so the
+        /// streamer can drop artwork without hunting for the AppData path.</summary>
+        private void OpenThemeArt_Click(object sender, RoutedEventArgs e)
+        {
+            OverlayServer.OpenThemeArtFolder();
+        }
+
         private static SolidColorBrush Brush(string hex) => GameTracker.Services.ThemeService.MapBrush(hex);
 
         // ---- chat ----

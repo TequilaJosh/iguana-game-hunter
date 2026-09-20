@@ -99,7 +99,7 @@
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="10,7"/>
             <Setter Property="FontSize" Value="13"/>
-            <Setter Property="CaretBrush" Value="#7cc44a"/>
+            <Setter Property="CaretBrush" Value="{DynamicResource ThemeAccent}"/>
             <Setter Property="VerticalContentAlignment" Value="Center"/>
             <Style.Triggers>
                 <Trigger Property="IsFocused" Value="True">
@@ -205,7 +205,7 @@
                             </Button.Style>
                         </Button>
                         <Border Grid.Column="3" CornerRadius="10" Padding="7,2"
-                                Background="#3a2a10" Margin="6,0,0,0"
+                                Background="{DynamicResource ThemeAccent2Soft}" Margin="6,0,0,0"
                                 BorderBrush="{DynamicResource ThemeAccent2}" BorderThickness="1"
                                 Visibility="{Binding Rating, Converter={StaticResource RatingVisConverter}}">
                             <TextBlock Foreground="{DynamicResource ThemeAccent2}" FontSize="11" FontWeight="Bold"
@@ -227,8 +227,8 @@
                                 Margin="0,0,4,0">
                             <TextBlock Text="{Binding Genre}" Foreground="{DynamicResource ThemeTextFaint}" FontSize="11"/>
                         </Border>
-                        <Border CornerRadius="3" Padding="6,2" Background="#1a1408"
-                                BorderBrush="#5a3a1a" BorderThickness="1"
+                        <Border CornerRadius="3" Padding="6,2" Background="{DynamicResource ThemeAccent2Soft}"
+                                BorderBrush="{DynamicResource ThemeAccent2Edge}" BorderThickness="1"
                                 Visibility="{Binding Requester, Converter={StaticResource NonEmptyVisConverter}}"
                                 Margin="0,0,0,0">
                             <TextBlock Foreground="{DynamicResource ThemeAccent2}" FontSize="11"
@@ -249,7 +249,7 @@
                                  VerticalAlignment="Center" Margin="0,0,5,0"/>
                         <TextBlock Grid.Column="1"
                                    Text="{Binding LastPlayedDisplay}"
-                                   Foreground="#506050" FontSize="11" VerticalAlignment="Center"/>
+                                   Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" VerticalAlignment="Center"/>
                         <Button Grid.Column="2" Content="&#10696;"
                                 Tag="{Binding Id}"
                                 Click="PopOutSession_Click"
@@ -448,18 +448,18 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
-                <Border Grid.Row="0" Background="#1a2620" CornerRadius="8,8,0,0" Padding="14,10"
-                        BorderBrush="#3a5a44" BorderThickness="1,1,1,0">
+                <Border Grid.Row="0" Background="{DynamicResource ThemeSurface2}" CornerRadius="8,8,0,0" Padding="14,10"
+                        BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1,1,1,0">
                     <Grid>
                         <Grid.ColumnDefinitions>
                             <ColumnDefinition Width="*"/>
                             <ColumnDefinition Width="Auto"/>
                         </Grid.ColumnDefinitions>
-                        <TextBlock Text="DORMANT" Foreground="#7a9a8a"
+                        <TextBlock Text="DORMANT" Foreground="{DynamicResource ThemeTextFaint}"
                                    FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
-                        <Border Grid.Column="1" Background="#2a4a3a" CornerRadius="10" Padding="8,2">
+                        <Border Grid.Column="1" Background="{DynamicResource ThemeBorder}" CornerRadius="10" Padding="8,2">
                             <TextBlock x:Name="NotStartedCount" Text="0"
-                                       Foreground="#a0e0c0" FontSize="11" FontWeight="Bold"/>
+                                       Foreground="{DynamicResource ThemeText}" FontSize="11" FontWeight="Bold"/>
                         </Border>
                     </Grid>
                 </Border>
@@ -480,7 +480,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
-                <Border Grid.Row="0" Background="#1e3a1e" CornerRadius="8,8,0,0" Padding="14,10"
+                <Border Grid.Row="0" Background="{DynamicResource ThemeAccentSoft}" CornerRadius="8,8,0,0" Padding="14,10"
                         BorderBrush="{DynamicResource ThemeAccentDeep}" BorderThickness="1,1,1,0">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -489,13 +489,13 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="HUNTING" Foreground="{DynamicResource ThemeAccent}"
                                    FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
-                        <Border Grid.Column="1" Background="#3a5a2a" CornerRadius="10" Padding="8,2">
+                        <Border Grid.Column="1" Background="{DynamicResource ThemeAccentMid}" CornerRadius="10" Padding="8,2">
                             <TextBlock x:Name="InProgressCount" Text="0"
-                                       Foreground="#c4e090" FontSize="11" FontWeight="Bold"/>
+                                       Foreground="{DynamicResource ThemeText}" FontSize="11" FontWeight="Bold"/>
                         </Border>
                     </Grid>
                 </Border>
-                <Border Grid.Row="1" Background="#0f1810" CornerRadius="0,0,8,8"
+                <Border Grid.Row="1" Background="{DynamicResource ThemeAccentSoft}" CornerRadius="0,0,8,8"
                         BorderBrush="{DynamicResource ThemeAccentDeep}" BorderThickness="1,0,1,1"
                         AllowDrop="True" Tag="InProgress"
                         DragOver="Column_DragOver" DragLeave="Column_DragLeave"
@@ -512,7 +512,7 @@
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
                 </Grid.RowDefinitions>
-                <Border Grid.Row="0" Background="#3a2a10" CornerRadius="8,8,0,0" Padding="14,10"
+                <Border Grid.Row="0" Background="{DynamicResource ThemeAccent2Soft}" CornerRadius="8,8,0,0" Padding="14,10"
                         BorderBrush="{DynamicResource ThemeAccent2}" BorderThickness="1,1,1,0">
                     <Grid>
                         <Grid.ColumnDefinitions>
@@ -521,14 +521,14 @@
                         </Grid.ColumnDefinitions>
                         <TextBlock Text="DEVOURED" Foreground="{DynamicResource ThemeAccent2}"
                                    FontSize="11" FontWeight="Bold" VerticalAlignment="Center"/>
-                        <Border Grid.Column="1" Background="#5a3a1a" CornerRadius="10" Padding="8,2">
+                        <Border Grid.Column="1" Background="{DynamicResource ThemeAccent2Edge}" CornerRadius="10" Padding="8,2">
                             <TextBlock x:Name="BeatenCount" Text="0"
-                                       Foreground="#e8c870" FontSize="11" FontWeight="Bold"/>
+                                       Foreground="{DynamicResource ThemeText}" FontSize="11" FontWeight="Bold"/>
                         </Border>
                     </Grid>
                 </Border>
-                <Border Grid.Row="1" Background="#1a1408" CornerRadius="0,0,8,8"
-                        BorderBrush="#5a3a1a" BorderThickness="1,0,1,1"
+                <Border Grid.Row="1" Background="{DynamicResource ThemeAccent2Soft}" CornerRadius="0,0,8,8"
+                        BorderBrush="{DynamicResource ThemeAccent2Edge}" BorderThickness="1,0,1,1"
                         AllowDrop="True" Tag="Beaten"
                         DragOver="Column_DragOver" DragLeave="Column_DragLeave"
                         Drop="Column_Drop">

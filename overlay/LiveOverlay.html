@@ -365,6 +365,139 @@
     word-break: break-word;
   }
 
+  /* RPG dialog box */
+  .row.rpg {
+    padding: 0; margin: 0.55em 0 0.5em; position: relative;
+    border: 2px solid var(--rpg-accent, var(--accent)); border-radius: 8px;
+    background: linear-gradient(180deg, rgba(0,0,0,0.86), rgba(0,0,0,0.93)) !important;
+    box-shadow: 0 0 0 2px rgba(0,0,0,0.5), inset 0 0 12px rgba(0,0,0,0.6);
+  }
+  .rpg .rpg-name {
+    position: absolute; top: -0.8em; left: 0.6em; padding: 0.02em 0.5em;
+    border-radius: 5px; font-weight: 800; font-size: 0.8em; color: #080e34;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.6);
+  }
+  .rpg .rpg-name .user { color: #080e34 !important; }
+  .rpg .bbody { background: transparent; color: #fff; padding: 0.5em 0.7em 0.55em; word-break: break-word; }
+  .rpg .rpg-arrow {
+    position: absolute; right: 0.5em; bottom: 0.12em; font-size: 0.7em;
+    color: var(--rpg-accent, var(--accent)); animation: rpgblink 1.1s steps(1) infinite;
+  }
+  @keyframes rpgblink { 0%,50% { opacity: 1; } 51%,100% { opacity: 0; } }
+
+  /* Speech bubbles */
+  .row.speech { display: flex; align-items: flex-start; gap: 0.4em; background: transparent !important; margin: 0.3em 0; padding: 0; }
+  .speech .avatar { width: 1.6em; height: 1.6em; line-height: 1.6em; flex: 0 0 auto; margin-top: 0.2em; }
+  .speech .sbubble {
+    position: relative; background: rgba(0,0,0,0.8); border: 2px solid var(--sp, var(--accent));
+    border-radius: 12px; padding: 0.28em 0.6em; max-width: 88%;
+  }
+  .speech .sbubble::before {
+    content: ""; position: absolute; left: -8px; top: 0.7em;
+    border: 6px solid transparent; border-right-color: var(--sp, var(--accent));
+  }
+  .speech .sname { font-weight: 800; font-size: 0.82em; margin-bottom: 0.05em; }
+  .speech .bbody { background: transparent; color: #fff; padding: 0; word-break: break-word; }
+
+  /* Comic action burst (BAM! / POW!) */
+  .row.comic { background: transparent !important; margin: 0.55em 0; padding: 0; overflow: visible; }
+  .row.comic.enter { opacity: 1; transform: none; }   /* the burst does its own entrance */
+  .comic .cbubble {
+    position: relative; display: inline-block; text-align: center;
+    background: var(--cburst, #ffd21e); padding: 1.15em 1.6em; margin: 0.2em 0.4em; max-width: 80%;
+    clip-path: polygon(50% 0%,61% 20%,83% 8%,79% 32%,100% 35%,82% 50%,100% 65%,79% 68%,83% 92%,61% 80%,50% 100%,39% 80%,17% 92%,21% 68%,0% 65%,18% 50%,0% 35%,21% 32%,17% 8%,39% 20%);
+    transform-origin: center; animation: comicPop 0.42s cubic-bezier(0.2,1.5,0.35,1) both;
+  }
+  .comic .cbubble::before {   /* jagged black outline behind the burst */
+    content: ""; position: absolute; inset: -5px; background: #111; z-index: -1;
+    clip-path: polygon(50% 0%,61% 20%,83% 8%,79% 32%,100% 35%,82% 50%,100% 65%,79% 68%,83% 92%,61% 80%,50% 100%,39% 80%,17% 92%,21% 68%,0% 65%,18% 50%,0% 35%,21% 32%,17% 8%,39% 20%);
+  }
+  .comic .cname {
+    display: block; color: #fff; font-weight: 900; font-size: 0.7em; letter-spacing: 0.5px;
+    margin-bottom: 0.12em; text-transform: uppercase;
+    text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;
+  }
+  .comic .bbody, .comic .bbody .msg {
+    background: transparent !important; color: #fff !important; padding: 0;
+    font-weight: 900; text-transform: uppercase; letter-spacing: 0.3px; word-break: break-word;
+    text-shadow: -1.5px -1.5px 0 #000, 1.5px -1.5px 0 #000, -1.5px 1.5px 0 #000, 1.5px 1.5px 0 #000, 0 2px 3px rgba(0,0,0,0.5);
+  }
+  @keyframes comicPop {
+    0%   { transform: scale(0.2) rotate(-14deg); opacity: 0; }
+    55%  { transform: scale(1.14) rotate(5deg);  opacity: 1; }
+    78%  { transform: scale(0.95) rotate(-3deg); }
+    100% { transform: scale(1) rotate(-3deg);    opacity: 1; }
+  }
+
+  /* Terminal */
+  .row.term {
+    font-family: 'Consolas','Cascadia Code',monospace; font-size: 0.85em;
+    background: transparent !important; margin: 0.03em 0; padding: 0.04em 0.3em;
+  }
+  .term .tprompt, .term .user { font-weight: 700; }
+  .term .msg { color: var(--text); }
+  .term .tcursor { color: var(--accent); margin-left: 1px; animation: tblink 0.9s steps(1) infinite; }
+  @keyframes tblink { 0%,50% { opacity: 1; } 51%,100% { opacity: 0; } }
+
+  /* These modes run their own entrance animation on the bubble, so cancel the row fade. */
+  .row.neon.enter, .row.scroll.enter, .row.coin.enter, .row.holo.enter { opacity: 1; transform: none; }
+
+  /* Neon arcade — glowing sign that flickers on */
+  .row.neon { background: transparent !important; margin: 0.4em 0; padding: 0; }
+  .neon .nbubble {
+    border: 2px solid var(--neon, #17e8e8); border-radius: 10px; padding: 0.35em 0.6em;
+    background: rgba(6, 10, 26, 0.85);
+    box-shadow: 0 0 9px var(--neon, #17e8e8), inset 0 0 9px rgba(255,255,255,0.05);
+    animation: neonIn 0.75s ease both;
+  }
+  .neon .nname { color: var(--neon, #17e8e8); font-weight: 800; font-size: 0.82em; margin-right: 0.35em; text-shadow: 0 0 6px var(--neon, #17e8e8); }
+  .neon .bbody { background: transparent; color: #fff; text-shadow: 0 0 4px rgba(255,255,255,0.4); word-break: break-word; }
+  @keyframes neonIn { 0%{opacity:0} 10%{opacity:1} 13%{opacity:0.25} 19%{opacity:1} 26%{opacity:0.5} 32%{opacity:1} 100%{opacity:1} }
+
+  /* Quest scroll — parchment that unrolls from the top */
+  .row.scroll { background: transparent !important; margin: 0.45em 0; padding: 0; }
+  .scroll .pbubble {
+    background: linear-gradient(180deg, #f3e2b8, #e6cf92); color: #4a2f14;
+    border: 1px solid #b9985a; border-radius: 6px; padding: 0.4em 0.75em;
+    box-shadow: inset 0 0 18px rgba(120,80,30,0.28), 0 3px 8px rgba(0,0,0,0.5);
+    font-family: Georgia, 'Times New Roman', serif;
+    transform-origin: top center; animation: unroll 0.5s cubic-bezier(0.2,0.9,0.3,1) both;
+  }
+  .scroll .sname { color: #7a2e12; font-weight: 800; margin-right: 0.35em; font-family: Georgia, serif; }
+  .scroll .bbody { background: transparent; color: #4a2f14; word-break: break-word; }
+  @keyframes unroll { 0%{transform:scaleY(0);opacity:0} 60%{opacity:1} 100%{transform:scaleY(1);opacity:1} }
+
+  /* ? Block — Mario-style gold block that bounces up */
+  .row.coin { background: transparent !important; margin: 0.45em 0; padding: 0; }
+  .coin .qbubble {
+    display: inline-block; background: linear-gradient(180deg, #ffcf3f, #e8a91e); color: #3a2500;
+    border: 3px solid #7a4d00; border-radius: 6px; padding: 0.35em 0.6em; max-width: 90%;
+    box-shadow: inset -2px -2px 0 rgba(0,0,0,0.25), inset 2px 2px 0 rgba(255,255,255,0.45), 0 3px 0 #7a4d00;
+    animation: blockBounce 0.55s cubic-bezier(0.28,1.55,0.4,1) both;
+  }
+  .coin .qname { color: #7a4d00; font-weight: 900; font-size: 0.8em; margin-right: 0.35em; text-transform: uppercase; }
+  .coin .bbody { background: transparent; color: #3a2500; font-weight: 700; word-break: break-word; }
+  @keyframes blockBounce { 0%{transform:translateY(11px) scale(0.9);opacity:0} 50%{transform:translateY(-6px) scale(1.03);opacity:1} 75%{transform:translateY(2px)} 100%{transform:translateY(0) scale(1)} }
+
+  /* Hologram — translucent sci-fi panel with a scanline sweep */
+  .row.holo { background: transparent !important; margin: 0.4em 0; padding: 0; }
+  .holo .hbubble {
+    position: relative; overflow: hidden;
+    background: linear-gradient(180deg, rgba(60,160,255,0.16), rgba(30,90,180,0.10));
+    border: 1px solid var(--holo, #3aa0ff); border-radius: 8px; padding: 0.35em 0.6em;
+    box-shadow: 0 0 10px var(--holo, #3aa0ff), inset 0 0 12px rgba(58,160,255,0.15);
+    color: #dff1ff; animation: holoIn 0.55s ease both;
+  }
+  .holo .hbubble::after {
+    content: ""; position: absolute; left: 0; right: 0; top: -100%; height: 60%;
+    background: linear-gradient(180deg, transparent, rgba(190,230,255,0.28), transparent);
+    animation: holoScan 2.4s linear infinite;
+  }
+  .holo .hname { color: var(--holo, #3aa0ff); font-weight: 800; font-size: 0.82em; margin-right: 0.35em; text-shadow: 0 0 6px var(--holo, #3aa0ff); }
+  .holo .bbody { background: transparent; color: #dff1ff; word-break: break-word; }
+  @keyframes holoIn { 0%{opacity:0;transform:translateY(4px)} 30%{opacity:0.6} 45%{opacity:0.3} 100%{opacity:1;transform:translateY(0)} }
+  @keyframes holoScan { 0%{top:-100%} 100%{top:160%} }
+
   /* Chatters list box */
   #clRows { flex: 1 1 auto; overflow: hidden; }
   .cl-row { display: flex; align-items: center; gap: 0.35em; margin: 0.14em 0; font-size: 0.8em; }
@@ -1094,32 +1227,107 @@
     return body;
   }
 
+  // Shared builder for the simple "name + body" animated bubble styles.
+  function bubbleMode(row, cls, bubbleCls, nameCls, m, cssVar, color) {
+    row.className = "row " + cls + " enter";
+    const bub = document.createElement("div");
+    bub.className = bubbleCls;
+    if (cssVar && color) bub.style.setProperty(cssVar, color);
+    const nm = document.createElement("span");
+    nm.className = nameCls; nm.textContent = m.user || "";
+    bub.appendChild(nm);
+    bub.appendChild(makeBody(m, true));
+    row.appendChild(bub);
+  }
+
   function buildRow(m, id) {
     const row = document.createElement("div");
     row.dataset.key = id;
 
-    if (chatStyle.mode === "boxes" && chatStyle.colors.length) {
-      // Bubble: colored box with a header line and a dark message body.
-      row.className = "row bubble enter";
-      row.style.background = "transparent";
-      const color = chatStyle.colors[bubbleIdx++ % chatStyle.colors.length];
+    const mode = chatStyle.mode;
+    const pal = (chatStyle.colors && chatStyle.colors.length) ? chatStyle.colors : null;
+    // Palette-driven modes rotate through the box colors; others use the chatter's own color.
+    const color = pal ? pal[bubbleIdx++ % pal.length] : (m.color || CONFIG.defaultUserColor);
 
+    if (mode === "boxes" && pal) {
+      // Colored header + dark body.
+      row.className = "row bubble enter";
       const head = document.createElement("div");
-      head.className = "bhead";
-      head.style.background = color;
+      head.className = "bhead"; head.style.background = color;
       head.appendChild(makeAvatar(m));
       const sym = document.createElement("span");
-      sym.className = "sym";
-      sym.style.color = "#0a1410";
-      sym.textContent = m.symbol || "●";
+      sym.className = "sym"; sym.style.color = "#080e34"; sym.textContent = m.symbol || "●";
       head.appendChild(sym);
       appendBadges(head, m);
       const user = document.createElement("span");
-      user.className = "user";
-      user.textContent = m.user || "";
+      user.className = "user"; user.textContent = m.user || "";
       head.appendChild(user);
       row.appendChild(head);
       row.appendChild(makeBody(m, true));
+    } else if (mode === "rpg") {
+      // JRPG dialog box: accent-bordered panel with a name-plate tab and a ▼ cue.
+      row.className = "row rpg enter";
+      row.style.setProperty("--rpg-accent", color);
+      const name = document.createElement("div");
+      name.className = "rpg-name"; name.style.background = color;
+      appendBadges(name, m);
+      const user = document.createElement("span");
+      user.className = "user"; user.textContent = m.user || "";
+      name.appendChild(user);
+      row.appendChild(name);
+      row.appendChild(makeBody(m, true));
+      const arrow = document.createElement("span");
+      arrow.className = "rpg-arrow"; arrow.textContent = "▼";
+      row.appendChild(arrow);
+    } else if (mode === "speech") {
+      // Rounded speech bubble with an avatar and a little tail.
+      row.className = "row speech enter";
+      row.appendChild(makeAvatar(m));
+      const bub = document.createElement("div");
+      bub.className = "sbubble"; bub.style.setProperty("--sp", color);
+      const user = document.createElement("div");
+      user.className = "sname"; user.style.color = color;
+      appendBadges(user, m);
+      const un = document.createElement("span");
+      un.className = "user"; un.style.color = color; un.textContent = m.user || "";
+      user.appendChild(un);
+      bub.appendChild(user);
+      bub.appendChild(makeBody(m, true));
+      row.appendChild(bub);
+    } else if (mode === "comic") {
+      // Batman-style action burst: spiky starburst that pops in.
+      row.className = "row comic enter";
+      const bub = document.createElement("div");
+      bub.className = "cbubble"; bub.style.setProperty("--cburst", color);
+      const user = document.createElement("span");
+      user.className = "cname"; user.textContent = m.user || "";
+      bub.appendChild(user);
+      bub.appendChild(makeBody(m, true));
+      row.appendChild(bub);
+    } else if (mode === "neon") {
+      bubbleMode(row, "neon", "nbubble", "nname", m, "--neon", color);
+    } else if (mode === "scroll") {
+      bubbleMode(row, "scroll", "pbubble", "sname", m, null, null);
+    } else if (mode === "coin") {
+      bubbleMode(row, "coin", "qbubble", "qname", m, null, null);
+    } else if (mode === "holo") {
+      bubbleMode(row, "holo", "hbubble", "hname", m, "--holo", color);
+    } else if (mode === "terminal") {
+      // Monospace terminal line: "❯ user: message" — the message types itself out.
+      row.className = "row term enter";
+      const pr = document.createElement("span");
+      pr.className = "tprompt"; pr.style.color = color; pr.textContent = "❯ ";
+      row.appendChild(pr);
+      const user = document.createElement("span");
+      user.className = "user"; user.style.color = color; user.textContent = (m.user || "") + ": ";
+      row.appendChild(user);
+      const msg = document.createElement("span");
+      msg.className = "msg";
+      row.appendChild(msg);
+      const cursor = document.createElement("span");
+      cursor.className = "tcursor"; cursor.textContent = "▋";
+      row.appendChild(cursor);
+      typeTerminal(msg, plainText(m), cursor);
     } else {
       // Classic log line with zebra striping.
       row.className = "row enter" + ((chatZebra++ % 2) ? " odd" : "");
@@ -1131,13 +1339,36 @@
       row.appendChild(sym);
       appendBadges(row, m);
       const user = document.createElement("span");
-      user.className = "user";
-      user.style.color = m.color || CONFIG.defaultUserColor;
+      user.className = "user"; user.style.color = m.color || CONFIG.defaultUserColor;
       user.textContent = (m.user || "") + " ";
       row.appendChild(user);
       row.appendChild(makeBody(m, false));
     }
     return row;
+  }
+
+  // Flatten a message to plain text (for the terminal typewriter): emote -> its alt, gif -> [gif].
+  function plainText(m) {
+    const segs = Array.isArray(m.segments) ? m.segments : [];
+    let s = "";
+    for (let i = 0; i < segs.length; i++) {
+      const g = segs[i]; if (!g) continue;
+      s += (g.t === "gif") ? "[gif]" : (g.text || "");
+    }
+    return s;
+  }
+
+  // Type text into a span one char at a time, then drop the cursor. Keeps the view pinned.
+  function typeTerminal(span, text, cursor) {
+    text = text || "";
+    let i = 0; const n = text.length;
+    const delay = Math.max(9, Math.min(30, Math.floor(800 / Math.max(1, n))));
+    (function step() {
+      if (i >= n) { if (cursor && cursor.parentNode) cursor.remove(); scheduleScroll(); return; }
+      span.textContent += text.charAt(i++);
+      if ((i & 3) === 0) scheduleScroll();
+      setTimeout(step, delay);
+    })();
   }
 
   function appendMessage(m) {

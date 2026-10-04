@@ -164,6 +164,13 @@ namespace GameTracker.Views
         private DateTime _dedupPruned = DateTime.MinValue;
         private static readonly TimeSpan DedupWindow = TimeSpan.FromMinutes(3);
 
+        // Zero-width characters and Unicode "tag" characters (U+E0000–E007F). Chat clients
+        // like 7TV/Chatterino append U+E0000 to bypass Twitch's repeat filter, and one
+        // connector may keep it while another strips it — ignore them when comparing.
+        private static readonly System.Text.RegularExpressions.Regex InvisibleChars = new(
+            @"[\u200B-\u200D\u2060\uFEFF\u034F\u180E]|\uDB40[\uDC00-\uDC7F]",
+            System.Text.RegularExpressions.RegexOptions.Compiled);
+
         private bool IsDuplicateChat(ChatMessage m)
         {
             var now = DateTime.UtcNow;
@@ -174,11 +181,20 @@ namespace GameTracker.Views
                                             .Select(kv => kv.Key).ToList())
                     _dedupSeen.Remove(k);
             }
-            // Content signature includes emote/GIF URLs so two different images from
-            // the same user aren't mistaken for a repeat.
-            var content = string.Concat(m.Segments.Select(s =>
-                (int)s.Kind + ":" + (s.Text.Length > 0 ? s.Text : s.Url) + "⁤"));
-            var key = m.Platform + "␟" + m.User + "␟" + content;
+            // Key on the message's normalized PLAIN TEXT, not its segment structure. The same
+            // Twitch line arrives from Twitch direct (emotes split into their own segments) and
+            // from Social Stream Ninja / Restream (parsed from HTML/plain text) — different
+            // segments, same words. A structure-based key missed those, so TTS read the line
+            // twice a second apart (the "echo"). Emote names and HTML entities already come
+            // through as the same text from every parser. Image-only messages (no text) fall
+            // back to their URLs so two different GIFs aren't mistaken for a repeat.
+            var text = InvisibleChars.Replace(m.Text ?? string.Empty, "");
+            text = System.Text.RegularExpressions.Regex.Replace(text, @"\s+", " ").Trim().ToLowerInvariant();
+            var content = text.Length > 0
+                ? text
+                : string.Concat(m.Segments.Select(s => s.Url + "⁤"));
+            var key = (m.Platform ?? string.Empty).Trim().ToLowerInvariant() + "␟" +
+                      (m.User ?? string.Empty).Trim().ToLowerInvariant() + "␟" + content;
             if (_dedupSeen.TryGetValue(key, out var t) && now - t <= DedupWindow)
                 return true;
             _dedupSeen[key] = now;

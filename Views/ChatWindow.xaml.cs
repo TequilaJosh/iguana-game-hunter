@@ -233,6 +233,39 @@ namespace GameTracker.Views
             });
         }
 
+        // ---- carry the chat across an update restart ----
+
+        /// <summary>The chat as it stands (every shown message, oldest first) plus whether any
+        /// source was connected — saved just before the app restarts to apply an update.</summary>
+        public ChatSnapshot Snapshot() => Dispatcher.Invoke(() => new ChatSnapshot
+        {
+            WasConnected = _twitch.IsConnected || _ssn.IsConnected || _restream.IsConnected,
+            Messages = _rows.Select(r => r.Source).Where(s => s != null).Select(s => s!).ToList(),
+        });
+
+        /// <summary>
+        /// Put the pre-update chat back: rows in the window and the overlay's recent lines.
+        /// Display only — no TTS, points, commands or stats fire again. Each line is also
+        /// registered with the duplicate filter, so when SSN replays its recent history on
+        /// reconnect those lines don't appear twice. Reconnects if chat was live before.
+        /// </summary>
+        public void RestoreHistory(ChatSnapshot? snapshot)
+        {
+            if (snapshot == null) return;
+            foreach (var m in snapshot.Messages)
+            {
+                if (m == null || m.IsEvent || IsDuplicateChat(m)) continue;
+                _rows.Add(ToRow(m));
+                _recent.Add(m);
+            }
+            while (_rows.Count > MaxMessages) _rows.RemoveAt(0);
+            while (_recent.Count > _overlayLines) _recent.RemoveAt(0);
+            _chatDirty = true;   // the overlay timer pushes the restored lines to OBS
+            MsgScroll.ScrollToEnd();
+
+            if (snapshot.WasConnected) ConnectSaved();
+        }
+
         private void HandleCommands(ChatMessage m)
         {
             var text = m.Text ?? string.Empty;
@@ -706,6 +739,7 @@ namespace GameTracker.Views
                 Initial = initial,
                 RowBrush = (_zebra++ % 2 == 0) ? ZebraNone : ZebraDark,
                 BoxBrush = boxBrush,
+                Source = m,
             };
         }
 
@@ -1105,6 +1139,8 @@ namespace GameTracker.Views
             public string Initial { get; set; } = string.Empty;
             public Brush RowBrush { get; set; } = Brushes.Transparent;
             public Brush BoxBrush { get; set; } = Brushes.DarkOliveGreen;
+            /// <summary>The message this row shows — kept so the chat can be saved across an update restart.</summary>
+            public ChatMessage? Source { get; set; }
         }
     }
 }

@@ -844,16 +844,21 @@ namespace GameTracker
             foreach (var id in _hltbWindows.Keys) open.Add(new() { Type = "hltb", GameId = id.ToString() });
             foreach (var id in _sessionWindows.Keys) open.Add(new() { Type = "session", GameId = id.ToString() });
             Services.WindowStateService.Save(open);
+            // Keep the live chat too, so it comes back showing what was there.
+            if (_chatWindow != null) Services.ChatHistoryService.Save(_chatWindow.Snapshot());
         }
 
         private void RestoreOpenWindows()
         {
+            // Always consume the chat snapshot (so a stale one never lingers); it's applied
+            // only if the chat window is among the windows being reopened.
+            var chatHistory = Services.ChatHistoryService.LoadAndClear();
             foreach (var w in Services.WindowStateService.LoadAndClear())
             {
                 Guid.TryParse(w.GameId, out var id);
                 switch (w.Type)
                 {
-                    case "chat": OpenChatWindow(); break;
+                    case "chat": OpenChatWindow().RestoreHistory(chatHistory); break;
                     case "wheel": OpenWheelFor(id); break;
                     case "guide": OpenGuideFor(id); break;
                     case "hltb": OpenHltbFor(id); break;

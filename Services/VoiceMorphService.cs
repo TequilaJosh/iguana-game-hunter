@@ -14,8 +14,9 @@ namespace GameTracker.Services
     /// Live streamer voice morph. Runs the mic through an NWaves DSP chain continuously
     /// (dry passthrough when no morph is active) and plays it to a chosen output device.
     /// Capture it in OBS with an "Application Audio Capture" source.
-    /// Redeems activate a preset for its TimerSeconds; the overlay shows a countdown and
-    /// the voice auto-reverts to dry at zero.
+    /// Redeems activate a preset for its TimerSeconds; several redeems stack (their effects
+    /// combine, the stronger winning where they share one), each dropping out when its own
+    /// timer ends. The overlay counts down to when the voice is fully back to dry.
     /// </summary>
     public static class VoiceMorphService
     {
@@ -300,102 +301,199 @@ namespace GameTracker.Services
             return list.ToArray();
         }
 
-        /// <summary>Build the DSP chain for a preset (shared with previews).</summary>
-        private static Chain BuildChain(MorphPreset p, int sampleRate)
-        {
-            var chain = new Chain();
-            if (p.PitchSemitones != 0)
-                chain.Pitch = new PitchShiftVocoderEffect(sampleRate, Math.Pow(2, p.PitchSemitones / 12.0));
+        // ---- effect stages (what lets several voices combine) ----
 
-            // Mixer voices: blend every fader that's off-centre, in a fixed processing order.
-            // Positive = the effect; negative (bidirectional faders only) = its opposite.
+        /// <summary>One effect in a voice: which effect it is (<paramref name="Key"/>), how strong
+        /// (<paramref name="Amount"/>, -1..1 — only the bidirectional "tone" uses the sign), and how
+        /// to build its filter. When voices stack, each Key is used once, from the strongest voice.</summary>
+        private sealed record Stage(string Key, float Amount, Func<int, IOnlineFilter> Make);
+
+        // Processing order for combined chains: tone → spectral → modulation → space. Every
+        // single voice's own effects already run in this relative order, so a voice on its own
+        // sounds exactly as it did before stacking existed.
+        private static readonly string[] StageOrder =
+            { "tone", "robot", "whisper", "autowah", "flanger", "vibrato", "wobble", "chorus", "reverb", "echo" };
+
+        /// <summary>A preset broken into keyed effect stages.</summary>
+        private static List<Stage> PresetStages(MorphPreset p)
+        {
+            var list = new List<Stage>();
+
+            // Mixer voices: every off-centre fader. Positive = the effect; negative
+            // (bidirectional faders only) = its opposite.
             if (p.Mix != null && p.Mix.Values.Any(v => v != 0))
             {
-                var list = new List<IOnlineFilter>();
                 foreach (var bar in MixBars)
                 {
                     if (!p.Mix.TryGetValue(bar.Key, out var amt) || amt == 0) continue;
-                    IOnlineFilter? fx = amt > 0
-                        ? MakeEffect(bar.Key, sampleRate)
-                        : (bar.Bidir ? MakeEffectInverse(bar.Key, sampleRate) : null);
-                    if (fx != null)
-                        list.Add(new WetDryFilter(fx, Math.Clamp(Math.Abs(amt), 0, 100) / 100f));
+                    var key = bar.Key;
+                    float wet = Math.Clamp(Math.Abs(amt), 0, 100) / 100f;
+                    if (amt > 0)
+                        list.Add(new Stage(key, wet, sr => new WetDryFilter(MakeEffect(key, sr)!, wet)));
+                    else if (bar.Bidir)
+                        list.Add(new Stage(key, -wet, sr => new WetDryFilter(MakeEffectInverse(key, sr)!, wet)));
                 }
-                chain.Fx = list.Count > 0 ? list.ToArray() : null;
-                return chain;
+                return list;
             }
 
-            // Legacy single-effect voices (the Voice Redeems editor and older saved presets).
-            chain.Fx = p.Effect switch
+            // Legacy single-effect voices (the Voice Redeems editor and older saved presets),
+            // mapped onto the mixer's effect keys where they're the same kind of effect.
+            switch (p.Effect)
             {
-                "robot" => new IOnlineFilter[] { new RobotEffect(hopSize: 128, fftSize: 512) },
-                "whisper" => new IOnlineFilter[] { new WhisperEffect(hopSize: 128, fftSize: 512) },
-                "echo" => new IOnlineFilter[] { new EchoEffect(sampleRate, 0.22f, 0.5f) },
-                "distortion" => new IOnlineFilter[] { new DistortionEffect(DistortionMode.SoftClipping, 18) },
-                "flanger" => new IOnlineFilter[] { new FlangerEffect(sampleRate) },
-                "vibrato" => new IOnlineFilter[] { new VibratoEffect(sampleRate) },
-                "tremolo" => new IOnlineFilter[] { new TremoloEffect(sampleRate, 0.7f, 7) },
-                "autowah" => new IOnlineFilter[] { new AutowahEffect(sampleRate) },
+                case "robot":      list.Add(new Stage("robot", 1f, sr => new RobotEffect(hopSize: 128, fftSize: 512))); break;
+                case "whisper":    list.Add(new Stage("whisper", 1f, sr => new WhisperEffect(hopSize: 128, fftSize: 512))); break;
+                case "echo":       list.Add(new Stage("echo", 1f, sr => new EchoEffect(sr, 0.22f, 0.5f))); break;
+                case "distortion": list.Add(new Stage("tone", 1f, sr => new DistortionEffect(DistortionMode.SoftClipping, 18))); break;
+                case "flanger":    list.Add(new Stage("flanger", 1f, sr => new FlangerEffect(sr))); break;
+                case "vibrato":    list.Add(new Stage("vibrato", 1f, sr => new VibratoEffect(sr))); break;
+                case "tremolo":    list.Add(new Stage("wobble", 1f, sr => new TremoloEffect(sr, 0.7f, 7))); break;
+                case "autowah":    list.Add(new Stage("autowah", 1f, sr => new AutowahEffect(sr))); break;
 
                 // The "voice of God" family — deep pitch (set via the preset) plus a big
                 // reverberant space, a layered chorus and a booming echo.
-                "yhwh" => new IOnlineFilter[]
-                {
-                    new ChorusEffect(sampleRate, new[] { 0.5f, 0.9f }, new[] { 0.002f, 0.0025f }),
-                    new ReverbFilter(sampleRate, roomSize: 0.90f, damp: 0.20f, wet: 0.55f),
-                    new EchoEffect(sampleRate, 0.25f, 0.3f),
-                },
-                "cathedral" => new IOnlineFilter[]
-                {
-                    new ReverbFilter(sampleRate, roomSize: 0.94f, damp: 0.15f, wet: 0.60f),
-                    new EchoEffect(sampleRate, 0.35f, 0.35f),
-                },
-                "angelic" => new IOnlineFilter[]
-                {
-                    new ChorusEffect(sampleRate, new[] { 0.8f, 1.2f, 1.6f }, new[] { 0.0025f, 0.003f, 0.0035f }),
-                    new ReverbFilter(sampleRate, roomSize: 0.85f, damp: 0.30f, wet: 0.50f),
-                },
+                case "yhwh":
+                    list.Add(new Stage("chorus", 1f, sr => new ChorusEffect(sr, new[] { 0.5f, 0.9f }, new[] { 0.002f, 0.0025f })));
+                    list.Add(new Stage("reverb", 1f, sr => new ReverbFilter(sr, roomSize: 0.90f, damp: 0.20f, wet: 0.55f)));
+                    list.Add(new Stage("echo", 1f, sr => new EchoEffect(sr, 0.25f, 0.3f)));
+                    break;
+                case "cathedral":
+                    list.Add(new Stage("reverb", 1f, sr => new ReverbFilter(sr, roomSize: 0.94f, damp: 0.15f, wet: 0.60f)));
+                    list.Add(new Stage("echo", 1f, sr => new EchoEffect(sr, 0.35f, 0.35f)));
+                    break;
+                case "angelic":
+                    list.Add(new Stage("chorus", 1f, sr => new ChorusEffect(sr, new[] { 0.8f, 1.2f, 1.6f }, new[] { 0.0025f, 0.003f, 0.0035f })));
+                    list.Add(new Stage("reverb", 1f, sr => new ReverbFilter(sr, roomSize: 0.85f, damp: 0.30f, wet: 0.50f)));
+                    break;
                 // Skeletor — matches the mixer preset: heavy raspy grit + a strong wobble.
-                "skeletor" => new IOnlineFilter[]
-                {
-                    new WetDryFilter(new DistortionEffect(DistortionMode.SoftClipping, 22), 0.76f),
-                    new WetDryFilter(new TremoloEffect(sampleRate, 0.7f, 6), 0.69f),
-                },
-                _ => null,
-            };
+                case "skeletor":
+                    list.Add(new Stage("tone", 0.76f, sr => new WetDryFilter(new DistortionEffect(DistortionMode.SoftClipping, 22), 0.76f)));
+                    list.Add(new Stage("wobble", 0.69f, sr => new WetDryFilter(new TremoloEffect(sr, 0.7f, 6), 0.69f)));
+                    break;
+            }
+            return list;
+        }
+
+        /// <summary>
+        /// Combine voices (oldest first) into one chain. Different effects all apply; when two
+        /// voices share an effect, the stronger one wins. Pitch likewise takes the biggest shift.
+        /// Ties go to the newer voice. A single voice yields exactly its own chain.
+        /// </summary>
+        private static Chain Merge(IEnumerable<MorphPreset> presets, int sampleRate)
+        {
+            int pitch = 0;
+            var best = new Dictionary<string, Stage>();
+            foreach (var p in presets)
+            {
+                if (p.PitchSemitones != 0 && Math.Abs(p.PitchSemitones) >= Math.Abs(pitch))
+                    pitch = p.PitchSemitones;
+                foreach (var st in PresetStages(p))
+                    if (!best.TryGetValue(st.Key, out var cur) || Math.Abs(st.Amount) >= Math.Abs(cur.Amount))
+                        best[st.Key] = st;
+            }
+
+            var chain = new Chain();
+            if (pitch != 0)
+                chain.Pitch = new PitchShiftVocoderEffect(sampleRate, Math.Pow(2, pitch / 12.0));
+            var ordered = best.Values
+                .OrderBy(s => { int i = Array.IndexOf(StageOrder, s.Key); return i < 0 ? int.MaxValue : i; })
+                .Select(s => s.Make(sampleRate))
+                .ToArray();
+            chain.Fx = ordered.Length > 0 ? ordered : null;
             return chain;
         }
 
-        /// <summary>Activate a saved morph by name; auto-reverts after its TimerSeconds.</summary>
+        /// <summary>Build the DSP chain for a preset (shared with previews).</summary>
+        private static Chain BuildChain(MorphPreset p, int sampleRate) => Merge(new[] { p }, sampleRate);
+
+        // Voices currently on, oldest first. Each keeps its own end time; the live chain is
+        // all of them merged (see Merge). Guarded by MorphGate (separate from the device Gate).
+        private sealed class ActiveVoice { public MorphPreset Preset = null!; public DateTime EndsUtc; }
+        private static readonly List<ActiveVoice> _active = new();
+        private static readonly object MorphGate = new();
+
+        /// <summary>Activate a saved morph by name (redeems). Stacks on top of any voices already
+        /// on — each runs for its own TimerSeconds — instead of replacing them.</summary>
         public static bool ActivateByName(string name)
         {
             var s = SettingsService.LoadMorph();
             var p = s.Presets.FirstOrDefault(x => x.Name.Equals(name, StringComparison.OrdinalIgnoreCase));
             if (p == null) return false;
-            return Activate(p);
+            return Activate(p, stack: true);
         }
 
-        public static bool Activate(MorphPreset p)
+        /// <summary>
+        /// Turn a voice on for its TimerSeconds. <paramref name="stack"/> = true (redeems) layers it
+        /// with whatever's already on; false (Voice Morph lab audition) replaces everything so you
+        /// hear only this voice.
+        /// </summary>
+        public static bool Activate(MorphPreset p, bool stack = false)
         {
             if (!IsRunning && !Start()) return false;
-            int sr = _capture?.WaveFormat.SampleRate ?? 48000;
-            _chain = BuildChain(p, sr);
-            _activeName = p.Name;
-
-            _revert?.Dispose();
             int secs = Math.Max(5, p.TimerSeconds);
-            _revert = new Timer(_ => ClearMorph(broadcast: true), null, TimeSpan.FromSeconds(secs), Timeout.InfiniteTimeSpan);
-            OverlayServer.SetMorph(p.Name, secs);
+            lock (MorphGate)
+            {
+                if (!stack) _active.Clear();
+                var ends = DateTime.UtcNow.AddSeconds(secs);
+                // Redeeming a voice that's already on refreshes it (keeps the later end time) and
+                // makes it the newest layer, rather than stacking a second copy of it.
+                int i = _active.FindIndex(a => SameVoice(a.Preset, p));
+                if (i >= 0)
+                {
+                    if (_active[i].EndsUtc > ends) ends = _active[i].EndsUtc;
+                    _active.RemoveAt(i);
+                }
+                _active.Add(new ActiveVoice { Preset = p, EndsUtc = ends });
+                RebuildLocked();
+            }
             return true;
         }
 
-        /// <summary>Back to the streamer's normal (dry) voice.</summary>
-        public static void ClearMorph(bool broadcast = true)
+        private static bool SameVoice(MorphPreset a, MorphPreset b) =>
+            ReferenceEquals(a, b) ||
+            (!string.IsNullOrEmpty(a.Name) && string.Equals(a.Name, b.Name, StringComparison.OrdinalIgnoreCase));
+
+        // Drop expired voices, rebuild the merged chain, re-arm the timer for the next voice to
+        // end, and update the overlay pill. Call with MorphGate held.
+        private static void RebuildLocked()
         {
-            _chain = null;
-            _activeName = string.Empty;
+            var now = DateTime.UtcNow;
+            _active.RemoveAll(a => a.EndsUtc <= now);
             _revert?.Dispose();
             _revert = null;
+
+            if (_active.Count == 0)
+            {
+                _chain = null;
+                _activeName = string.Empty;
+                OverlayServer.SetMorph(null, 0);
+                return;
+            }
+
+            int sr = _capture?.WaveFormat.SampleRate ?? 48000;
+            _chain = Merge(_active.Select(a => a.Preset), sr);
+            _activeName = string.Join(" + ", _active.Select(a => a.Preset.Name));
+
+            // Wake when the next voice ends so it drops out on time; the others keep going.
+            var due = _active.Min(a => a.EndsUtc) - now;
+            if (due < TimeSpan.FromMilliseconds(50)) due = TimeSpan.FromMilliseconds(50);
+            _revert = new Timer(_ => { lock (MorphGate) RebuildLocked(); }, null, due, Timeout.InfiniteTimeSpan);
+
+            // The overlay counts down to when the voice is fully back to normal.
+            int untilNormal = (int)Math.Ceiling((_active.Max(a => a.EndsUtc) - now).TotalSeconds);
+            OverlayServer.SetMorph(_activeName, untilNormal);
+        }
+
+        /// <summary>Back to the streamer's normal (dry) voice — turns every active voice off.</summary>
+        public static void ClearMorph(bool broadcast = true)
+        {
+            lock (MorphGate)
+            {
+                _active.Clear();
+                _chain = null;
+                _activeName = string.Empty;
+                _revert?.Dispose();
+                _revert = null;
+            }
             if (broadcast) OverlayServer.SetMorph(null, 0);
         }
     }

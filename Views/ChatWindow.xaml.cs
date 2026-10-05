@@ -302,6 +302,23 @@ namespace GameTracker.Views
                 return;
             }
 
+            // "!roll [NdM[+K]]" -> roll dice: "1d10" -> 7; "3d6" -> 4, 2, 6 = 12. Bare "!roll" = 1d20.
+            if (string.Equals(cmd, "!roll", StringComparison.OrdinalIgnoreCase))
+            {
+                var spec = parts.Length == 2 ? parts[1].Trim() : string.Empty;
+                if (DiceService.TryRoll(spec, out var roll, out var error))
+                {
+                    var result = $"rolled {roll!.Spec}: {roll.Describe()}";
+                    OverlayServer.Toast($"🎲 {m.User} {result}", confetti: false);
+                    SendChatReply($"@{m.User} 🎲 {result}", m.Platform);
+                }
+                else
+                {
+                    SendChatReply($"@{m.User} 🎲 {error} — try !roll 1d20 or !roll 3d6", m.Platform);
+                }
+                return;
+            }
+
             // "!points" (or "!<points name>") -> balance toast + optional chat reply.
             if (_features.PointsEnabled && IsBalanceCommand(cmd))
             {
@@ -448,7 +465,7 @@ namespace GameTracker.Views
                 case "commands":
                 case "command":
                     text = $"Commands: {balanceCmd} = your {pointsName} · !request <game> = suggest a game · " +
-                           "!vote <#> = vote in the poll · !ghhelp redeems = spendable rewards";
+                           "!vote <#> = vote in the poll · !roll 3d6 = roll dice · !ghhelp redeems = spendable rewards";
                     break;
 
                 case "redeems":

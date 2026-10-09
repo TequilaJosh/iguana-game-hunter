@@ -449,32 +449,32 @@ namespace GameTracker.Views
 
         private void Save_Click(object sender, RoutedEventArgs e)
         {
-            var f = new ChatFeatureSettings
-            {
-                ShowCount = ShowCountCb.IsChecked == true,
-                CountPerSource = PerSourceCb.IsChecked == true,
-                CountOnOverlay = CountOverlayCb.IsChecked == true,
-                ShowChattersOnOverlay = ChattersOverlayCb.IsChecked == true,
-                ReplyInChat = ReplyCb.IsChecked == true,
-                PostClips = PostClipsCb.IsChecked == true,
-                DiscordWebhook = (DiscordWebhookBox.Password ?? string.Empty).Trim(),
-                BotIngestUrl = (BotIngestUrlBox.Text ?? string.Empty).Trim(),
-                BotIngestToken = (BotIngestTokenBox.Password ?? string.Empty).Trim(),
-                RpgEnabled = RpgEnabledCb.IsChecked == true,
-                LurkMinutes = ParseInt(LurkBox.Text, 5, 1, 720),
-                RemoveMinutes = ParseInt(RemoveBox.Text, 15, 1, 1440),
-                PointsEnabled = PointsCb.IsChecked == true,
-                PointsName = string.IsNullOrWhiteSpace(PointsNameBox.Text) ? "Points" : PointsNameBox.Text.Trim(),
-                PointsIntervalMinutes = ParseInt(PointsIntervalBox.Text, 5, 1, 720),
-                PointsPerInterval = ParseInt(PointsAmountBox.Text, 10, 1, 1000000),
-                FirstChatterBonus = ParseInt(FirstBonusBox.Text, 50, 0, 1000000),
-                StreakBonusPerDay = ParseInt(StreakBonusBox.Text, 10, 0, 1000000),
-                BalanceCommand = NormalizeCommand(BalanceCmdBox.Text),
-                ChatStyle = (StyleCombo.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Tag as string ?? "log",
-                BoxColors = _colors.Select(c => c.Hex.Trim())
-                                   .Where(IsHex).Take(10).ToList(),
-                Redeems = BuildRedeems(),
-            };
+            // Start from what's saved and change only the fields this window edits. Building a
+            // fresh object here used to reset settings owned by other windows — notably the
+            // Gift Alerts tiers (and their sounds) — back to defaults on every save.
+            var f = SettingsService.LoadChatFeatures();
+            f.ShowCount = ShowCountCb.IsChecked == true;
+            f.CountPerSource = PerSourceCb.IsChecked == true;
+            f.CountOnOverlay = CountOverlayCb.IsChecked == true;
+            f.ShowChattersOnOverlay = ChattersOverlayCb.IsChecked == true;
+            f.ReplyInChat = ReplyCb.IsChecked == true;
+            f.PostClips = PostClipsCb.IsChecked == true;
+            f.DiscordWebhook = (DiscordWebhookBox.Password ?? string.Empty).Trim();
+            f.BotIngestUrl = (BotIngestUrlBox.Text ?? string.Empty).Trim();
+            f.BotIngestToken = (BotIngestTokenBox.Password ?? string.Empty).Trim();
+            f.RpgEnabled = RpgEnabledCb.IsChecked == true;
+            f.LurkMinutes = ParseInt(LurkBox.Text, 5, 1, 720);
+            f.RemoveMinutes = ParseInt(RemoveBox.Text, 15, 1, 1440);
+            f.PointsEnabled = PointsCb.IsChecked == true;
+            f.PointsName = string.IsNullOrWhiteSpace(PointsNameBox.Text) ? "Points" : PointsNameBox.Text.Trim();
+            f.PointsIntervalMinutes = ParseInt(PointsIntervalBox.Text, 5, 1, 720);
+            f.PointsPerInterval = ParseInt(PointsAmountBox.Text, 10, 1, 1000000);
+            f.FirstChatterBonus = ParseInt(FirstBonusBox.Text, 50, 0, 1000000);
+            f.StreakBonusPerDay = ParseInt(StreakBonusBox.Text, 10, 0, 1000000);
+            f.BalanceCommand = NormalizeCommand(BalanceCmdBox.Text);
+            f.ChatStyle = (StyleCombo.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Tag as string ?? "log";
+            f.BoxColors = _colors.Select(c => c.Hex.Trim()).Where(IsHex).Take(10).ToList();
+            f.Redeems = BuildRedeems();
             if (f.BoxColors.Count == 0) f.BoxColors = new ChatFeatureSettings().BoxColors;
 
             SettingsService.SaveChatFeatures(f);

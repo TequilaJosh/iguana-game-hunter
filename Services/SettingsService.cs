@@ -206,7 +206,7 @@ namespace GameTracker.Services
         public static void RunMigrations()
         {
             var s = LoadAll();
-            if (s.MigrationRev >= 2) return;
+            if (s.MigrationRev >= 3) return;
 
             if (s.MigrationRev < 1)
             {
@@ -220,12 +220,21 @@ namespace GameTracker.Services
                 }
             }
 
-            // Rev 2: TTS max spoken length default went 200 -> 500 (long messages were
-            // audibly cutting off). Only bump users still on the old shipped default.
-            s.Tts ??= new ChatTtsSettings();
-            if (s.Tts.MaxChars == 200) s.Tts.MaxChars = 500;
+            if (s.MigrationRev < 2)
+            {
+                // Rev 2: TTS max spoken length default went 200 -> 500 (long messages were
+                // audibly cutting off). Only bump users still on the old shipped default.
+                s.Tts ??= new ChatTtsSettings();
+                if (s.Tts.MaxChars == 200) s.Tts.MaxChars = 500;
+            }
 
-            s.MigrationRev = 2;
+            // Rev 3: redeem video sound through Game Hunter became on-by-default. v1.0.85
+            // shipped it off (and saved that), so anyone with it off is on the old default —
+            // turn it on once; it stays whatever the streamer picks after this.
+            s.Features ??= new ChatFeatureSettings();
+            s.Features.VideoAudioThroughApp = true;
+
+            s.MigrationRev = 3;
             SaveAll(s);
         }
 

@@ -265,7 +265,7 @@
                     <CheckBox x:Name="VideoAudioAppCb" Style="{StaticResource Chk}" Margin="0,4,0,0"
                               Content="Play redeem video sound through Game Hunter"/>
                     <TextBlock Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" Margin="0,2,0,8" TextWrapping="Wrap"
-                               Text="Turn on if OBS captures Game Hunter's audio (e.g. a 'Voice Morpher' Application Audio Capture). Videos then show muted on the overlay and Game Hunter plays their sound, in sync — so the browser source doesn't need 'Control audio via OBS'. Leave off otherwise, or redeem videos will be silent on stream."/>
+                               Text="On by default. Videos show muted on the overlay and Game Hunter plays their sound, in sync — it reaches the stream through Desktop Audio or an OBS capture of Game Hunter (e.g. the 'Voice Morpher' Application Audio Capture), so the browser source doesn't need 'Control audio via OBS'. Turn off only if OBS captures neither and you use 'Control audio via OBS' on the browser source instead."/>
                     <ItemsControl x:Name="RedeemList">
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>

@@ -46,9 +46,10 @@ namespace GameTracker.Models
         public bool ReplyInChat { get; set; } = true;
 
         // Redeem videos: Game Hunter plays the soundtrack itself (and the overlay shows the
-        // video muted), so an OBS capture of the app's audio — e.g. the Voice Morpher source —
-        // carries it. Off by default: without such a capture, videos would be silent on stream.
-        public bool VideoAudioThroughApp { get; set; } = false;
+        // video muted), so it reaches the stream through Desktop Audio or an OBS capture of the
+        // app (e.g. the Voice Morpher source) — no "Control audio via OBS" needed. On by default;
+        // turn off only if OBS captures neither and you rely on the browser source's own audio.
+        public bool VideoAudioThroughApp { get; set; } = true;
 
         // Points (on by default: 25 points every 5 minutes)
         public bool PointsEnabled { get; set; } = true;

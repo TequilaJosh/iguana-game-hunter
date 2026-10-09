@@ -105,7 +105,7 @@
                         Style="{StaticResource Btn}" HorizontalAlignment="Left" Margin="0,0,0,8"
                         ToolTip="Open the step-by-step OBS setup guide"/>
                 <TextBlock Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,6"
-                           Text="To get this into your stream: in OBS add an 'Application Audio Capture (BETA)' source (NOT 'Audio Input Capture') with its Window set to Game Tracker, then mute your raw Mic source. Output here is only what YOU hear back — OBS captures the app no matter which device you pick. See Settings → How to → 'Voice Morph → OBS' for the full walkthrough."/>
+                           Text="To get this into your stream: in OBS add an 'Application Audio Capture (BETA)' source (NOT 'Audio Input Capture') with its Window set to Game Tracker, then mute your raw Mic source — if you leave it on, your voice reaches the stream twice (straight from the mic, then again a moment later through the app) and sounds like an echo. Output here is only what YOU hear back — OBS captures the app no matter which device you pick. See Settings → How to → 'Voice Morph → OBS' for the full walkthrough."/>
                 <TextBlock x:Name="OutputWarn" Foreground="{DynamicResource ThemeAccent2}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8"
                            Visibility="Collapsed"
                            Text="⚠ Output is set to 🔇 None, so nothing plays and there's no audio for OBS to capture. Pick a real device (🎧 System default is fine) if you want the morph on stream."/>

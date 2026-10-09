@@ -175,8 +175,21 @@ namespace GameTracker
             UnregisterHotKey(_hwnd, HK_FX_STOP);
         }
 
+        private const int WM_QUERYENDSESSION = 0x0011;
+        private const long ENDSESSION_CLOSEAPP = 0x1;
+
         private IntPtr WndHook(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled)
         {
+            // An installer is closing the app so it can update it (Windows Restart Manager sends
+            // "close app"): e.g. the streamer ran the installer over the running app instead of
+            // using the auto-updater. Save the open windows and live chat exactly like the
+            // auto-updater does, so they come back after the install. Not set as handled — the
+            // normal close continues. (A plain quit or PC shutdown doesn't carry this flag.)
+            if (msg == WM_QUERYENDSESSION && (lParam.ToInt64() & ENDSESSION_CLOSEAPP) != 0)
+            {
+                try { SaveOpenWindows(); } catch { /* best-effort — never block the install */ }
+            }
+
             if (msg == WM_HOTKEY)
             {
                 int id = wParam.ToInt32();

@@ -181,23 +181,55 @@ namespace GameTracker.Views
                                             .Select(kv => kv.Key).ToList())
                     _dedupSeen.Remove(k);
             }
-            // Key on the message's normalized PLAIN TEXT, not its segment structure. The same
-            // Twitch line arrives from Twitch direct (emotes split into their own segments) and
-            // from Social Stream Ninja / Restream (parsed from HTML/plain text) — different
-            // segments, same words. A structure-based key missed those, so TTS read the line
-            // twice a second apart (the "echo"). Emote names and HTML entities already come
-            // through as the same text from every parser. Image-only messages (no text) fall
-            // back to their URLs so two different GIFs aren't mistaken for a repeat.
+            var key = ChatKey(m);
+            if (_dedupSeen.TryGetValue(key, out var t) && now - t <= DedupWindow)
+                return true;
+            _dedupSeen[key] = now;
+            return false;
+        }
+
+        /// <summary>
+        /// Identity of a chat line for duplicate checks: platform + user + the message's
+        /// normalized PLAIN TEXT (not its segment structure). The same Twitch line arrives from
+        /// Twitch direct (emotes split into their own segments) and from Social Stream Ninja /
+        /// Restream (parsed from HTML/plain text) — different segments, same words. Invisible
+        /// characters are stripped, whitespace collapsed, everything case-folded. Image-only
+        /// messages (no text) fall back to their URLs so two different GIFs aren't merged.
+        /// </summary>
+        private static string ChatKey(ChatMessage m)
+        {
             var text = InvisibleChars.Replace(m.Text ?? string.Empty, "");
             text = System.Text.RegularExpressions.Regex.Replace(text, @"\s+", " ").Trim().ToLowerInvariant();
             var content = text.Length > 0
                 ? text
                 : string.Concat(m.Segments.Select(s => s.Url + "⁤"));
-            var key = (m.Platform ?? string.Empty).Trim().ToLowerInvariant() + "␟" +
-                      (m.User ?? string.Empty).Trim().ToLowerInvariant() + "␟" + content;
-            if (_dedupSeen.TryGetValue(key, out var t) && now - t <= DedupWindow)
-                return true;
-            _dedupSeen[key] = now;
+            return (m.Platform ?? string.Empty).Trim().ToLowerInvariant() + "␟" +
+                   (m.User ?? string.Empty).Trim().ToLowerInvariant() + "␟" + content;
+        }
+
+        // ---- TTS replay guard ----
+        // When Social Stream Ninja refreshes it re-sends the chat still on its page. On a slow
+        // chat those lines are older than the 3-minute duplicate window above, so they'd be read
+        // aloud a second time. TTS keeps its own, longer memory of what it has already read: the
+        // same person's same line isn't spoken again within SpokenWindow. Only TTS uses this —
+        // chat display and commands keep the short window, so a deliberate repeat still works.
+        private readonly Dictionary<string, DateTime> _spoken = new();
+        private DateTime _spokenPruned = DateTime.MinValue;
+        private static readonly TimeSpan SpokenWindow = TimeSpan.FromMinutes(30);
+
+        /// <summary>True if this line was already read aloud recently; otherwise records it as read.</summary>
+        private bool AlreadySpoken(ChatMessage m)
+        {
+            var now = DateTime.UtcNow;
+            if (now - _spokenPruned > TimeSpan.FromMinutes(1))
+            {
+                _spokenPruned = now;
+                foreach (var k in _spoken.Where(kv => now - kv.Value > SpokenWindow).Select(kv => kv.Key).ToList())
+                    _spoken.Remove(k);
+            }
+            var key = ChatKey(m);
+            if (_spoken.TryGetValue(key, out var t) && now - t <= SpokenWindow) return true;
+            _spoken[key] = now;
             return false;
         }
 
@@ -257,6 +289,7 @@ namespace GameTracker.Views
                 if (m == null || m.IsEvent || IsDuplicateChat(m)) continue;
                 _rows.Add(ToRow(m));
                 _recent.Add(m);
+                _spoken[ChatKey(m)] = DateTime.UtcNow;   // was read before the update — don't re-read it on an SSN replay
             }
             while (_rows.Count > MaxMessages) _rows.RemoveAt(0);
             while (_recent.Count > _overlayLines) _recent.RemoveAt(0);
@@ -678,6 +711,9 @@ namespace GameTracker.Views
                 var cut = text.LastIndexOf(' ', _ttsSettings.MaxChars - 1);
                 text = text[..(cut > _ttsSettings.MaxChars / 2 ? cut : _ttsSettings.MaxChars)].TrimEnd();
             }
+            // SSN refresh re-sent a line TTS already read — don't read it again.
+            if (AlreadySpoken(m)) return;
+
             var spoken = _ttsSettings.ReadName && !string.IsNullOrWhiteSpace(m.User)
                 ? $"{m.User} says: {text}"
                 : text;

@@ -45,6 +45,11 @@ namespace GameTracker.Models
         // Reply in chat (via Social Stream Ninja) with @mentions for requests/points/redeems.
         public bool ReplyInChat { get; set; } = true;
 
+        // Redeem videos: Game Hunter plays the soundtrack itself (and the overlay shows the
+        // video muted), so an OBS capture of the app's audio — e.g. the Voice Morpher source —
+        // carries it. Off by default: without such a capture, videos would be silent on stream.
+        public bool VideoAudioThroughApp { get; set; } = false;
+
         // Points (on by default: 25 points every 5 minutes)
         public bool PointsEnabled { get; set; } = true;
         public string PointsName { get; set; } = "Points";

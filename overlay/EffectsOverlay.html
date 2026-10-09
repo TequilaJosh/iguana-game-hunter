@@ -42,7 +42,7 @@
     ws.onmessage = function (ev) {
       try {
         var d = JSON.parse(ev.data);
-        if (d.type === "video") playVideo(d.url, d.volume);
+        if (d.type === "video") playVideo(d.url, d.volume, d.appAudio ? d.vid : null);
         else if (d.type === "effect" && d.effect === "custom" && d.image) showImage(d.image, d.duration);
       } catch (e) { /* ignore bad frames */ }
     };
@@ -55,10 +55,17 @@
   }
 
   var vid = document.getElementById("fxvideo");
-  function playVideo(url, volume) {
+  // appVid: Game Hunter plays this clip's sound itself (so OBS's capture of the app carries
+  // it) — show the video muted and tell the app the moment playback really starts.
+  function playVideo(url, volume, appVid) {
     if (!url) return;
     try {
+      vid.muted = !!appVid;                    // reset each time (a muted autoplay retry used to stick)
       vid.volume = Math.max(0, Math.min(1, (typeof volume === "number" ? volume : 100) / 100));
+      vid.onplaying = appVid ? function () {
+        vid.onplaying = null;                  // first start only (not after buffering stalls)
+        try { ws.send(JSON.stringify({ type: "videoPlaying", vid: appVid, t: vid.currentTime })); } catch (e) {}
+      } : null;
       vid.src = url;
       vid.classList.add("show");
       vid.onended = function () { vid.classList.remove("show"); vid.removeAttribute("src"); };

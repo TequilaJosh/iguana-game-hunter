@@ -549,7 +549,8 @@ namespace GameTracker.Views
         private void Mute_Click(object sender, RoutedEventArgs e)
         {
             _sound.Muted = !_sound.Muted;
-            if (_sound.Muted) { _sound.StopAll(); _tts.StopAll(); }   // panic: kill alerts + TTS
+            RedeemAudioService.Muted = _sound.Muted;
+            if (_sound.Muted) { _sound.StopAll(); _tts.StopAll(); RedeemAudioService.StopAll(); }   // panic: kill alerts, TTS + redeem video sound
             UpdateMuteButton();
         }
 

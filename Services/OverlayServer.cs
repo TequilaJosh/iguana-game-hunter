@@ -398,19 +398,8 @@ namespace GameTracker.Services
         private static async Task ServeVideo(NetworkStream stream, string route,
             Dictionary<string, string> headers, CancellationToken ct)
         {
-            string? path = null;
-            try
-            {
-                var idStr = route.Substring("/fxvideo/".Length).Split('?')[0];
-                if (int.TryParse(idStr, out int idx))
-                {
-                    var redeems = SettingsService.LoadChatFeatures().Redeems;
-                    if (idx >= 0 && idx < redeems.Count) path = redeems[idx].VideoPath;
-                }
-            }
-            catch { }
-
-            if (string.IsNullOrWhiteSpace(path) || !File.Exists(path))
+            var path = ResolveRedeemVideo(route);
+            if (path == null)
             {
                 await WriteSimple(stream, "404 Not Found", "text/plain", "Not found", ct);
                 return;
@@ -755,6 +744,16 @@ namespace GameTracker.Services
                 if (msg.Contains("\"ping\""))
                 {
                     _ = SendText(client, "{\"type\":\"pong\"}", ct);
+                    return;
+                }
+
+                // An overlay just started a redeem video whose sound Game Hunter plays — start
+                // the sound now, at the same point in the clip, so it lines up with the picture.
+                if (msg.Contains("\"videoPlaying\""))
+                {
+                    var o = JObject.Parse(msg);
+                    if ((string?)o["type"] == "videoPlaying" && (string?)o["vid"] is string vid)
+                        RedeemAudioService.Start(vid, (double?)o["t"] ?? 0);
                     return;
                 }
 
@@ -1251,7 +1250,42 @@ namespace GameTracker.Services
         {
             if (!_running || string.IsNullOrEmpty(url)) return;
             var target = HasEffectsClient ? "effects" : "main";
-            Broadcast(new { type = "video", url, volume = Math.Clamp(volumePercent, 0, 100), target });
+            var volume = Math.Clamp(volumePercent, 0, 100);
+
+            // A new video replaces whatever the overlay is showing — stop its app-played sound too.
+            RedeemAudioService.StopAll();
+
+            // Opt-in: Game Hunter plays the clip's soundtrack itself (so an OBS capture of the
+            // app — e.g. the Voice Morpher source — carries it) and the overlay shows the video
+            // muted. The overlay reports when playback really starts, so sound and picture line up.
+            if (SettingsService.LoadChatFeatures().VideoAudioThroughApp && ResolveRedeemVideo(url) is string path)
+            {
+                var vid = Guid.NewGuid().ToString("N");
+                if (RedeemAudioService.Prepare(vid, path, volume / 100.0))
+                {
+                    Broadcast(new { type = "video", url, volume, target, vid, appAudio = true });
+                    return;
+                }
+                // Couldn't decode the soundtrack here — fall back to the browser playing it.
+            }
+            Broadcast(new { type = "video", url, volume, target });
+        }
+
+        /// <summary>The local file behind a "/fxvideo/&lt;index&gt;" URL (a redeem's video), or null.
+        /// Only files the streamer picked in the redeems editor resolve.</summary>
+        private static string? ResolveRedeemVideo(string url)
+        {
+            try
+            {
+                if (!url.StartsWith("/fxvideo/", StringComparison.Ordinal)) return null;
+                var idStr = url.Substring("/fxvideo/".Length).Split('?')[0];
+                if (!int.TryParse(idStr, out int idx)) return null;
+                var redeems = SettingsService.LoadChatFeatures().Redeems;
+                if (idx < 0 || idx >= redeems.Count) return null;
+                var path = redeems[idx].VideoPath;
+                return !string.IsNullOrWhiteSpace(path) && File.Exists(path) ? path : null;
+            }
+            catch { return null; }
         }
 
         // Active streamer voice-morph (for the overlay countdown pill).

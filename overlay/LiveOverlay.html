@@ -1061,7 +1061,7 @@
         if (!(data.target === "effects" && data.effect === "custom")) runEffect(data);
         break;
       case "video":
-        if (data.target !== "effects") playVideo(data.url, data.volume);
+        if (data.target !== "effects") playVideo(data.url, data.volume, data.appAudio ? data.vid : null);
         break;
       case "morph":
         showMorph(data.name, data.seconds);
@@ -1713,12 +1713,19 @@
   }
 
   let fxVidEl = null;
-  function playVideo(url, volume) {
+  // appVid: Game Hunter plays this clip's sound itself (so OBS's capture of the app carries
+  // it) — show the video muted and tell the app the moment playback really starts.
+  function playVideo(url, volume, appVid) {
     if (!url) return;
     if (!fxVidEl) fxVidEl = document.getElementById("fxvideo");
     if (!fxVidEl) return;
     try {
+      fxVidEl.muted = !!appVid;                // reset each time (a muted autoplay retry used to stick)
       fxVidEl.volume = Math.max(0, Math.min(1, (typeof volume === "number" ? volume : 100) / 100));
+      fxVidEl.onplaying = appVid ? function () {
+        fxVidEl.onplaying = null;              // first start only (not after buffering stalls)
+        send({ type: "videoPlaying", vid: appVid, t: fxVidEl.currentTime });
+      } : null;
       fxVidEl.src = url;
       fxVidEl.classList.add("show");
       fxVidEl.onended = function () { fxVidEl.classList.remove("show"); fxVidEl.removeAttribute("src"); };

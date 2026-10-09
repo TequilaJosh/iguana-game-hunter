@@ -71,6 +71,7 @@ namespace GameTracker.Views
             LurkBox.Text = f.LurkMinutes.ToString();
             RemoveBox.Text = f.RemoveMinutes.ToString();
             PointsCb.IsChecked = f.PointsEnabled;
+            VideoAudioAppCb.IsChecked = f.VideoAudioThroughApp;
             PointsNameBox.Text = f.PointsName;
             PointsIntervalBox.Text = f.PointsIntervalMinutes.ToString();
             PointsAmountBox.Text = f.PointsPerInterval.ToString();
@@ -411,6 +412,7 @@ namespace GameTracker.Views
             // Persist the current redeem list quietly so /fx and /fxvideo can serve the files.
             var saved = SettingsService.LoadChatFeatures();
             saved.Redeems = BuildRedeems();
+            saved.VideoAudioThroughApp = VideoAudioAppCb.IsChecked == true;   // test with what's ticked now
             SettingsService.SaveChatFeatures(saved);
 
             if (!string.IsNullOrWhiteSpace(r.SoundPath))
@@ -475,6 +477,7 @@ namespace GameTracker.Views
             f.ChatStyle = (StyleCombo.SelectedItem as System.Windows.Controls.ComboBoxItem)?.Tag as string ?? "log";
             f.BoxColors = _colors.Select(c => c.Hex.Trim()).Where(IsHex).Take(10).ToList();
             f.Redeems = BuildRedeems();
+            f.VideoAudioThroughApp = VideoAudioAppCb.IsChecked == true;
             if (f.BoxColors.Count == 0) f.BoxColors = new ChatFeatureSettings().BoxColors;
 
             SettingsService.SaveChatFeatures(f);

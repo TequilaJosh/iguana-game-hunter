@@ -18,8 +18,18 @@ namespace GameTracker
         private RegisteredWaitHandle? _showRegistration;
         private bool _isPrimary;
 
+        private const string ReminderMutexName = "Local\\LazerGuanasGameHunter.Reminders";
+        private Mutex? _reminderMutex;
+
         protected override void OnStartup(StartupEventArgs e)
         {
+            // Woken by the scheduled task to show game reminders while the app is closed.
+            if (Array.Exists(e.Args, a => string.Equals(a, Services.ReminderService.WakeArg, StringComparison.OrdinalIgnoreCase)))
+            {
+                RunReminderMode(e);
+                return;
+            }
+
             _instanceMutex = new Mutex(initiallyOwned: true, MutexName, out _isPrimary);
 
             if (!_isPrimary)
@@ -37,6 +47,23 @@ namespace GameTracker
                 Shutdown();
                 return;
             }
+
+            // A closed-app reminder pop-up may be on screen: hand off to us (we show reminders on
+            // our own timer) and give it a moment to exit before the library is loaded.
+            try
+            {
+                if (EventWaitHandle.TryOpenExisting(Views.ReminderRunner.HandoffEventName, out var handoff))
+                {
+                    handoff.Set();
+                    handoff.Dispose();
+                    for (int i = 0; i < 20 && Mutex.TryOpenExisting(ReminderMutexName, out var m); i++)
+                    {
+                        m.Dispose();
+                        Thread.Sleep(100);
+                    }
+                }
+            }
+            catch { /* best-effort */ }
 
             // Primary instance: listen for "show" pings from any later launches.
             try
@@ -90,8 +117,31 @@ namespace GameTracker
             });
         }
 
+        /// <summary>
+        /// "--reminders": show only the due reminder pop-ups, then exit. If Game Hunter itself is
+        /// running it does nothing (the app shows reminders on its own timer), and it never takes
+        /// the app's single-instance guard — so opening Game Hunter meanwhile still works.
+        /// </summary>
+        private void RunReminderMode(StartupEventArgs e)
+        {
+            ShutdownMode = ShutdownMode.OnExplicitShutdown;
+            if (Mutex.TryOpenExisting(MutexName, out var running)) { running.Dispose(); Shutdown(); return; }
+
+            _reminderMutex = new Mutex(initiallyOwned: true, ReminderMutexName, out bool first);
+            if (!first) { _reminderMutex.Dispose(); _reminderMutex = null; Shutdown(); return; }
+
+            base.OnStartup(e);
+            try { Services.ThemeService.Initialize(); } catch { /* fall back to XAML defaults */ }
+            new Views.ReminderRunner(() => Shutdown()).Start();
+        }
+
         protected override void OnExit(ExitEventArgs e)
         {
+            if (_reminderMutex != null)
+            {
+                try { _reminderMutex.ReleaseMutex(); } catch { }
+                try { _reminderMutex.Dispose(); } catch { }
+            }
             // Free the overlay port and release the single-instance guard so the next
             // launch starts clean.
             try { Services.VoiceMorphService.Stop(); } catch { }

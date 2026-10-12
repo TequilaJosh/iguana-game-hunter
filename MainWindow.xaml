@@ -121,6 +121,7 @@
                         <MenuItem Header="Move to DEVOURED" Click="MoveToDevoured_Click"/>
                         <Separator/>
                         <MenuItem Header="🎡 Wheel…" Click="OpenWheel_Click"/>
+                        <MenuItem Header="⏰ Reminder…" Click="OpenReminder_Click"/>
                         <Separator/>
                         <MenuItem Header="Shed" Click="RemoveGame_Click" FontWeight="Bold"
                                   Foreground="#e89080"/>
@@ -233,6 +234,13 @@
                                 Margin="0,0,0,0">
                             <TextBlock Foreground="{DynamicResource ThemeAccent2}" FontSize="11"
                                        Text="{Binding Requester, StringFormat=@{0}}"/>
+                        </Border>
+                        <Border CornerRadius="3" Padding="6,2" Background="{DynamicResource ThemeAccentSoft}"
+                                BorderBrush="{DynamicResource ThemeAccentEdge}" BorderThickness="1"
+                                Visibility="{Binding HasReminder, Converter={StaticResource BoolVisConverter}}"
+                                Margin="4,0,0,0" ToolTip="{Binding ReminderTip}">
+                            <TextBlock Foreground="{DynamicResource ThemeAccent}" FontSize="11"
+                                       Text="{Binding ReminderChip}"/>
                         </Border>
                     </StackPanel>
 

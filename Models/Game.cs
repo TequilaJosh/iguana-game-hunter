@@ -100,6 +100,22 @@ namespace GameTracker.Models
         public string SuggestionType { get; set; } = SuggestionTypes.Default;
         public int Rating { get; set; } = 0;
         public string Notes { get; set; } = string.Empty;
+
+        /// <summary>Scheduled pop-up reminder for this game (null = none). Set from the card's
+        /// right-click menu; keeps popping up on its repeat until the streamer turns it off.</summary>
+        public GameReminder? Reminder { get; set; }
+
+        [JsonIgnore] public bool HasReminder => Reminder?.Enabled == true;
+
+        /// <summary>Card chip, e.g. "⏰ 7:00 PM" (today), "⏰ Sat 7:00 PM" (this week), "⏰ Oct 30".</summary>
+        [JsonIgnore]
+        public string ReminderChip => HasReminder ? "⏰ " + GameReminder.ShortWhen(Reminder!.NextAt) : string.Empty;
+
+        [JsonIgnore]
+        public string ReminderTip => !HasReminder ? string.Empty
+            : $"Next reminder: {Reminder!.NextAt:ddd MMM d, h:mm tt} · repeats {Reminder.RepeatDisplay}" +
+              (string.IsNullOrWhiteSpace(Reminder.Note) ? "" : "\n" + Reminder.Note) +
+              "\nRight-click → ⏰ Reminder… to change or turn it off.";
         public DateTime DateAdded { get; set; } = DateTime.Now;
 
         // Saved place in the GameFAQs guide window (last page + scroll position).
@@ -175,5 +191,40 @@ namespace GameTracker.Models
         [JsonIgnore]
         public bool IsStale => !IsSessionActive && LastPlayed.HasValue &&
                                (DateTime.Now - LastPlayed.Value).Days > 30;
+    }
+
+    /// <summary>
+    /// A pop-up reminder for a game: first shows at <see cref="NextAt"/>, then every
+    /// <see cref="RepeatMinutes"/> (0 = just once) until the streamer turns it off.
+    /// </summary>
+    public class GameReminder
+    {
+        public bool Enabled { get; set; } = true;
+        public DateTime NextAt { get; set; } = DateTime.Now;   // local time of the next pop-up
+        public int RepeatMinutes { get; set; } = 0;             // 0 = once
+        public string Note { get; set; } = string.Empty;        // e.g. "Stream it Saturday!"
+
+        /// <summary>The repeat choices offered in the reminder window (minutes; 0 = once).</summary>
+        public static readonly int[] RepeatChoices = { 0, 15, 30, 60, 120, 240, 720, 1440, 10080 };
+
+        [JsonIgnore] public string RepeatDisplay => DescribeRepeat(RepeatMinutes);
+
+        public static string DescribeRepeat(int minutes)
+        {
+            if (minutes <= 0) return "just once";
+            if (minutes % 10080 == 0) return minutes == 10080 ? "every week" : $"every {minutes / 10080} weeks";
+            if (minutes % 1440 == 0) return minutes == 1440 ? "every day" : $"every {minutes / 1440} days";
+            if (minutes % 60 == 0) return minutes == 60 ? "every hour" : $"every {minutes / 60} hours";
+            return $"every {minutes} minutes";
+        }
+
+        /// <summary>Compact "when": time today, weekday + time within a week, else the date.</summary>
+        public static string ShortWhen(DateTime at)
+        {
+            var now = DateTime.Now;
+            if (at.Date == now.Date) return at.ToString("h:mm tt");
+            if (at > now && (at.Date - now.Date).TotalDays < 7) return at.ToString("ddd h:mm tt");
+            return at.ToString("MMM d");
+        }
     }
 }

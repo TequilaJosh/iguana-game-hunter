@@ -22,6 +22,8 @@ namespace GameTracker
         private bool _isDragging;
         private readonly DispatcherTimer _liveTimer;
         private readonly DispatcherTimer _overlayTimer;
+        private readonly DispatcherTimer _reminderTimer;
+        private readonly Dictionary<Guid, Views.ReminderPopup> _reminderPopups = new();
         private readonly Dictionary<Guid, Views.SessionWindow> _sessionWindows = new();
         private readonly Dictionary<Guid, Views.GuideWindow> _guideWindows = new();
         private readonly Dictionary<Guid, Views.HltbWindow> _hltbWindows = new();
@@ -51,6 +53,18 @@ namespace GameTracker
             _overlayTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(1) };
             _overlayTimer.Tick += (_, _) => Services.OverlayService.Update(CurrentlyStreaming());
             _overlayTimer.Start();
+
+            // Game reminders: check for due ones every few seconds (and right at startup, so one
+            // that came due while the app was closed shows up once).
+            _reminderTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(15) };
+            _reminderTimer.Tick += (_, _) => CheckReminders();
+            _reminderTimer.Start();
+            Loaded += (_, _) =>
+            {
+                CheckReminders();
+                // Re-point the "app closed" wake-up task (e.g. after an update moved the exe).
+                Services.ReminderService.SyncWakeTask(_games);
+            };
 
             // Quietly check GitHub releases for a newer version on launch.
             Loaded += async (_, _) => await Services.UpdateService.CheckForUpdatesAsync(silent: true);
@@ -753,6 +767,66 @@ namespace GameTracker
         private void OpenWheel_Click(object sender, RoutedEventArgs e)
         {
             if (GetMenuItemGameId(sender) is Guid id) OpenWheelFor(id);
+        }
+
+        // ----- game reminders -----
+
+        private void OpenReminder_Click(object sender, RoutedEventArgs e)
+        {
+            if (GetMenuItemGameId(sender) is not Guid id) return;
+            var game = _games.FirstOrDefault(g => g.Id == id);
+            if (game == null) return;
+
+            var dlg = new Views.ReminderWindow(game) { Owner = this };
+            if (dlg.ShowDialog() != true) return;
+
+            if (dlg.TurnedOff)
+            {
+                game.Reminder = null;
+                StatusText.Text = $"⏰ Reminder for “{game.Title}” turned off.";
+            }
+            else if (dlg.Result != null)
+            {
+                game.Reminder = dlg.Result;
+                StatusText.Text = $"⏰ Reminder set for “{game.Title}” — " +
+                    $"{Models.GameReminder.ShortWhen(dlg.Result.NextAt)}, {dlg.Result.RepeatDisplay}.";
+            }
+            Save();
+            RefreshView();
+            Services.ReminderService.SyncWakeTask(_games);   // so it still fires if the app is closed
+            CheckReminders();   // a time that's already passed pops up right away
+        }
+
+        /// <summary>Show a pop-up for every reminder that's due, then schedule its next one.</summary>
+        private void CheckReminders()
+        {
+            var due = Services.ReminderService.TakeDue(_games, DateTime.Now);
+            if (due.Count == 0) return;
+            foreach (var (game, dueAt) in due)
+            {
+                if (_reminderPopups.ContainsKey(game.Id)) continue;   // last one is still on screen
+                var popup = new Views.ReminderPopup(game, game.Reminder!, dueAt);
+                popup.Chosen += OnReminderChosen;
+                _reminderPopups[game.Id] = popup;
+                popup.Show();
+            }
+            Save();
+            RefreshView();
+            Services.ReminderService.SyncWakeTask(_games);
+        }
+
+        private void OnReminderChosen(Views.ReminderPopup popup, Services.ReminderService.Choice choice)
+        {
+            _reminderPopups.Remove(popup.GameId);
+            var game = _games.FirstOrDefault(g => g.Id == popup.GameId);
+            if (game == null || !Services.ReminderService.Apply(game, choice, DateTime.Now)) return;
+
+            StatusText.Text = choice == Services.ReminderService.Choice.Snooze
+                ? $"⏰ “{game.Title}” snoozed for 10 minutes."
+                : $"⏰ Reminder for “{game.Title}” turned off.";
+            Save();
+            RefreshView();
+            Services.ReminderService.SyncWakeTask(_games);
         }
 
         private void OpenWheelFor(Guid id)

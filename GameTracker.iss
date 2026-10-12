@@ -53,6 +53,10 @@ Filename: "{app}\{#MyAppExeName}"; Description: "Launch {#MyAppName}"; Flags: no
 ; Silent install (auto-update): relaunch the app automatically.
 Filename: "{app}\{#MyAppExeName}"; Flags: nowait; Check: IsSilentRun
 
+[UninstallRun]
+; Remove the scheduled task that shows game reminders while the app is closed.
+Filename: "{sys}\schtasks.exe"; Parameters: "/Delete /TN ""LazerGuanas Game Hunter reminders"" /F"; Flags: runhidden; RunOnceId: "DelReminderTask"
+
 [Code]
 function IsSilentRun(): Boolean;
 begin

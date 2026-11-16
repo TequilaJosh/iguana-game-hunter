@@ -55,7 +55,7 @@ namespace GameTracker.Services
             res["ThemeAccent2Mid"]   = Frozen(Extrapolate(baseC, accent2C, 0.38));
             res["ThemeAccent2Edge"]  = Frozen(Extrapolate(baseC, accent2C, 0.52));
 
-            res["ScaleBrush"] = BuildScaleBrush(Current.BgBase, Current.BgTile);
+            res["ScaleBrush"] = BuildPatternBrush(Current.Pattern, Current.BgBase, Current.BgTile);
 
             // Recolour the OBS overlay to match (and let it load per-theme artwork).
             try { OverlayServer.SetTheme(Current); } catch { /* overlay optional */ }
@@ -119,6 +119,78 @@ namespace GameTracker.Services
         {
             try { return (Color)ColorConverter.ConvertFromString(hex); }
             catch { return (Color)ColorConverter.ConvertFromString(fallback); }
+        }
+
+        /// <summary>The window background: the theme's pattern tiled in its line colour
+        /// over its base colour. "None" is the flat base colour.</summary>
+        public static Brush BuildPatternBrush(string? pattern, string baseHex, string tileHex)
+        {
+            var baseColor = ParseColor(baseHex, "#0a1410");
+            var tileColor = ParseColor(tileHex, "#1c2a1e");
+            switch ((pattern ?? "Scales").Trim().ToLowerInvariant())
+            {
+                case "none":       return Frozen(baseColor);
+                case "dots":       return TileBrush(baseColor, 16, g => g.Children.Add(new GeometryDrawing(
+                                       new SolidColorBrush(tileColor), null, new EllipseGeometry(new Point(8, 8), 1.5, 1.5))));
+                case "grid":       return TileBrush(baseColor, 24, g => g.Children.Add(new GeometryDrawing(null, ThinPen(tileColor),
+                                       Lines((0, 0.5, 24, 0.5), (0.5, 0, 0.5, 24)))));
+                case "diagonal":   return TileBrush(baseColor, 16, g => g.Children.Add(new GeometryDrawing(null, ThinPen(tileColor),
+                                       Lines((-4, 20, 20, -4), (12, 20, 20, 12), (-4, 4, 4, -4)))));
+                case "crosshatch": return TileBrush(baseColor, 16, g => g.Children.Add(new GeometryDrawing(null, ThinPen(tileColor),
+                                       Lines((0, 0, 16, 16), (16, 0, 0, 16)))));
+                case "hex":        return TileBrush(baseColor, 28, g => g.Children.Add(new GeometryDrawing(null, ThinPen(tileColor), HexTile())), 24);
+                default:           return BuildScaleBrush(baseHex, tileHex);
+            }
+        }
+
+        private static Pen ThinPen(Color c) { var p = new Pen(new SolidColorBrush(c), 1); p.Freeze(); return p; }
+
+        private static PathGeometry Lines(params (double x1, double y1, double x2, double y2)[] segs)
+        {
+            var pg = new PathGeometry();
+            foreach (var (x1, y1, x2, y2) in segs)
+            {
+                var f = new PathFigure { StartPoint = new Point(x1, y1) };
+                f.Segments.Add(new LineSegment(new Point(x2, y2), true));
+                pg.Figures.Add(f);
+            }
+            return pg;
+        }
+
+        // A 28x24 tile of two interlocking flat-topped hexagon halves, so tiling reads as
+        // a honeycomb.
+        private static PathGeometry HexTile()
+        {
+            var pg = new PathGeometry();
+            void Poly(params Point[] pts)
+            {
+                var f = new PathFigure { StartPoint = pts[0], IsClosed = false };
+                for (int i = 1; i < pts.Length; i++) f.Segments.Add(new LineSegment(pts[i], true));
+                pg.Figures.Add(f);
+            }
+            Poly(new Point(0, 6), new Point(7, 0), new Point(21, 0), new Point(28, 6));
+            Poly(new Point(0, 6), new Point(7, 12), new Point(21, 12), new Point(28, 6));
+            Poly(new Point(7, 12), new Point(7, 24));
+            Poly(new Point(21, 12), new Point(21, 24));
+            return pg;
+        }
+
+        private static DrawingBrush TileBrush(Color baseColor, double size, Action<DrawingGroup> draw, double? height = null)
+        {
+            var h = height ?? size;
+            var group = new DrawingGroup();
+            group.Children.Add(new GeometryDrawing(new SolidColorBrush(baseColor), null,
+                new RectangleGeometry(new Rect(0, 0, size, h))));
+            draw(group);
+            var db = new DrawingBrush(group)
+            {
+                TileMode = TileMode.Tile,
+                Viewport = new Rect(0, 0, size, h),
+                ViewportUnits = BrushMappingMode.Absolute,
+                Stretch = Stretch.None,
+            };
+            db.Freeze();
+            return db;
         }
 
         // Recreates the App.xaml snake-scale DrawingBrush with themed colours.

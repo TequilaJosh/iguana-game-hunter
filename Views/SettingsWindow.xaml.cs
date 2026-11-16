@@ -451,10 +451,14 @@ namespace GameTracker.Views
 
         // ---- theme ----
 
+        // Copies every field — the text colours and pattern included, or picking the
+        // Light preset would silently keep the dark theme's cream text.
         private static ThemeSettings Clone(ThemeSettings t) => new()
         {
             PresetName = t.PresetName, Accent = t.Accent, AccentDeep = t.AccentDeep,
             Accent2 = t.Accent2, BgBase = t.BgBase, BgTile = t.BgTile,
+            Text = t.Text, TextDim = t.TextDim, TextFaint = t.TextFaint,
+            Pattern = t.Pattern,
         };
 
         private static List<PresetVm> BuildPresetVms()
@@ -475,6 +479,32 @@ namespace GameTracker.Views
                     ApplyLive();
                     BuildCustomRows();
                 }));
+            SyncPatternCombo();
+        }
+
+        // ── Background pattern ───────────────────────────────────────────────
+        private bool _syncingPattern;
+
+        /// <summary>Points the pattern dropdown at the theme's current pattern without
+        /// firing a re-apply. Runs whenever the theme object is swapped or rebuilt.</summary>
+        private void SyncPatternCombo()
+        {
+            _syncingPattern = true;
+            try
+            {
+                if (PatternCombo.ItemsSource == null) PatternCombo.ItemsSource = ThemeSettings.Patterns;
+                var current = ThemeSettings.Patterns.FirstOrDefault(
+                    x => string.Equals(x, _theme.Pattern, StringComparison.OrdinalIgnoreCase)) ?? "Scales";
+                PatternCombo.SelectedItem = current;
+            }
+            finally { _syncingPattern = false; }
+        }
+
+        private void Pattern_Changed(object sender, SelectionChangedEventArgs e)
+        {
+            if (_syncingPattern || PatternCombo.SelectedItem is not string pattern) return;
+            _theme.Pattern = pattern;      // a preset with a different pattern is still that preset
+            ApplyLive();
         }
 
         private FrameworkElement BuildColorRow(string label, string hex, Action<string> onPick)
@@ -717,6 +747,20 @@ namespace GameTracker.Views
         {
             var url = OverlayUrl + "effects";
             try { Clipboard.SetText(url); OverlayStatus.Text = "Copied: " + url + " — add as a transparent OBS Browser source."; }
+            catch { /* clipboard can be momentarily locked */ }
+        }
+
+        private void CopyFrameUrl_Click(object sender, RoutedEventArgs e)
+        {
+            var url = OverlayUrl + "frame";
+            try { Clipboard.SetText(url); OverlayStatus.Text = "Copied: " + url + " — add as a Browser source and resize it around your game."; }
+            catch { /* clipboard can be momentarily locked */ }
+        }
+
+        private void CopyFrameEditUrl_Click(object sender, RoutedEventArgs e)
+        {
+            var url = OverlayUrl + "frame?edit";
+            try { Clipboard.SetText(url); OverlayStatus.Text = "Copied editor URL — open it in a browser to design the frame; changes save & update OBS live."; }
             catch { /* clipboard can be momentarily locked */ }
         }
 

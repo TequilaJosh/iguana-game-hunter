@@ -11,15 +11,37 @@ namespace GameTracker.Views
     /// <summary>Set up chat-command → sound-file alerts. Persisted on Save.</summary>
     public partial class SoundAlertsWindow : Window
     {
+        private const string DefaultOutputLabel = "Default (system output)";
         private readonly ObservableCollection<AlertItem> _items = new();
         private readonly SoundService _tester = new();
+
+        /// <summary>The chosen alert output device ("" = system default).</summary>
+        private string SelectedOutput()
+        {
+            var s = AlertOutput.SelectedItem as string;
+            return string.IsNullOrEmpty(s) || s == DefaultOutputLabel ? string.Empty : s;
+        }
 
         public SoundAlertsWindow()
         {
             InitializeComponent();
             foreach (var a in SettingsService.LoadSoundAlerts())
-                _items.Add(new AlertItem { Command = a.Command, FilePath = a.FilePath, Volume = a.Volume });
+                _items.Add(new AlertItem
+                {
+                    Command = a.Command,
+                    FilePath = a.FilePath,
+                    Volume = a.Volume,
+                    MatchAnywhere = a.MatchAnywhere,
+                });
             AlertList.ItemsSource = _items;
+            GlobalAnywhereCb.IsChecked = SettingsService.LoadSoundAlertsMatchAnywhere();
+
+            var device = SettingsService.LoadSoundAlertsOutputDevice();
+            AlertOutput.Items.Add(DefaultOutputLabel);
+            foreach (var d in SoundService.OutputDevices()) AlertOutput.Items.Add(d);
+            AlertOutput.SelectedItem = !string.IsNullOrEmpty(device) && AlertOutput.Items.Contains(device)
+                ? device : DefaultOutputLabel;
+            _tester.OutputDevice = SelectedOutput();
         }
 
         private void Add_Click(object sender, RoutedEventArgs e) =>
@@ -54,6 +76,7 @@ namespace GameTracker.Views
                 return;
             }
             TestStatus.Text = "▶ Playing " + System.IO.Path.GetFileName(item.FilePath);
+            _tester.OutputDevice = SelectedOutput();   // test where the alert will actually play
             _tester.Play(item.FilePath, item.Volume, msg => Dispatcher.Invoke(() => TestStatus.Text = msg));
         }
 
@@ -61,9 +84,17 @@ namespace GameTracker.Views
         {
             var list = _items
                 .Where(i => !string.IsNullOrWhiteSpace(i.Command) && !string.IsNullOrWhiteSpace(i.FilePath))
-                .Select(i => new SoundAlert { Command = i.Command.Trim(), FilePath = i.FilePath.Trim(), Volume = i.Volume })
+                .Select(i => new SoundAlert
+                {
+                    Command = i.Command.Trim(),
+                    FilePath = i.FilePath.Trim(),
+                    Volume = i.Volume,
+                    MatchAnywhere = i.MatchAnywhere,
+                })
                 .ToList();
             SettingsService.SaveSoundAlerts(list);
+            SettingsService.SaveSoundAlertsMatchAnywhere(GlobalAnywhereCb.IsChecked == true);
+            SettingsService.SaveSoundAlertsOutputDevice(SelectedOutput());
             DialogResult = true;
         }
 
@@ -74,6 +105,7 @@ namespace GameTracker.Views
             private string _command = string.Empty;
             private string _filePath = string.Empty;
             private double _volume = 1.0;
+            private bool _matchAnywhere;
 
             public string Command
             {
@@ -89,6 +121,11 @@ namespace GameTracker.Views
             {
                 get => _volume;
                 set { _volume = value; OnChanged(nameof(Volume)); }
+            }
+            public bool MatchAnywhere
+            {
+                get => _matchAnywhere;
+                set { _matchAnywhere = value; OnChanged(nameof(MatchAnywhere)); }
             }
 
             public event PropertyChangedEventHandler? PropertyChanged;

@@ -103,6 +103,8 @@ namespace GameTracker.Views
             SendTargetCombo.ItemsSource = _sendTargets;
             SendTargetCombo.SelectedItem = AllChats;
 
+            _sound.MatchAnywhereGlobally = SettingsService.LoadSoundAlertsMatchAnywhere();
+            _sound.OutputDevice = SettingsService.LoadSoundAlertsOutputDevice();
             _sound.SetAlerts(SettingsService.LoadSoundAlerts());
             UpdateMuteButton();
 
@@ -610,7 +612,12 @@ namespace GameTracker.Views
         }
 
         /// <summary>Re-read sound-alert bindings after they're edited elsewhere.</summary>
-        public void ReloadSoundAlerts() => _sound.SetAlerts(SettingsService.LoadSoundAlerts());
+        public void ReloadSoundAlerts()
+        {
+            _sound.MatchAnywhereGlobally = SettingsService.LoadSoundAlertsMatchAnywhere();
+            _sound.OutputDevice = SettingsService.LoadSoundAlertsOutputDevice();
+            _sound.SetAlerts(SettingsService.LoadSoundAlerts());
+        }
 
         /// <summary>Re-read text-to-speech settings after they're changed in Settings.</summary>
         public void ReloadTts()

@@ -17,6 +17,12 @@ namespace GameTracker.Models
         public string TextDim { get; set; } = "#a8c488";     // labels / secondary text
         public string TextFaint { get; set; } = "#7a9070";   // hints / tertiary text
 
+        /// <summary>Background tile pattern, drawn in <see cref="BgTile"/> over <see cref="BgBase"/>.
+        /// One of <see cref="Patterns"/>; unknown values fall back to Scales.</summary>
+        public string Pattern { get; set; } = "Scales";
+
+        public static readonly string[] Patterns = { "Scales", "Dots", "Grid", "Diagonal", "Crosshatch", "Hex", "None" };
+
         public static readonly List<ThemeSettings> Presets = new()
         {
             new() { PresetName = "Reptile", Accent = "#7cc44a", AccentDeep = "#4a7c3a", Accent2 = "#d4a437", BgBase = "#0a1410", BgTile = "#1c2a1e", Text = "#e8e0c4", TextDim = "#a8c488", TextFaint = "#7a9070" },

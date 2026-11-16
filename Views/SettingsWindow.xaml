@@ -198,6 +198,12 @@
                             </ItemsControl>
                             <TextBlock Text="Custom colors" Foreground="{DynamicResource ThemeTextDim}" FontSize="12" Margin="0,0,0,6"/>
                             <StackPanel x:Name="CustomColors"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,4,0,0">
+                                <TextBlock Text="Background pattern" Foreground="{DynamicResource ThemeTextDim}" FontSize="12"
+                                           VerticalAlignment="Center" Width="130"/>
+                                <ComboBox x:Name="PatternCombo" Width="140" SelectionChanged="Pattern_Changed"
+                                          ToolTip="Tiled behind every window, drawn in the 'Background lines' colour"/>
+                            </StackPanel>
                             <Button Content="&#8635; Reset to default (Reptile)" Click="ResetTheme_Click"
                                     Style="{StaticResource Btn}" HorizontalAlignment="Left" Margin="0,4,0,0"/>
 
@@ -425,6 +431,18 @@
                             <Button Content="&#128203; Copy effects overlay URL" Click="CopyEffectsUrl_Click"
                                     Style="{StaticResource Btn}" HorizontalAlignment="Left"
                                     ToolTip="Copy the /effects URL for a transparent redeem-playback Browser source"/>
+
+                            <TextBlock Text="GAME FRAME" Style="{StaticResource SecHdr}"/>
+                            <TextBlock Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,6"
+                                       Text="A border with a clear middle, to frame your game capture. Add it as its own OBS Browser source and resize that source — the border always hugs its edges, and the inside stays transparent so the game shows through. Design it live (colour, thickness, corners, glow, line style…) by opening the editor URL in a browser; changes save and update OBS instantly. It follows your app theme colour unless you pick one. For a second frame styled differently, add options to its URL instead: ?color=ff0066 &amp; width=12 &amp; radius=16 &amp; inset=10 &amp; glow=20 &amp; opacity=70 &amp; style=solid|double|dashed|dotted"/>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="&#128203; Copy game frame URL" Click="CopyFrameUrl_Click"
+                                        Style="{StaticResource Btn}" Margin="0,0,8,0"
+                                        ToolTip="The /frame URL for the OBS Browser source"/>
+                                <Button Content="&#127912; Copy editor URL" Click="CopyFrameEditUrl_Click"
+                                        Style="{StaticResource Btn}"
+                                        ToolTip="Open /frame?edit in a browser to design the border live"/>
+                            </StackPanel>
 
                             <TextBlock Text="ACTIVITY TICKER" Style="{StaticResource SecHdr}"/>
                             <TextBlock Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,8"

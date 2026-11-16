@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Frame Overlay</title>
+<style>
+  /* Nothing but a border — the middle stays fully transparent so the game shows
+     through, and the page never eats clicks in OBS. */
+  html, body { margin: 0; padding: 0; background: transparent; overflow: hidden; }
+
+  #frame {
+    position: fixed;
+    box-sizing: border-box;
+    background: transparent;
+    pointer-events: none;
+    /* Everything below is set from the saved config / query string at runtime. */
+    inset: 0;
+    border: 8px solid #7cc44a;
+    border-radius: 0;
+  }
+
+  /* Edit mode only: a checkerboard behind the frame so you can see that the
+     middle really is see-through (in OBS it's the game, here it's squares). */
+  body.editing {
+    background-color: #1b1b1b;
+    background-image:
+      linear-gradient(45deg, #262626 25%, transparent 25%, transparent 75%, #262626 75%),
+      linear-gradient(45deg, #262626 25%, transparent 25%, transparent 75%, #262626 75%);
+    background-size: 32px 32px;
+    background-position: 0 0, 16px 16px;
+  }
+
+  /* Editor panel */
+  #editor { position: fixed; top: 12px; left: 12px; z-index: 50; width: 300px; max-height: calc(100vh - 24px);
+            overflow: auto; background: rgba(10,20,16,0.96); border: 1px solid #4a7c3a; border-radius: 8px;
+            padding: 12px 14px; font: 12px/1.45 "Segoe UI", system-ui, sans-serif; color: #e8e0c4;
+            box-shadow: 0 6px 24px rgba(0,0,0,0.5); }
+  #editor h3 { margin: 0 0 2px; color: #7cc44a; font-size: 13px; }
+  #editor .hint { color: #7a9070; font-size: 11px; margin-bottom: 10px; }
+  #editor .grp { margin-bottom: 11px; }
+  #editor .grp > label.h { display: block; color: #a8c488; font-weight: 700; font-size: 11px; text-transform: uppercase; margin-bottom: 5px; }
+  #editor .row { display: flex; align-items: center; gap: 8px; }
+  #editor .row .rv { margin-left: auto; color: #a8c488; min-width: 42px; text-align: right; }
+  #editor input[type=range] { flex: 1; accent-color: #7cc44a; }
+  #editor select, #editor input[type=color] { background: #14241c; color: #e8e0c4; border: 1px solid #4a7c3a; border-radius: 4px; padding: 3px 5px; }
+  #editor input[type=color] { padding: 1px; width: 40px; height: 26px; }
+  #editor input[type=color]:disabled { opacity: 0.4; }
+  #editor button { background: #14241c; color: #a8c488; border: 1px solid #4a7c3a; border-radius: 4px; padding: 4px 8px; cursor: pointer; }
+  #editor .saved { color: #7cc44a; font-size: 11px; height: 14px; }
+</style>
+</head>
+<body>
+  <div id="frame"></div>
+
+<script>
+"use strict";
+(function () {
+  // Size the frame by resizing the Browser source in OBS — it always hugs the
+  // source's bounds. Everything else is set in the editor:
+  //
+  //   http://localhost:3620/frame?edit
+  //
+  // Changes there save straight into the app's settings and push live to every
+  // /frame source that's open. In OBS use the plain /frame URL.
+  //
+  // Query-string options still work and win over the saved config, so a second
+  // source can be framed differently without its own editor:
+  //
+  //   ?color=ff0066   border colour (hex, with or without #). "theme" follows the app theme.
+  //   ?width=12       border thickness in px            (default 8)
+  //   ?radius=16      corner radius in px               (default 0)
+  //   ?inset=10       gap between the frame and the source edge, px (default 0)
+  //   ?glow=18        glow strength in px               (default 0 = off)
+  //   ?opacity=70     0–100                             (default 100)
+  //   ?style=double   solid | double | dashed | dotted  (default solid)
+
+  var el = document.getElementById("frame");
+  var q = new URLSearchParams(location.search);
+  var EDIT = q.has("edit");
+  if (EDIT) document.body.classList.add("editing");
+
+  // color: "" means "follow the app theme".
+  var DEFAULT_CONFIG = { color: "", width: 8, radius: 0, inset: 0, glow: 0, opacity: 100, style: "solid" };
+  var STYLES = ["solid", "double", "dashed", "dotted"];
+  var config = Object.assign({}, DEFAULT_CONFIG);
+  var themeColor = "#7cc44a";          // until the app tells us otherwise
+
+  function clampNum(v, lo, hi, dflt) { v = Math.round(+v); return isFinite(v) ? Math.min(hi, Math.max(lo, v)) : dflt; }
+
+  // Accept "ff0066", "#ff0066", "f06"; anything else means "follow the theme".
+  function hex(raw) {
+    raw = String(raw === null || raw === undefined ? "" : raw).trim().replace(/^#/, "");
+    if (/^[0-9a-fA-F]{3}$/.test(raw)) raw = raw[0] + raw[0] + raw[1] + raw[1] + raw[2] + raw[2];
+    return /^[0-9a-fA-F]{6}$/.test(raw) ? "#" + raw.toLowerCase() : "";
+  }
+
+  function coerce(c) {
+    var o = Object.assign({}, DEFAULT_CONFIG, c || {});
+    o.color = hex(o.color);
+    o.width = clampNum(o.width, 0, 200, DEFAULT_CONFIG.width);
+    o.radius = clampNum(o.radius, 0, 400, DEFAULT_CONFIG.radius);
+    o.inset = clampNum(o.inset, 0, 400, DEFAULT_CONFIG.inset);
+    o.glow = clampNum(o.glow, 0, 200, DEFAULT_CONFIG.glow);
+    o.opacity = clampNum(o.opacity, 0, 100, DEFAULT_CONFIG.opacity);
+    if (STYLES.indexOf(o.style) < 0) o.style = "solid";
+    return o;
+  }
+
+  function urlOverrides() {
+    var o = {};
+    [["width", "w"], ["radius", "r"], ["inset", "i"], ["glow", "g"], ["opacity", "o"]].forEach(function (names) {
+      for (var i = 0; i < names.length; i++) {
+        var raw = q.get(names[i]);
+        if (raw === null) continue;
+        var v = parseFloat(raw);
+        if (isFinite(v)) { o[names[0]] = v; return; }
+      }
+    });
+    var st = (q.get("style") || "").toLowerCase();
+    if (STYLES.indexOf(st) >= 0) o.style = st;
+    var raw = q.get("color");
+    if (raw === null) raw = q.get("c");
+    if (raw !== null) {
+      // ?color=theme (or any unparseable value) explicitly means "follow the theme",
+      // so a source can opt out of a saved colour.
+      o.color = hex(raw);
+    }
+    return o;
+  }
+  var OVERRIDES = urlOverrides();
+
+  function render() {
+    var c = config;
+    var color = c.color || themeColor;
+    el.style.inset = c.inset + "px";
+    el.style.borderWidth = c.width + "px";
+    el.style.borderStyle = c.style;
+    el.style.borderColor = color;
+    el.style.borderRadius = c.radius + "px";
+    el.style.opacity = String(c.opacity / 100);
+    // Glow both ways so the frame reads against light and dark game art.
+    el.style.boxShadow = c.glow > 0
+      ? "0 0 " + c.glow + "px " + color + ", inset 0 0 " + c.glow + "px " + color
+      : "none";
+  }
+
+  function applyConfig(c) {
+    // In the editor you're setting the saved config, so URL options are ignored
+    // there — otherwise a stray ?width would silently overwrite what you saved.
+    config = EDIT ? coerce(c) : coerce(Object.assign({}, c, OVERRIDES));
+    render();
+    if (EDIT) syncControls();
+  }
+
+  // ---- editor panel ----
+  var E = {};
+  function bind(id, fn) { var el2 = document.getElementById(id); el2.addEventListener("input", fn); el2.addEventListener("change", fn); return el2; }
+  function buildEditor() {
+    var e = document.createElement("div"); e.id = "editor";
+    e.innerHTML =
+      '<h3>🖼 Game frame editor</h3>' +
+      '<div class="hint">Resize the frame by resizing the Browser source in OBS — it always fills the source. Everything here saves automatically. In OBS, use the plain /frame URL.</div>' +
+      '<div class="grp"><label class="h">Border colour</label>' +
+        '<div class="row"><input type="color" id="edColor"><span class="rv" id="edColorV"></span></div>' +
+        '<label style="display:block;margin-top:5px"><input type="checkbox" id="edTheme"> Follow app theme</label></div>' +
+      '<div class="grp"><label class="h">Thickness</label><div class="row"><input type="range" id="edWidth" min="0" max="80"><span class="rv" id="edWidthV"></span></div></div>' +
+      '<div class="grp"><label class="h">Corner radius</label><div class="row"><input type="range" id="edRadius" min="0" max="200"><span class="rv" id="edRadiusV"></span></div></div>' +
+      '<div class="grp"><label class="h">Inset from edge</label><div class="row"><input type="range" id="edInset" min="0" max="200"><span class="rv" id="edInsetV"></span></div></div>' +
+      '<div class="grp"><label class="h">Glow</label><div class="row"><input type="range" id="edGlow" min="0" max="80"><span class="rv" id="edGlowV"></span></div></div>' +
+      '<div class="grp"><label class="h">Opacity</label><div class="row"><input type="range" id="edOpacity" min="0" max="100"><span class="rv" id="edOpacityV"></span></div></div>' +
+      '<div class="grp"><label class="h">Line style</label><div class="row"><select id="edStyle">' +
+        '<option value="solid">Solid</option><option value="double">Double</option>' +
+        '<option value="dashed">Dashed</option><option value="dotted">Dotted</option>' +
+      '</select></div></div>' +
+      '<div class="grp"><button id="edReset">↺ Reset to defaults</button></div>' +
+      '<div class="saved" id="edSaved"></div>';
+    document.body.appendChild(e);
+    E.color = bind("edColor", onChange); E.colorV = document.getElementById("edColorV");
+    E.theme = bind("edTheme", onChange);
+    E.width = bind("edWidth", onChange); E.widthV = document.getElementById("edWidthV");
+    E.radius = bind("edRadius", onChange); E.radiusV = document.getElementById("edRadiusV");
+    E.inset = bind("edInset", onChange); E.insetV = document.getElementById("edInsetV");
+    E.glow = bind("edGlow", onChange); E.glowV = document.getElementById("edGlowV");
+    E.opacity = bind("edOpacity", onChange); E.opacityV = document.getElementById("edOpacityV");
+    E.style = bind("edStyle", onChange);
+    E.saved = document.getElementById("edSaved");
+    document.getElementById("edReset").addEventListener("click", function () {
+      config = coerce({}); render(); syncControls(); scheduleSave();
+    });
+    syncControls();
+  }
+
+  function syncControls() {
+    if (!E.width) return;
+    var following = !config.color;
+    E.theme.checked = following;
+    E.color.disabled = following;
+    E.color.value = config.color || themeColor;
+    E.colorV.textContent = following ? "theme" : config.color;
+    E.width.value = config.width; E.widthV.textContent = config.width + "px";
+    E.radius.value = config.radius; E.radiusV.textContent = config.radius + "px";
+    E.inset.value = config.inset; E.insetV.textContent = config.inset + "px";
+    E.glow.value = config.glow; E.glowV.textContent = config.glow ? config.glow + "px" : "off";
+    E.opacity.value = config.opacity; E.opacityV.textContent = config.opacity + "%";
+    E.style.value = config.style;
+  }
+
+  function onChange(ev) {
+    // Nudging the swatch itself means "use this colour", so drop the theme tick.
+    if (ev && ev.target === E.color) E.theme.checked = false;
+    config = coerce({
+      color: E.theme.checked ? "" : E.color.value,
+      width: +E.width.value, radius: +E.radius.value, inset: +E.inset.value,
+      glow: +E.glow.value, opacity: +E.opacity.value, style: E.style.value
+    });
+    render(); syncControls(); scheduleSave();
+  }
+
+  var saveTimer = null;
+  function scheduleSave() {
+    if (!EDIT) return;
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () {
+      saveTimer = null; send({ type: "saveFrame", frame: config });
+      if (E.saved) { E.saved.textContent = "✓ saved"; setTimeout(function () { if (E.saved) E.saved.textContent = ""; }, 1200); }
+    }, 300);
+  }
+
+  // ---- WebSocket ----
+  function applyTheme(t) {
+    if (!t || !t.accent) return;
+    themeColor = t.accent;
+    if (!config.color) render();
+    if (EDIT) syncControls();
+  }
+
+  function onFrame(raw) {
+    var d; try { d = JSON.parse(raw); } catch (e) { return; }
+    if (!d || typeof d.type !== "string") return;
+    if (d.type === "snapshot") {
+      themeColor = (d.theme && d.theme.accent) || themeColor;
+      applyConfig(d.frame || {});
+    } else if (d.type === "frameConfig") {
+      // The editor already shows what it just saved; only follow another editor's
+      // changes so two open editors don't fight over the controls mid-drag.
+      if (!EDIT) applyConfig(d.frame || {});
+      else if (!saveTimer) { config = coerce(d.frame || {}); render(); syncControls(); }
+    } else if (d.type === "theme") {
+      applyTheme(d.theme);
+    }
+  }
+
+  var ws = null, retryMs = 1000;
+  function wsUrl() {
+    var p = location.protocol;
+    if (p === "http:" || p === "https:") {
+      return (p === "https:" ? "wss:" : "ws:") + "//" + location.host + "/ws";
+    }
+    return "ws://localhost:3620/ws";
+  }
+  function send(obj) { try { if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj)); } catch (e) {} }
+  function schedule() {
+    setTimeout(connect, retryMs);
+    retryMs = Math.min(15000, retryMs * 2);
+  }
+  function connect() {
+    try { ws = new WebSocket(wsUrl()); } catch (e) { schedule(); return; }
+    ws.onopen = function () { retryMs = 1000; send({ type: "hello", client: "frame" }); };
+    ws.onmessage = function (ev) { onFrame(ev.data); };
+    ws.onclose = function () { schedule(); };
+    ws.onerror = function () { try { ws.close(); } catch (e) {} };
+  }
+
+  // Draw something immediately, then let the snapshot fill in the saved config.
+  applyConfig({});
+  if (EDIT) buildEditor();
+  connect();
+})();
+</script>
+</body>
+</html>

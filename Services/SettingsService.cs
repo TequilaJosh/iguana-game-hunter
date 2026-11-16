@@ -32,6 +32,8 @@ namespace GameTracker.Services
             public List<string>? SuggestionTypes { get; set; } // null = use built-in defaults
             public List<string> SeedsApplied { get; set; } = new(); // bundled games already offered
             public List<SoundAlert> SoundAlerts { get; set; } = new(); // chat command -> sound file
+            public bool SoundAlertsMatchAnywhere { get; set; }         // every alert fires mid-sentence
+            public string SoundAlertsOutputDevice { get; set; } = ""; // "" = system default output
             public int OverlayPort { get; set; } = 3620; // port for the live OBS overlay server
             public int OverlayChatLines { get; set; } = 20; // chat lines shown on the overlay
             public string? OverlayLayout { get; set; } // JSON: per-element position/size/font (null = default)
@@ -46,6 +48,7 @@ namespace GameTracker.Services
             public int MigrationRev { get; set; }                      // one-time defaults migrations applied
             public MorphSettings Morph { get; set; } = new();          // live mic voice morph
             public string? OverlayTicker { get; set; }                 // JSON: ticker banner config (null = default)
+            public string? OverlayFrame { get; set; }                  // JSON: game frame border config (null = default)
             public List<WheelPreset> WheelPresets { get; set; } = new(); // reusable named challenge lists
             public List<WheelPreset> WheelGamePresets { get; set; } = new(); // named game-picker sets (by title)
         }
@@ -87,6 +90,16 @@ namespace GameTracker.Services
         {
             var s = LoadAll();
             s.OverlayTicker = tickerJson;
+            SaveAll(s);
+        }
+
+        // Game frame border config as raw JSON (edited live in /frame?edit), same deal.
+        public static string? LoadOverlayFrame() => LoadAll().OverlayFrame;
+
+        public static void SaveOverlayFrame(string? frameJson)
+        {
+            var s = LoadAll();
+            s.OverlayFrame = frameJson;
             SaveAll(s);
         }
 
@@ -151,6 +164,26 @@ namespace GameTracker.Services
         {
             var s = LoadAll();
             s.SoundAlerts = alerts;
+            SaveAll(s);
+        }
+
+        /// <summary>Global override: every alert fires mid-sentence, not just as the first word.</summary>
+        public static bool LoadSoundAlertsMatchAnywhere() => LoadAll().SoundAlertsMatchAnywhere;
+
+        public static void SaveSoundAlertsMatchAnywhere(bool on)
+        {
+            var s = LoadAll();
+            s.SoundAlertsMatchAnywhere = on;
+            SaveAll(s);
+        }
+
+        /// <summary>Output device alerts play to ("" = system default).</summary>
+        public static string LoadSoundAlertsOutputDevice() => LoadAll().SoundAlertsOutputDevice ?? "";
+
+        public static void SaveSoundAlertsOutputDevice(string? device)
+        {
+            var s = LoadAll();
+            s.SoundAlertsOutputDevice = device ?? "";
             SaveAll(s);
         }
 

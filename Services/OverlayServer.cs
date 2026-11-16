@@ -75,6 +75,7 @@ namespace GameTracker.Services
         private static readonly List<object> _activity = new(); // live activity feed (gifts/follows/subs…)
         private static readonly Dictionary<string, object> _latestByKind = new(); // newest item per kind (ticker)
         private static JToken? _ticker;   // ticker banner config (edited live in /ticker?edit)
+        private static JToken? _frame;    // game frame border config (edited live in /frame?edit)
         private static object? _theme;    // active app theme colors + slug (styles the overlay)
         private const int ActivityMax = 25;
         private static string? _panelHtml; // PanelOverlay.html template (index injected per request)
@@ -108,6 +109,7 @@ namespace GameTracker.Services
                 _layout = ParseLayout(SettingsService.LoadOverlayLayout());
                 _presets = ParseLayout(SettingsService.LoadOverlayPresets());
                 _ticker = ParseLayout(SettingsService.LoadOverlayTicker());   // ticker banner config
+                _frame = ParseLayout(SettingsService.LoadOverlayFrame());     // game frame border config
                 var f = SettingsService.LoadChatFeatures();
                 _style = new { mode = f.ChatStyle, colors = f.BoxColors.ToArray() };
                 _panels = PanelsToWire(SettingsService.LoadTextPanels());
@@ -246,6 +248,10 @@ namespace GameTracker.Services
                 else if (method == "GET" && (route == "/ticker" || route == "/ticker/"))
                 {
                     await ServeEmbeddedHtml(stream, "TickerOverlay.html", ct);
+                }
+                else if (method == "GET" && (route == "/frame" || route == "/frame/"))
+                {
+                    await ServeEmbeddedHtml(stream, "FrameOverlay.html", ct);
                 }
                 else
                 {
@@ -691,7 +697,7 @@ namespace GameTracker.Services
                 panels = _panels, morph = MorphSnapshot(), goals = _goals, counters = _counters, poll = _poll,
                 activity = _activity.ToArray(),
                 activityLatest = new Dictionary<string, object>(_latestByKind),
-                ticker = _ticker,
+                ticker = _ticker, frame = _frame,
             };
             await SendText(client, JsonConvert.SerializeObject(snapshot), ct);
 
@@ -791,6 +797,19 @@ namespace GameTracker.Services
                     }
                 }
 
+                // Frame editor (/frame?edit) saved a config -> persist and push live to every
+                // frame source so the borders in OBS update immediately.
+                if (msg.Contains("\"saveFrame\""))
+                {
+                    var o = JObject.Parse(msg);
+                    if ((string?)o["type"] == "saveFrame" && o["frame"] is JToken fr)
+                    {
+                        SettingsService.SaveOverlayFrame(fr.ToString(Formatting.None));
+                        lock (Gate) _frame = fr;
+                        Broadcast(new { type = "frameConfig", frame = fr });
+                    }
+                }
+
                 // Editor saved its preset list (editor-only, not broadcast to viewers).
                 if (msg.Contains("\"savePresets\""))
                 {
@@ -887,6 +906,8 @@ namespace GameTracker.Services
             Accent2     = (string?)c["accent2"]    ?? "#d4a437",
             BgBase      = (string?)c["bg"]         ?? "#0a1410",
             BgTile      = (string?)c["tile"]       ?? "#1c2a1e",
+            // The overlay builder only edits colours; keep whatever pattern the app has.
+            Pattern     = ThemeService.Current?.Pattern ?? "Scales",
             Text        = (string?)c["text"]       ?? "#e8e0c4",
             TextDim     = (string?)c["textDim"]    ?? "#a8c488",
             TextFaint   = (string?)c["textFaint"]  ?? "#7a9070",

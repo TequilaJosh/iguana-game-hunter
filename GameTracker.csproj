@@ -34,6 +34,8 @@
     <EmbeddedResource Include="overlay\LiveOverlay.html" />
     <!-- Custom text-panel overlays, served at /panel/1..5. -->
     <EmbeddedResource Include="overlay\PanelOverlay.html" />
+    <!-- Resizable border frame with a transparent middle, served at /frame. -->
+    <EmbeddedResource Include="overlay\FrameOverlay.html" />
     <!-- Transparent effects overlay (video/image redeems), served at /effects. -->
     <EmbeddedResource Include="overlay\EffectsOverlay.html" />
     <!-- Activity ticker banner (latest sub/gift/follow), served at /ticker. -->

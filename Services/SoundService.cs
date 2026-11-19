@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text.RegularExpressions;
 using NAudio.CoreAudioApi;
 using NAudio.Wave;
+using NAudio.Wave.SampleProviders;
 using NAudio.Vorbis;
 using GameTracker.Models;
 
@@ -16,7 +17,9 @@ namespace GameTracker.Services
     ///   - .ogg            -> NAudio.Vorbis (managed Ogg Vorbis decoder)
     ///   - everything else -> NAudio AudioFileReader (wav/mp3/aiff natively;
     ///                        wma/m4a/aac/flac via Media Foundation)
-    /// Output goes through WaveOutEvent, which needs no window or UI thread.
+    /// Output goes through WaveOutEvent, or WasapiOut when a device is chosen; neither
+    /// needs a window or UI thread. Per-alert volume is applied as gain on the samples,
+    /// never through IWavePlayer.Volume (see Play).
     /// </summary>
     public sealed class SoundService
     {
@@ -191,11 +194,15 @@ namespace GameTracker.Services
 
             try
             {
-                output.Init(reader);
-                // Not every WASAPI endpoint exposes per-stream volume; a failure here
-                // shouldn't lose the alert, so fall back to playing it at full volume.
-                try { output.Volume = (float)Math.Clamp(volume, 0.0, 1.0); }
-                catch { }
+                // Apply the alert's volume as gain on the samples, NOT via output.Volume.
+                // IWavePlayer.Volume writes the app's Windows session volume: it moves our
+                // slider in the Windows volume mixer, outlives the sound, persists across
+                // restarts, and drags every other sound the app makes (the voice morph
+                // included) down with it until some louder alert happens to reset it.
+                output.Init(new VolumeSampleProvider(reader.ToSampleProvider())
+                {
+                    Volume = (float)Math.Clamp(volume, 0.0, 1.0),
+                });
                 _active.Add(output);
                 output.Play();
             }

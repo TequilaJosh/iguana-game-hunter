@@ -28,8 +28,10 @@
   #bar > i { display: block; height: 100%; width: 0%; background: var(--accent);
              border-radius: 1em; transition: width 0.35s ease; }
 
-  #view { flex: 1 1 auto; overflow: hidden; position: relative; }
-  #list { position: absolute; left: 0; top: 0; width: 100%; will-change: transform; }
+  /* min-height:0 lets the view shrink below its content so overflow is clipped (and
+     measurable) instead of pushing the panel open. */
+  #view { flex: 1 1 auto; min-height: 0; overflow: hidden; position: relative; }
+  #list { position: relative; width: 100%; will-change: transform; }
 
   .grp { margin-bottom: 0.5em; }
   .gh { font-size: 0.62em; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
@@ -68,6 +70,8 @@
   .rz { display: none; position: absolute; right: -8px; bottom: -8px; width: 16px; height: 16px;
         border-radius: 3px; background: #7cc44a; border: 2px solid #0a1410; cursor: nwse-resize; z-index: 5; }
   body.editing .rz { display: block; }
+  /* Auto-fit owns the height, so the handle only sets the width. */
+  body.fitting .rz { cursor: ew-resize; }
 
   /* Editor panel */
   #editor { position: fixed; top: 12px; right: 12px; z-index: 50; width: 288px; max-height: calc(100vh - 24px);
@@ -107,6 +111,7 @@
   if (EDIT) document.body.classList.add("editing");
 
   var CANVAS_W = 1280, CANVAS_H = 720;
+  var MIN_SIZE = 8;                      // how small auto-fit may shrink the text
 
   var DEFAULT_CONFIG = {
     x: 24, y: 90, w: 300, h: 520,       // position + size on the 1280x720 stage
@@ -117,6 +122,7 @@
     title: true, prog: true, bars: true, heads: true,
     dots: true, chips: false, strike: false, caps: false,
     hide: false,                         // hide items once collected
+    fit: true,                           // height follows the list; shrink text rather than cut off
     scroll: false, speed: 24             // slow auto-scroll when the list overflows
   };
 
@@ -138,7 +144,7 @@
     o.bg = clampNum(o.bg, 0, 100, 80);
     o.speed = clampNum(o.speed, 4, 200, 24);
     o.accent = /^#[0-9a-fA-F]{6}$/.test(o.accent || "") ? o.accent : "";
-    ["title", "prog", "bars", "heads", "dots", "chips", "strike", "caps", "hide", "scroll"]
+    ["title", "prog", "bars", "heads", "dots", "chips", "strike", "caps", "hide", "fit", "scroll"]
       .forEach(function (k) { o[k] = !!o[k]; });
     return o;
   }
@@ -151,7 +157,7 @@
       var v = parseInt(p.get(n), 10); if (isFinite(v)) o[n] = v;
     });
     var ac = p.get("accent"); if (ac && /^#?[0-9a-fA-F]{6}$/.test(ac)) o.accent = ac[0] === "#" ? ac : "#" + ac;
-    ["title", "prog", "bars", "heads", "dots", "chips", "strike", "caps", "hide", "scroll"]
+    ["title", "prog", "bars", "heads", "dots", "chips", "strike", "caps", "hide", "fit", "scroll"]
       .forEach(function (k) { var v = p.get(k); if (v === "0") o[k] = false; else if (v === "1") o[k] = true; });
     return o;
   }
@@ -191,10 +197,11 @@
     document.documentElement.style.setProperty("--border", accentColor());
 
     boardEl.style.left = c.x + "px"; boardEl.style.top = c.y + "px";
-    boardEl.style.width = c.w + "px"; boardEl.style.height = c.h + "px";
+    boardEl.style.width = c.w + "px";
     boardEl.style.fontSize = c.size + "px";
     boardEl.style.background = "rgba(10, 20, 16, " + (c.bg / 100) + ")";
     boardEl.classList.toggle("bare", c.bg === 0);
+    document.body.classList.toggle("fitting", c.fit);
     document.body.classList.toggle("chips", c.chips);
     document.body.classList.toggle("strike", c.strike);
     document.body.classList.toggle("caps", c.caps);
@@ -211,6 +218,7 @@
       listEl.innerHTML = '<div id="empty">No board yet.<br>Open the tracker in Game Hunter ' +
                          '(chat window → 🎲, or Settings → Overlay) and pick a set.</div>';
       stopScroll();
+      autoFit();
       return;
     }
 
@@ -256,7 +264,47 @@
     listEl.appendChild(frag);
     prevState = seen;
 
-    startScroll();
+    // Auto-fit returns true when even the smallest text won't fit on the stage — then
+    // scroll it regardless of the setting, so nothing is ever permanently cut off.
+    startScroll(autoFit());
+  }
+
+  // ---- auto-fit: the panel grows and shrinks with the list ----
+  var fitSize = 0;          // text size actually in use after any shrinking
+
+  function autoFit() {
+    fitSize = config.size;
+    if (!config.fit) { boardEl.style.height = config.h + "px"; return false; }
+
+    // Room left on the stage below the board's top edge, with a small bottom margin.
+    var avail = Math.max(60, CANVAS_H - config.y - 6);
+    boardEl.style.height = "auto";
+    boardEl.style.fontSize = fitSize + "px";
+    var h = boardEl.offsetHeight;
+
+    // Too tall: step the text down until it fits, or we hit the floor.
+    var shrank = false;
+    for (var i = 0; i < 8 && h > avail && fitSize > MIN_SIZE; i++) {
+      var next = Math.floor(fitSize * avail / h);
+      if (next >= fitSize) next = fitSize - 1;        // always make progress
+      fitSize = Math.max(MIN_SIZE, next);
+      boardEl.style.fontSize = fitSize + "px";
+      h = boardEl.offsetHeight;
+      shrank = true;
+    }
+    // The estimate above undershoots, so claw back any size the space can still take.
+    if (shrank && h <= avail) {
+      for (var j = 0; j < 12 && fitSize < config.size; j++) {
+        boardEl.style.fontSize = (fitSize + 1) + "px";
+        var grown = boardEl.offsetHeight;
+        if (grown > avail) { boardEl.style.fontSize = fitSize + "px"; break; }
+        fitSize++; h = grown;
+      }
+    }
+
+    var over = h > avail;
+    boardEl.style.height = (over ? avail : h) + "px";
+    return over;
   }
 
   // ---- slow auto-scroll when the list is taller than the panel ----
@@ -265,9 +313,9 @@
     if (scrollRaf) cancelAnimationFrame(scrollRaf);
     scrollRaf = 0; sy = 0; slast = null; sdir = -1; shold = 0; listEl.style.transform = "";
   }
-  function startScroll() {
+  function startScroll(force) {
     stopScroll();
-    if (!config.scroll) return;
+    if (!config.scroll && !force) return;
     var over = listEl.scrollHeight - viewEl.clientHeight;
     if (over <= 2) return;
     function frame(t) {
@@ -302,6 +350,7 @@
         config.x = Math.round(ox + (ev.clientX - sx) / stageScale);
         config.y = Math.round(oy + (ev.clientY - sy2) / stageScale);
         boardEl.style.left = config.x + "px"; boardEl.style.top = config.y + "px";
+        if (config.fit) autoFit();     // less room below -> re-fit as it moves
       }
       function up() {
         try { boardEl.releasePointerCapture(e.pointerId); } catch (x) {}
@@ -318,8 +367,10 @@
       rz.setPointerCapture(e.pointerId);
       function move(ev) {
         config.w = clampNum(ow + (ev.clientX - sx) / stageScale, 100, 1280, ow);
+        boardEl.style.width = config.w + "px";
+        if (config.fit) { autoFit(); return; }       // height belongs to auto-fit
         config.h = clampNum(oh + (ev.clientY - sy2) / stageScale, 60, 720, oh);
-        boardEl.style.width = config.w + "px"; boardEl.style.height = config.h + "px";
+        boardEl.style.height = config.h + "px";
       }
       function up() {
         try { rz.releasePointerCapture(e.pointerId); } catch (x) {}
@@ -343,7 +394,8 @@
     var e = document.createElement("div"); e.id = "editor";
     e.innerHTML =
       '<h3>&#127922; Tracker editor</h3>' +
-      '<div class="hint">Drag the board to move it, drag the green corner to resize. ' +
+      '<div class="hint">Drag the board to move it, drag the green corner for the width. ' +
+      'With auto-fit on, the height follows the list on its own. ' +
       'Tick items off in Game Hunter — they light up here instantly. Everything saves ' +
       'automatically; in OBS use the plain /tracker URL.</div>' +
       '<div class="grp2"><label class="h">Text size</label><div class="row">' +
@@ -366,6 +418,10 @@
         '<label class="cb"><input type="checkbox" id="edStrike"> Strike through collected</label>' +
         '<label class="cb"><input type="checkbox" id="edCaps"> UPPERCASE names</label>' +
         '<label class="cb"><input type="checkbox" id="edHide"> Hide once collected</label></div>' +
+      '<div class="grp2"><label class="h">Height</label>' +
+        '<label class="cb"><input type="checkbox" id="edFit"> Auto-fit to the list</label>' +
+        '<div class="hint" style="margin:2px 0 0">On: the panel grows and shrinks with the list, and ' +
+        'the text steps down rather than get cut off. Off: drag the corner to set the height yourself.</div></div>' +
       '<div class="grp2"><label class="h">Long lists</label>' +
         '<label class="cb"><input type="checkbox" id="edScroll"> Auto-scroll when too tall</label>' +
         '<div class="row"><input type="range" id="edSpeed" min="4" max="120"><span class="rv" id="edSpeedV"></span></div></div>' +
@@ -381,7 +437,8 @@
     E.bars = bind("edBars", onChange); E.heads = bind("edHeads", onChange);
     E.dots = bind("edDots", onChange); E.chips = bind("edChips", onChange);
     E.strike = bind("edStrike", onChange); E.caps = bind("edCaps", onChange);
-    E.hide = bind("edHide", onChange); E.scroll = bind("edScroll", onChange);
+    E.hide = bind("edHide", onChange); E.fit = bind("edFit", onChange);
+    E.scroll = bind("edScroll", onChange);
     E.speed = bind("edSpeed", onChange); E.speedV = document.getElementById("edSpeedV");
     E.saved = document.getElementById("edSaved");
 
@@ -401,13 +458,16 @@
 
   function syncControls() {
     if (!E.size) return;
-    E.size.value = config.size; E.sizeV.textContent = config.size + "px";
+    E.size.value = config.size;
+    // Show what auto-fit actually ended up using when it had to shrink the text.
+    E.sizeV.textContent = (fitSize && fitSize !== config.size)
+      ? config.size + "→" + fitSize : config.size + "px";
     E.cols.value = config.cols; E.colsV.textContent = config.cols;
     E.accent.value = config.accent || accentColor();
     E.accentV.textContent = config.accent ? config.accent : "auto";
     E.bg.value = config.bg; E.bgV.textContent = config.bg + "%";
     E.speed.value = config.speed; E.speedV.textContent = config.speed + "/s";
-    ["title", "prog", "bars", "heads", "dots", "chips", "strike", "caps", "hide", "scroll"]
+    ["title", "prog", "bars", "heads", "dots", "chips", "strike", "caps", "hide", "fit", "scroll"]
       .forEach(function (k) { E[k].checked = !!config[k]; });
   }
 
@@ -415,14 +475,18 @@
     var accent = config.accent;
     // Touching the colour picker takes it off "auto"; the Auto button puts it back.
     if (ev && ev.target === E.accent) accent = E.accent.value;
+    // Switching auto-fit off hands the height over at its current size, so it
+    // doesn't jump back to whatever was set before.
+    var h = config.h;
+    if (config.fit && !E.fit.checked) h = Math.round(boardEl.offsetHeight) || h;
     config = coerce({
-      x: config.x, y: config.y, w: config.w, h: config.h,
+      x: config.x, y: config.y, w: config.w, h: h,
       size: +E.size.value, cols: +E.cols.value, bg: +E.bg.value, accent: accent,
       speed: +E.speed.value,
       title: E.title.checked, prog: E.prog.checked, bars: E.bars.checked,
       heads: E.heads.checked, dots: E.dots.checked, chips: E.chips.checked,
       strike: E.strike.checked, caps: E.caps.checked, hide: E.hide.checked,
-      scroll: E.scroll.checked
+      fit: E.fit.checked, scroll: E.scroll.checked
     });
     render(false); syncControls(); scheduleSave();
   }

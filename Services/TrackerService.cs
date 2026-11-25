@@ -23,10 +23,17 @@ namespace GameTracker.Services
         private static string _activeId = string.Empty;
         private static readonly object Gate = new();
 
+        // Boards built before the colour became optional carry the old hard-coded green.
+        // Nobody picked it deliberately, so hand them back to the app theme.
+        private const string LegacyDefaultColor = "#7cc44a";
+
         private static void Ensure()
         {
             if (_sets != null) return;
             _sets = SettingsService.LoadTrackers();
+            foreach (var s in _sets)
+                if (string.Equals(s.Color, LegacyDefaultColor, StringComparison.OrdinalIgnoreCase))
+                    s.Color = string.Empty;
             _activeId = SettingsService.LoadTrackerActiveId();
         }
 

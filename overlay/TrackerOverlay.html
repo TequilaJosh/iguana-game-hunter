@@ -75,23 +75,25 @@
 
   /* Editor panel */
   #editor { position: fixed; top: 12px; right: 12px; z-index: 50; width: 288px; max-height: calc(100vh - 24px);
-            overflow: auto; background: rgba(8,16,12,0.96); color: #e8e0c4; border: 1px solid #4a7c3a;
+            overflow: auto; background: var(--panel, rgba(8,16,12,0.96)); color: var(--ink);
+            border: 1px solid var(--border);
             border-radius: 10px; padding: 12px 14px; font-size: 13px; box-shadow: 0 8px 26px rgba(0,0,0,0.6); }
-  #editor h3 { margin: 0 0 2px; color: #7cc44a; font-size: 13px; }
-  #editor .hint { color: #7a9070; font-size: 11px; margin-bottom: 10px; line-height: 1.35; }
+  #editor h3 { margin: 0 0 2px; color: var(--accent); font-size: 13px; }
+  #editor .hint { color: var(--dim); font-size: 11px; margin-bottom: 10px; line-height: 1.35; }
   #editor .grp2 { margin-bottom: 10px; }
-  #editor .grp2 > label.h { display: block; color: #a8c488; font-weight: 700; font-size: 11px;
+  #editor .grp2 > label.h { display: block; color: var(--accent); font-weight: 700; font-size: 11px;
                             text-transform: uppercase; margin-bottom: 4px; }
   #editor .row { display: flex; align-items: center; gap: 8px; }
-  #editor .row .rv { margin-left: auto; color: #a8c488; min-width: 46px; text-align: right; }
+  #editor .row .rv { margin-left: auto; color: var(--accent); min-width: 46px; text-align: right; }
   #editor label.cb { display: flex; align-items: center; gap: 5px; margin: 0 0 4px; cursor: pointer; }
-  #editor input[type=range] { flex: 1; accent-color: #7cc44a; }
-  #editor select, #editor input[type=color] { background: #14241c; color: #e8e0c4;
-            border: 1px solid #4a7c3a; border-radius: 4px; padding: 3px 5px; }
+  #editor input[type=range] { flex: 1; accent-color: var(--accent); }
+  #editor select, #editor input[type=color], #editor input[type=number] { background: rgba(255,255,255,0.07);
+            color: var(--ink); border: 1px solid var(--border); border-radius: 4px; padding: 3px 5px; }
+  #editor input[type=number] { width: 54px; flex: none; text-align: center; }
   #editor input[type=color] { padding: 1px; width: 40px; height: 26px; }
-  #editor button { background: #14241c; color: #a8c488; border: 1px solid #4a7c3a; border-radius: 4px;
+  #editor button { background: rgba(255,255,255,0.07); color: var(--accent); border: 1px solid var(--border); border-radius: 4px;
                    padding: 4px 8px; cursor: pointer; }
-  #editor .saved { color: #7cc44a; font-size: 11px; height: 14px; }
+  #editor .saved { color: var(--accent); font-size: 11px; height: 14px; }
 </style>
 </head>
 <body>
@@ -112,11 +114,12 @@
 
   var CANVAS_W = 1280, CANVAS_H = 720;
   var MIN_SIZE = 8;                      // how small auto-fit may shrink the text
+  var MAX_COLS = 24;                     // a ceiling only so a stray number can't break the layout
 
   var DEFAULT_CONFIG = {
-    x: 24, y: 90, w: 300, h: 520,       // position + size on the 1280x720 stage
+    x: 24, y: 90, w: 460, h: 520,       // position + size on the 1280x720 stage
     size: 16,                            // text size in px
-    cols: 1,                             // items per row (1-4)
+    cols: 2,                             // items per row
     bg: 80,                              // panel background opacity %
     accent: "",                          // "" = follow the board's colour / app theme
     title: true, prog: true, bars: true, heads: true,
@@ -128,10 +131,17 @@
 
   var config = Object.assign({}, DEFAULT_CONFIG);
   var board = null;        // the active set pushed by Game Hunter
-  var themeAccent = "#7cc44a";
+  // The app's current palette, so the board looks like the rest of Game Hunter.
+  var theme = { accent: "#7cc44a", accentDeep: "#4a7c3a", bg: "#0a1410",
+                text: "#e8e0c4", textFaint: "#7a9070" };
 
   function clampNum(v, lo, hi, dflt) { v = Math.round(+v); return isFinite(v) ? Math.min(hi, Math.max(lo, v)) : dflt; }
   function hex(v, dflt) { return /^#[0-9a-fA-F]{6}$/.test(v || "") ? v : dflt; }
+  function rgba(h, a) {
+    h = hex(h, "#0a1410");
+    return "rgba(" + parseInt(h.substr(1, 2), 16) + "," + parseInt(h.substr(3, 2), 16) + "," +
+           parseInt(h.substr(5, 2), 16) + "," + a + ")";
+  }
 
   function coerce(c) {
     var o = Object.assign({}, DEFAULT_CONFIG, c || {});
@@ -140,7 +150,7 @@
     o.w = clampNum(o.w, 100, 1280, DEFAULT_CONFIG.w);
     o.h = clampNum(o.h, 60, 720, DEFAULT_CONFIG.h);
     o.size = clampNum(o.size, 8, 48, 16);
-    o.cols = clampNum(o.cols, 1, 4, 1);
+    o.cols = clampNum(o.cols, 1, MAX_COLS, DEFAULT_CONFIG.cols);
     o.bg = clampNum(o.bg, 0, 100, 80);
     o.speed = clampNum(o.speed, 4, 200, 24);
     o.accent = /^#[0-9a-fA-F]{6}$/.test(o.accent || "") ? o.accent : "";
@@ -187,19 +197,27 @@
   // ---- rendering ----
   var prevState = {};   // "group/item" -> collected, so newly-got items can pop
 
+  // The board's own colour beats the theme; an explicit accent in the editor beats both.
   function accentColor() {
-    return config.accent || (board && hex(board.color, null)) || themeAccent || "#7cc44a";
+    return config.accent || (board && hex(board.color, null)) || hex(theme.accent, "#7cc44a");
+  }
+  function borderColor() {
+    var own = config.accent || (board && hex(board.color, null));
+    return own || hex(theme.accentDeep, accentColor());
   }
 
   function render(animate) {
-    var c = config;
-    document.documentElement.style.setProperty("--accent", accentColor());
-    document.documentElement.style.setProperty("--border", accentColor());
+    var c = config, root = document.documentElement.style;
+    root.setProperty("--accent", accentColor());
+    root.setProperty("--border", borderColor());
+    root.setProperty("--ink", hex(theme.text, "#e8e0c4"));
+    root.setProperty("--dim", hex(theme.textFaint, "#7a9070"));
+    root.setProperty("--panel", rgba(theme.bg, 0.96));     // the editor's own chrome
 
     boardEl.style.left = c.x + "px"; boardEl.style.top = c.y + "px";
     boardEl.style.width = c.w + "px";
     boardEl.style.fontSize = c.size + "px";
-    boardEl.style.background = "rgba(10, 20, 16, " + (c.bg / 100) + ")";
+    boardEl.style.background = rgba(theme.bg, c.bg / 100);
     boardEl.classList.toggle("bare", c.bg === 0);
     document.body.classList.toggle("fitting", c.fit);
     document.body.classList.toggle("chips", c.chips);
@@ -401,7 +419,10 @@
       '<div class="grp2"><label class="h">Text size</label><div class="row">' +
         '<input type="range" id="edSize" min="8" max="40"><span class="rv" id="edSizeV"></span></div></div>' +
       '<div class="grp2"><label class="h">Columns</label><div class="row">' +
-        '<input type="range" id="edCols" min="1" max="4"><span class="rv" id="edColsV"></span></div></div>' +
+        '<input type="range" id="edCols" min="1" max="8">' +
+        '<input type="number" id="edColsN" min="1" max="' + MAX_COLS + '" step="1">' +
+        '</div><div class="hint" style="margin:3px 0 0">Slider to 8, or type any number up to ' +
+        MAX_COLS + ' in the box.</div></div>' +
       '<div class="grp2"><label class="h">Accent colour</label><div class="row">' +
         '<input type="color" id="edAccent"><span class="rv" id="edAccentV"></span>' +
         '<button id="edAccentAuto">Auto</button></div></div>' +
@@ -430,7 +451,7 @@
     document.body.appendChild(e);
 
     E.size = bind("edSize", onChange); E.sizeV = document.getElementById("edSizeV");
-    E.cols = bind("edCols", onChange); E.colsV = document.getElementById("edColsV");
+    E.cols = bind("edCols", onChange); E.colsN = bind("edColsN", onChange);
     E.accent = bind("edAccent", onChange); E.accentV = document.getElementById("edAccentV");
     E.bg = bind("edBg", onChange); E.bgV = document.getElementById("edBgV");
     E.title = bind("edTitle", onChange); E.prog = bind("edProg", onChange);
@@ -462,7 +483,9 @@
     // Show what auto-fit actually ended up using when it had to shrink the text.
     E.sizeV.textContent = (fitSize && fitSize !== config.size)
       ? config.size + "→" + fitSize : config.size + "px";
-    E.cols.value = config.cols; E.colsV.textContent = config.cols;
+    // Don't fight the box while it's being typed into.
+    E.cols.value = Math.min(8, config.cols);
+    if (document.activeElement !== E.colsN) E.colsN.value = config.cols;
     E.accent.value = config.accent || accentColor();
     E.accentV.textContent = config.accent ? config.accent : "auto";
     E.bg.value = config.bg; E.bgV.textContent = config.bg + "%";
@@ -479,9 +502,14 @@
     // doesn't jump back to whatever was set before.
     var h = config.h;
     if (config.fit && !E.fit.checked) h = Math.round(boardEl.offsetHeight) || h;
+    // Columns come from the slider or the box, whichever was touched. An empty box is
+    // someone mid-type, so leave the count alone until they finish.
+    var cols = config.cols;
+    if (ev && ev.target === E.cols) cols = +E.cols.value;
+    else if (ev && ev.target === E.colsN && E.colsN.value !== "") cols = +E.colsN.value;
     config = coerce({
       x: config.x, y: config.y, w: config.w, h: h,
-      size: +E.size.value, cols: +E.cols.value, bg: +E.bg.value, accent: accent,
+      size: +E.size.value, cols: cols, bg: +E.bg.value, accent: accent,
       speed: +E.speed.value,
       title: E.title.checked, prog: E.prog.checked, bars: E.bars.checked,
       heads: E.heads.checked, dots: E.dots.checked, chips: E.chips.checked,
@@ -510,7 +538,7 @@
     var d; try { d = JSON.parse(raw); } catch (e) { return; }
     if (!d || typeof d.type !== "string") return;
     if (d.type === "snapshot") {
-      if (d.theme && d.theme.accent) themeAccent = d.theme.accent;
+      if (d.theme && d.theme.accent) theme = d.theme;
       board = d.tracker || null;
       applyConfig(d.trackerCfg || {});
     } else if (d.type === "tracker") {
@@ -520,8 +548,9 @@
       if (!EDIT) applyConfig(d.trackerCfg || {});
       else { config = coerce(d.trackerCfg || {}); render(false); syncControls(); }
     } else if (d.type === "theme" && d.theme && d.theme.accent) {
-      themeAccent = d.theme.accent;
+      theme = d.theme;             // app theme changed -> recolour live
       render(false);
+      if (EDIT) syncControls();    // the "auto" swatch follows the new accent
     }
   }
 

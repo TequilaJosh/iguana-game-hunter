@@ -109,7 +109,8 @@ namespace GameTracker.Models
         public string Game { get; set; } = string.Empty;
 
         /// <summary>Accent colour for the collected items (dashboard and overlay).</summary>
-        public string Color { get; set; } = "#7cc44a";
+        /// <summary>Colour for collected items. Empty = follow the app's theme accent.</summary>
+        public string Color { get; set; } = "";
 
         /// <summary>Catalog entry this was copied from, if any (informational).</summary>
         public string SourceId { get; set; } = string.Empty;

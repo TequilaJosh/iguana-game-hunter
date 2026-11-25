@@ -168,12 +168,19 @@ namespace GameTracker.Views
                 : titles.FirstOrDefault(t => t.Equals(linked, StringComparison.OrdinalIgnoreCase)) ?? NoGame;
         }
 
+        // A board with no colour of its own follows whatever theme the app is wearing.
         private static Brush BrushOf(string? hex)
         {
             try
             {
                 if (!string.IsNullOrWhiteSpace(hex))
                     return new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
+            }
+            catch { }
+            try
+            {
+                if (Application.Current?.Resources["ThemeAccent"] is SolidColorBrush t)
+                    return new SolidColorBrush(t.Color);
             }
             catch { }
             return new SolidColorBrush(Color.FromRgb(0x7c, 0xc4, 0x4a));
@@ -301,6 +308,17 @@ namespace GameTracker.Views
             var hex = ColorPickerWindow.Pick(Window.GetWindow(this), set.Color);
             if (hex == null) return;
             set.Color = hex;
+            TrackerService.Save();
+            RefreshAll();
+        }
+
+        // Right-click the colour button to drop back to the app theme's own accent.
+        private void SetColor_RightClick(object sender, MouseButtonEventArgs e)
+        {
+            e.Handled = true;
+            var set = TrackerService.Active;
+            if (set == null || set.Color.Length == 0) return;
+            set.Color = "";
             TrackerService.Save();
             RefreshAll();
         }

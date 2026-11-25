@@ -212,7 +212,8 @@
                                  LostFocus="SetName_Changed" KeyDown="SetName_KeyDown"
                                  ToolTip="What this board is called"/>
                         <Button Grid.Column="1" Content="&#127912;" Style="{StaticResource TBtn}"
-                                Click="SetColor_Click" ToolTip="Colour for the collected items on the overlay"/>
+                                Click="SetColor_Click" MouseRightButtonUp="SetColor_RightClick"
+                                ToolTip="Colour for the collected items on the overlay. Right-click to go back to your theme colour."/>
                     </Grid>
                     <Grid Margin="0,0,0,5">
                         <Grid.ColumnDefinitions>

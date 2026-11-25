@@ -414,7 +414,8 @@ namespace GameTracker.Views
             Step(4, "✎ edits the board: rename items, remove them, add your own, add and delete groups. Typing \"Dragon Orbs *8\" makes a counter out of eight. ↺ resets the run without losing the list.");
             Step(5, "Link a board to a game in the ✎ footer and it comes up by itself when you start that game's session.");
             Step(6, "For stream: Settings → Overlay → RANDOMIZER TRACKER → copy the tracker URL into an OBS Browser source, then open the editor URL in a browser to size it, set columns, colour and whether found items stay or disappear. It saves as you go.");
-            Step(7, "The overlay panel fits itself to the list: it grows and shrinks as the board changes, and steps the text down instead of cutting the bottom off. Long lists read better in 2 columns or a wider panel — untick \"Auto-fit to the list\" in the editor if you'd rather set the height yourself.");
+            Step(7, "The overlay panel fits itself to the list: it grows and shrinks as the board changes, and steps the text down instead of cutting the bottom off. Untick \"Auto-fit to the list\" in the editor if you'd rather set the height yourself.");
+            Step(8, "It starts two columns wide — set any number you like in the editor's Columns box (the slider goes to 8, the box up to 24). Colours follow whatever theme the app is wearing; 🎨 in the ✎ footer gives one board its own colour instead, and right-clicking 🎨 hands it back to the theme.");
 
             Section("Stream stats & recap");
             Img("stats.png");

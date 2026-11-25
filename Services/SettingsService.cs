@@ -15,6 +15,8 @@ namespace GameTracker.Services
         public bool AutoConnect { get; set; } = true; // connect saved sources when a session starts
         public double Opacity { get; set; } = 1.0;    // chat window transparency (0.25–1.0)
         public string SendTarget { get; set; } = "";  // outgoing SSN target platform ("" = all)
+        public bool TrackerDock { get; set; }         // randomizer tracker docked under the chat
+        public double TrackerDockHeight { get; set; } = 240; // how tall the streamer left it
     }
 
     /// <summary>Persists app settings (hotkeys, chat connections) to settings.json.</summary>
@@ -51,6 +53,9 @@ namespace GameTracker.Services
             public string? OverlayFrame { get; set; }                  // JSON: game frame border config (null = default)
             public List<WheelPreset> WheelPresets { get; set; } = new(); // reusable named challenge lists
             public List<WheelPreset> WheelGamePresets { get; set; } = new(); // named game-picker sets (by title)
+            public List<TrackerSet> Trackers { get; set; } = new();    // randomizer item/quest boards
+            public string TrackerActiveId { get; set; } = "";          // which board is on the dashboard
+            public string? OverlayTracker { get; set; }                // JSON: tracker overlay config (null = default)
         }
 
         // Replace initialized collections instead of appending to them — otherwise lists
@@ -100,6 +105,44 @@ namespace GameTracker.Services
         {
             var s = LoadAll();
             s.OverlayFrame = frameJson;
+            SaveAll(s);
+        }
+
+        // Randomizer tracker boards (item/quest checklists) and which one is showing.
+        public static List<TrackerSet> LoadTrackers() => LoadAll().Trackers ?? new List<TrackerSet>();
+
+        public static void SaveTrackers(List<TrackerSet> sets)
+        {
+            var s = LoadAll();
+            s.Trackers = sets ?? new List<TrackerSet>();
+            SaveAll(s);
+        }
+
+        public static string LoadTrackerActiveId() => LoadAll().TrackerActiveId ?? "";
+
+        public static void SaveTrackerActiveId(string? id)
+        {
+            var s = LoadAll();
+            s.TrackerActiveId = id ?? "";
+            SaveAll(s);
+        }
+
+        /// <summary>Both at once — the tracker changes them together on every edit.</summary>
+        public static void SaveTrackers(List<TrackerSet> sets, string? activeId)
+        {
+            var s = LoadAll();
+            s.Trackers = sets ?? new List<TrackerSet>();
+            s.TrackerActiveId = activeId ?? "";
+            SaveAll(s);
+        }
+
+        // Tracker overlay config as raw JSON (edited live in /tracker?edit), like the ticker.
+        public static string? LoadOverlayTracker() => LoadAll().OverlayTracker;
+
+        public static void SaveOverlayTracker(string? trackerJson)
+        {
+            var s = LoadAll();
+            s.OverlayTracker = trackerJson;
             SaveAll(s);
         }
 

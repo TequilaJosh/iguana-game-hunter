@@ -40,6 +40,8 @@
     <EmbeddedResource Include="overlay\EffectsOverlay.html" />
     <!-- Activity ticker banner (latest sub/gift/follow), served at /ticker. -->
     <EmbeddedResource Include="overlay\TickerOverlay.html" />
+    <!-- Randomizer item/quest tracker board, served at /tracker. -->
+    <EmbeddedResource Include="overlay\TrackerOverlay.html" />
     <!-- How-to guide screenshots (regenerate with the capture-docs startup flag). -->
     <Resource Include="Docs\Screens\*.png" />
     <!-- Bundled bonus font, served at /font/saturn.ttf as "MR. Saturn". -->

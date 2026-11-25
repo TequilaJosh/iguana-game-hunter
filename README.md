@@ -10,6 +10,9 @@ A reptilian-themed WPF desktop app for tracking your game backlog as a kanban bo
   banks the elapsed time and totals it per game. Manual entry and per-session notes too.
 - **Requester tracking** — note who asked for each game
 - **Search** across title, platform, genre, and requester
+- **Randomizer tracker** — key-item/quest boards you click off as you find them, with 60
+  built-in sets for NES, SNES, PS1 and PS2 RPGs. Docks under the chat or pops out into its
+  own window, and mirrors live to an OBS browser source at `/tracker`.
 - **Custom reptilian theme** with an iguana-eye icon and custom title bar
 - **Auto-update** — checks GitHub Releases on launch and offers to install newer versions
 

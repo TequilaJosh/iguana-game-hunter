@@ -707,6 +707,8 @@ namespace GameTracker
             RefreshView();
             Services.OverlayService.Update(CurrentlyStreaming());
             Services.StreamStatsService.CountGame(game.Title);
+            // If a tracker board is linked to this game, bring it up without being asked.
+            Services.TrackerService.SyncToGame(game.Title);
             EnsureChatAutoConnect();
             StatusText.Text = moved
                 ? $"Started session for \"{game.Title}\"  -  now HUNTING"

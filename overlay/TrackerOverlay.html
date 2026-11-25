@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>LazerGuanas Randomizer Tracker</title>
+<style>
+  :root { --accent: #7cc44a; --border: #4a7c3a; --ink: #e8e0c4; --dim: #7a9070; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; height: 100%; background: transparent; overflow: hidden;
+               font-family: 'Segoe UI', Arial, sans-serif; }
+
+  /* Fixed 1280x720 design stage scaled to fit the OBS source (matches the other overlays). */
+  #stage { position: absolute; left: 50%; top: 50%; width: 1280px; height: 720px;
+           transform-origin: center center; transform: translate(-50%,-50%); }
+
+  #board { position: absolute; overflow: hidden; display: flex; flex-direction: column;
+           background: rgba(10, 20, 16, 0.8); border: 2px solid var(--border); border-radius: 12px;
+           box-shadow: 0 6px 22px rgba(0,0,0,0.55); padding: 0.6em 0.75em; font-size: 16px;
+           color: var(--ink); }
+  #board.bare { background: none; border: none; box-shadow: none; padding: 0; }
+
+  #hdr { display: flex; align-items: baseline; gap: 0.5em; margin-bottom: 0.35em; flex: none; }
+  #title { font-weight: 800; font-size: 1.05em; color: var(--accent); letter-spacing: 0.02em;
+           white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #prog { margin-left: auto; font-weight: 700; font-size: 0.85em; color: var(--ink); white-space: nowrap; }
+  #bar { flex: none; height: 0.3em; border-radius: 1em; background: rgba(255,255,255,0.13);
+         overflow: hidden; margin-bottom: 0.5em; }
+  #bar > i { display: block; height: 100%; width: 0%; background: var(--accent);
+             border-radius: 1em; transition: width 0.35s ease; }
+
+  #view { flex: 1 1 auto; overflow: hidden; position: relative; }
+  #list { position: absolute; left: 0; top: 0; width: 100%; will-change: transform; }
+
+  .grp { margin-bottom: 0.5em; }
+  .gh { font-size: 0.62em; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase;
+        color: var(--accent); opacity: 0.85; margin-bottom: 0.25em;
+        border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.15em; }
+  .items { display: grid; gap: 0.25em; }
+
+  .it { display: flex; align-items: center; gap: 0.35em; line-height: 1.2;
+        padding: 0.12em 0.3em; border-radius: 0.3em; min-width: 0; }
+  .it .nm { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .it .ct { margin-left: auto; font-size: 0.78em; font-weight: 700; opacity: 0.9; flex: none; }
+  .it .dot { flex: none; width: 0.55em; height: 0.55em; border-radius: 50%;
+             border: 1px solid var(--accent); opacity: 0.5; }
+
+  /* Not collected yet: faded. Collected: full strength + a lit dot. */
+  .it.off { opacity: 0.35; }
+  .it.off .nm { color: var(--ink); }
+  .it.on { opacity: 1; }
+  .it.on .dot { background: var(--accent); opacity: 1; box-shadow: 0 0 0.4em var(--accent); }
+  .it.on .nm { color: var(--accent); font-weight: 700; }
+  body.strike .it.on .nm { text-decoration: line-through; text-decoration-thickness: 0.08em; }
+  body.chips .it { background: rgba(255,255,255,0.06); }
+  body.chips .it.on { background: rgba(124,196,74,0.18); }
+  body.nodots .dot { display: none; }
+  body.caps .nm { text-transform: uppercase; letter-spacing: 0.03em; }
+
+  @keyframes pop { 0% { transform: scale(1); } 35% { transform: scale(1.18); } 100% { transform: scale(1); } }
+  .it.pop { animation: pop 0.45s ease; }
+
+  #empty { color: var(--dim); font-size: 0.85em; line-height: 1.4; }
+
+  /* Edit mode: selectable, draggable, resizable. */
+  body.editing #board { cursor: move; outline: 2px dashed rgba(124,196,74,0.8); }
+  body.editing { background:
+      repeating-conic-gradient(#1a1a1a 0% 25%, #242424 0% 50%) 50% / 24px 24px; }
+  .rz { display: none; position: absolute; right: -8px; bottom: -8px; width: 16px; height: 16px;
+        border-radius: 3px; background: #7cc44a; border: 2px solid #0a1410; cursor: nwse-resize; z-index: 5; }
+  body.editing .rz { display: block; }
+
+  /* Editor panel */
+  #editor { position: fixed; top: 12px; right: 12px; z-index: 50; width: 288px; max-height: calc(100vh - 24px);
+            overflow: auto; background: rgba(8,16,12,0.96); color: #e8e0c4; border: 1px solid #4a7c3a;
+            border-radius: 10px; padding: 12px 14px; font-size: 13px; box-shadow: 0 8px 26px rgba(0,0,0,0.6); }
+  #editor h3 { margin: 0 0 2px; color: #7cc44a; font-size: 13px; }
+  #editor .hint { color: #7a9070; font-size: 11px; margin-bottom: 10px; line-height: 1.35; }
+  #editor .grp2 { margin-bottom: 10px; }
+  #editor .grp2 > label.h { display: block; color: #a8c488; font-weight: 700; font-size: 11px;
+                            text-transform: uppercase; margin-bottom: 4px; }
+  #editor .row { display: flex; align-items: center; gap: 8px; }
+  #editor .row .rv { margin-left: auto; color: #a8c488; min-width: 46px; text-align: right; }
+  #editor label.cb { display: flex; align-items: center; gap: 5px; margin: 0 0 4px; cursor: pointer; }
+  #editor input[type=range] { flex: 1; accent-color: #7cc44a; }
+  #editor select, #editor input[type=color] { background: #14241c; color: #e8e0c4;
+            border: 1px solid #4a7c3a; border-radius: 4px; padding: 3px 5px; }
+  #editor input[type=color] { padding: 1px; width: 40px; height: 26px; }
+  #editor button { background: #14241c; color: #a8c488; border: 1px solid #4a7c3a; border-radius: 4px;
+                   padding: 4px 8px; cursor: pointer; }
+  #editor .saved { color: #7cc44a; font-size: 11px; height: 14px; }
+</style>
+</head>
+<body>
+  <div id="stage">
+    <div id="board">
+      <div id="hdr"><span id="title">Tracker</span><span id="prog"></span></div>
+      <div id="bar"><i></i></div>
+      <div id="view"><div id="list"><div id="empty"></div></div></div>
+      <div class="rz"></div>
+    </div>
+  </div>
+
+<script>
+(function () {
+  "use strict";
+  var EDIT = new URLSearchParams(location.search).has("edit");
+  if (EDIT) document.body.classList.add("editing");
+
+  var CANVAS_W = 1280, CANVAS_H = 720;
+
+  var DEFAULT_CONFIG = {
+    x: 24, y: 90, w: 300, h: 520,       // position + size on the 1280x720 stage
+    size: 16,                            // text size in px
+    cols: 1,                             // items per row (1-4)
+    bg: 80,                              // panel background opacity %
+    accent: "",                          // "" = follow the board's colour / app theme
+    title: true, prog: true, bars: true, heads: true,
+    dots: true, chips: false, strike: false, caps: false,
+    hide: false,                         // hide items once collected
+    scroll: false, speed: 24             // slow auto-scroll when the list overflows
+  };
+
+  var config = Object.assign({}, DEFAULT_CONFIG);
+  var board = null;        // the active set pushed by Game Hunter
+  var themeAccent = "#7cc44a";
+
+  function clampNum(v, lo, hi, dflt) { v = Math.round(+v); return isFinite(v) ? Math.min(hi, Math.max(lo, v)) : dflt; }
+  function hex(v, dflt) { return /^#[0-9a-fA-F]{6}$/.test(v || "") ? v : dflt; }
+
+  function coerce(c) {
+    var o = Object.assign({}, DEFAULT_CONFIG, c || {});
+    o.x = clampNum(o.x, -400, CANVAS_W, DEFAULT_CONFIG.x);
+    o.y = clampNum(o.y, -200, CANVAS_H, DEFAULT_CONFIG.y);
+    o.w = clampNum(o.w, 100, 1280, DEFAULT_CONFIG.w);
+    o.h = clampNum(o.h, 60, 720, DEFAULT_CONFIG.h);
+    o.size = clampNum(o.size, 8, 48, 16);
+    o.cols = clampNum(o.cols, 1, 4, 1);
+    o.bg = clampNum(o.bg, 0, 100, 80);
+    o.speed = clampNum(o.speed, 4, 200, 24);
+    o.accent = /^#[0-9a-fA-F]{6}$/.test(o.accent || "") ? o.accent : "";
+    ["title", "prog", "bars", "heads", "dots", "chips", "strike", "caps", "hide", "scroll"]
+      .forEach(function (k) { o[k] = !!o[k]; });
+    return o;
+  }
+
+  // URL overrides let a second OBS source show the same board styled differently,
+  // e.g. /tracker?cols=2&size=13&hide=1&accent=ff0066
+  function urlOverrides() {
+    var p = new URLSearchParams(location.search), o = {};
+    ["x", "y", "w", "h", "size", "cols", "bg", "speed"].forEach(function (n) {
+      var v = parseInt(p.get(n), 10); if (isFinite(v)) o[n] = v;
+    });
+    var ac = p.get("accent"); if (ac && /^#?[0-9a-fA-F]{6}$/.test(ac)) o.accent = ac[0] === "#" ? ac : "#" + ac;
+    ["title", "prog", "bars", "heads", "dots", "chips", "strike", "caps", "hide", "scroll"]
+      .forEach(function (k) { var v = p.get(k); if (v === "0") o[k] = false; else if (v === "1") o[k] = true; });
+    return o;
+  }
+  var OVERRIDES = urlOverrides();
+
+  var stage = document.getElementById("stage");
+  var boardEl = document.getElementById("board");
+  var listEl = document.getElementById("list");
+  var viewEl = document.getElementById("view");
+  var titleEl = document.getElementById("title");
+  var progEl = document.getElementById("prog");
+  var barEl = document.getElementById("bar");
+  var fillEl = barEl.firstElementChild;
+
+  // ---- stage scaling ----
+  var scaleRaf = 0, stageScale = 1;
+  function applyScale() {
+    stageScale = Math.min(window.innerWidth / CANVAS_W, window.innerHeight / CANVAS_H);
+    stage.style.transform = "translate(-50%,-50%) scale(" + stageScale + ")";
+  }
+  window.addEventListener("resize", function () {
+    if (scaleRaf) return;
+    scaleRaf = requestAnimationFrame(function () { scaleRaf = 0; applyScale(); });
+  });
+  applyScale();
+
+  // ---- rendering ----
+  var prevState = {};   // "group/item" -> collected, so newly-got items can pop
+
+  function accentColor() {
+    return config.accent || (board && hex(board.color, null)) || themeAccent || "#7cc44a";
+  }
+
+  function render(animate) {
+    var c = config;
+    document.documentElement.style.setProperty("--accent", accentColor());
+    document.documentElement.style.setProperty("--border", accentColor());
+
+    boardEl.style.left = c.x + "px"; boardEl.style.top = c.y + "px";
+    boardEl.style.width = c.w + "px"; boardEl.style.height = c.h + "px";
+    boardEl.style.fontSize = c.size + "px";
+    boardEl.style.background = "rgba(10, 20, 16, " + (c.bg / 100) + ")";
+    boardEl.classList.toggle("bare", c.bg === 0);
+    document.body.classList.toggle("chips", c.chips);
+    document.body.classList.toggle("strike", c.strike);
+    document.body.classList.toggle("caps", c.caps);
+    document.body.classList.toggle("nodots", !c.dots);
+
+    titleEl.style.display = c.title ? "" : "none";
+    progEl.style.display = c.prog ? "" : "none";
+    barEl.style.display = c.bars ? "" : "none";
+
+    if (!board) {
+      titleEl.textContent = "Randomizer tracker";
+      progEl.textContent = "";
+      fillEl.style.width = "0%";
+      listEl.innerHTML = '<div id="empty">No board yet.<br>Open the tracker in Game Hunter ' +
+                         '(chat window → 🎲, or Settings → Overlay) and pick a set.</div>';
+      stopScroll();
+      return;
+    }
+
+    titleEl.textContent = board.name || "Tracker";
+    progEl.textContent = board.done + " / " + board.total;
+    fillEl.style.width = (board.total ? (board.done / board.total) * 100 : 0) + "%";
+
+    var frag = document.createDocumentFragment();
+    var seen = {};
+    (board.groups || []).forEach(function (g) {
+      var items = (g.items || []).filter(function (i) { return !(c.hide && i.got); });
+      if (!items.length) return;
+      var gd = document.createElement("div"); gd.className = "grp";
+      if (c.heads && g.name) {
+        var gh = document.createElement("div"); gh.className = "gh"; gh.textContent = g.name;
+        gd.appendChild(gh);
+      }
+      var box = document.createElement("div"); box.className = "items";
+      box.style.gridTemplateColumns = "repeat(" + c.cols + ", minmax(0, 1fr))";
+      items.forEach(function (i) {
+        var key = (g.name || "") + "/" + i.n;
+        seen[key] = !!i.got;
+        var el = document.createElement("div");
+        el.className = "it " + (i.got ? "on" : "off");
+        var dot = document.createElement("span"); dot.className = "dot"; el.appendChild(dot);
+        var nm = document.createElement("span"); nm.className = "nm";
+        nm.textContent = (i.icon ? i.icon + " " : "") + i.n;
+        el.appendChild(nm);
+        if (i.m > 1) {
+          var ct = document.createElement("span"); ct.className = "ct";
+          ct.textContent = i.c + "/" + i.m;
+          el.appendChild(ct);
+        }
+        if (animate && i.got && prevState[key] === false) {
+          el.classList.add("pop");
+        }
+        box.appendChild(el);
+      });
+      gd.appendChild(box);
+      frag.appendChild(gd);
+    });
+    listEl.innerHTML = "";
+    listEl.appendChild(frag);
+    prevState = seen;
+
+    startScroll();
+  }
+
+  // ---- slow auto-scroll when the list is taller than the panel ----
+  var scrollRaf = 0, sy = 0, slast = null, sdir = -1, shold = 0;
+  function stopScroll() {
+    if (scrollRaf) cancelAnimationFrame(scrollRaf);
+    scrollRaf = 0; sy = 0; slast = null; sdir = -1; shold = 0; listEl.style.transform = "";
+  }
+  function startScroll() {
+    stopScroll();
+    if (!config.scroll) return;
+    var over = listEl.scrollHeight - viewEl.clientHeight;
+    if (over <= 2) return;
+    function frame(t) {
+      if (slast === null) slast = t;
+      var dt = Math.min(0.05, (t - slast) / 1000); slast = t;
+      if (shold > 0) { shold -= dt; }           // pause at each end before turning round
+      else {
+        sy += sdir * config.speed * dt;
+        if (sy < -over) { sy = -over; sdir = 1; shold = 1.5; }
+        if (sy > 0) { sy = 0; sdir = -1; shold = 1.5; }
+      }
+      listEl.style.transform = "translateY(" + sy + "px)";
+      scrollRaf = requestAnimationFrame(frame);
+    }
+    scrollRaf = requestAnimationFrame(frame);
+  }
+
+  function applyConfig(c) {
+    config = EDIT ? coerce(c) : coerce(Object.assign({}, c, OVERRIDES));
+    render(false);
+    if (EDIT) syncControls();
+  }
+
+  // ---- drag + resize (edit mode) ----
+  function attachDragResize() {
+    var rz = boardEl.querySelector(".rz");
+    boardEl.addEventListener("pointerdown", function (e) {
+      if (e.target === rz) return;
+      var sx = e.clientX, sy2 = e.clientY, ox = config.x, oy = config.y;
+      boardEl.setPointerCapture(e.pointerId);
+      function move(ev) {
+        config.x = Math.round(ox + (ev.clientX - sx) / stageScale);
+        config.y = Math.round(oy + (ev.clientY - sy2) / stageScale);
+        boardEl.style.left = config.x + "px"; boardEl.style.top = config.y + "px";
+      }
+      function up() {
+        try { boardEl.releasePointerCapture(e.pointerId); } catch (x) {}
+        boardEl.removeEventListener("pointermove", move);
+        boardEl.removeEventListener("pointerup", up);
+        scheduleSave();
+      }
+      boardEl.addEventListener("pointermove", move);
+      boardEl.addEventListener("pointerup", up);
+    });
+    rz.addEventListener("pointerdown", function (e) {
+      e.stopPropagation();
+      var sx = e.clientX, sy2 = e.clientY, ow = config.w, oh = config.h;
+      rz.setPointerCapture(e.pointerId);
+      function move(ev) {
+        config.w = clampNum(ow + (ev.clientX - sx) / stageScale, 100, 1280, ow);
+        config.h = clampNum(oh + (ev.clientY - sy2) / stageScale, 60, 720, oh);
+        boardEl.style.width = config.w + "px"; boardEl.style.height = config.h + "px";
+      }
+      function up() {
+        try { rz.releasePointerCapture(e.pointerId); } catch (x) {}
+        rz.removeEventListener("pointermove", move);
+        rz.removeEventListener("pointerup", up);
+        render(false); scheduleSave();
+      }
+      rz.addEventListener("pointermove", move);
+      rz.addEventListener("pointerup", up);
+    });
+  }
+
+  // ---- editor panel ----
+  var E = {};
+  function bind(id, fn) {
+    var el = document.getElementById(id);
+    el.addEventListener("input", fn); el.addEventListener("change", fn);
+    return el;
+  }
+  function buildEditor() {
+    var e = document.createElement("div"); e.id = "editor";
+    e.innerHTML =
+      '<h3>&#127922; Tracker editor</h3>' +
+      '<div class="hint">Drag the board to move it, drag the green corner to resize. ' +
+      'Tick items off in Game Hunter — they light up here instantly. Everything saves ' +
+      'automatically; in OBS use the plain /tracker URL.</div>' +
+      '<div class="grp2"><label class="h">Text size</label><div class="row">' +
+        '<input type="range" id="edSize" min="8" max="40"><span class="rv" id="edSizeV"></span></div></div>' +
+      '<div class="grp2"><label class="h">Columns</label><div class="row">' +
+        '<input type="range" id="edCols" min="1" max="4"><span class="rv" id="edColsV"></span></div></div>' +
+      '<div class="grp2"><label class="h">Accent colour</label><div class="row">' +
+        '<input type="color" id="edAccent"><span class="rv" id="edAccentV"></span>' +
+        '<button id="edAccentAuto">Auto</button></div></div>' +
+      '<div class="grp2"><label class="h">Panel background</label><div class="row">' +
+        '<input type="range" id="edBg" min="0" max="100"><span class="rv" id="edBgV"></span></div></div>' +
+      '<div class="grp2"><label class="h">Show</label>' +
+        '<label class="cb"><input type="checkbox" id="edTitle"> Set name</label>' +
+        '<label class="cb"><input type="checkbox" id="edProg"> Progress count</label>' +
+        '<label class="cb"><input type="checkbox" id="edBars"> Progress bar</label>' +
+        '<label class="cb"><input type="checkbox" id="edHeads"> Group headings</label>' +
+        '<label class="cb"><input type="checkbox" id="edDots"> Dots</label></div>' +
+      '<div class="grp2"><label class="h">Style</label>' +
+        '<label class="cb"><input type="checkbox" id="edChips"> Chip backgrounds</label>' +
+        '<label class="cb"><input type="checkbox" id="edStrike"> Strike through collected</label>' +
+        '<label class="cb"><input type="checkbox" id="edCaps"> UPPERCASE names</label>' +
+        '<label class="cb"><input type="checkbox" id="edHide"> Hide once collected</label></div>' +
+      '<div class="grp2"><label class="h">Long lists</label>' +
+        '<label class="cb"><input type="checkbox" id="edScroll"> Auto-scroll when too tall</label>' +
+        '<div class="row"><input type="range" id="edSpeed" min="4" max="120"><span class="rv" id="edSpeedV"></span></div></div>' +
+      '<div class="grp2"><button id="edReset">&#8634; Reset position &amp; size</button></div>' +
+      '<div class="saved" id="edSaved"></div>';
+    document.body.appendChild(e);
+
+    E.size = bind("edSize", onChange); E.sizeV = document.getElementById("edSizeV");
+    E.cols = bind("edCols", onChange); E.colsV = document.getElementById("edColsV");
+    E.accent = bind("edAccent", onChange); E.accentV = document.getElementById("edAccentV");
+    E.bg = bind("edBg", onChange); E.bgV = document.getElementById("edBgV");
+    E.title = bind("edTitle", onChange); E.prog = bind("edProg", onChange);
+    E.bars = bind("edBars", onChange); E.heads = bind("edHeads", onChange);
+    E.dots = bind("edDots", onChange); E.chips = bind("edChips", onChange);
+    E.strike = bind("edStrike", onChange); E.caps = bind("edCaps", onChange);
+    E.hide = bind("edHide", onChange); E.scroll = bind("edScroll", onChange);
+    E.speed = bind("edSpeed", onChange); E.speedV = document.getElementById("edSpeedV");
+    E.saved = document.getElementById("edSaved");
+
+    document.getElementById("edAccentAuto").addEventListener("click", function () {
+      config.accent = "";          // back to the board's own colour / app theme
+      render(false); syncControls(); scheduleSave();
+    });
+    document.getElementById("edReset").addEventListener("click", function () {
+      config.x = DEFAULT_CONFIG.x; config.y = DEFAULT_CONFIG.y;
+      config.w = DEFAULT_CONFIG.w; config.h = DEFAULT_CONFIG.h;
+      render(false); scheduleSave();
+    });
+
+    syncControls();
+    attachDragResize();
+  }
+
+  function syncControls() {
+    if (!E.size) return;
+    E.size.value = config.size; E.sizeV.textContent = config.size + "px";
+    E.cols.value = config.cols; E.colsV.textContent = config.cols;
+    E.accent.value = config.accent || accentColor();
+    E.accentV.textContent = config.accent ? config.accent : "auto";
+    E.bg.value = config.bg; E.bgV.textContent = config.bg + "%";
+    E.speed.value = config.speed; E.speedV.textContent = config.speed + "/s";
+    ["title", "prog", "bars", "heads", "dots", "chips", "strike", "caps", "hide", "scroll"]
+      .forEach(function (k) { E[k].checked = !!config[k]; });
+  }
+
+  function onChange(ev) {
+    var accent = config.accent;
+    // Touching the colour picker takes it off "auto"; the Auto button puts it back.
+    if (ev && ev.target === E.accent) accent = E.accent.value;
+    config = coerce({
+      x: config.x, y: config.y, w: config.w, h: config.h,
+      size: +E.size.value, cols: +E.cols.value, bg: +E.bg.value, accent: accent,
+      speed: +E.speed.value,
+      title: E.title.checked, prog: E.prog.checked, bars: E.bars.checked,
+      heads: E.heads.checked, dots: E.dots.checked, chips: E.chips.checked,
+      strike: E.strike.checked, caps: E.caps.checked, hide: E.hide.checked,
+      scroll: E.scroll.checked
+    });
+    render(false); syncControls(); scheduleSave();
+  }
+
+  var saveTimer = null;
+  function scheduleSave() {
+    if (!EDIT) return;
+    if (saveTimer) clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () {
+      saveTimer = null;
+      send({ type: "saveTracker", tracker: config });
+      if (E.saved) {
+        E.saved.textContent = "✓ saved";
+        setTimeout(function () { if (E.saved) E.saved.textContent = ""; }, 1200);
+      }
+    }, 300);
+  }
+
+  // ---- WebSocket ----
+  function onFrame(raw) {
+    var d; try { d = JSON.parse(raw); } catch (e) { return; }
+    if (!d || typeof d.type !== "string") return;
+    if (d.type === "snapshot") {
+      if (d.theme && d.theme.accent) themeAccent = d.theme.accent;
+      board = d.tracker || null;
+      applyConfig(d.trackerCfg || {});
+    } else if (d.type === "tracker") {
+      board = d.tracker || null;
+      render(true);
+    } else if (d.type === "trackerConfig") {
+      if (!EDIT) applyConfig(d.trackerCfg || {});
+      else { config = coerce(d.trackerCfg || {}); render(false); syncControls(); }
+    } else if (d.type === "theme" && d.theme && d.theme.accent) {
+      themeAccent = d.theme.accent;
+      render(false);
+    }
+  }
+
+  var ws = null, retry = null;
+  function wsUrl() {
+    if (location.protocol === "http:" || location.protocol === "https:")
+      return (location.protocol === "https:" ? "wss:" : "ws:") + "//" + location.host + "/ws";
+    return "ws://localhost:3620/ws";
+  }
+  function schedule() { if (!retry) retry = setTimeout(function () { retry = null; connect(); }, 1500); }
+  function send(obj) { try { if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj)); } catch (e) {} }
+  function connect() {
+    try { ws = new WebSocket(wsUrl()); } catch (e) { schedule(); return; }
+    ws.onopen = function () { send({ type: "hello", client: "tracker" }); };
+    ws.onmessage = function (ev) { onFrame(ev.data); };
+    ws.onclose = function () { schedule(); };
+    ws.onerror = function () { try { ws.close(); } catch (e) {} };
+  }
+
+  applyConfig({});
+  if (EDIT) buildEditor();
+  connect();
+})();
+</script>
+</body>
+</html>

@@ -98,6 +98,7 @@ namespace GameTracker.Views
             if (sender == NavVoiceMorph) { VoiceMorph_Click(sender, e); return; }
             if (sender == NavGoals) { Goals_Click(sender, e); return; }
             if (sender == NavCounters) { Counters_Click(sender, e); return; }
+            if (sender == NavTracker) { Tracker_Click(sender, e); return; }
             if (sender == NavTextOverlays) { TextPanels_Click(sender, e); return; }
 
             NavAppearance.Tag = NavChat.Tag = NavVoice.Tag = NavAlerts.Tag = NavOverlay.Tag =
@@ -404,6 +405,15 @@ namespace GameTracker.Views
             Step(1, "Settings → Overlay → 🎯 Goals. Add up to 8 goals: name, current, target, and a bar color.");
             Step(2, "Enable the Goals block in the layout editor to show them on stream.");
             Step(3, "Keep the window open during the stream and tap +1 (or type a number) as things happen — OBS updates instantly.");
+
+            Section("Randomizer tracker (key items & quests)");
+            Body("A board of key items, quests and bosses you click off as you find them — on your screen and on stream at the same time. Built for randomizers, where the whole point is \"what have I got so far?\".");
+            Step(1, "Open it from the chat window's 🎲 button (it docks under the chat), or Settings → Overlay → 🎲 Randomizer tracker for its own window. The ⬍ button moves it between the two, and the pop-out window pins on top for a second monitor.");
+            Step(2, "Hit 📚 and add a built-in set — 60 of them across NES, SNES, PS1 and PS2 (Final Fantasy, Dragon Warrior, Chrono Trigger, Zelda, Super Metroid, Kingdom Hearts, Persona…). It's copied into your own list, so edit it however you like.");
+            Step(3, "Click an item when you find it: it lights up here and on the overlay instantly. Right-click takes it back. Counter items (Mini Medals 7/110) go up one per click, or ten with Shift held.");
+            Step(4, "✎ edits the board: rename items, remove them, add your own, add and delete groups. Typing \"Dragon Orbs *8\" makes a counter out of eight. ↺ resets the run without losing the list.");
+            Step(5, "Link a board to a game in the ✎ footer and it comes up by itself when you start that game's session.");
+            Step(6, "For stream: Settings → Overlay → RANDOMIZER TRACKER → copy the tracker URL into an OBS Browser source, then open the editor URL in a browser to size it, set columns, colour and whether found items stay or disappear. It saves as you go.");
 
             Section("Stream stats & recap");
             Img("stats.png");
@@ -777,6 +787,23 @@ namespace GameTracker.Views
             try { Clipboard.SetText(url); OverlayStatus.Text = "Copied editor URL — open it in a browser to design the ticker; changes save & update OBS live."; }
             catch { /* clipboard can be momentarily locked */ }
         }
+
+        private void CopyTrackerUrl_Click(object sender, RoutedEventArgs e)
+        {
+            var url = OverlayUrl + "tracker";
+            try { Clipboard.SetText(url); OverlayStatus.Text = "Copied: " + url + " — add as its own OBS Browser source for the item board."; }
+            catch { /* clipboard can be momentarily locked */ }
+        }
+
+        private void CopyTrackerEditUrl_Click(object sender, RoutedEventArgs e)
+        {
+            var url = OverlayUrl + "tracker?edit";
+            try { Clipboard.SetText(url); OverlayStatus.Text = "Copied editor URL — open it in a browser to design the board; changes save & update OBS live."; }
+            catch { /* clipboard can be momentarily locked */ }
+        }
+
+        private void Tracker_Click(object sender, RoutedEventArgs e) =>
+            TrackerWindow.Open(Application.Current.MainWindow);
 
         private static readonly Dictionary<string, (string icon, string label)> TickerSlotDefs = new()
         {

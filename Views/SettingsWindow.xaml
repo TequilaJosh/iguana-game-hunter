@@ -143,6 +143,8 @@
                         <Button x:Name="NavOverlay" Content="🖼  Overlays" Style="{StaticResource NavBtn}" Click="Nav_Click"/>
                         <Button x:Name="NavGoals" Content="🎯  Goals" Style="{StaticResource NavBtn}" Click="Nav_Click"/>
                         <Button x:Name="NavCounters" Content="🔢  Counters" Style="{StaticResource NavBtn}" Click="Nav_Click"/>
+                        <Button x:Name="NavTracker" Content="🎲  Tracker" Style="{StaticResource NavBtn}" Click="Nav_Click"
+                                ToolTip="Randomizer item &amp; quest boards — tick things off as you find them"/>
                         <Button x:Name="NavTextOverlays" Content="📝  Text Overlays" Style="{StaticResource NavBtn}" Click="Nav_Click"/>
                         <Button x:Name="NavAppearance" Content="🎨  Appearance" Style="{StaticResource NavBtn}" Click="Nav_Click"/>
                         <Button x:Name="NavHotkeys" Content="⌨  Hotkeys" Style="{StaticResource NavBtn}" Click="Nav_Click"/>
@@ -424,6 +426,9 @@
                                 <Button Content="&#128290; Counters" Click="Counters_Click"
                                         Style="{StaticResource Btn}" Margin="0,0,8,6"
                                         ToolTip="On-stream tallies per game (deaths, catchphrases…) with +/- hotkeys"/>
+                                <Button Content="&#127922; Randomizer tracker" Click="Tracker_Click"
+                                        Style="{StaticResource Btn}" Margin="0,0,8,6"
+                                        ToolTip="Key item / quest boards for randomizer runs — click things off as you find them"/>
                             </WrapPanel>
                             <TextBlock Text="EFFECTS OVERLAY" Style="{StaticResource SecHdr}"/>
                             <TextBlock Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,6"
@@ -442,6 +447,18 @@
                                 <Button Content="&#127912; Copy editor URL" Click="CopyFrameEditUrl_Click"
                                         Style="{StaticResource Btn}"
                                         ToolTip="Open /frame?edit in a browser to design the border live"/>
+                            </StackPanel>
+
+                            <TextBlock Text="RANDOMIZER TRACKER" Style="{StaticResource SecHdr}"/>
+                            <TextBlock Foreground="{DynamicResource ThemeTextFaint}" FontSize="11" TextWrapping="Wrap" Margin="0,0,0,6"
+                                       Text="A board of key items, quests and bosses that lights up as you tick them off — ideal for randomizers. Open the tracker (above, or the 🎲 button in the chat window) and add a built-in set for your game, or build your own. Add the tracker URL as its own OBS Browser source, then design it live (size, columns, colour, hide-when-found…) with the editor URL. Every click in Game Hunter shows up on stream instantly. For a second board styled differently, add options to its URL: ?cols=2 &amp; size=13 &amp; hide=1 &amp; heads=0 &amp; accent=ff0066 &amp; bg=0"/>
+                            <StackPanel Orientation="Horizontal">
+                                <Button Content="&#128203; Copy tracker URL" Click="CopyTrackerUrl_Click"
+                                        Style="{StaticResource Btn}" Margin="0,0,8,0"
+                                        ToolTip="The /tracker URL for the OBS Browser source"/>
+                                <Button Content="&#127912; Copy editor URL" Click="CopyTrackerEditUrl_Click"
+                                        Style="{StaticResource Btn}"
+                                        ToolTip="Open /tracker?edit in a browser to design the board live"/>
                             </StackPanel>
 
                             <TextBlock Text="ACTIVITY TICKER" Style="{StaticResource SecHdr}"/>

@@ -76,6 +76,8 @@ namespace GameTracker.Services
         private static readonly Dictionary<string, object> _latestByKind = new(); // newest item per kind (ticker)
         private static JToken? _ticker;   // ticker banner config (edited live in /ticker?edit)
         private static JToken? _frame;    // game frame border config (edited live in /frame?edit)
+        private static object? _tracker;     // active randomizer board (wire form; null = none)
+        private static JToken? _trackerCfg;  // tracker overlay config (edited live in /tracker?edit)
         private static object? _theme;    // active app theme colors + slug (styles the overlay)
         private const int ActivityMax = 25;
         private static string? _panelHtml; // PanelOverlay.html template (index injected per request)
@@ -110,6 +112,8 @@ namespace GameTracker.Services
                 _presets = ParseLayout(SettingsService.LoadOverlayPresets());
                 _ticker = ParseLayout(SettingsService.LoadOverlayTicker());   // ticker banner config
                 _frame = ParseLayout(SettingsService.LoadOverlayFrame());     // game frame border config
+                _trackerCfg = ParseLayout(SettingsService.LoadOverlayTracker()); // tracker overlay config
+                _tracker = TrackerToWire(TrackerService.Active);              // active randomizer board
                 var f = SettingsService.LoadChatFeatures();
                 _style = new { mode = f.ChatStyle, colors = f.BoxColors.ToArray() };
                 _panels = PanelsToWire(SettingsService.LoadTextPanels());
@@ -252,6 +256,10 @@ namespace GameTracker.Services
                 else if (method == "GET" && (route == "/frame" || route == "/frame/"))
                 {
                     await ServeEmbeddedHtml(stream, "FrameOverlay.html", ct);
+                }
+                else if (method == "GET" && (route == "/tracker" || route == "/tracker/"))
+                {
+                    await ServeEmbeddedHtml(stream, "TrackerOverlay.html", ct);
                 }
                 else
                 {
@@ -698,6 +706,7 @@ namespace GameTracker.Services
                 activity = _activity.ToArray(),
                 activityLatest = new Dictionary<string, object>(_latestByKind),
                 ticker = _ticker, frame = _frame,
+                tracker = _tracker, trackerCfg = _trackerCfg,
             };
             await SendText(client, JsonConvert.SerializeObject(snapshot), ct);
 
@@ -807,6 +816,19 @@ namespace GameTracker.Services
                         SettingsService.SaveOverlayFrame(fr.ToString(Formatting.None));
                         lock (Gate) _frame = fr;
                         Broadcast(new { type = "frameConfig", frame = fr });
+                    }
+                }
+
+                // Tracker editor (/tracker?edit) saved a config -> persist and push live to every
+                // tracker source so the board in OBS restyles immediately.
+                if (msg.Contains("\"saveTracker\""))
+                {
+                    var o = JObject.Parse(msg);
+                    if ((string?)o["type"] == "saveTracker" && o["tracker"] is JToken tr)
+                    {
+                        SettingsService.SaveOverlayTracker(tr.ToString(Formatting.None));
+                        lock (Gate) _trackerCfg = tr;
+                        Broadcast(new { type = "trackerConfig", trackerCfg = tr });
                     }
                 }
 
@@ -1210,6 +1232,42 @@ namespace GameTracker.Services
             var wire = CountersToWire(counters);
             lock (Gate) _counters = wire;
             Broadcast(new { type = "counters", counters = wire });
+        }
+
+        // The active randomizer board in wire form. Kept small: the overlay only needs the
+        // names and the tick state, and this is re-sent on every single click.
+        private static object? TrackerToWire(TrackerSet? set)
+        {
+            if (set == null) return null;
+            return new
+            {
+                name = set.Name ?? string.Empty,
+                color = string.IsNullOrWhiteSpace(set.Color) ? "#7cc44a" : set.Color,
+                system = set.System ?? string.Empty,
+                done = set.Done,
+                total = set.Total,
+                groups = (set.Groups ?? new List<TrackerGroup>()).Select(g => new
+                {
+                    name = g.Name ?? string.Empty,
+                    items = (g.Items ?? new List<TrackerItem>()).Select(i => new
+                    {
+                        n = i.Name ?? string.Empty,
+                        icon = i.Icon ?? string.Empty,
+                        got = i.Done,
+                        c = i.Count,
+                        m = i.Max,
+                    }).ToArray(),
+                }).ToArray(),
+            };
+        }
+
+        /// <summary>Push the active randomizer tracker board to all clients (on every tick).</summary>
+        public static void PushTracker(TrackerSet? set)
+        {
+            if (!_running) return;
+            var wire = TrackerToWire(set);
+            lock (Gate) _tracker = wire;
+            Broadcast(new { type = "tracker", tracker = wire });
         }
 
         /// <summary>Push the streamer's text panels to all clients (live while typing).</summary>

@@ -98,6 +98,13 @@ namespace GameTracker.Views
             // Window transparency (set in Settings) applies to this window.
             Opacity = saved.Opacity is >= 0.25 and <= 1.0 ? saved.Opacity : 1.0;
 
+            // Randomizer tracker dock: same height and open/closed state as last time.
+            _trackerHeight = saved.TrackerDockHeight is >= 60 and <= 1200 ? saved.TrackerDockHeight : 240;
+            TrackerDock.PopOutRequested += PopOutTracker;
+            // save: false — restoring the saved state must not write settings back out
+            // (docs capture builds this window with placeholder values in the boxes).
+            ShowTrackerDock(saved.TrackerDock && TrackerWindow.Current == null, save: false);
+
             // Send-target picker: "All chats" + platforms seen via SSN. Always starts on
             // All chats so a leftover platform pick can't surprise the streamer later.
             SendTargetCombo.ItemsSource = _sendTargets;
@@ -733,6 +740,77 @@ namespace GameTracker.Views
             _tts.Speak(spoken, voice, effect, _ttsSettings.Rate, _ttsSettings.Volume);
         }
 
+        // ---- right-click a chat row: copy it, or mute that person in TTS ----
+
+        private static ChatRow? RowOf(object sender) =>
+            (sender as FrameworkElement)?.DataContext as ChatRow;
+
+        private bool IsTtsIgnored(string user) =>
+            _ttsSettings.IgnoreUsers.Any(u =>
+                string.Equals(u?.Trim(), user, StringComparison.OrdinalIgnoreCase));
+
+        /// <summary>Label the TTS entry for whoever this row belongs to, and hide it on rows
+        /// with no sender (system lines, raids and the like).</summary>
+        private void RowMenu_Opened(object sender, RoutedEventArgs e)
+        {
+            if (sender is not System.Windows.Controls.ContextMenu menu) return;
+            var user = (menu.DataContext as ChatRow)?.User?.Trim() ?? string.Empty;
+            var show = user.Length > 0 ? Visibility.Visible : Visibility.Collapsed;
+
+            foreach (var item in menu.Items.OfType<FrameworkElement>())
+            {
+                if ((item.Tag as string) != "tts") continue;
+                item.Visibility = show;
+                if (item is System.Windows.Controls.MenuItem mi && user.Length > 0)
+                    mi.Header = IsTtsIgnored(user)
+                        ? $"\U0001F50A  Read {user} aloud again"
+                        : $"\U0001F507  Never read {user} aloud";
+            }
+        }
+
+        private static void CopyToClipboard(string? text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return;
+            try { Clipboard.SetText(text); }
+            catch { /* clipboard can be momentarily locked by another app */ }
+        }
+
+        private void CopyMessage_Click(object sender, RoutedEventArgs e) =>
+            CopyToClipboard(RowOf(sender)?.PlainText);
+
+        private void CopyName_Click(object sender, RoutedEventArgs e) =>
+            CopyToClipboard(RowOf(sender)?.User);
+
+        private void CopyBoth_Click(object sender, RoutedEventArgs e)
+        {
+            if (RowOf(sender) is not { } row) return;
+            CopyToClipboard(string.IsNullOrWhiteSpace(row.User)
+                ? row.PlainText
+                : $"{row.User}: {row.PlainText}");
+        }
+
+        /// <summary>Add or remove this row's sender from the TTS "ignore users" list — the same
+        /// list Settings shows, so the two stay in step.</summary>
+        private void ToggleTtsBan_Click(object sender, RoutedEventArgs e)
+        {
+            var user = RowOf(sender)?.User?.Trim();
+            if (string.IsNullOrWhiteSpace(user)) return;
+
+            var wasIgnored = IsTtsIgnored(user);
+
+            // Round-trip through saved settings rather than the in-memory copy, so this
+            // doesn't clobber anything changed in the Settings window meanwhile.
+            var tts = SettingsService.LoadTts();
+            tts.IgnoreUsers.RemoveAll(u =>
+                string.Equals(u?.Trim(), user, StringComparison.OrdinalIgnoreCase));
+            if (!wasIgnored) tts.IgnoreUsers.Add(user);
+            SettingsService.SaveTts(tts);
+            ReloadTts();
+
+            // You normally hit this because they're being read right now, so cut it off.
+            if (!wasIgnored) _tts.StopAll();
+        }
+
         /// <summary>Re-read the overlay chat-line count after it's changed in Settings.</summary>
         public void ReloadOverlayLines() => _overlayLines = SettingsService.LoadOverlayChatLines();
 
@@ -964,7 +1042,59 @@ namespace GameTracker.Views
             s.TwitchChannel = TwitchBox.Text.Trim();
             s.SsnSession = SsnBox.Text.Trim();
             s.RestreamToken = RestreamBox.Text.Trim();
+            s.TrackerDock = _trackerDocked;
+            if (_trackerDocked && TrackerRow.ActualHeight >= 60) s.TrackerDockHeight = TrackerRow.ActualHeight;
             SettingsService.SaveChat(s);
+        }
+
+        // ---- randomizer tracker dock ----
+
+        private bool _trackerDocked;
+        private double _trackerHeight = 240;
+
+        /// <summary>
+        /// Show or hide the tracker under the chat. Hiding leaves the row at zero height so
+        /// the chat gets the space back; the height the streamer dragged it to is remembered.
+        /// </summary>
+        public void ShowTrackerDock(bool show) => ShowTrackerDock(show, save: true);
+
+        private void ShowTrackerDock(bool show, bool save)
+        {
+            if (show && TrackerWindow.Current is { } popped)
+            {
+                // It's living in its own window — bring that forward instead of having two.
+                popped.Activate();
+                return;
+            }
+
+            if (!show && _trackerDocked && TrackerRow.ActualHeight >= 60)
+                _trackerHeight = TrackerRow.ActualHeight;   // remember where they left it
+
+            _trackerDocked = show;
+            TrackerRow.Height = show ? new GridLength(_trackerHeight) : new GridLength(0);
+            TrackerDock.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+            TrackerSplitter.Visibility = show ? Visibility.Visible : Visibility.Collapsed;
+            TrackerButton.Foreground = show
+                ? new SolidColorBrush(Color.FromRgb(0xd4, 0xa4, 0x37))
+                : new SolidColorBrush(Color.FromRgb(0x7a, 0x90, 0x70));
+            TrackerButton.ToolTip = show
+                ? "Hide the randomizer tracker"
+                : "Randomizer tracker — tick off key items and quests as you find them";
+            if (show) TrackerDock.RefreshAll();
+            if (save) SaveChat();
+        }
+
+        private void Tracker_Click(object sender, RoutedEventArgs e)
+        {
+            if (TrackerWindow.Current is { } popped) { popped.Activate(); return; }
+            ShowTrackerDock(!_trackerDocked);
+        }
+
+        // The dock's ⬍ button: move the tracker out into its own window.
+        private void PopOutTracker()
+        {
+            ShowTrackerDock(false);
+            TrackerWindow.Open(Application.Current.MainWindow);
         }
 
         private void SsnGuide_Click(object sender, RoutedEventArgs e) =>
@@ -1160,6 +1290,7 @@ namespace GameTracker.Views
         {
             if (ReferenceEquals(Current, this)) Current = null;
             SaveChat();
+            TrackerService.Flush();   // a tick made in the last half-second still counts
             _chattersTimer?.Stop();
             PointsService.Save();
             _overlayTimer.Stop();
@@ -1181,6 +1312,9 @@ namespace GameTracker.Views
             public Brush UserBrush { get; set; } = Brushes.White;
             public Brush AvatarBrush { get; set; } = Brushes.Gray;
             public string Initial { get; set; } = string.Empty;
+            /// <summary>The row's words with emotes flattened to their names — what "Copy message" puts
+            /// on the clipboard.</summary>
+            public string PlainText => string.Concat(Segments.Select(s => s.Text)).Trim();
             public Brush RowBrush { get; set; } = Brushes.Transparent;
             public Brush BoxBrush { get; set; } = Brushes.DarkOliveGreen;
             /// <summary>The message this row shows — kept so the chat can be saved across an update restart.</summary>

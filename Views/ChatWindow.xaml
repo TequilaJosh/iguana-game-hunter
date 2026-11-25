@@ -4,6 +4,7 @@
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         xmlns:local="clr-namespace:GameTracker.Views"
         Title="Chat"
+        x:Name="ChatRoot"
         Width="460" Height="680"
         MinWidth="380" MinHeight="420"
         WindowStartupLocation="CenterOwner"
@@ -66,7 +67,9 @@
                 <RowDefinition Height="32"/>
                 <RowDefinition Height="Auto"/>
                 <RowDefinition Height="Auto"/>
-                <RowDefinition Height="*"/>
+                <RowDefinition Height="*" MinHeight="90"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition x:Name="TrackerRow" Height="0"/>
                 <RowDefinition Height="Auto"/>
             </Grid.RowDefinitions>
 
@@ -86,6 +89,9 @@
                     </StackPanel>
                     <StackPanel Grid.Column="1" Orientation="Horizontal"
                                 shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                        <Button x:Name="TrackerButton" Content="&#127922;" Click="Tracker_Click"
+                                Style="{StaticResource WindowControlButton}" FontSize="12"
+                                ToolTip="Randomizer tracker — tick off key items and quests as you find them"/>
                         <Button x:Name="MuteButton" Content="&#128266;" Click="Mute_Click"
                                 Style="{StaticResource WindowControlButton}" FontSize="11"
                                 ToolTip="Stop sound alerts (panic): kill the current alert and mute incoming"/>
@@ -222,8 +228,19 @@
             <ScrollViewer x:Name="MsgScroll" Grid.Row="3" VerticalScrollBarVisibility="Auto" Padding="10,8">
                 <ItemsControl x:Name="MessageList">
                     <ItemsControl.Resources>
+                        <!-- Right-click a message: copy it, or stop TTS reading that person.
+                             x:Shared="False" so every row gets its own menu instance and
+                             inherits that row's DataContext. -->
+                        <ContextMenu x:Key="RowMenu" x:Shared="False" Opened="RowMenu_Opened">
+                            <MenuItem Header="Copy message" Click="CopyMessage_Click"/>
+                            <MenuItem Header="Copy name" Click="CopyName_Click"/>
+                            <MenuItem Header="Copy name and message" Click="CopyBoth_Click"/>
+                            <Separator Tag="tts"/>
+                            <MenuItem Tag="tts" Click="ToggleTtsBan_Click"/>
+                        </ContextMenu>
                         <DataTemplate x:Key="LogRow">
-                            <Border Margin="0,1" Padding="4,2" CornerRadius="4" Background="{Binding RowBrush}">
+                            <Border Margin="0,1" Padding="4,2" CornerRadius="4" Background="{Binding RowBrush}"
+                                    ContextMenu="{StaticResource RowMenu}">
                                 <Grid>
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="Auto"/>
@@ -241,7 +258,8 @@
                             </Border>
                         </DataTemplate>
                         <DataTemplate x:Key="BoxRow">
-                            <Border Margin="0,3" CornerRadius="8" Background="{Binding BoxBrush}">
+                            <Border Margin="0,3" CornerRadius="8" Background="{Binding BoxBrush}"
+                                    ContextMenu="{StaticResource RowMenu}">
                                 <StackPanel>
                                     <StackPanel Orientation="Horizontal" Margin="7,3,7,2">
                                         <Border Width="18" Height="18" CornerRadius="9"
@@ -264,8 +282,17 @@
                 </ItemsControl>
             </ScrollViewer>
 
+            <!-- Randomizer tracker dock: drag the handle to resize it, 🎲 in the title bar
+                 hides it, and the panel's own ⬍ button pops it into its own window. -->
+            <GridSplitter x:Name="TrackerSplitter" Grid.Row="4" Height="5"
+                          HorizontalAlignment="Stretch" VerticalAlignment="Center"
+                          Background="{DynamicResource ThemeBorder}" Visibility="Collapsed"
+                          ResizeBehavior="PreviousAndNext" ResizeDirection="Rows"
+                          Cursor="SizeNS" ToolTip="Drag to resize the tracker"/>
+            <local:TrackerPanel x:Name="TrackerDock" Grid.Row="5" Visibility="Collapsed"/>
+
             <!-- Send bar (two-way chat via Social Stream Ninja) -->
-            <Border Grid.Row="4" Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource ThemeBorder}"
+            <Border Grid.Row="6" Background="{DynamicResource ThemeSurface}" BorderBrush="{DynamicResource ThemeBorder}"
                     BorderThickness="0,1,0,0" Padding="8,6">
                 <Grid>
                     <Grid.ColumnDefinitions>

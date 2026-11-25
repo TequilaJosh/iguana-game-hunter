@@ -1,0 +1,247 @@
+<UserControl x:Class="GameTracker.Views.TrackerPanel"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:GameTracker.Views"
+             x:Name="PanelRoot"
+             MinHeight="90">
+
+    <UserControl.Resources>
+        <!-- Small square tool button for the header strip. -->
+        <Style x:Key="TBtn" TargetType="Button">
+            <Setter Property="Background" Value="{DynamicResource ThemeSurface2}"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeAccent}"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Width" Value="26"/>
+            <Setter Property="Height" Value="24"/>
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Margin" Value="3,0,0,0"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" CornerRadius="3"
+                                BorderBrush="{DynamicResource ThemeAccentDeep}" BorderThickness="1">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{DynamicResource ThemeAccentDeep}"/>
+                                <Setter Property="Foreground" Value="{DynamicResource ThemeBg}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Opacity" Value="0.4"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <!-- Text input used in edit mode (names, new item, new group). -->
+        <Style x:Key="TBox" TargetType="TextBox">
+            <Setter Property="Background" Value="{DynamicResource ThemeSurface}"/>
+            <Setter Property="Foreground" Value="{DynamicResource ThemeText}"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource ThemeBorder}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="CaretBrush" Value="{DynamicResource ThemeAccent}"/>
+            <Setter Property="Padding" Value="4,2"/>
+            <Setter Property="FontSize" Value="11"/>
+            <Setter Property="VerticalContentAlignment" Value="Center"/>
+        </Style>
+    </UserControl.Resources>
+
+    <Border Background="{DynamicResource ThemeSurface}"
+            BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,1,0,0">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- ── Header: which board, how far along, and the tools ───────────── -->
+            <Grid Grid.Row="0" Margin="8,6,8,3">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <ComboBox x:Name="SetCombo" Grid.Column="0" MinWidth="90" Height="24"
+                          VerticalAlignment="Center" DisplayMemberPath="Name"
+                          SelectionChanged="SetCombo_Changed"
+                          ToolTip="Which tracker board is showing here and on the overlay"/>
+
+                <TextBlock x:Name="ProgressText" Grid.Column="1" VerticalAlignment="Center"
+                           Margin="8,0,2,0" FontSize="12" FontWeight="Bold"
+                           Foreground="{DynamicResource ThemeAccent}"/>
+
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Content="&#128218;" Style="{StaticResource TBtn}" Click="Sets_Click"
+                            ToolTip="Boards: add a built-in set, start an empty one, duplicate, colour, delete"/>
+                    <Button x:Name="EditBtn" Content="&#9998;" Style="{StaticResource TBtn}" Click="Edit_Click"
+                            ToolTip="Edit this board — rename, add and remove items and groups"/>
+                    <Button Content="&#8634;" Style="{StaticResource TBtn}" Click="Reset_Click"
+                            ToolTip="Reset the run — untick everything on this board"/>
+                    <Button x:Name="PopBtn" Content="&#11021;" Style="{StaticResource TBtn}" Click="Pop_Click"
+                            ToolTip="Pop the tracker out into its own window"/>
+                </StackPanel>
+            </Grid>
+
+            <!-- ── Progress bar ────────────────────────────────────────────────── -->
+            <Border Grid.Row="1" Height="4" CornerRadius="2" Margin="8,0,8,5"
+                    Background="{DynamicResource ThemeSurface2}">
+                <Border x:Name="ProgressFill" HorizontalAlignment="Left" Width="0" CornerRadius="2"
+                        Background="{DynamicResource ThemeAccent}"/>
+            </Border>
+
+            <!-- ── The board ───────────────────────────────────────────────────── -->
+            <ScrollViewer x:Name="BoardScroll" Grid.Row="2" VerticalScrollBarVisibility="Auto"
+                          Padding="8,0,8,4">
+                <StackPanel>
+                    <TextBlock x:Name="EmptyText" TextWrapping="Wrap" FontSize="12" Margin="0,6,0,10"
+                               Foreground="{DynamicResource ThemeTextFaint}"
+                               Text="No tracker board yet. Hit the 📚 button and add a built-in set for the game you're randomizing — or start an empty one and build your own."/>
+
+                    <ItemsControl x:Name="GroupList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <StackPanel Margin="0,0,0,7">
+
+                                    <!-- Group heading (a text box while editing) -->
+                                    <Grid Margin="0,0,0,3">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBlock Text="{Binding Name}" FontSize="10" FontWeight="Bold"
+                                                   Foreground="{DynamicResource ThemeAccent}"
+                                                   Visibility="{Binding ViewVis, RelativeSource={RelativeSource AncestorType={x:Type local:TrackerPanel}}}"/>
+                                        <TextBox Text="{Binding Name, UpdateSourceTrigger=LostFocus}"
+                                                 Style="{StaticResource TBox}" FontWeight="Bold"
+                                                 Visibility="{Binding EditVis, RelativeSource={RelativeSource AncestorType={x:Type local:TrackerPanel}}}"/>
+                                        <Button Grid.Column="1" Content="&#x2715;" Tag="{Binding}"
+                                                Click="DeleteGroup_Click" Style="{StaticResource TBtn}"
+                                                Width="22" Height="20" Foreground="#e08a7a"
+                                                Visibility="{Binding EditVis, RelativeSource={RelativeSource AncestorType={x:Type local:TrackerPanel}}}"
+                                                ToolTip="Remove this whole group"/>
+                                    </Grid>
+
+                                    <!-- Items -->
+                                    <ItemsControl ItemsSource="{Binding Items}">
+                                        <ItemsControl.ItemsPanel>
+                                            <ItemsPanelTemplate><WrapPanel/></ItemsPanelTemplate>
+                                        </ItemsControl.ItemsPanel>
+                                        <ItemsControl.ItemTemplate>
+                                            <DataTemplate>
+                                                <Grid Margin="0,0,4,4">
+                                                    <!-- Normal: a chip you click to tick off -->
+                                                    <Button Tag="{Binding}" Click="Item_Click"
+                                                            MouseRightButtonUp="Item_RightClick"
+                                                            Cursor="Hand" ToolTip="{Binding Tip}"
+                                                            Visibility="{Binding ViewVis, RelativeSource={RelativeSource AncestorType={x:Type local:TrackerPanel}}}">
+                                                        <Button.Template>
+                                                            <ControlTemplate TargetType="Button">
+                                                                <Border CornerRadius="4" Padding="6,3"
+                                                                        Background="{Binding ChipBrush}"
+                                                                        BorderBrush="{Binding EdgeBrush}"
+                                                                        BorderThickness="1">
+                                                                    <StackPanel Orientation="Horizontal">
+                                                                        <Ellipse Width="7" Height="7" Margin="0,0,5,0"
+                                                                                 VerticalAlignment="Center"
+                                                                                 Fill="{Binding DotBrush}"
+                                                                                 Stroke="{Binding EdgeBrush}"
+                                                                                 StrokeThickness="1"/>
+                                                                        <TextBlock Text="{Binding Display}" FontSize="12"
+                                                                                   Foreground="{Binding TextBrush}"
+                                                                                   FontWeight="{Binding Weight}"/>
+                                                                        <TextBlock Text="{Binding CountText}" FontSize="10"
+                                                                                   Margin="5,0,0,0" VerticalAlignment="Center"
+                                                                                   Foreground="{Binding TextBrush}" Opacity="0.85"/>
+                                                                    </StackPanel>
+                                                                </Border>
+                                                            </ControlTemplate>
+                                                        </Button.Template>
+                                                    </Button>
+
+                                                    <!-- Editing: rename or remove -->
+                                                    <Border CornerRadius="4" Padding="2"
+                                                            Background="{DynamicResource ThemeSurface2}"
+                                                            BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="1"
+                                                            Visibility="{Binding EditVis, RelativeSource={RelativeSource AncestorType={x:Type local:TrackerPanel}}}">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBox Text="{Binding EditName, UpdateSourceTrigger=LostFocus}"
+                                                                     Style="{StaticResource TBox}" MinWidth="64"
+                                                                     BorderThickness="0" Background="Transparent"
+                                                                     ToolTip="Rename. End with *8 to make it a counter (e.g. Orbs *8)"/>
+                                                            <Button Content="&#x2715;" Tag="{Binding}" Click="DeleteItem_Click"
+                                                                    Style="{StaticResource TBtn}" Width="20" Height="20"
+                                                                    Margin="2,0,0,0" Foreground="#e08a7a"
+                                                                    ToolTip="Remove this item"/>
+                                                        </StackPanel>
+                                                    </Border>
+                                                </Grid>
+                                            </DataTemplate>
+                                        </ItemsControl.ItemTemplate>
+                                    </ItemsControl>
+
+                                    <!-- Add an item to this group (edit mode) -->
+                                    <TextBox Style="{StaticResource TBox}" Tag="{Binding}" Margin="0,2,0,0"
+                                             KeyDown="AddItem_KeyDown"
+                                             Visibility="{Binding EditVis, RelativeSource={RelativeSource AncestorType={x:Type local:TrackerPanel}}}"
+                                             ToolTip="Type an item and press Enter. End with *8 for a counter (e.g. Orbs *8)"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ── Edit footer: the board's own settings ───────────────────────── -->
+            <Border x:Name="EditFooter" Grid.Row="3" Background="{DynamicResource ThemeBg}"
+                    BorderBrush="{DynamicResource ThemeBorder}" BorderThickness="0,1,0,0"
+                    Padding="8,6" Visibility="Collapsed">
+                <StackPanel>
+                    <Grid Margin="0,0,0,5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="SetNameBox" Style="{StaticResource TBox}"
+                                 LostFocus="SetName_Changed" KeyDown="SetName_KeyDown"
+                                 ToolTip="What this board is called"/>
+                        <Button Grid.Column="1" Content="&#127912;" Style="{StaticResource TBtn}"
+                                Click="SetColor_Click" ToolTip="Colour for the collected items on the overlay"/>
+                    </Grid>
+                    <Grid Margin="0,0,0,5">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="Auto-pick for" VerticalAlignment="Center" FontSize="11"
+                                   Margin="0,0,6,0" Foreground="{DynamicResource ThemeTextFaint}"/>
+                        <ComboBox x:Name="GameCombo" Grid.Column="1" Height="22" FontSize="11"
+                                  SelectionChanged="GameCombo_Changed"
+                                  ToolTip="Switch to this board by itself when that game's session starts"/>
+                    </Grid>
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBox x:Name="AddGroupBox" Style="{StaticResource TBox}"
+                                 KeyDown="AddGroup_KeyDown"
+                                 ToolTip="Type a group name (Key Items, Quests, Bosses…) and press Enter"/>
+                        <Button Grid.Column="1" Content="&#128465;" Style="{StaticResource TBtn}"
+                                Click="DeleteSet_Click" Foreground="#e08a7a"
+                                ToolTip="Delete this whole board"/>
+                    </Grid>
+                    <TextBlock Margin="0,5,0,0" FontSize="10" TextWrapping="Wrap"
+                               Foreground="{DynamicResource ThemeTextFaint}"
+                               Text="Click an item to tick it off, right-click to take it back. Counters go up by one per click (hold Shift for ten)."/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Border>
+</UserControl>
